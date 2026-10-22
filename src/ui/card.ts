@@ -14,6 +14,11 @@ export function toolImg(key: string | undefined) {
   return `<img src="/assets/tools/${esc(key || 'generic')}.svg" alt="" onerror="this.onerror=null;this.src='/assets/tools/generic.svg'">`;
 }
 
+/** A CI step packed onto one line ("- name: Lint     run: npm run lint") reads as two YAML lines, so it never wraps mid-command. */
+function yamlStep(code: string) {
+  return /^- name:/.test(code) ? code.replace(/\s{3,}(run:)/, '\n  $1') : code;
+}
+
 /** A tool card, Magic: The Gathering style: frame, name, picture, type line, rules with the real config, power box. */
 export function toolCardHtml(game: Game, tier: PlayTier, stop: Stop, k: number): string {
   const card = stop.p2;
@@ -21,7 +26,7 @@ export function toolCardHtml(game: Game, tier: PlayTier, stop: Stop, k: number):
   const cfg = tool.config;
   const lines = cfg?.lines.slice(0, 6) ?? [];
   const hit = Math.round(90 / tier.stops.length);
-  const cfgHtml = cfg && lines.length ? `<div class="cfg"><div class="file">${esc(cfg.file)}<span>${esc(cfg.status === 'planned' ? 'planned' : 'applied in this PR')}</span></div>${lines.map(([code, means]) => `<div class="ln"><code>${esc(code)}</code><em>${esc(means)}</em></div>`).join('')}</div>` : '';
+  const cfgHtml = cfg && lines.length ? `<div class="cfg"><div class="file">${esc(cfg.file)}<span>${esc(cfg.status === 'planned' ? 'planned' : 'applied in this PR')}</span></div>${lines.map(([code, means]) => `<div class="ln"><code>${esc(yamlStep(code))}</code><em>${esc(means)}</em></div>`).join('')}</div>` : '';
   return `<article class="tcard" data-tool="${esc(card.tool ?? '')}">
     <span class="hint">→ PLAY CARD</span>
     <div class="head"><span class="name">${esc(shortTool(tool.name))}</span><span class="cost"><i>${esc(gateCode(stop.gate))}</i><i>T${tier.n}</i></span></div>

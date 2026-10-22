@@ -172,7 +172,7 @@ export class PlayerWorld {
     while (this.debt.length > s.debt) this.debt.pop()!.win.dispose();
     for (let k = this.debt.length; k < s.debt; k++) {
       const stop = tier.stops[k]!;
-      const win = new CodeWindow(this.paint(stop.p1, 'angry', 'problem', 30, stop), 1.5, 'angry');
+      const win = new CodeWindow(this.paint(stop.p1, 'angry', 'problem', 30, stop), 1.1, 'angry');
       this.scene.add(win.group);
       this.debt.push({ win, key: String(k) });
     }
@@ -679,7 +679,8 @@ export class PlayerWorld {
   private debtSlot(i: number) {
     const c = this.character.root.position;
     const t = this.clock;
-    return new THREE.Vector3(-1.3 - (i % 2) * 0.9, 2.6 + Math.floor(i / 2) * 0.9 + Math.sin(t * 2 + i) * 0.15, c.z + 1.2 + (i % 3) * 0.5);
+    // Above and beside player 1's far shoulder: off the follow camera's lens, behind the stop window in side views.
+    return new THREE.Vector3(-1.1 - (i % 2) * 0.7, 2.8 + Math.floor(i / 2) * 0.5 + Math.sin(t * 2 + i) * 0.1, c.z - 0.3 - (i % 3) * 0.35);
   }
 
   /** Where a stop window sits so the code is as big as possible, with the character beside or below it. */
@@ -795,6 +796,8 @@ export class PlayerWorld {
       w.win.update(dt);
     }
     this.debt.forEach((d, i) => {
+      // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
+      d.win.group.visible = this.camMode !== 'portrait';
       d.win.group.position.lerp(this.debtSlot(i), 1 - Math.exp(-dt * 4));
       this.faceCamera(d.win.group);
       d.win.group.rotateZ(Math.sin(this.clock * 3 + i) * 0.08);

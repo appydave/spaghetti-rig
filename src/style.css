@@ -257,7 +257,7 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 .result .p2 .stamp, .ending .p2 .stamp { color: #3f7d5a; }
 .result p, .ending p { font-size: 1.5rem; max-width: 34rem; background: rgba(244,244,232,.9); padding: 0.8rem 1.2rem; border: 0.12rem solid var(--ink); margin: 0; line-height: 1.35; }
 .result .label, .ending .label { background: var(--ink); color: var(--paper); padding: 0.4rem 0.8rem; }
-.result .score { font-size: 1.1rem; letter-spacing: 0.14em; font-weight: 700; }
+.result .score { font-size: 1.1rem; letter-spacing: 0.14em; font-weight: 700; background: var(--paper); border: 0.12rem solid var(--ink); padding: 0.3rem 0.8rem; }
 @keyframes stamp { from { transform: scale(2.4) rotate(-14deg); opacity: 0; } }
 .result .next, .ending .next { position: absolute; bottom: 2.2rem; left: 50%; transform: translateX(-50%); font-size: 0.9rem; letter-spacing: 0.14em; font-weight: 700; background: var(--yellow); border: 0.14rem solid var(--ink); padding: 0.8rem 1.2rem; }
 

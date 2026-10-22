@@ -179,6 +179,8 @@ function drawLine(g: CanvasRenderingContext2D, line: Line, x0: number, y: number
 }
 
 function drawMarks(g: CanvasRenderingContext2D, marks: Mark[], tx: number, y: number, h: number, cw: number, line: Line) {
+  // Pins sit after the line's last character, so they never cover the code that follows a mark.
+  let pinX = tx + Math.max(line.text.trimEnd().length * cw, 0) + 24;
   for (const m of marks) {
     const empty = line.text.trim() === '';
     const x1 = tx + (empty ? 0 : m.from * cw), x2 = tx + (empty ? cw * 10 : m.to * cw);
@@ -202,7 +204,7 @@ function drawMarks(g: CanvasRenderingContext2D, marks: Mark[], tx: number, y: nu
       if (m.kind === 'fix') { g.fillStyle = 'rgba(142,240,138,.13)'; roundRect(g, x1 - 6, y + 3, x2 - x1 + 12, h - 6, 7); g.fill(); }
       roundRect(g, x1 - 6, y + 3, x2 - x1 + 12, h - 6, 7); g.stroke();
     }
-    if (m.pin) pin(g, x2 + 24, y + 14, m.pin, PIN[m.kind]);
+    if (m.pin) { pinX = Math.max(pinX, x2 + 24); pin(g, pinX, y + 14, m.pin, PIN[m.kind]); pinX += 36; }
   }
 }
 
