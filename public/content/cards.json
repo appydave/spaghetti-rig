@@ -1,0 +1,2813 @@
+{
+  "version": 12,
+  "about": "Card data for the Spaghetti Rig game. IDs are global and never reused; a new card takes the next free number. 'evidence.status' is 'example' until the card is refilled from the game's own rebuild (commit, file, diff, number), then 'real'.",
+  "nextId": "#42",
+  "annotationKinds": {
+    "problem": "Something wrong in the code. Shown as an editor-style red squiggle in plain code, a red strike in a diff.",
+    "fix": "What the gate changed. Shown as a green box in a diff.",
+    "note": "Worth pointing at, neither wrong nor fixed. Shown as an amber underline.",
+    "number": "A count or result in tool output. Shown as an amber box."
+  },
+  "screens": {
+    "title": {
+      "id": "#01",
+      "big": "Spaghetti Rig",
+      "sub": "Walk the gates. Shoot to learn."
+    },
+    "vs": {
+      "id": "#02",
+      "p1": "Vibe-coded · no gates",
+      "p2": "Gated"
+    }
+  },
+  "tiers": [
+    {
+      "n": 1,
+      "key": "foundation",
+      "name": "Foundation",
+      "gates": "G00–G02",
+      "idea": "Make the checks run, and stop the code lying about types.",
+      "boss": {
+        "id": "#13",
+        "name": "The Friday PR",
+        "idea": "One pull request that breaks every rule in the tier at once.",
+        "attack": "One pull request with all four sins: no CI step, messy layout, an 'any', a new cast.",
+        "p1": "It merges. Main breaks on Monday and nobody knows which line did it.",
+        "p2": "Four red checks. The PR can't merge until each one is fixed.",
+        "say": "A tier's gates work together: the boss is the PR that would have got through without them.",
+        "presenter": [
+          "The boss recaps the tier: every card the player just saw, fired at once. It is the natural place for the tier's VS score."
+        ],
+        "parts": [
+          {
+            "part": "a blind eye",
+            "from": "#03 checks nobody runs",
+            "beatenBy": "ci"
+          },
+          {
+            "part": "a tangled body",
+            "from": "#05 ugly code",
+            "beatenBy": "prettier"
+          },
+          {
+            "part": "a mask",
+            "from": "#07 'any' hides the bugs",
+            "beatenBy": "lint"
+          },
+          {
+            "part": "a fake 'trust me' badge",
+            "from": "#09 casts that lie",
+            "beatenBy": "casts"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        },
+        "playable": true
+      }
+    },
+    {
+      "n": 2,
+      "key": "shape",
+      "name": "Shape",
+      "gates": "G03–G05",
+      "idea": "Spacing, size limits, named numbers and colours.",
+      "boss": {
+        "id": "#26",
+        "name": "The 900-line file",
+        "idea": "One file that does everything. (idea only)",
+        "parts": [
+          {
+            "part": "a body with no joints",
+            "from": "#14 a wall of code",
+            "beatenBy": "spacing"
+          },
+          {
+            "part": "one swollen arm",
+            "from": "#17 the function that does everything",
+            "beatenBy": "size"
+          },
+          {
+            "part": "numbers tattooed all over",
+            "from": "#20 numbers nobody can read",
+            "beatenBy": "magic"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        },
+        "playable": true,
+        "attack": "One file of 900 lines: no braces, no gaps, a 400-line function and numbers nobody can read.",
+        "p1": "Nobody will touch it. Every change takes a day and breaks something else.",
+        "p2": "Each gate went in and fixed its own mess: spacing by the machine, the big function split, every number named.",
+        "say": "Shape is about code you can read. The boss is the file nobody wants to open.",
+        "presenter": [
+          "The tier 2 boss recaps G03, G04, G05 and G07."
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "key": "complexity",
+      "name": "Complexity",
+      "gates": "G06",
+      "idea": "No function too tangled to follow.",
+      "boss": {
+        "id": "#29",
+        "name": "The if-pyramid",
+        "idea": "A function nested ten levels deep that nobody dares to touch.",
+        "parts": [
+          {
+            "part": "a stack of nested ifs",
+            "from": "#27 the if-pyramid",
+            "beatenBy": "complexity"
+          },
+          {
+            "part": "a tangle of && and ||",
+            "from": "#27 the chained ternary",
+            "beatenBy": "complexity"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        },
+        "attack": "One function with ten nested ifs, a loop in every branch and a ternary chain to choose the result.",
+        "p1": "Every bug fix adds another if. Nobody can say which paths are tested.",
+        "p2": "Three limits in CI; the pyramid is cut into small named functions, each with one job.",
+        "say": "Complexity is about code you can follow. The boss is the function nobody can.",
+        "presenter": [
+          "The tier 3 boss recaps G06. On AppyRig the real one was parseBlocks (cognitive 74)."
+        ],
+        "playable": true
+      }
+    },
+    {
+      "n": 4,
+      "key": "duplication",
+      "name": "Duplication",
+      "gates": "G08",
+      "idea": "One copy of each idea.",
+      "boss": {
+        "id": "#32",
+        "name": "The clone army",
+        "idea": "The same block of code in six places, one slightly different each time.",
+        "parts": [
+          {
+            "part": "identical soldiers",
+            "from": "#30 the same handler, twice",
+            "beatenBy": "jscpd"
+          },
+          {
+            "part": "soldiers in disguise",
+            "from": "#30 renamed copies",
+            "beatenBy": "jscpd"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        },
+        "attack": "The same 30 lines pasted into six files. Two have renamed variables, one has different numbers, one is written differently to do the same job.",
+        "p1": "A bug is fixed in one copy. The other five keep it for months.",
+        "p2": "Five checks in CI, each on a list of today's clones. Every copy is merged into one shared helper.",
+        "say": "Duplication is about fixes that don't spread. The boss is the bug you already fixed once.",
+        "presenter": [
+          "The tier 4 boss recaps G08. On AppyRig the cut was 206 clones to 170, and the biggest family left is a test scaffold copied into 13 files."
+        ],
+        "playable": true
+      }
+    },
+    {
+      "n": 5,
+      "key": "structure",
+      "name": "Structure",
+      "gates": "G09–G12",
+      "idea": "Folder sizes, imports, dead code, layer rules.",
+      "boss": {
+        "id": "#41",
+        "name": "The tangle",
+        "idea": "A crowded folder of dead code, ../../ paths and files that import each other.",
+        "parts": [
+          {
+            "part": "a crowd with no order",
+            "from": "#33 the crowded folder",
+            "beatenBy": "folders"
+          },
+          {
+            "part": "paths that count dots",
+            "from": "#35 the ../../ path",
+            "beatenBy": "aliases"
+          },
+          {
+            "part": "dead limbs",
+            "from": "#37 the code nobody uses",
+            "beatenBy": "knip"
+          },
+          {
+            "part": "a chain biting its own tail",
+            "from": "#37 import cycles",
+            "beatenBy": "knip"
+          },
+          {
+            "part": "a wall with a hole in it",
+            "from": "#39 the layer leak",
+            "beatenBy": "boundaries"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        },
+        "attack": "One folder of sixty files, full of ../../ imports, unused code and two files that import each other, with the server reaching into the client.",
+        "p1": "Move any file and ten others break. Nobody can say what depends on what.",
+        "p2": "Folders capped, imports say where code lives, dead code deleted, loops cut and the layer walls checked in CI.",
+        "say": "Structure is about where things live. The boss is the repo where nothing is where you'd look.",
+        "presenter": [
+          "The tier 5 boss recaps G09 to G12. On AppyRig: e2e 16 → 9 files, 539 → 2 root imports, 1,192 → 1,003 dead-code findings, and 12 boundary rules at 0 violations."
+        ],
+        "playable": true
+      }
+    },
+    {
+      "n": 6,
+      "key": "architecture",
+      "name": "Architecture",
+      "gates": "G13–G15",
+      "idea": "Modules that hang together and don't lean on everything.",
+      "boss": {
+        "id": null,
+        "name": "The god module",
+        "idea": "Final boss: the module everything depends on. (idea only)",
+        "parts": [
+          {
+            "part": "cables to everything",
+            "from": "coupling hubs",
+            "beatenBy": "archlint"
+          }
+        ],
+        "visual": {
+          "medium": "tbd: image, video, computer graphic, or a mix",
+          "layer": "tbd: video overlay on the game, drawn in-game, or both",
+          "beats": [
+            "entrance",
+            "attack (its parts, one per sin)",
+            "P2 knocks off each part with its tool",
+            "P1 is buried"
+          ],
+          "status": "structure only; style waits until the game is built"
+        }
+      }
+    }
+  ],
+  "tools": {
+    "ci": {
+      "name": "CI (continuous integration)",
+      "what": "A robot (GitHub Actions) that runs a list of checks on every pull request.",
+      "why": "A check that only runs when someone remembers is a check that never runs. CI makes every gate automatic.",
+      "how": "The steps live in .github/workflows/ci.yml. A red step blocks the merge button.",
+      "config": {
+        "file": ".github/workflows/ci.yml",
+        "status": "real",
+        "source": "AppyRig main 1f04ad0 (G00a)",
+        "lines": [
+          [
+            "- name: Format       run: npm run format:check",
+            "fails if any file isn't Prettier-formatted"
+          ],
+          [
+            "- name: Typecheck    run: npm run typecheck",
+            "fails on any TypeScript error"
+          ],
+          [
+            "- name: Lint         run: npm run lint",
+            "ESLint: spacing, size and the other gates"
+          ],
+          [
+            "- name: Test         run: npm test",
+            "every unit test must pass"
+          ]
+        ]
+      }
+    },
+    "prettier": {
+      "name": "Prettier (code formatter)",
+      "what": "A tool that rewrites code into one fixed layout: spaces, line breaks, quotes.",
+      "why": "Layout arguments and whitespace noise disappear from every diff, so reviewers see only real changes.",
+      "how": "format:check runs in CI and fails on any file Prettier would change. Editors run it on save.",
+      "config": {
+        "file": ".prettierrc",
+        "status": "real",
+        "source": "AppyRig main 1f04ad0 (G01)",
+        "lines": [
+          [
+            "\"singleQuote\": true",
+            "strings use 'single' quotes"
+          ],
+          [
+            "\"tabWidth\": 2",
+            "indent by 2 spaces"
+          ],
+          [
+            "\"printWidth\": 100",
+            "wrap lines at 100 characters"
+          ],
+          [
+            "\"trailingComma\": \"es5\"",
+            "a comma after the last item, so diffs stay one line"
+          ]
+        ]
+      }
+    },
+    "lint": {
+      "name": "Oxlint (fast JavaScript linter) + anti-slop rules",
+      "what": "A linter reads every file and flags risky patterns. Anti-slop is Omer's rule set aimed at the shortcuts AI-written code likes to take.",
+      "why": "Shortcuts like 'any' switch off TypeScript's checking. The linter refuses them before they merge.",
+      "how": "Runs in CI. 'no-explicit-any' is an error. In the game every 'any' is replaced with a real type in the same PR, so the count goes to zero.",
+      "config": {
+        "file": "eslint.config.js + oxlint.config.ts",
+        "status": "real",
+        "source": "AppyRig main 1f04ad0 (G02)",
+        "lines": [
+          [
+            "'@typescript-eslint/no-explicit-any': 'error'",
+            "'any' fails the build instead of warning"
+          ],
+          [
+            "'anti-slop/no-chained-type-assertions': 'error'",
+            "no 'as unknown as T' double casts"
+          ],
+          [
+            "'anti-slop/no-unsafe-dictionary-type': 'error'",
+            "no loose Record<string, any> bags"
+          ],
+          [
+            "'anti-slop/no-module-mocking': 'error'",
+            "tests may not fake whole modules"
+          ]
+        ]
+      }
+    },
+    "spacing": {
+      "name": "Spacing rules (ESLint JavaScript linter + @stylistic plugin)",
+      "what": "Rules that demand braces on every if, and blank lines around blocks and returns.",
+      "why": "Dense code hides its own structure. Braces stop the classic bug where a second line looks inside an if but isn't.",
+      "how": "ESLint in the existing CI lint step. Every finding can be fixed automatically, so one run of eslint --fix clears them all in the same PR.",
+      "config": {
+        "file": "lint/spacing.js",
+        "status": "real",
+        "source": "AppyRig PR #16, main 6f4bbfb (G03)",
+        "lines": [
+          [
+            "curly: ['error', 'all']",
+            "every if/else gets braces"
+          ],
+          [
+            "'no-sequences': 'error'",
+            "no comma-joined expressions"
+          ],
+          [
+            "{ blankLine: 'always', prev: '*', next: 'return' }",
+            "a blank line before every return"
+          ],
+          [
+            "{ blankLine: 'always', prev: '*', next: ['function', 'class'] }",
+            "a blank line before every function and class"
+          ]
+        ]
+      }
+    },
+    "size": {
+      "name": "Size limits (ESLint JavaScript linter)",
+      "what": "Caps: a file 300 lines, a function 40, 3 parameters, 30 members.",
+      "why": "A big function does many things, so nobody can hold it in their head and every change risks the rest.",
+      "how": "ESLint core rules in CI. They can't be fixed automatically: someone has to split the code, and in the game that happens in the same PR.",
+      "config": {
+        "file": "lint/limits.js",
+        "status": "real",
+        "source": "AppyRig PR #18, gate/04-size 133f022 (G04)",
+        "lines": [
+          [
+            "'max-lines': ['error', { max: 300 }]",
+            "a file: 300 lines (test files 500)"
+          ],
+          [
+            "'max-lines-per-function': ['error', { max: 40 }]",
+            "a function: 40 lines (off in test files)"
+          ],
+          [
+            "'max-params': ['error', { max: 3 }]",
+            "at most 3 parameters"
+          ],
+          [
+            "ClassBody[body.length>30]",
+            "at most 30 members in a class, interface or object type"
+          ]
+        ]
+      }
+    },
+    "magic": {
+      "name": "No magic numbers (ESLint JavaScript linter)",
+      "what": "Only 0, 1 and −1 may appear bare in code; every other number needs a name. Colours must come from the palette.",
+      "why": "86400000 means nothing until you work it out. A name says what it is, and changing it means changing one place.",
+      "how": "no-magic-numbers in CI, calibrated for layout code, with the colour rule pointed at the app's CSS variables.",
+      "config": {
+        "file": "lint/numeric.js + stylelint.config.mjs",
+        "status": "real",
+        "source": "AppyRig PR #20, main 40a7d7f (G05)",
+        "lines": [
+          [
+            "'no-magic-numbers': ['error', { ignore: [0, 1, -1, 2] }]",
+            "only 0, 1, −1 and 2 may appear bare; every other number needs a name"
+          ],
+          [
+            "detectObjects: true",
+            "numbers inside objects count too, e.g. timeoutMs: 60000"
+          ],
+          [
+            "enforceConst: true",
+            "the name must be a const, so it can't drift"
+          ],
+          [
+            "'color-no-hex': true",
+            "no #hex colours in CSS"
+          ],
+          [
+            "'function-disallowed-list': ['rgb', 'rgba', 'hsl', …]",
+            "no rgb()/hsl() colours either"
+          ],
+          [
+            "overrides: tokens.css → rules off",
+            "the palette file is the one place colours are defined"
+          ]
+        ]
+      }
+    },
+    "casts": {
+      "name": "No type casts (Oxlint fast linter rule)",
+      "what": "A lint rule that bans 'as' casts: the code has to prove a type, not just claim it.",
+      "why": "A cast is a promise the compiler can't check. When it's wrong, the app crashes somewhere else, later.",
+      "how": "oxlint's typescript/consistent-type-assertions with assertionStyle 'never', in CI. Every cast is fixed in the same PR; data from outside is checked with a schema (such as Zod) where it comes in.",
+      "config": {
+        "file": "oxlint.config.ts",
+        "status": "planned",
+        "source": "Planned for the game; confirm on its own run. AppyRig used anti-slop/require-safety-comment-for-type-assertion with a marker nobody writes, so no comment can excuse a cast (ratchet).",
+        "lines": [
+          [
+            "'typescript/consistent-type-assertions': ['error', { assertionStyle: 'never' }]",
+            "no 'as T' at all: prove the type instead"
+          ]
+        ]
+      }
+    },
+    "complexity": {
+      "name": "Complexity limits (SonarJS code-quality rules)",
+      "what": "Three scores per function: cognitive (how hard it is to follow, nesting counts extra), cyclomatic (how many paths through it), expression (how many && / || / ?: in one line).",
+      "why": "A function you can't follow is where bugs hide. The score rises with every nested if, loop and early exit, so a pyramid of ifs fails long before it reaches 40 lines.",
+      "how": "eslint-plugin-sonarjs in the existing CI lint step: cognitive ≤ 8, cyclomatic ≤ 6, expression ≤ 3. None of it fixes itself: someone has to split the function.",
+      "config": {
+        "file": "lint/complexity.js",
+        "status": "real",
+        "source": "AppyRig PR #23, main d4464c2 (G06)",
+        "lines": [
+          [
+            "'sonarjs/cognitive-complexity': ['error', 8]",
+            "how hard a function is to follow: at most 8"
+          ],
+          [
+            "'sonarjs/cyclomatic-complexity': ['error', { threshold: 6 }]",
+            "at most 6 paths through a function"
+          ],
+          [
+            "'sonarjs/expression-complexity': ['error', { max: 3 }]",
+            "at most 3 && / || / ?: in one expression"
+          ],
+          [
+            "plainCyclomatic (≈20-line wrapper)",
+            "turns SonarJS's JSON message into plain text an agent can act on"
+          ]
+        ]
+      }
+    },
+    "jscpd": {
+      "name": "jscpd (JavaScript Copy/Paste Detector)",
+      "what": "Five checks that each find copied code in a different way: exact copies; copies with renamed variables; copies with renamed variables and changed values; copies with a similar shape (compared as a syntax tree); and copies that do the same job written differently (found by an AI model).",
+      "why": "A copy is a bug that gets fixed in one place and stays alive in the others. An AI agent copies code readily, so clones multiply faster than anyone notices.",
+      "how": "Check 1, exact: the same run of words, 90 tokens or 9 lines. Check 2, renamed variables: the same code with other names, 130 tokens or 16 lines. Check 3, renamed and changed values: the same code with other names and other literals, 240 tokens. Check 4, similar shape: the code is parsed into a syntax tree (the structure of the code, not its text) and trees that are 85% alike count. Check 5, semantic: an AI embedding model, CodeRankEmbed, turns each function into numbers and finds functions that do the same thing written differently. It runs locally on the M2, with no cloud service. None of it fixes itself: someone has to merge the copies into one.",
+      "config": {
+        "file": ".jscpd.json + package.json lint:duplicates:*",
+        "status": "real",
+        "source": "AppyRig PR #25 (G08), #26/#29 (semantic on the M2 runner)",
+        "lines": [
+          [
+            "--min-tokens 90 --min-lines 9",
+            "exact: a copy of 90 tokens or 9 lines is a clone"
+          ],
+          [
+            "--ignore-identifiers --min-tokens 130 --min-lines 16",
+            "renamed variables: 130 tokens or 16 lines"
+          ],
+          [
+            "--ignore-identifiers --ignore-literals --min-tokens 240 --min-lines 1",
+            "renamed and changed values: 240 tokens"
+          ],
+          [
+            "--kind similar,gap,ast --similarity 0.85",
+            "similar shape: syntax trees 85% alike"
+          ],
+          [
+            "--semantic --semantic-model CodeRankEmbed --semantic-threshold 0.90",
+            "semantic: the AI model says 90% the same job"
+          ],
+          [
+            "runs-on: [self-hosted, m2, semantic]",
+            "the semantic check runs on the M2, with a cache on disk"
+          ]
+        ]
+      }
+    },
+    "folders": {
+      "name": "Folder size limit (custom script lint/folder-limits.mjs)",
+      "what": "A script that counts the files and subfolders directly inside every folder and fails when a folder holds more than 10 of either.",
+      "why": "A folder with 60 files can't be read at a glance, and an agent has to open them one by one to find the right one. A small folder is a table of contents.",
+      "how": "lint/folder-limits.mjs asks git for every tracked file, counts the direct children of each folder under the code roots, and compares with a recorded baseline. A folder only fails if it grows past its recorded count. The fix is to move files into subfolders that match the code they test or use.",
+      "config": {
+        "file": "lint/folder-limits.mjs + folder-baseline.json",
+        "status": "real",
+        "source": "AppyRig PR #28 (G09 check), #31 (G09 fix)",
+        "lines": [
+          [
+            "export const MAX_FILES = 10",
+            "at most 10 files directly in a folder"
+          ],
+          [
+            "export const MAX_SUBFOLDERS = 10",
+            "at most 10 subfolders directly in a folder"
+          ],
+          [
+            "SCANNED = ['client/src', 'server/src', 'shared/src', 'e2e', 'test', 'lint', …]",
+            "the code and test roots that are counted"
+          ],
+          [
+            "NOT_SCANNED = ['test/fixtures/', 'server/src/core/vendor/', …]",
+            "vendored and recorded files are not counted"
+          ],
+          [
+            "npm run folders",
+            "fails on any folder above its baseline"
+          ]
+        ]
+      }
+    },
+    "aliases": {
+      "name": "Root imports (ESLint no-restricted-imports + path aliases)",
+      "what": "A ban on '../' imports. Code from another folder is imported by a short project name, such as @client/pages/page-test-kit.js, which says where it lives.",
+      "why": "A path like ../../test/fleetFixtures.js breaks whenever a file moves, and one '../' too many quietly imports the wrong file. Agents get these counts wrong all the time.",
+      "how": "ESLint's no-restricted-imports bans '../', and a few extra rules cover import(), require and computed paths. Five aliases (@client, @server, @collector, @shared, @root) are defined once in tsconfig paths. A 20-line script rewrote the old imports; after that, the lint rule keeps new ones out. Imports within the same folder stay './'.",
+      "config": {
+        "file": "lint/imports.js + tsconfig paths",
+        "status": "real",
+        "source": "AppyRig PR #32 (G10)",
+        "lines": [
+          [
+            "'no-restricted-imports': ['error', { patterns: [{ regex: '^\\\\.\\\\./' }] }]",
+            "a '../' import is an error"
+          ],
+          [
+            "ImportExpression[source.value=/^\\\\.\\\\.[/]/]",
+            "the same ban for import(), types and require"
+          ],
+          [
+            "@client/… @server/… @collector/… @shared/… @root/…",
+            "the five aliases, one per part of the repo"
+          ],
+          [
+            "lint/root-imports-codemod.mjs",
+            "rewrote 524 imports in 178 files in one pass"
+          ],
+          [
+            "message: \"Import with a project alias instead of '../'\"",
+            "the error text names the fix for an agent"
+          ]
+        ]
+      }
+    },
+    "knip": {
+      "name": "Knip (dead code finder) + dependency-cruiser no-circular (import cycles)",
+      "what": "Knip finds code nothing uses: files, exports and packages. dependency-cruiser's no-circular rule finds files that import each other in a loop.",
+      "why": "Dead code gets read, copied and extended by agents that think it matters. A cycle means two files can't be loaded or tested alone.",
+      "how": "lint/knip-gate.mjs runs Knip twice (normal and --production) and ratchets the findings per file and type against knip-baseline.json. no-circular runs in dependency-cruiser, and a second config checks folder-level cycles. Both sit on a baseline: only new findings fail, and deleting dead code lowers the baseline.",
+      "config": {
+        "file": "knip.json + lint/knip-gate.mjs + .dependency-cruiser.cjs",
+        "status": "real",
+        "source": "AppyRig PR #33 (G11 check), #34 (G11 fix)",
+        "lines": [
+          [
+            "\"includeEntryExports\": true",
+            "an export nobody imports counts as dead"
+          ],
+          [
+            "\"client\": { \"entry\": [\"src/main.tsx!\"] }",
+            "what starts the app; anything it can't reach is dead"
+          ],
+          [
+            "npm run knip",
+            "Knip twice (normal and --production) against a baseline"
+          ],
+          [
+            "name: 'no-circular'",
+            "A imports B imports A is an error"
+          ],
+          [
+            "viaOnly: { dependencyTypesNot: ['type-only', 'dynamic-import'] }",
+            "type-only and dynamic imports don't count as a loop"
+          ],
+          [
+            ".dependency-cruiser-folders.cjs",
+            "the same rule one level up, for folder cycles"
+          ]
+        ]
+      }
+    },
+    "boundaries": {
+      "name": "dependency-cruiser layer rules (reachable)",
+      "what": "Rules about which layers may import which, checked even when the import goes through another file.",
+      "why": "Layers leak a little at a time: UI code reaching into the server, production code pulling in a test helper. Once a layer leans on another, neither can change alone.",
+      "how": "Each rule says 'files here must not reach files there'. With reachable: true the rule follows the whole import chain, so going round a boundary through a helper file doesn't help. Three more rules keep dev-only packages, tests and deprecated Node modules out of production code. Each rule was proved by planting a violation and watching it fail.",
+      "config": {
+        "file": ".dependency-cruiser.cjs",
+        "status": "real",
+        "source": "AppyRig PR #35 (G12)",
+        "lines": [
+          [
+            "to: { path: '^(server|collector)/', reachable: true }",
+            "client code can't reach the server, even through other files"
+          ],
+          [
+            "name: 'client-lib-is-a-leaf'",
+            "client/lib imports nothing else from the client"
+          ],
+          [
+            "name: 'collector-adapters-below-orchestration'",
+            "adapters can't import the code that runs them"
+          ],
+          [
+            "name: 'not-to-dev-dep'",
+            "production code can't import a dev-only package"
+          ],
+          [
+            "name: 'not-to-spec'",
+            "production code can't import a test or fixture"
+          ],
+          [
+            "name: 'no-deprecated-core'",
+            "no deprecated Node modules (an error, not a warning)"
+          ]
+        ]
+      }
+    }
+  },
+  "stops": [
+    {
+      "tier": "foundation",
+      "gate": "G00a · CI runs every gate",
+      "p1": {
+        "id": "#03",
+        "title": "Checks nobody runs",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "\"scripts\": {"
+              ],
+              [
+                "c",
+                "  \"lint\": \"eslint .\","
+              ],
+              [
+                "c",
+                "  \"format:check\": \"prettier --check .\""
+              ],
+              [
+                "c",
+                "}"
+              ],
+              [
+                "c",
+                "# .github/workflows/ci.yml: npm test only"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 4,
+            "match": "npm test only",
+            "kind": "problem",
+            "note": "CI runs the tests and nothing else. lint and format:check exist but never run."
+          }
+        ],
+        "text": "The checks exist, but CI never runs them. Red goes unnoticed until someone looks.",
+        "say": "A check that nothing runs is the same as no check.",
+        "presenter": [
+          "package.json lists the checks as scripts. A script is just a shortcut someone can type. Nothing types it unless CI does."
+        ],
+        "evidence": {
+          "status": "example"
+        }
+      },
+      "p2": {
+        "id": "#04",
+        "title": "Tool: CI runs every check",
+        "tool": "ci",
+        "blocks": [
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                ".github/workflows/ci.yml"
+              ],
+              [
+                "c",
+                "      - run: npm test"
+              ],
+              [
+                "a",
+                "      - run: npm run format:check"
+              ],
+              [
+                "a",
+                "      - run: npm run arch:check"
+              ],
+              [
+                "a",
+                "      - run: npm run provenance"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 2,
+            "match": "format:check",
+            "kind": "fix",
+            "note": "Now runs on every PR."
+          }
+        ],
+        "text": "Every check runs on every PR. A red check blocks the merge.",
+        "num": "AppyRig: 3 checks added to CI · 13 banned strings → 0",
+        "say": "Before any gate, make CI run all of them. Every gate after this one lands here.",
+        "presenter": [
+          "This gate adds no new rule. It wires up the rules that already existed, so every later gate has somewhere to run."
+        ],
+        "evidence": {
+          "status": "example",
+          "source": "AppyRig gate G00a (number only)"
+        },
+        "answers": "#03"
+      }
+    },
+    {
+      "tier": "foundation",
+      "gate": "G01 · Formatting",
+      "p1": {
+        "id": "#05",
+        "title": "Ugly code, noisy diffs",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "function load( rig ){"
+              ],
+              [
+                "c",
+                "if(!rig) {return null}"
+              ],
+              [
+                "c",
+                "    const seats=rig.seats .map( s=>s.name )"
+              ],
+              [
+                "c",
+                "  return {name:rig.name,seats}}"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 2,
+            "match": "    const",
+            "kind": "problem",
+            "note": "Indent jumps to 4 spaces for no reason."
+          },
+          {
+            "block": 0,
+            "row": 3,
+            "match": "seats}}",
+            "kind": "problem",
+            "note": "Two closing braces crammed on one line."
+          }
+        ],
+        "text": "Every editor formats differently, so every diff is full of whitespace noise.",
+        "say": "When the layout changes every commit, you can't see the real change.",
+        "presenter": [
+          "The code works. The cost is in review: a one-word change shows up as a whole rewritten block."
+        ],
+        "evidence": {
+          "status": "example"
+        }
+      },
+      "p2": {
+        "id": "#06",
+        "title": "Tool: Prettier comb",
+        "tool": "prettier",
+        "blocks": [
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "server/src/rigs.ts"
+              ],
+              [
+                "d",
+                "function load( rig ){"
+              ],
+              [
+                "d",
+                "if(!rig) {return null}"
+              ],
+              [
+                "a",
+                "function load(rig) {"
+              ],
+              [
+                "a",
+                "  if (!rig) return null;"
+              ],
+              [
+                "d",
+                "    const seats=rig.seats .map( s=>s.name )"
+              ],
+              [
+                "a",
+                "  const seats = rig.seats.map((s) => s.name);"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 6,
+            "match": "rig.seats.map((s) => s.name)",
+            "kind": "fix",
+            "note": "Same code, one standard layout."
+          }
+        ],
+        "text": "One format for everyone. format:check fails the build on anything else.",
+        "num": "AppyRig: already in place, so it should have been verify-only",
+        "say": "A machine decides the layout, so people and agents stop arguing about it.",
+        "presenter": [
+          "On AppyRig this gate found nothing to do: Prettier already ran in CI from G00a. That led to the 'already in place' rule."
+        ],
+        "evidence": {
+          "status": "example",
+          "source": "AppyRig gate G01 (number only)"
+        },
+        "answers": "#05"
+      }
+    },
+    {
+      "tier": "foundation",
+      "gate": "G02 · Lint + anti-slop",
+      "p1": {
+        "id": "#07",
+        "title": "\"any\" hides the bugs",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "const data: any = await res.json();"
+              ],
+              [
+                "c",
+                "return data.seats.lenght; // typo, no error"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "any",
+            "kind": "note",
+            "note": "'any' tells TypeScript: don't check this value."
+          },
+          {
+            "block": 0,
+            "row": 1,
+            "match": "lenght",
+            "kind": "problem",
+            "note": "Typo for 'length'. No error, because 'any' switched checking off."
+          }
+        ],
+        "text": "With \"any\", TypeScript stops checking. The typo ships.",
+        "say": "\"any\" switches the type checker off for that value.",
+        "presenter": [
+          "At run time data.seats.lenght doesn't crash. Asking a list for a property it doesn't have just gives undefined.",
+          "So the bug is silent: the screen shows a blank or 'undefined' instead of a number, and nothing in the logs says why."
+        ],
+        "evidence": {
+          "status": "example"
+        },
+        "failureModes": [
+          {
+            "input": "seats is a list",
+            "where": "line 2",
+            "result": "No crash. .lenght is undefined, so the screen shows a blank. The silent case."
+          },
+          {
+            "input": "seats is missing",
+            "where": "line 2",
+            "result": "Crash: Cannot read properties of undefined (reading 'lenght')."
+          },
+          {
+            "input": "the response isn't JSON",
+            "where": "line 1",
+            "result": "res.json() throws before anything else runs."
+          }
+        ]
+      },
+      "p2": {
+        "id": "#08",
+        "title": "Tool: lint laser",
+        "tool": "lint",
+        "blocks": [
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/fleet/load.ts"
+              ],
+              [
+                "d",
+                "const data: any = await res.json();"
+              ],
+              [
+                "a",
+                "const data = RigSchema.parse(await res.json());"
+              ],
+              [
+                "d",
+                "return data.seats.lenght;"
+              ],
+              [
+                "a",
+                "return data.seats.length;"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 2,
+            "match": "RigSchema.parse",
+            "kind": "fix",
+            "note": "Checks the data's shape when it arrives, and gives TypeScript the real type."
+          },
+          {
+            "block": 0,
+            "row": 4,
+            "match": "length",
+            "kind": "fix",
+            "note": "With a real type, the typo is now a compile error, so it gets fixed."
+          }
+        ],
+        "text": "Oxlint plus the anti-slop rules. \"any\" is now an error, so this fails CI.",
+        "num": "Game: every 'any' → 0 in this PR (AppyRig baselined 275)",
+        "say": "The linter reads every file on every PR and refuses the shortcuts AI likes to take.",
+        "presenter": [
+          "RigSchema is a Zod schema: a description of what a Rig looks like that runs at run time. parse() throws a clear error if the data doesn't match, at the door, instead of a crash deep inside the app."
+        ],
+        "evidence": {
+          "status": "example",
+          "source": "AppyRig gate G02 (number only)"
+        },
+        "answers": "#07",
+        "failureModes": [
+          {
+            "input": "data matches RigSchema",
+            "where": "—",
+            "result": "Works, and the typo can't compile any more."
+          },
+          {
+            "input": "data has the wrong shape",
+            "where": "line 1",
+            "result": "parse() throws at the door, naming the bad field. One clear error instead of a crash deep inside the app."
+          }
+        ]
+      }
+    },
+    {
+      "tier": "foundation",
+      "gate": "G02 · No type casts",
+      "p1": {
+        "id": "#09",
+        "title": "Casts that lie",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "const rig = payload as Rig;    // \"trust me, it's a Rig\""
+              ],
+              [
+                "c",
+                "const seat = rig.seats[0] as Seat;"
+              ],
+              [
+                "c",
+                "seat.pod.name;  // seats: [] → seat is undefined → crash"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "as Rig",
+            "kind": "note",
+            "note": "Erased when TypeScript compiles. At run time this line is just: const rig = payload."
+          },
+          {
+            "block": 0,
+            "row": 1,
+            "match": "as Seat",
+            "kind": "note",
+            "note": "Same again: no check, no conversion."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "seat.pod",
+            "kind": "problem",
+            "note": "Crashes here when the list of seats is empty."
+          }
+        ],
+        "text": "A cast (\"as Rig\") tells TypeScript to stop checking and trust you. It believes you even when you're wrong, and the app crashes at run time instead.",
+        "say": "Every \"as\" is a promise the compiler can't check.",
+        "presenter": [
+          "\"as Rig\" does nothing at run time. TypeScript deletes it when it compiles, so rig is exactly whatever payload was. It never becomes nil: JavaScript has no nil, it has null and undefined, and the cast produces neither.",
+          "So yes, it can crash on line 2. The card shows the empty-list case, where it gets one line further."
+        ],
+        "evidence": {
+          "status": "example"
+        },
+        "failureModes": [
+          {
+            "input": "{ seats: [] }  empty list",
+            "where": "line 3",
+            "result": "rig.seats[0] is undefined, so seat.pod crashes."
+          },
+          {
+            "input": "{ }  no seats at all",
+            "where": "line 2",
+            "result": "rig.seats is undefined, so rig.seats[0] crashes."
+          },
+          {
+            "input": "null",
+            "where": "line 2",
+            "result": "rig is null, so rig.seats crashes."
+          }
+        ]
+      },
+      "p2": {
+        "id": "#10",
+        "title": "Tool: prove the type",
+        "tool": "casts",
+        "steps": [
+          {
+            "text": "The linter now bans 'as' casts. A new one fails the PR.",
+            "block": 0
+          },
+          {
+            "text": "The fix: check the data once, where it comes in. A schema proves it's a Rig, or says exactly what's wrong.",
+            "block": 1
+          },
+          {
+            "text": "Every cast in the game goes the same way, in this one PR.",
+            "block": 1
+          }
+        ],
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "CI · lint"
+              ],
+              [
+                "d",
+                "load.ts:12  consistent-type-assertions: 'as Rig'  ✗ FAIL"
+              ],
+              [
+                "c",
+                "prove the type instead of promising it"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "src/fleet/load.ts"
+              ],
+              [
+                "d",
+                "const rig = payload as Rig;"
+              ],
+              [
+                "a",
+                "const rig = RigSchema.parse(payload); // checked where it comes in"
+              ],
+              [
+                "d",
+                "const seat = rig.seats[0] as Seat;"
+              ],
+              [
+                "a",
+                "const seat = rig.seats.at(0);  // Seat | undefined"
+              ],
+              [
+                "a",
+                "if (!seat) return showNoSeats();"
+              ],
+              [
+                "c",
+                "casts in the game: 7 → 0  ✓"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "'as Rig'",
+            "kind": "problem",
+            "note": "Any new cast blocks the PR. No baseline, no count to stay under."
+          },
+          {
+            "block": 1,
+            "row": 2,
+            "match": "RigSchema.parse(payload)",
+            "kind": "fix",
+            "note": "Bad data fails here with a clear message, not three lines later with a crash."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "Seat | undefined",
+            "kind": "fix",
+            "note": "TypeScript now makes you handle the empty list."
+          },
+          {
+            "block": 1,
+            "row": 6,
+            "match": "7 → 0",
+            "kind": "number",
+            "note": "One PR fixes every cast; the rule stops new ones."
+          }
+        ],
+        "num": "Game: every cast removed in one PR",
+        "say": "Don't promise the type. Prove it once, where the data comes in.",
+        "presenter": [
+          "The 7 is a placeholder until the game's own run gives the real count.",
+          "RigSchema.parse covers all three ways #09 crashes (empty list, no seats, null): each one fails at the door with a message saying which field is wrong.",
+          "AppyRig went the other way: 204 casts, too many for one PR, so it froze the count and only lets it go down (a ratchet, like Omer's commit e80b884). Worth one line on camera as the big-codebase version of this card."
+        ],
+        "evidence": {
+          "status": "example"
+        },
+        "answers": "#09"
+      }
+    },
+    {
+      "tier": "shape",
+      "gate": "G03 · Readable spacing (all spacing rules)",
+      "p1": {
+        "id": "#14",
+        "title": "A wall of code",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "const origin = first(headers.origin);"
+              ],
+              [
+                "c",
+                "if (origin !== undefined) return localUrl(origin, port);"
+              ],
+              [
+                "c",
+                "const host = first(headers.host);"
+              ],
+              [
+                "c",
+                "return host !== undefined && localUrl(`http://${host}`, port);"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "return localUrl(origin, port);",
+            "kind": "problem",
+            "note": "No braces: the if and its return share one line."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "const host",
+            "kind": "note",
+            "note": "No blank line, so the early exit and the next step run together."
+          }
+        ],
+        "text": "Four lines, two exits, no gaps. Your eye has to find the structure itself.",
+        "say": "Code you can't skim is code you won't review.",
+        "presenter": [
+          "This is real AppyRig code: client/src/app/devProxy.ts, isLocalDevRequest. It works fine. The cost is reading it.",
+          "Without braces, the classic bug is adding a second line under the if: it looks inside the if, but runs every time."
+        ],
+        "failureModes": [
+          {
+            "input": "someone adds a log line under the if",
+            "where": "line 2",
+            "result": "It runs every time, not just when origin is set. Braces make that impossible."
+          }
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig main 7034ac9, client/src/app/devProxy.ts:41-44"
+        }
+      },
+      "p2": {
+        "id": "#15",
+        "title": "Tool: spacing rules",
+        "tool": "spacing",
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "eslint · G03 spacing, measured on AppyRig"
+              ],
+              [
+                "c",
+                "curly                              1,444"
+              ],
+              [
+                "c",
+                "padding-line-between-statements    1,184"
+              ],
+              [
+                "c",
+                "lines-between-class-members           83"
+              ],
+              [
+                "c",
+                "no-sequences                           1"
+              ],
+              [
+                "d",
+                "total 2,712 findings in 292 files → all fixed in this PR"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/app/devProxy.ts"
+              ],
+              [
+                "c",
+                "const origin = first(headers.origin);"
+              ],
+              [
+                "a",
+                ""
+              ],
+              [
+                "d",
+                "if (origin !== undefined) return localUrl(origin, port);"
+              ],
+              [
+                "a",
+                "if (origin !== undefined) {"
+              ],
+              [
+                "a",
+                "  return localUrl(origin, port);"
+              ],
+              [
+                "a",
+                "}"
+              ],
+              [
+                "a",
+                ""
+              ],
+              [
+                "c",
+                "const host = first(headers.host);"
+              ],
+              [
+                "a",
+                ""
+              ],
+              [
+                "c",
+                "return host !== undefined && localUrl(`http://${host}`, port);"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 5,
+            "match": "2,712",
+            "kind": "number",
+            "note": "AppyRig's count. In the game the same rules go straight to zero in this PR."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "{",
+            "kind": "fix",
+            "note": "Braces: the if's body is now unmistakable."
+          },
+          {
+            "block": 1,
+            "row": 7,
+            "match": "",
+            "kind": "fix",
+            "note": "Blank lines split it into steps you can skim."
+          }
+        ],
+        "text": "All of Omer's spacing rules, from both his spacing commits, in one gate. The gate goes into CI and every finding is fixed in the same PR, so the count goes straight to zero.",
+        "num": "Game: spacing findings → 0 in this PR (AppyRig had 2,712)",
+        "say": "The machine fixed 2,712 problems in one pass, and the tests prove nothing broke.",
+        "presenter": [
+          "Measured on AppyRig, where the gate ran in two parts (freeze, then fix) because AppyRig is 48k lines of existing code. The game is vibe-coded fresh, so its gate fixes everything in one PR, as Omer did. These numbers are a stand-in until the game's own run.",
+          "How do you review a big mechanical fix? Re-run the fixer: if it changes nothing, the change was purely mechanical. Tests prove behaviour didn't change.",
+          "Omer added more spacing rules (block and declaration spacing, 3c484f4) two hours after his size gate, and the new blank lines pushed code back over the size limits, so he re-split it. AppyRig hit the same thing (+39 size findings). Here they're folded into one spacing gate before size: gates that add lines run before gates that count lines."
+        ],
+        "evidence": {
+          "status": "example",
+          "source": "Illustrated on real AppyRig code; refill from the game's own G03 PR"
+        },
+        "answers": "#14"
+      }
+    },
+    {
+      "tier": "shape",
+      "gate": "G04 · Size",
+      "p1": {
+        "id": "#17",
+        "title": "The function that does everything",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "function renderRigPage(rig, seats, pods, filter, mode, onPick) {"
+              ],
+              [
+                "c",
+                "  // load… sort… group by pod… filter… count…"
+              ],
+              [
+                "c",
+                "  // build the header… the legend… the seat tiles…"
+              ],
+              [
+                "c",
+                "  // handle clicks… keyboard… hover…"
+              ],
+              [
+                "c",
+                "  // …212 more lines"
+              ],
+              [
+                "c",
+                "}"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "rig, seats, pods, filter, mode, onPick",
+            "kind": "problem",
+            "note": "6 parameters: the limit is 3."
+          },
+          {
+            "block": 0,
+            "row": 4,
+            "match": "212 more lines",
+            "kind": "problem",
+            "note": "About 220 lines: the limit is 40."
+          }
+        ],
+        "text": "One function, nine jobs. Change the legend and you might break the keyboard.",
+        "say": "If a function needs a scroll bar, it's doing too much.",
+        "presenter": [
+          "React pages are functions, so a whole screen is often one giant function. That's where most size findings land."
+        ],
+        "evidence": {
+          "status": "example"
+        }
+      },
+      "p2": {
+        "id": "#18",
+        "title": "Tool: size limits",
+        "tool": "size",
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "eslint · G04 size limits"
+              ],
+              [
+                "c",
+                "file > 300 lines              51 files"
+              ],
+              [
+                "c",
+                "function > 40 lines          224 functions"
+              ],
+              [
+                "c",
+                "more than 3 parameters        51"
+              ],
+              [
+                "d",
+                "all fixed in this PR"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/pages/RigPage.tsx"
+              ],
+              [
+                "d",
+                "function renderRigPage(rig, seats, pods, filter, mode, onPick) {"
+              ],
+              [
+                "d",
+                "  // …220 lines"
+              ],
+              [
+                "a",
+                "function RigPage({ rig, view }: RigPageProps) {"
+              ],
+              [
+                "a",
+                "  const groups = groupSeatsByPod(rig, view.filter);"
+              ],
+              [
+                "a",
+                "  return <RigLayout header={<RigHeader rig={rig} />} body={<SeatGrid groups={groups} />} />;"
+              ],
+              [
+                "a",
+                "}"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 2,
+            "match": "224",
+            "kind": "number",
+            "note": "Measured before V1 was retired; refill from the real G04 run."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "groupSeatsByPod",
+            "kind": "fix",
+            "note": "One job, one name, testable on its own."
+          }
+        ],
+        "text": "Hard caps. The gate goes into CI and every finding is fixed in the same PR, so the count goes straight to zero.",
+        "num": "Game: functions over 40 lines → 0 in this PR",
+        "say": "Big functions get cut into named pieces, ten files at a time.",
+        "presenter": [
+          "Spacing came first on purpose: otherwise the cheapest way to pass '40 lines' is to cram code.",
+          "Splitting is real refactoring, not a tool fix. On a fresh game the functions are fewer, so one PR can fix them all, as Omer did."
+        ],
+        "evidence": {
+          "status": "example"
+        },
+        "answers": "#17",
+        "showConfig": true
+      }
+    },
+    {
+      "tier": "shape",
+      "gate": "G05 · Magic numbers",
+      "p1": {
+        "id": "#20",
+        "title": "Numbers nobody can read",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "c",
+                "setTimeout(refresh, 86400000);"
+              ],
+              [
+                "c",
+                "if (seats.length > 9) collapse();"
+              ],
+              [
+                "c",
+                "tile.style.color = '#c8841a';"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "86400000",
+            "kind": "problem",
+            "note": "One day in milliseconds. You have to work that out."
+          },
+          {
+            "block": 0,
+            "row": 1,
+            "match": "9",
+            "kind": "problem",
+            "note": "Why 9? Nobody remembers."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "'#c8841a'",
+            "kind": "problem",
+            "note": "A colour pasted in, so the palette can't change it."
+          }
+        ],
+        "text": "Every bare number is a question the next reader has to answer.",
+        "say": "A number without a name is a secret.",
+        "presenter": [
+          "Layout code is full of numbers (padding, sizes), so this gate is calibrated: it decides which numbers are worth naming."
+        ],
+        "evidence": {
+          "status": "example"
+        }
+      },
+      "p2": {
+        "id": "#21",
+        "title": "Tool: name the numbers",
+        "tool": "magic",
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "eslint · G05 no-magic-numbers (calibrated)"
+              ],
+              [
+                "c",
+                "bare numbers        ~1,144 (before V1 retired)"
+              ],
+              [
+                "d",
+                "all fixed in this PR"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/domain/refresh.ts"
+              ],
+              [
+                "a",
+                "const ONE_DAY_MS = 24 * 60 * 60 * 1000;"
+              ],
+              [
+                "d",
+                "setTimeout(refresh, 86400000);"
+              ],
+              [
+                "a",
+                "setTimeout(refresh, ONE_DAY_MS);"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "~1,144",
+            "kind": "number",
+            "note": "Noisy: layout numbers. The gate calibrates before freezing."
+          },
+          {
+            "block": 1,
+            "row": 1,
+            "match": "ONE_DAY_MS",
+            "kind": "fix",
+            "note": "The name says what it is; the maths shows it."
+          }
+        ],
+        "text": "Only 0, 1 and −1 may stand alone. The gate goes into CI and every finding is fixed in the same PR, so the count goes straight to zero.",
+        "num": "Game: bare numbers → 0 in this PR",
+        "say": "Now the code tells you what the number means.",
+        "presenter": [
+          "Omer's game used hex colours; AppyRig uses CSS variables and Tailwind, so the colour rule is pointed at those."
+        ],
+        "evidence": {
+          "status": "example"
+        },
+        "answers": "#20"
+      }
+    },
+    {
+      "tier": "complexity",
+      "gate": "G06 · Complexity",
+      "p1": {
+        "id": "#27",
+        "title": "The if-pyramid",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/lib/markdown.ts · parseBlocks (before)"
+              ],
+              [
+                "c",
+                "while (i < lines.length) {"
+              ],
+              [
+                "c",
+                "  if (line.trim() === '') { i++; continue; }"
+              ],
+              [
+                "c",
+                "  const fence = FENCE.exec(line);"
+              ],
+              [
+                "c",
+                "  if (fence) { while (…) { … } blocks.push(…); continue; }"
+              ],
+              [
+                "c",
+                "  if (h) { … continue; }   if (HR.test(line)) { … continue; }"
+              ],
+              [
+                "c",
+                "  if (/^\\s*>/.test(line)) { while (…) { … } … continue; }"
+              ],
+              [
+                "c",
+                "  if (line.includes('|') && … && …) { … ? … : … ? … : … }"
+              ],
+              [
+                "c",
+                "  // …lists, paragraphs: 170 lines in one loop"
+              ],
+              [
+                "c",
+                "}"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 4,
+            "match": "while (…)",
+            "kind": "problem",
+            "note": "A loop inside an if inside a loop: each level of nesting costs extra."
+          },
+          {
+            "block": 0,
+            "row": 7,
+            "match": "? … : … ? … :",
+            "kind": "problem",
+            "note": "A chained ternary: expression complexity over 3."
+          },
+          {
+            "block": 0,
+            "row": 8,
+            "match": "170 lines in one loop",
+            "kind": "number",
+            "note": "Cognitive complexity 74. The limit is 8."
+          }
+        ],
+        "text": "One loop reads every kind of Markdown block. Every new kind adds another branch, and every fix risks the others.",
+        "say": "If you need a whiteboard to follow a function, it's too complex.",
+        "presenter": [
+          "Real AppyRig code (client/src/lib/markdown.ts, before PR #24). Its cognitive complexity was 74, the worst in the codebase.",
+          "The score is SonarJS's cognitive complexity: +1 per if, loop or jump, plus extra for each level of nesting."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/lib/markdown.ts before PR #24 (main d4464c2)"
+        }
+      },
+      "p2": {
+        "id": "#28",
+        "title": "Tool: complexity limits",
+        "tool": "complexity",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "eslint · G06 complexity (AppyRig)"
+              ],
+              [
+                "c",
+                "cognitive > 8              158"
+              ],
+              [
+                "c",
+                "cyclomatic > 6             275"
+              ],
+              [
+                "c",
+                "expression > 3              60"
+              ],
+              [
+                "d",
+                "parseBlocks: cognitive 74 · split in PR #24"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/lib/markdown.ts"
+              ],
+              [
+                "d",
+                "function parseBlocks(lines) { /* 170-line loop, one branch per block kind */ }"
+              ],
+              [
+                "a",
+                "function parseFence(lines, i): Parsed | null { … }"
+              ],
+              [
+                "a",
+                "function parseHeadingBlock(lines, i): Parsed | null { … }"
+              ],
+              [
+                "a",
+                "function parseQuote(lines, i): Parsed | null { … }"
+              ],
+              [
+                "a",
+                "// …one parser per kind of block"
+              ],
+              [
+                "a",
+                "function parseBlocks(lines) {"
+              ],
+              [
+                "a",
+                "  while (i < lines.length) { const parsed = parseBlockAt(lines, i); blocks.push(parsed.block); i = parsed.next; }"
+              ],
+              [
+                "a",
+                "}"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 4,
+            "match": "parseBlocks: cognitive 74",
+            "kind": "number",
+            "note": "The worst function in AppyRig, fixed in G06's one slice."
+          },
+          {
+            "block": 1,
+            "row": 2,
+            "match": "parseFence",
+            "kind": "fix",
+            "note": "Each kind of block gets its own small parser: one job, one name."
+          },
+          {
+            "block": 1,
+            "row": 7,
+            "match": "parseBlockAt(lines, i)",
+            "kind": "fix",
+            "note": "The loop now just asks each parser in turn."
+          }
+        ],
+        "text": "Three limits go into CI. The fix is real refactoring: the tangled loop becomes one small parser per kind of block, with the same output.",
+        "num": "Game: every function under the limits in this PR (AppyRig: 493 baselined, slice 493 → 490)",
+        "say": "Untangle it into small named pieces, and prove the output didn't change.",
+        "presenter": [
+          "Proof the behaviour didn't change: the old and new parsers gave identical output on 201 Markdown files plus 20 edge cases.",
+          "Omer's own G06 tightened in steps (15 → 12 → 10 → 8). With a baseline, AppyRig went straight to 8.",
+          "SonarJS printed its findings as JSON; a 20-line wrapper turns them into plain text an agent can act on (ladder rule 8)."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #23 and #24"
+        },
+        "answers": "#27"
+      }
+    },
+    {
+      "tier": "duplication",
+      "gate": "G08 · Duplication",
+      "p1": {
+        "id": "#30",
+        "title": "The same handler, twice",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "server/src/hub/collectorIngest.ts · two handlers (before)"
+              ],
+              [
+                "c",
+                "socket.on(FLEET_EVENTS.HISTORY, (raw, ack) => {"
+              ],
+              [
+                "c",
+                "  const parsed = SeatHistorySchema.safeParse(raw);"
+              ],
+              [
+                "c",
+                "  if (!parsed.success) { reply({ ok: false, failureMode: 'invalid_snapshot', … }); return; }"
+              ],
+              [
+                "c",
+                "  if (parsed.data.machineId !== machineId) { reply({ ok: false, failureMode: 'machine_mismatch', … }); return; }"
+              ],
+              [
+                "c",
+                "  opts.store.putHistory(parsed.data);"
+              ],
+              [
+                "c",
+                "});"
+              ],
+              [
+                "c",
+                "socket.on(FLEET_EVENTS.HANDOFFS, (raw, ack) => {"
+              ],
+              [
+                "c",
+                "  const parsed = HandoffBodiesSchema.safeParse(raw);"
+              ],
+              [
+                "c",
+                "  // …the same two checks, the same replies, 30 lines again"
+              ],
+              [
+                "c",
+                "});"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 3,
+            "match": "failureMode: 'invalid_snapshot'",
+            "kind": "problem",
+            "note": "The same check and the same reply, written out by hand."
+          },
+          {
+            "block": 0,
+            "row": 4,
+            "match": "failureMode: 'machine_mismatch'",
+            "kind": "problem",
+            "note": "Fix a message here and the other copy keeps the old one."
+          },
+          {
+            "block": 0,
+            "row": 9,
+            "match": "the same two checks",
+            "kind": "problem",
+            "note": "A copy, and the file already has a helper called guarded that does this."
+          }
+        ],
+        "text": "Two handlers do the same checks and send the same replies. Change one and the other quietly drifts.",
+        "say": "A bug fixed in one copy lives on in the other.",
+        "presenter": [
+          "Real AppyRig code (server/src/hub/collectorIngest.ts, before PR #27). The same block of about 30 lines was there twice, and a helper that did the job already existed in the file.",
+          "Exact-copy detection catches this one: more than 90 tokens in a row, identical."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig server/src/hub/collectorIngest.ts before PR #27 (main 4b1b721)"
+        }
+      },
+      "p2": {
+        "id": "#31",
+        "title": "Tool: duplicate detection",
+        "tool": "jscpd",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "jscpd · G08 five checks (AppyRig)"
+              ],
+              [
+                "c",
+                "exact          36 clones"
+              ],
+              [
+                "c",
+                "renamed vars    7 clones"
+              ],
+              [
+                "c",
+                "renamed + values 5 clones"
+              ],
+              [
+                "c",
+                "similar shape  14 clones"
+              ],
+              [
+                "c",
+                "semantic (AI)  144 clones"
+              ],
+              [
+                "d",
+                "collectorIngest.ts: the two handlers are one clone · merged in PR #27"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "server/src/hub/collectorIngest.ts"
+              ],
+              [
+                "d",
+                "socket.on(FLEET_EVENTS.HISTORY, (raw, ack) => { /* parse, check machine, reply: 30 lines */ });"
+              ],
+              [
+                "d",
+                "socket.on(FLEET_EVENTS.HANDOFFS, (raw, ack) => { /* the same 30 lines again */ });"
+              ],
+              [
+                "a",
+                "socket.on(FLEET_EVENTS.HISTORY, guarded(SeatHistorySchema, (data) => opts.store.putHistory(data)));"
+              ],
+              [
+                "a",
+                "socket.on(FLEET_EVENTS.HANDOFFS, guarded(HandoffBodiesSchema, (data) => /* store the bodies */));"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "exact          36 clones",
+            "kind": "number",
+            "note": "Exact copies found. The game counts what is left in this PR."
+          },
+          {
+            "block": 0,
+            "row": 5,
+            "match": "semantic (AI)  144 clones",
+            "kind": "number",
+            "note": "Same job, written differently: only the AI check sees these."
+          },
+          {
+            "block": 1,
+            "row": 3,
+            "match": "guarded(SeatHistorySchema,",
+            "kind": "fix",
+            "note": "One shared helper does the checks and the reply."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "guarded(HandoffBodiesSchema,",
+            "kind": "fix",
+            "note": "The second handler reuses it instead of copying it."
+          }
+        ],
+        "text": "Five checks go into CI, each on a recorded list of today's clones. The fix merges copies into one helper that both places call.",
+        "num": "Game: every clone merged in this PR → 0 (AppyRig: 206 clones baselined, slice 206 → 170)",
+        "say": "Delete the copy, call the original, and prove nothing changed.",
+        "presenter": [
+          "AppyRig's numbers: the PR cut exact 36 → 26, renamed variables 7 → 4, renamed and changed values 5 → 3, similar shape 14 → 10 and semantic 144 → 127. 10 source files, +113 / −421 lines, net −308.",
+          "The settings are less sensitive than Omer's, calibrated by reading every pair on a codebase about ten times his; the first calibration found 0 false alarms in the four fast checks.",
+          "The semantic check took 42 minutes on a cloud runner. On the M2 with a disk cache it takes about 2 seconds."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #25, #26, #27, #29"
+        },
+        "answers": "#30"
+      }
+    },
+    {
+      "tier": "structure",
+      "gate": "G09 · Folder size",
+      "p1": {
+        "id": "#33",
+        "title": "The crowded folder",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "e2e/ (before): 16 entries in one folder"
+              ],
+              [
+                "c",
+                "archive.spec.ts   docs.spec.ts      esc.spec.ts      flow-scroll.spec.ts"
+              ],
+              [
+                "c",
+                "flow-steady.spec.ts   graph-menu.spec.ts   graph-open.spec.ts   headers.spec.ts"
+              ],
+              [
+                "c",
+                "more-menu.spec.ts   page-scroll.spec.ts   panel-narrow.spec.ts   run-board.spec.ts"
+              ],
+              [
+                "c",
+                "shell-narrow.spec.ts   shell.spec.ts   tour.spec.ts   wall.spec.ts   support/"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "16 entries in one folder",
+            "kind": "problem",
+            "note": "The limit is 10 files in a folder."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "graph-menu.spec.ts",
+            "kind": "note",
+            "note": "These belong with the graph page tests. Nothing in the folder says so."
+          }
+        ],
+        "text": "A folder of 16 files. Finding the one you want means reading them all, and every new test lands in the pile.",
+        "say": "If a folder needs a scroll bar, nobody knows what's in it.",
+        "presenter": [
+          "Real AppyRig folder (e2e, before PR #31). The browser tests were all flat: graph, flow and shell tests mixed together.",
+          "The bigger folders were worse: client/src/kit held 61 files and collector/src/adapters 43. They didn't fit the one-slice cap, so e2e was the biggest that did."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig e2e/ before PR #31 (main 3ed8bab)"
+        }
+      },
+      "p2": {
+        "id": "#34",
+        "title": "Tool: folder size limit",
+        "tool": "folders",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "npm run folders · G09 (AppyRig)"
+              ],
+              [
+                "c",
+                "folders over the limit          13"
+              ],
+              [
+                "c",
+                "e2e                    16 files > 10"
+              ],
+              [
+                "c",
+                "client/src/kit        61 files > 10"
+              ],
+              [
+                "d",
+                "folders checked: 80 · e2e split in PR #31"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "e2e/"
+              ],
+              [
+                "d",
+                "e2e/graph-menu.spec.ts, e2e/graph-open.spec.ts"
+              ],
+              [
+                "d",
+                "e2e/flow-scroll.spec.ts, e2e/flow-steady.spec.ts"
+              ],
+              [
+                "d",
+                "e2e/shell.spec.ts, e2e/shell-narrow.spec.ts, e2e/panel-narrow.spec.ts"
+              ],
+              [
+                "a",
+                "e2e/graph/graph-menu.spec.ts, e2e/graph/graph-open.spec.ts"
+              ],
+              [
+                "a",
+                "e2e/flow/flow-scroll.spec.ts, e2e/flow/flow-steady.spec.ts"
+              ],
+              [
+                "a",
+                "e2e/shell/shell.spec.ts, shell-narrow.spec.ts, panel-narrow.spec.ts"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 2,
+            "match": "e2e                    16 files > 10",
+            "kind": "number",
+            "note": "The folder this PR fixes: 16 files down to 9."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "e2e/graph/graph-menu.spec.ts",
+            "kind": "fix",
+            "note": "The graph tests sit in a folder named for the page they test."
+          },
+          {
+            "block": 1,
+            "row": 6,
+            "match": "e2e/shell/shell.spec.ts",
+            "kind": "fix",
+            "note": "Seven files moved; only their import lines changed."
+          }
+        ],
+        "text": "A small script counts files and subfolders in every folder. The fix is to move files into subfolders named after what they test.",
+        "num": "Game: every folder within 10 files and 10 subfolders in this PR → 0 (AppyRig: 13 folders baselined, slice 13 → 12)",
+        "say": "A folder is a table of contents: keep it short enough to read.",
+        "presenter": [
+          "AppyRig's numbers: baseline 13 → 12 folders; e2e went from 16 files to 9 plus four subfolders (flow 2, graph 2, shell 3, support 2). 8 files changed, +6 / −9, seven pure moves.",
+          "The script counts files tracked by git, so a stray .DS_Store or build folder can't change the answer."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #28 and #31"
+        },
+        "answers": "#33"
+      }
+    },
+    {
+      "tier": "structure",
+      "gate": "G10 · Root imports",
+      "p1": {
+        "id": "#35",
+        "title": "The ../../ path",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/pages/flow/clean.test.tsx · imports (before)"
+              ],
+              [
+                "c",
+                "import { fleetMachine, snapshot } from '../../test/fleetFixtures.js';"
+              ],
+              [
+                "c",
+                "import { rigPageCtx } from '../page-test-kit.js';"
+              ],
+              [
+                "c",
+                "// 521 imports like these across the repo"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "'../../test/fleetFixtures.js'",
+            "kind": "problem",
+            "note": "Two levels up, then down. Move this file and the path breaks."
+          },
+          {
+            "block": 0,
+            "row": 3,
+            "match": "521 imports",
+            "kind": "number",
+            "note": "521 static '../' imports in AppyRig, plus 18 harder forms."
+          }
+        ],
+        "text": "The path counts folders instead of saying where the code lives. One '../' too many and it quietly imports the wrong file.",
+        "say": "Agents can't count dots in a path, and neither can tired humans.",
+        "presenter": [
+          "Real AppyRig code (client/src/pages/flow/clean.test.tsx, before PR #32).",
+          "The 539 findings: 521 static '../' imports (client 454, server 46, collector 15, scripts 10, test 6, e2e 6) plus 18 import(), require and computed ones."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/pages/flow/clean.test.tsx before PR #32 (main 45580b3)"
+        }
+      },
+      "p2": {
+        "id": "#36",
+        "title": "Tool: root imports",
+        "tool": "aliases",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "eslint · G10 no-restricted-imports (AppyRig)"
+              ],
+              [
+                "c",
+                "../ imports banned         539"
+              ],
+              [
+                "d",
+                "Import with a project alias instead of '../': @client/… @server/… @shared/…"
+              ],
+              [
+                "d",
+                "after PR #32: 2 left, both baselined"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/pages/flow/clean.test.tsx"
+              ],
+              [
+                "d",
+                "import { fleetMachine, snapshot } from '../../test/fleetFixtures.js';"
+              ],
+              [
+                "d",
+                "import { rigPageCtx } from '../page-test-kit.js';"
+              ],
+              [
+                "a",
+                "import { fleetMachine, snapshot } from '@client/test/fleetFixtures.js';"
+              ],
+              [
+                "a",
+                "import { rigPageCtx } from '@client/pages/page-test-kit.js';"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "../ imports banned         539",
+            "kind": "number",
+            "note": "What the new rule found in AppyRig."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "@client/…",
+            "kind": "fix",
+            "note": "The error message names the fix, so an agent can act on it."
+          },
+          {
+            "block": 1,
+            "row": 3,
+            "match": "@client/test/fleetFixtures.js",
+            "kind": "fix",
+            "note": "Says where the file lives. It can move without this line breaking."
+          }
+        ],
+        "text": "A lint rule bans '../' in every import form. A script rewrites the old ones, and the error message names the alias to use.",
+        "num": "Game: every '../' import rewritten in this PR → 0 (AppyRig: 539 → 2, 524 imports in 178 files rewritten by a script)",
+        "say": "Say where the code lives, not how many folders to climb.",
+        "presenter": [
+          "AppyRig's numbers: 539 → 2 findings; 14 computed imports in env.test.ts were fixed by hand. Imports in the same folder stay './' by ruling.",
+          "The rewrite was one deterministic script in its own commit. The judge replayed the script and got the same 178 files, so reviewers can skip that commit.",
+          "Five aliases: @client, @server, @collector, @shared, @root, defined once in tsconfig paths."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PR #32"
+        },
+        "answers": "#35"
+      }
+    },
+    {
+      "tier": "structure",
+      "gate": "G11 · Dead code + cycles",
+      "p1": {
+        "id": "#37",
+        "title": "The code nobody uses",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/lib/utils.ts (before): imported by no file"
+              ],
+              [
+                "c",
+                "import { clsx, type ClassValue } from 'clsx';"
+              ],
+              [
+                "c",
+                "import { twMerge } from 'tailwind-merge';"
+              ],
+              [
+                "c",
+                "export function cn(...inputs: ClassValue[]): string {"
+              ],
+              [
+                "c",
+                "  return twMerge(clsx(inputs));"
+              ],
+              [
+                "c",
+                "}"
+              ],
+              [
+                "l",
+                "server/src/middleware/validate.ts · client/src/config/env.ts: also imported by no file"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 3,
+            "match": "export function cn(",
+            "kind": "problem",
+            "note": "Exported, never imported. The file is only read by its own test."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "twMerge",
+            "kind": "problem",
+            "note": "Pulls in a package (and so does react-hook-form) that nothing else needs."
+          },
+          {
+            "block": 0,
+            "row": 6,
+            "match": "imported by no file",
+            "kind": "number",
+            "note": "Three whole files and five packages in AppyRig."
+          }
+        ],
+        "text": "A file and the packages behind it are never used. An agent that reads them will copy them as if they mattered.",
+        "say": "Dead code isn't harmless: it gets read, trusted and copied.",
+        "presenter": [
+          "Real AppyRig code (client/src/lib/utils.ts, before PR #34). Three unused files: validate.ts, utils.ts and env.ts. Five unused client packages: react-hook-form, @hookform/resolvers, html-to-image, clsx, tailwind-merge.",
+          "Knip found 1,192 dead-code findings in total. The cycles were also found: 1 module cycle and 17 folder cycles, baselined to untangle later."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/lib/utils.ts before PR #34 (main 5c5f28a)"
+        }
+      },
+      "p2": {
+        "id": "#38",
+        "title": "Tool: dead code and cycles",
+        "tool": "knip",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "knip + no-circular · G11 (AppyRig)"
+              ],
+              [
+                "c",
+                "dead code findings        1,192"
+              ],
+              [
+                "c",
+                "module cycles                 1"
+              ],
+              [
+                "c",
+                "folder cycles               17"
+              ],
+              [
+                "d",
+                "after PR #34: dead code 1,003"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "PR #34"
+              ],
+              [
+                "d",
+                "client/src/lib/utils.ts (+ test)"
+              ],
+              [
+                "d",
+                "server/src/middleware/validate.ts (+ test)"
+              ],
+              [
+                "d",
+                "client/src/config/env.ts (+ test)"
+              ],
+              [
+                "d",
+                "client/package.json: react-hook-form, @hookform/resolvers, html-to-image, clsx, tailwind-merge"
+              ],
+              [
+                "a",
+                "collector/src/adapters/index.ts: 77 → 29 lines (dead re-exports pruned)"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "dead code findings        1,192",
+            "kind": "number",
+            "note": "Everything Knip says nothing uses."
+          },
+          {
+            "block": 1,
+            "row": 1,
+            "match": "client/src/lib/utils.ts",
+            "kind": "fix",
+            "note": "Deleted with the 26 tests that only tested the dead files."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "react-hook-form",
+            "kind": "fix",
+            "note": "A package nothing imports, removed from the lockfile too."
+          }
+        ],
+        "text": "Knip runs twice, normal and production, and no-circular looks for import loops. The fix deletes what is provably unused.",
+        "num": "Game: every dead file, package and import loop removed in this PR → 0 (AppyRig: 1,192 baselined, slice 1,192 → 1,003)",
+        "say": "If nothing uses it, delete it. Git remembers.",
+        "presenter": [
+          "AppyRig's numbers: 763 lines deleted, 73 added; 3 files, 5 packages and 90 dead re-exports gone. Normal run 483 → 391, production run 709 → 612.",
+          "Kept on purpose: pino-pretty (a false positive, it's named as a string), dev and test tooling, and mock scaffolding.",
+          "The judge searched the whole repo for each removed name before approving."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #33 and #34"
+        },
+        "answers": "#37"
+      }
+    },
+    {
+      "tier": "structure",
+      "gate": "G12 · Boundaries",
+      "p1": {
+        "id": "#39",
+        "title": "The layer leak",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "server/src/hub/store.ts · a leak the judge planted"
+              ],
+              [
+                "c",
+                "import { fleetBadge } from '@client/kit/badges.js';"
+              ],
+              [
+                "c",
+                "import { setupServer } from 'msw/node';"
+              ],
+              [
+                "c",
+                "// server code importing client code, and a dev-only package"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "@client/kit/badges.js",
+            "kind": "problem",
+            "note": "The server reaches into the client. Neither can change alone."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "msw/node",
+            "kind": "problem",
+            "note": "A test-only package in production code: missing in a production install."
+          }
+        ],
+        "text": "One import at a time, layers lean on each other until nothing can change alone.",
+        "say": "Every shortcut across a boundary is a bill you pay later.",
+        "presenter": [
+          "AppyRig has no such leak today, so this is an example, planted by the judge in PR #35 to prove each rule fires. The point is what the rules catch.",
+          "Before PR #35 a config bug excluded every npm package from the check, so a dev-only package rule could never have fired."
+        ],
+        "evidence": {
+          "status": "example",
+          "source": "Planted by the judge in AppyRig PR #35; AppyRig has 0 real violations"
+        }
+      },
+      "p2": {
+        "id": "#40",
+        "title": "Tool: layer rules",
+        "tool": "boundaries",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "depcruise · G12 (AppyRig)"
+              ],
+              [
+                "c",
+                "rules                         12"
+              ],
+              [
+                "c",
+                "  layer rules                  9"
+              ],
+              [
+                "c",
+                "  dev-dep, test, deprecated    3"
+              ],
+              [
+                "c",
+                "violations                    0"
+              ],
+              [
+                "d",
+                "each rule proved by a planted example"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                ".dependency-cruiser.cjs"
+              ],
+              [
+                "d",
+                "to: { path: '^(server|collector)/' }"
+              ],
+              [
+                "a",
+                "to: { path: '^(server|collector)/', reachable: true }"
+              ],
+              [
+                "a",
+                "name: 'client-lib-is-a-leaf'"
+              ],
+              [
+                "a",
+                "name: 'not-to-dev-dep'"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 4,
+            "match": "violations                    0",
+            "kind": "number",
+            "note": "Zero on all 12 rules, and each was shown to fire."
+          },
+          {
+            "block": 1,
+            "row": 2,
+            "match": "reachable: true",
+            "kind": "fix",
+            "note": "Follows the whole chain, so going round the wall through a helper fails too."
+          },
+          {
+            "block": 1,
+            "row": 4,
+            "match": "not-to-dev-dep",
+            "kind": "fix",
+            "note": "Production code can't import a dev-only package."
+          }
+        ],
+        "text": "Layer rules say which parts may import which. With reachable on, the rule follows the whole chain of imports.",
+        "num": "Game: every boundary rule passes in this PR → 0 violations (AppyRig: 12 rules, 0 violations)",
+        "say": "Draw the walls, then let the machine check every door.",
+        "presenter": [
+          "AppyRig's numbers: 12 rules, 0 violations. Six existing layer rules became reachable, three layer rules are new, and three keep dev packages, tests and deprecated Node modules out of production. 2 files, +124 / −8, no baseline.",
+          "It also fixed a hidden bug: the old exclude dropped every npm package from the check (380 modules before, 402 after).",
+          "Two known leaks, pages to app (1) and server core to hub (2), are left for a later untangle."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PR #35"
+        },
+        "answers": "#39"
+      }
+    }
+  ],
+  "endings": {
+    "p1": {
+      "id": "#11",
+      "big": "Buried in spaghetti",
+      "sub": "Every change breaks something. Nobody dares touch it."
+    },
+    "p2": {
+      "id": "#12",
+      "big": "Shipped",
+      "sub": "Every gate in CI. Every new mess is caught at the PR, and every old one is going down."
+    }
+  },
+  "templates": {
+    "status": "draft: #10 is the starting point; may not fit every gate",
+    "p1-problem": {
+      "fields": [
+        "id",
+        "title",
+        "blocks (view: code)",
+        "annotations",
+        "text",
+        "say",
+        "presenter",
+        "failureModes (optional)",
+        "evidence"
+      ],
+      "shape": "Show the code as it is, mark what's wrong, one plain sentence, one line to say out loud."
+    },
+    "p2-tool": {
+      "fields": [
+        "id",
+        "answers (the P1 card)",
+        "title",
+        "tool (key into tools)",
+        "steps (1-3) or blocks",
+        "annotations",
+        "num",
+        "say",
+        "presenter",
+        "failureModes (optional)",
+        "evidence"
+      ],
+      "shape": "One gate = one PR: the check goes into CI and every finding is fixed in the same PR, Omer-style. A fresh, vibe-coded game has no baseline to freeze. (AppyRig's two-part gates are AppyRig's process, not the game's.)"
+    },
+    "failureModes": "Optional presenter list: the different ways this code can run or fail, one row per kind of input (input · where · what happens). Off camera; for talking about it."
+  },
+  "retiredIds": {
+    "#16": "was G03's 'fix' beat; folded into #15 (the game has one gate = one PR, no baseline)",
+    "#19": "folded into #18",
+    "#22": "folded into #21",
+    "#25": "folded into #24",
+    "#23": "was G07 block spacing (P1); folded into G03 (#14/#15): spacing rules run before size",
+    "#24": "was G07 block spacing (P2 tool); folded into G03 (#15)"
+  }
+}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spaghetti Rig</title>
+  <link rel="icon" href="/assets/deco/lightning-logo.svg" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <canvas id="stage" aria-label="3D rail shooter"></canvas>
+
+  <!-- 1. Prelude: a click unlocks the audio. -->
+  <section id="prelude" class="screen">
+    <button id="enter" class="entry-button" type="button">Click to play</button>
+  </section>
+
+  <!-- 2. Title. -->
+  <section id="title" class="screen" hidden>
+    <div class="menu-grain"></div>
+    <header class="site-header">
+      <div class="brand"><img src="/assets/deco/lightning-logo.svg" alt="" /><span id="brand-name">SPAGHETTI<br />RIG</span></div>
+      <div class="header-right"><span class="edition" id="title-track">♫ —</span><button class="sound-button" data-action="mute" type="button"><span class="ico-sound"></span><span class="sound-label">SOUND ON</span></button></div>
+    </header>
+    <div class="hero-deco" aria-hidden="true">
+      <img class="deco star1" src="/assets/deco/burst-star.svg" alt="" />
+      <img class="deco spiky" src="/assets/deco/burst-spiky.svg" alt="" />
+      <img class="deco badge" src="/assets/deco/bracket-badge.svg" alt="" />
+      <img class="deco sparkle1" src="/assets/deco/sparkle.svg" alt="" />
+      <img class="deco sparkle2" src="/assets/deco/sparkle.svg" alt="" />
+      <div class="sticker"><i></i>TECH DEBT DETECTED <b>↙</b></div>
+      <div class="meet">MEET YOUR CODE QUALITY SPECIALIST<br /><small>WHITE SUIT. ZERO MERCY. ↗ &nbsp; (AND THE VIBE CODER BEHIND HIM.)</small></div>
+    </div>
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="tiny-star">✳</span>SAME ROAD. TWO DEVELOPERS. ONE HAS GATES.</div>
+      <h1><span id="title-1">SPAGHETTI</span><span class="title-second" id="title-2">RIG<span class="title-period">.</span></span></h1>
+      <p class="tagline" id="tagline">Walk the gates. Shoot to learn.</p>
+      <p class="hero-description">Player 1 vibe-codes with no tools. Player 2 brings a quality specialist's gates.<br />Every stop, bad code attacks both. Only one of them gets back up.</p>
+      <div class="mode-pick" role="radiogroup" aria-label="Who plays">
+        <button type="button" data-mode="p1" role="radio"><kbd>1</kbd>Player 1<small>vibe coder</small></button>
+        <button type="button" data-mode="both" role="radio"><kbd>B</kbd>Both<small>side by side</small></button>
+        <button type="button" data-mode="p2" role="radio"><kbd>2</kbd>Player 2<small>gated</small></button>
+      </div>
+      <div class="menu-actions">
+        <button id="start" class="primary-button" type="button">WALK THE GATES <span class="button-arrow">↗</span></button>
+        <button class="help-link" data-action="help" type="button">HOW TO PLAY <span class="q">?</span></button>
+      </div>
+      <div class="best"><i></i>SIX TIERS. ONE ROAD. NO SHORTCUTS. <span>BEST</span> <b id="best">000000</b></div>
+    </div>
+    <footer class="mission">
+      <span class="mission-tag">THE MISSION</span><span>WALK THE ROAD.</span><span class="ast">✳</span><span>HIT EVERY GATE.</span><span class="ast">✳</span><span>SHIP CLEAN.</span>
+      <span class="ver">v1.0 &nbsp;/&nbsp; A COMPANION TO SPAGHETTI BUSTERS</span>
+    </footer>
+  </section>
+
+  <!-- 3. Tier map. -->
+  <section id="map" class="screen" hidden>
+    <div class="menu-grain"></div>
+    <header class="site-header">
+      <div class="brand"><img src="/assets/deco/lightning-logo.svg" alt="" /><span>SPAGHETTI<br />RIG</span></div>
+      <div class="map-head"><span class="label">THE ROAD</span><b>Pick a tier</b></div>
+      <div class="header-right"><span class="edition">← → PICK &nbsp;·&nbsp; ENTER START &nbsp;·&nbsp; ESC BACK</span></div>
+    </header>
+    <ol id="tiers" class="tiers"></ol>
+    <footer class="mission"><span class="mission-tag">MODE</span><span id="map-mode">BOTH · SIDE BY SIDE</span><span class="ast">✳</span><span>1 / 2 / B TO CHANGE</span><span class="ver">LOCKED TIERS OPEN WHEN THEIR STOPS ARE WRITTEN</span></footer>
+  </section>
+
+  <!-- 4–11. The game. -->
+  <section id="game" class="screen" hidden>
+    <div class="topbar">
+      <div class="brand small"><img src="/assets/deco/lightning-logo.svg" alt="" /><span>SPAGHETTI<br />RIG</span></div>
+      <div class="stat"><span class="label">CURRENT TIER</span><b id="hud-tier">01</b><span class="sub" id="hud-tier-name">/ FOUNDATION</span></div>
+      <div class="stat wide"><span class="label" id="hud-stop-label">NEXT STOP</span><b id="hud-stop" class="gate-name">—</b></div>
+      <div class="spacer"></div>
+      <div class="chips">
+        <span class="chip" data-chip="mode"><kbd>1</kbd><kbd>2</kbd><kbd>B</kbd><span id="hud-mode">BOTH</span></span>
+        <span class="chip" data-chip="auto"><kbd>A</kbd><span id="hud-auto">AUTOPLAY OFF</span></span>
+      </div>
+      <button class="round" data-action="mute" type="button" aria-label="Sound"><span class="ico-sound"></span></button>
+      <button class="round" data-action="pause" type="button" aria-label="Pause"><span class="ico-pause"></span></button>
+    </div>
+    <div id="lanes"></div>
+    <div class="divider" hidden></div>
+    <div id="banner" class="banner" hidden><span class="label" id="banner-label">GATE</span><div class="headline" id="banner-text"></div></div>
+    <div id="vs" class="vs" hidden></div>
+    <div id="result" class="result" hidden></div>
+    <div id="ending" class="ending" hidden></div>
+    <div class="nav-hint"><kbd>←</kbd><kbd>→</kbd><span id="hud-progress">1 / 1</span></div>
+    <div class="now-playing" id="now-playing">♫ —</div>
+    <div id="notes" class="notes" hidden></div>
+  </section>
+
+  <div id="pause" class="overlay" hidden>
+    <div class="panel">
+      <span class="label">PAUSED</span>
+      <h2>Coffee break.</h2>
+      <p>The spaghetti will still be here.</p>
+      <div class="menu-actions"><button class="primary-button" data-action="pause" type="button">RESUME <span class="button-arrow">▶</span></button><button class="help-link" data-action="to-map" type="button">TIER MAP</button><button class="help-link" data-action="help" type="button">HOW TO PLAY <span class="q">?</span></button></div>
+    </div>
+  </div>
+
+  <div id="help" class="overlay" hidden>
+    <div class="panel help">
+      <span class="label">HOW TO PLAY</span>
+      <h2>Walk. Stop. Learn. Shoot.</h2>
+      <p>Two developers walk the same road through six tiers. At every gate a <b>problem card</b> — real bad code — slams into both of them. Player 1 is a vibe coder with no tools: every hit sticks. Player 2 plays a <b>tool card</b> that fixes the code and heals to 100%. At the end of each tier, the boss is made of the tier's problems; only the tools can break it.</p>
+      <div class="keys">
+        <div><kbd>→</kbd> or <kbd>Space</kbd><span>Next: walk on, play the card, skip a pause</span></div>
+        <div><kbd>←</kbd><span>Back one step</span></div>
+        <div><kbd>1</kbd> <kbd>2</kbd> <kbd>B</kbd><span>Player 1 · Player 2 · Both side by side</span></div>
+        <div><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>6</kbd><span>Jump to a tier</span></div>
+        <div><kbd>A</kbd><span>Autoplay: shoots the street enemies for you</span></div>
+        <div><kbd>Mouse</kbd><span>Aim and click to shoot spaghetti, bugs and AI robots</span></div>
+        <div><kbd>N</kbd><span>Speaker notes strip</span></div>
+        <div><kbd>M</kbd> <kbd>P</kbd><span>Mute · Pause</span></div>
+        <div><kbd>Esc</kbd><span>Close / back to the map</span></div>
+      </div>
+      <p class="small">Presenter view: open <a id="presenter-link" href="?presenter" target="_blank">?presenter</a> in a second window. It follows the game and shows the notes for the current card. <span id="track-list"></span></p>
+      <div class="menu-actions"><button class="primary-button" data-action="help" type="button">GOT IT <span class="button-arrow">↗</span></button></div>
+    </div>
+  </div>
+
+  <div id="presenter" hidden></div>
+  <div id="loading" class="loading" hidden>Loading the road…</div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
