@@ -72,9 +72,11 @@ At the moment an enemy that gets past you just disappears, and score means nothi
 
 **Proved when:** a screenshot showing the counter on player 1's side and a "caught by CI" pop on player 2's side during the same walk. A unit test shows health at every step is unchanged.
 
-## 8. The Space key
+## 8. The Space key stays "next"
 
-[DAVID TO DECIDE BEFORE THIS RUNS: keep `Space` as "next", or make it fire. Replace this paragraph with the answer.]
+Keep `Space` and `→` as "next", as in my original brief. Firing is the trackpad or mouse only. Presentation clickers send `Space`, `→` and `Page Down`, so a clicker press on stage must never fire a shot. Add `Page Down` as "next" and `Page Up` as "back" so a clicker works too.
+
+**Proved when:** in Claude in Chrome, `Space` during a walk moves the show on and fires nothing, and `Page Down` / `Page Up` step forward and back.
 
 ## Done means verified with real input
 
