@@ -350,6 +350,12 @@
       }
     },
     {
+      "files": ["src/show/messages.ts"],
+      "rules": {
+        "anti-slop/no-unknown-parameters": "off"
+      }
+    },
+    {
       "files": ["tests/**/*.ts", "*.config.ts"],
       "env": {
         "node": true

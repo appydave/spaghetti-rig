@@ -1,4 +1,5 @@
 import { byId, closestEl } from "../dom";
+import { parseDirectorMessage } from "./messages";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "../audio/audio";
 import { toolFor, type Game } from "../content/load";
@@ -73,10 +74,10 @@ export class Director {
     this.applyAutoplay();
     for (const p of PLAYERS) worlds[p].onSlip = () => this.slipped(p);
     this.channel?.addEventListener("message", (e) => {
-      const m = e.data as { type: string; key?: string };
+      const m = parseDirectorMessage(e.data);
+      if (!m) return;
       if (m.type === "hello") this.broadcast();
-      if (m.type === "cmd" && m.key)
-        dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
+      else dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
     });
     // The HUD lets the pointer through, so a press over the street lands on the canvas, which sits
     // beside #game rather than inside it. Listen on the window and fire on the press itself: a quick

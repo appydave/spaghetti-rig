@@ -1,7 +1,8 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
 import { loadContent } from "./content/load";
 import { byId, closestEl } from "./dom";
-import { Director, type PresenterState } from "./show/director";
+import { Director } from "./show/director";
+import { parsePresenterState } from "./show/messages";
 import { isSplit, MODES, type Mode, type Player } from "./show/script";
 import { gatesText } from "./content/gatelabel";
 import { esc } from "./ui/card";
@@ -421,8 +422,8 @@ function presenter() {
   const send = (key: string) => ch.postMessage({ type: "cmd", key });
   ch.postMessage({ type: "hello" });
   ch.addEventListener("message", (e) => {
-    const s = e.data as PresenterState;
-    if (s.type !== "state") return;
+    const s = parsePresenterState(e.data);
+    if (!s) return;
     const n = s.notes;
     root.innerHTML = `
       <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? " · PAUSED" : ""}</span><br><b>${esc(n.heading)}</b></div>
