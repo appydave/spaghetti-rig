@@ -155,6 +155,93 @@ const ROBOT_START_BACK = 4;
 const ROBOT_TRAVEL_Z = 2;
 const ROBOT_SPEED = 2.6;
 
+const PROBLEM_ALARM_DELAY = 0.2;
+const CARD_LAUNCH_DELAY = 1.5;
+const CARD_FLIGHT_SECONDS = 0.5;
+const CARD_LAUNCH_Y = 6;
+const CARD_LAUNCH_Z = -34;
+const CARD_HIT_Y = 0.6;
+const CARD_HIT_Z = -0.6;
+const CARD_FLIGHT_START_SCALE = 0.35;
+const CARD_FLIGHT_END_SCALE = 0.55;
+const CARD_FLIGHT_SPIN = 2.5;
+const DAMAGE_VOLUME = 0.8;
+const HIT_BURST_COUNT = 40;
+const HIT_BURST_SPEED = 7;
+const HIT_RING_SIZE = 1.6;
+const HIT_RING_LIFE = 0.4;
+const HIT_TEXT_RISE = 1.2;
+const HIT_TEXT_LIFE = 1.4;
+const HEALTH_DROP_SECONDS = 0.5;
+const CARD_BOUNCE_SECONDS = 0.55;
+const OLD_CARD_RATTLE = 0.4;
+const AIM_TO_FIRE_DELAY = 0.45;
+const BEAM_RING_SIZE = 2.5;
+const BEAM_RING_LIFE = 0.5;
+const FIRST_CRACK_DELAY = 0.65;
+const FIRST_CRACK_SEED = 3;
+const MORE_CRACKS_DELAY = 0.85;
+const SECOND_CRACK_SEED = 9;
+const SECOND_CRACK_U = 0.3;
+const SECOND_CRACK_V = 0.6;
+const THIRD_CRACK_SEED = 13;
+const THIRD_CRACK_U = 0.75;
+const THIRD_CRACK_V = 0.35;
+const SHATTER_DELAY = 1.05;
+const SHATTER_POWER = 7;
+const SHATTER_GRID_SHORT = 5;
+const SHATTER_GRID_LONG = 7;
+const SHATTER_SEED_BASE = 21;
+const SHATTER_SHAKE = 0.5;
+const FIXED_CARD_DELAY = 1.3;
+const FIXED_CARD_SECONDS = 0.6;
+const FIXED_CARD_DROP = 3;
+const FIXED_CARD_START_SCALE = 0.6;
+const HEAL_DELAY = 1.7;
+const HEAL_RISE = 1.2;
+const HEAL_TEXT_RISE = 1.4;
+const HEAL_TEXT_LIFE = 1.6;
+const HEAL_SECONDS = 0.8;
+const VICTORY_POSE_SECONDS = 1.2;
+const BOSS_DROP_HEIGHT = 26;
+const BOSS_ARRIVE_SOUND_DELAY = 0.9;
+const BOSS_DROP_SECONDS = 1.3;
+const BOSS_LANDING_SHAKE = 1.2;
+const BOSS_LANDING_DUST_Y = 0.2;
+const BOSS_LANDING_BURST_COUNT = 60;
+const BOSS_LANDING_BURST_SPEED = 10;
+const MIN_TWEEN_SECONDS = 0.001;
+const BOSS_BOUNCE_SHOT_A = 2.6;
+const BOSS_BOUNCE_SHOT_B = 3.0;
+const BOSS_BOUNCE_SHOT_C = 3.4;
+const PART_SHOT_A_DELAY = 0.2;
+const PART_SHOT_B_DELAY = 0.5;
+const KO_BLOW_DELAY = 0.9;
+const KO_BLOW_WIDTH = 2.2;
+const KO_BLOW_SECONDS = 0.45;
+const KO_BLOW_SPIN = 6;
+const KO_SHAKE = 1.4;
+const KO_BURST_COUNT = 50;
+const KO_BURST_SPEED = 8;
+const KO_TEXT_RISE = 1.4;
+const KO_TEXT_SIZE = 1.3;
+const KO_TEXT_LIFE = 1.8;
+const KO_SHATTER_POWER = 5;
+const KO_SHATTER_GRID_COLS = 3;
+const KO_SHATTER_GRID_ROWS = 2;
+const KO_HEALTH_SECONDS = 0.6;
+const TOOL_FIRE_DELAY = 0.25;
+const TOOL_BOLT_SECONDS = 0.4;
+const TOOL_BOLT_SPIN = 8;
+const PART_BURST_COUNT = 50;
+const PART_BURST_SPEED = 9;
+const PART_TEXT_RISE = 1.8;
+const PART_TEXT_WORDS = 2;
+const PART_TEXT_SIZE = 1.1;
+const PART_TEXT_LIFE = 1.6;
+const PART_BREAK_SHAKE = 0.8;
+const PART_HEALTH_SECONDS = 0.6;
+
 /** Boss arena: how far down the road the boss stands and how high its main window floats. */
 const BOSS = { y: BOSS_HEIGHT };
 
@@ -982,7 +1069,7 @@ export class PlayerWorld {
     const before =
       this.player === "p1"
         ? healthAt(this.game, { ...step, phase: "walk" }, "p1")
-        : 100;
+        : FULL_HEALTH;
 
     this.reconcile(s);
     this.clearStreet();
@@ -997,19 +1084,19 @@ export class PlayerWorld {
     this.health = before;
     this.gateAt(step.stop).state = "idle";
     this.character.pose = "idle";
-    this.after(0.2, () => {
+    this.after(PROBLEM_ALARM_DELAY, () => {
       this.gateAt(step.stop).state = "alarm";
     });
 
-    const launch = 1.5;
-    const flight = 0.5;
+    const launch = CARD_LAUNCH_DELAY;
+    const flight = CARD_FLIGHT_SECONDS;
 
     this.after(launch, () => {
       g.visible = true;
 
       const start = this.character.root.position
         .clone()
-        .add(new THREE.Vector3(0, 6, -34));
+        .add(new THREE.Vector3(0, CARD_LAUNCH_Y, CARD_LAUNCH_Z));
       const chest = this.character.chestWorld();
 
       this.tween(flight, (k) => {
@@ -1017,18 +1104,20 @@ export class PlayerWorld {
 
         g.position.lerpVectors(
           start,
-          chest.clone().add(new THREE.Vector3(0, 0.6, -0.6)),
+          chest.clone().add(new THREE.Vector3(0, CARD_HIT_Y, CARD_HIT_Z)),
           e,
         );
-        g.scale.setScalar(lerp(0.35, 0.55, e));
-        g.rotation.set(0, 0, (1 - e) * 2.5);
+        g.scale.setScalar(
+          lerp(CARD_FLIGHT_START_SCALE, CARD_FLIGHT_END_SCALE, e),
+        );
+        g.rotation.set(0, 0, (1 - e) * CARD_FLIGHT_SPIN);
         g.quaternion.premultiply(new THREE.Quaternion());
         this.faceCamera(g);
       });
     });
     this.after(launch + flight, () => {
       this.sfx("slam");
-      this.sfx("damage", 0.8);
+      this.sfx("damage", DAMAGE_VOLUME);
       this.character.hit();
       this.shake = 1;
 
@@ -1036,21 +1125,28 @@ export class PlayerWorld {
 
       this.fx.burst(chest, {
         colors: ["#ff5d4f", "#ffae59", "#fff3b0"],
-        n: 40,
-        speed: 7,
+        n: HIT_BURST_COUNT,
+        speed: HIT_BURST_SPEED,
       });
-      this.fx.ring(chest, "#ff5d4f", 1.6, 0.4, false, this.camera.position);
+      this.fx.ring(
+        chest,
+        "#ff5d4f",
+        HIT_RING_SIZE,
+        HIT_RING_LIFE,
+        false,
+        this.camera.position,
+      );
       this.fx.text(
-        chest.clone().add(new THREE.Vector3(0, 1.2, 0)),
-        `−${Math.round(90 / this.playing.stops.length)}%`,
+        chest.clone().add(new THREE.Vector3(0, HIT_TEXT_RISE, 0)),
+        `−${Math.round(TIER_HEALTH_LOSS / this.playing.stops.length)}%`,
         "#ff8b69",
         1.0,
-        1.4,
+        HIT_TEXT_LIFE,
       );
 
       const from = this.health;
 
-      this.tween(0.5, (k) => {
+      this.tween(HEALTH_DROP_SECONDS, (k) => {
         this.health = lerp(from, s.health, ease.outCubic(k));
       });
       this.character.pose = s.pose;
@@ -1060,7 +1156,7 @@ export class PlayerWorld {
       const hitScale = g.scale.x;
 
       this.tween(
-        0.55,
+        CARD_BOUNCE_SECONDS,
         (k) => {
           const e = ease.outBack(k);
           const target = this.readingPose(w.win);
@@ -1091,7 +1187,7 @@ export class PlayerWorld {
 
     const old = this.track(this.makeStopWindow(stop, "problem"));
 
-    old.rattle = 0.4;
+    old.rattle = OLD_CARD_RATTLE;
     this.scene.add(old.group);
 
     const pose = this.readingPose(old);
@@ -1099,10 +1195,10 @@ export class PlayerWorld {
     old.group.position.copy(pose.pos);
     old.group.scale.setScalar(pose.scale);
     this.faceCamera(old.group);
-    this.health = 100 - 90 / this.playing.stops.length;
+    this.health = FULL_HEALTH - TIER_HEALTH_LOSS / this.playing.stops.length;
     this.gateAt(step.stop).state = "alarm";
     this.character.pose = "aim";
-    this.after(0.45, () => {
+    this.after(AIM_TO_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
@@ -1110,18 +1206,25 @@ export class PlayerWorld {
 
       this.fx.muzzle(from, "#aee5a3");
       this.fx.beam(from, to);
-      this.fx.ring(to, "#aee5a3", 2.5, 0.5, false, this.camera.position);
+      this.fx.ring(
+        to,
+        "#aee5a3",
+        BEAM_RING_SIZE,
+        BEAM_RING_LIFE,
+        false,
+        this.camera.position,
+      );
       this.sfx("cardPlay");
     });
-    this.after(0.65, () => {
-      old.crack(3);
+    this.after(FIRST_CRACK_DELAY, () => {
+      old.crack(FIRST_CRACK_SEED);
       this.sfx("glassCrack");
     });
-    this.after(0.85, () => {
-      old.crack(9, 0.3, 0.6);
-      old.crack(13, 0.75, 0.35);
+    this.after(MORE_CRACKS_DELAY, () => {
+      old.crack(SECOND_CRACK_SEED, SECOND_CRACK_U, SECOND_CRACK_V);
+      old.crack(THIRD_CRACK_SEED, THIRD_CRACK_U, THIRD_CRACK_V);
     });
-    this.after(1.05, () => {
+    this.after(SHATTER_DELAY, () => {
       this.sfx("shatter");
 
       const from = this.character.muzzleWorld();
@@ -1129,14 +1232,16 @@ export class PlayerWorld {
       old.shatter(
         this.debris,
         from.setY(from.y - 1),
-        7,
-        this.shape === "tall" ? [5, 7] : [7, 5],
-        21 + step.stop,
+        SHATTER_POWER,
+        this.shape === "tall"
+          ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
+          : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
+        SHATTER_SEED_BASE + step.stop,
       );
       this.temps.splice(this.temps.indexOf(old), 1);
-      this.shake = 0.5;
+      this.shake = SHATTER_SHAKE;
     });
-    this.after(1.3, () => {
+    this.after(FIXED_CARD_DELAY, () => {
       this.sfx("codeFix");
       fixed.win.group.visible = true;
 
@@ -1144,14 +1249,18 @@ export class PlayerWorld {
 
       fixed.reading = false;
       this.tween(
-        0.6,
+        FIXED_CARD_SECONDS,
         (k) => {
           const t = this.readingPose(fixed.win);
 
           g.position
             .copy(t.pos)
-            .add(new THREE.Vector3(0, (1 - ease.outBack(k)) * 3, 0));
-          g.scale.setScalar(t.scale * lerp(0.6, 1, ease.outBack(k)));
+            .add(
+              new THREE.Vector3(0, (1 - ease.outBack(k)) * FIXED_CARD_DROP, 0),
+            );
+          g.scale.setScalar(
+            t.scale * lerp(FIXED_CARD_START_SCALE, 1, ease.outBack(k)),
+          );
           this.faceCamera(g);
         },
         () => {
@@ -1160,26 +1269,30 @@ export class PlayerWorld {
       );
       this.gateAt(step.stop).state = "open";
     });
-    this.after(1.7, () => {
+    this.after(HEAL_DELAY, () => {
       this.sfx("heal");
       this.fx.heal(
-        this.character.root.position.clone().add(new THREE.Vector3(0, 1.2, 0)),
+        this.character.root.position
+          .clone()
+          .add(new THREE.Vector3(0, HEAL_RISE, 0)),
       );
       this.fx.text(
-        this.character.chestWorld().add(new THREE.Vector3(0, 1.4, 0)),
+        this.character
+          .chestWorld()
+          .add(new THREE.Vector3(0, HEAL_TEXT_RISE, 0)),
         "+100% HP",
         "#aee5a3",
         1.0,
-        1.6,
+        HEAL_TEXT_LIFE,
       );
 
       const from = this.health;
 
-      this.tween(0.8, (k) => {
-        this.health = lerp(from, 100, ease.outCubic(k));
+      this.tween(HEAL_SECONDS, (k) => {
+        this.health = lerp(from, FULL_HEALTH, ease.outCubic(k));
       });
       this.character.pose = "victory";
-      this.after(1.2, () => {
+      this.after(VICTORY_POSE_SECONDS, () => {
         this.character.pose = "idle";
       });
     });
@@ -1191,27 +1304,32 @@ export class PlayerWorld {
     const boss = this.bossModel;
     const home = boss.group.position.clone();
 
-    boss.group.position.y = home.y + 26;
-    this.after(0.9, () => this.sfx("bossArrive"));
+    boss.group.position.y = home.y + BOSS_DROP_HEIGHT;
+    this.after(BOSS_ARRIVE_SOUND_DELAY, () => this.sfx("bossArrive"));
     this.tween(
-      1.3,
+      BOSS_DROP_SECONDS,
       (k) => {
-        boss.group.position.y = home.y + 26 * (1 - ease.outCubic(clamp01(k)));
+        boss.group.position.y =
+          home.y + BOSS_DROP_HEIGHT * (1 - ease.outCubic(clamp01(k)));
       },
       () => {
-        this.shake = 1.2;
+        this.shake = BOSS_LANDING_SHAKE;
         boss.shake = 1;
-        this.fx.burst(home.clone().setY(0.2), {
-          n: 60,
+        this.fx.burst(home.clone().setY(BOSS_LANDING_DUST_Y), {
+          n: BOSS_LANDING_BURST_COUNT,
           colors: ["#ffae59", "#ff6d21", "#f4f4e8"],
-          speed: 10,
+          speed: BOSS_LANDING_BURST_SPEED,
         });
       },
     );
-    this.tween(0.001, () => void 0);
+    this.tween(MIN_TWEEN_SECONDS, () => void 0);
     if (this.player === "p1") {
       // Player 1 has nothing that works: shots bounce off.
-      for (const t of [2.6, 3.0, 3.4]) {
+      for (const t of [
+        BOSS_BOUNCE_SHOT_A,
+        BOSS_BOUNCE_SHOT_B,
+        BOSS_BOUNCE_SHOT_C,
+      ]) {
         this.after(t, () => this.shootBoss());
       }
     }
@@ -1229,16 +1347,22 @@ export class PlayerWorld {
             ? healthAt(this.game, { ...step, phase: "boss" }, "p1")
             : 0,
       });
-      this.after(0.2, () => this.shootBoss());
-      this.after(0.5, () => this.shootBoss());
+      this.after(PART_SHOT_A_DELAY, () => this.shootBoss());
+      this.after(PART_SHOT_B_DELAY, () => this.shootBoss());
       if (step.part === 0) {
         // The boss finishes player 1 with one blow.
-        this.after(0.9, () => {
+        this.after(KO_BLOW_DELAY, () => {
           const firstStop = nth(this.playing.stops, 0, "stops");
           const blow = this.track(
             new CodeWindow(
-              this.paint(firstStop.p1, "angry", "problem", 30, firstStop),
-              2.2,
+              this.paint(
+                firstStop.p1,
+                "angry",
+                "problem",
+                DEBT_WINDOW_COLS,
+                firstStop,
+              ),
+              KO_BLOW_WIDTH,
               "angry",
             ),
           );
@@ -1249,35 +1373,38 @@ export class PlayerWorld {
           const to = this.character.chestWorld();
 
           this.tween(
-            0.45,
+            KO_BLOW_SECONDS,
             (k) => {
               blow.group.position.lerpVectors(from, to, ease.inCubic(k));
-              blow.group.rotation.z = k * 6;
+              blow.group.rotation.z = k * KO_BLOW_SPIN;
             },
             () => {
               this.sfx("slam");
               this.sfx("lose");
-              this.shake = 1.4;
+              this.shake = KO_SHAKE;
               this.character.hit();
               this.character.pose = "down";
               this.fx.burst(to, {
-                n: 50,
+                n: KO_BURST_COUNT,
                 colors: ["#ff5d4f", "#ffae59"],
-                speed: 8,
+                speed: KO_BURST_SPEED,
               });
               this.fx.text(
-                to.clone().add(new THREE.Vector3(0, 1.4, 0)),
+                to.clone().add(new THREE.Vector3(0, KO_TEXT_RISE, 0)),
                 "K.O.",
                 "#ff5d4f",
-                1.3,
-                1.8,
+                KO_TEXT_SIZE,
+                KO_TEXT_LIFE,
               );
-              blow.shatter(this.debris, from, 5, [3, 2]);
+              blow.shatter(this.debris, from, KO_SHATTER_POWER, [
+                KO_SHATTER_GRID_COLS,
+                KO_SHATTER_GRID_ROWS,
+              ]);
               this.temps.splice(this.temps.indexOf(blow), 1);
 
               const h0 = this.health;
 
-              this.tween(0.6, (k) => {
+              this.tween(KO_HEALTH_SECONDS, (k) => {
                 this.health = lerp(h0, 0, k);
               });
             },
@@ -1298,7 +1425,7 @@ export class PlayerWorld {
     const part = nth(this.playing.boss.parts, step.part, "boss parts");
     const tool = toolFor(this.game, part.beatenBy);
 
-    this.after(0.25, () => {
+    this.after(TOOL_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
@@ -1311,36 +1438,39 @@ export class PlayerWorld {
 
       this.scene.add(card.group);
       this.tween(
-        0.4,
+        TOOL_BOLT_SECONDS,
         (k) => {
           card.group.position.lerpVectors(from, to, ease.inCubic(k));
-          card.group.rotation.z = k * 8;
+          card.group.rotation.z = k * TOOL_BOLT_SPIN;
           this.faceCamera(card.group, true);
         },
         () => {
           this.fx.beam(from, to, "#f9db48");
           this.fx.burst(to, {
-            n: 50,
+            n: PART_BURST_COUNT,
             colors: ["#f9db48", "#aee5a3", "#fff"],
-            speed: 9,
+            speed: PART_BURST_SPEED,
           });
           this.fx.text(
-            to.clone().add(new THREE.Vector3(0, 1.8, 0)),
-            beforeParen(tool.name).split(" ").slice(0, 2).join(" "),
+            to.clone().add(new THREE.Vector3(0, PART_TEXT_RISE, 0)),
+            beforeParen(tool.name)
+              .split(" ")
+              .slice(0, PART_TEXT_WORDS)
+              .join(" "),
             "#f9db48",
-            1.1,
-            1.6,
+            PART_TEXT_SIZE,
+            PART_TEXT_LIFE,
           );
           boss.breakPart(step.part, this.debris, from);
           this.sfx("bossPartBreak");
           this.bossLeft = this.bossTotal - step.part - 1;
-          this.shake = 0.8;
+          this.shake = PART_BREAK_SHAKE;
           card.dispose();
           this.temps.splice(this.temps.indexOf(card), 1);
 
           const h0 = this.health;
 
-          this.tween(0.6, (k) => {
+          this.tween(PART_HEALTH_SECONDS, (k) => {
             this.health = lerp(h0, s.health, k);
           });
         },
