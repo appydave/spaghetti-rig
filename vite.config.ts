@@ -13,8 +13,8 @@ export default defineConfig({
       // Count every source file, not only the ones a test imports, so an untested file lowers the numbers.
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts'],
-      // The floor is the measured coverage on 2026-10-23 rounded down: it fails if coverage falls.
-      thresholds: { statements: 11, branches: 17, functions: 17, lines: 12 },
+      // The floor is the measured coverage on 2026-10-23 rounded down to one decimal: it fails if coverage falls.
+      thresholds: { statements: 11.1, branches: 17.6, functions: 17.5, lines: 12.3 },
     },
   },
 });
