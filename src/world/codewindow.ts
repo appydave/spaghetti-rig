@@ -3,6 +3,8 @@ import type { Layout, Line, Mark } from "./codelayout";
 import { Debris } from "./physics";
 import { INK, kit, rng, toon } from "./toon";
 import { meshNamed } from "./objects";
+import { context2d } from "../dom";
+import { nth } from "../nth";
 
 export type Mood = "angry" | "calm" | "fixed" | "boss";
 
@@ -118,7 +120,7 @@ export function paintCard(
   paint: Paint,
 ): HTMLCanvasElement {
   const cv = document.createElement("canvas");
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   g.font = `600 ${FONT}px ${MONO}`;
   const cw = g.measureText("MMMMMMMMMM").width / 10;
   const gutter = cw * 2.2;
@@ -225,7 +227,7 @@ export function paintCard(
     g.setLineDash([]);
     y += 26;
     for (const [i, n] of layout.notes.entries()) {
-      const ls = noteLines[i]!;
+      const ls = nth(noteLines, i, "note lines");
       pin(g, PAD + 18, y + 18, n.pin, PIN[n.kind]);
       g.font = `500 30px Space, Arial, sans-serif`;
       g.fillStyle = "#e6eef7";
@@ -449,7 +451,7 @@ export function paintCracks(
   cx?: number,
   cy?: number,
 ) {
-  const g = cv.getContext("2d")!,
+  const g = context2d(cv),
     r = rng(seed);
   const x0 = cx ?? cv.width * (0.3 + r() * 0.4),
     y0 = cy ?? cv.height * (0.3 + r() * 0.4);
@@ -531,7 +533,7 @@ function extrudeMapped(
   geo.translate(0, 0, -depth / 2);
   const pos = geo.getAttribute("position"),
     uv = geo.getAttribute("uv");
-  const caps = geo.groups[0]!;
+  const caps = nth(geo.groups, 0, "geometry groups");
   for (let i = caps.start; i < caps.start + caps.count; i++)
     uv.setXY(i, pos.getX(i) / w + 0.5, pos.getY(i) / h + 0.5);
   uv.needsUpdate = true;
@@ -655,7 +657,7 @@ export class CodeWindow {
       this.canvas,
       seed + this.cracks * 31,
       u === undefined ? undefined : u * this.canvas.width,
-      v === undefined ? undefined : (1 - v!) * this.canvas.height,
+      v === undefined ? undefined : (1 - v) * this.canvas.height,
     );
     this.refresh();
   }
@@ -667,7 +669,7 @@ export class CodeWindow {
       this.eyes.scale.y = blink;
     }
     if (this.rattle > 0) {
-      this.group.children[0]!.position.set(
+      nth(this.group.children, 0, "window group children").position.set(
         (Math.random() - 0.5) * 0.04 * this.rattle,
         (Math.random() - 0.5) * 0.04 * this.rattle,
         0,
@@ -692,15 +694,15 @@ export class CodeWindow {
     const w = this.w,
       h = this.h,
       d = this.depth;
-    const P: [number, number][][] = [];
-    for (let i = 0; i <= cols; i++) {
-      P[i] = [];
-      for (let j = 0; j <= rows; j++) {
+    const P = Array.from({ length: cols + 1 }, (_, i) =>
+      Array.from({ length: rows + 1 }, (_, j): [number, number] => {
         const jx = i > 0 && i < cols ? (r() - 0.5) * 0.55 * (w / cols) : 0;
         const jy = j > 0 && j < rows ? (r() - 0.5) * 0.55 * (h / rows) : 0;
-        P[i]![j] = [-w / 2 + (i * w) / cols + jx, -h / 2 + (j * h) / rows + jy];
-      }
-    }
+        return [-w / 2 + (i * w) / cols + jx, -h / 2 + (j * h) / rows + jy];
+      }),
+    );
+    const corner = (i: number, j: number) =>
+      nth(nth(P, i, "grid columns"), j, "grid rows");
     const jag = new Map<string, [number, number][]>();
     const edge = (
       a: [number, number],
@@ -729,9 +731,9 @@ export class CodeWindow {
       return pts;
     };
     const H = (i: number, j: number) =>
-      edge(P[i]![j]!, P[i + 1]![j]!, `h${i},${j}`, j > 0 && j < rows);
+      edge(corner(i, j), corner(i + 1, j), `h${i},${j}`, j > 0 && j < rows);
     const Vt = (i: number, j: number) =>
-      edge(P[i]![j]!, P[i]![j + 1]!, `v${i},${j}`, i > 0 && i < cols);
+      edge(corner(i, j), corner(i, j + 1), `v${i},${j}`, i > 0 && i < cols);
     const refs = { n: 0 };
     this.face.userData.refs = 0;
     this.side.userData.refs = 0;

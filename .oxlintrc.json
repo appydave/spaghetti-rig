@@ -327,7 +327,8 @@
         "unicorn/prefer-structured-clone": ["error"],
         "unicorn/prefer-top-level-await": ["error"],
         "unicorn/prefer-type-error": ["error"],
-        "unicorn/require-module-specifiers": ["error"]
+        "unicorn/require-module-specifiers": ["error"],
+        "typescript/no-non-null-assertion": "error"
       }
     },
     {
@@ -339,7 +340,8 @@
             "assertionStyle": "as",
             "objectLiteralTypeAssertions": "allow"
           }
-        ]
+        ],
+        "typescript/no-non-null-assertion": "off"
       }
     },
     {

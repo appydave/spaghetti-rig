@@ -6,6 +6,8 @@ import { kit } from "./toon";
 import type { Player } from "../show/script";
 import type { Card } from "../content/types";
 import { userData } from "./objects";
+import { context2d } from "../dom";
+import { nth } from "../nth";
 
 function lights(scene: THREE.Scene) {
   scene.add(new THREE.HemisphereLight("#e4f7ff", "#586d55", 2.3));
@@ -24,7 +26,7 @@ function lights(scene: THREE.Scene) {
 function blob(x: number, y: number, z: number, r: number) {
   const cv = document.createElement("canvas");
   cv.width = cv.height = 128;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   grad.addColorStop(0, "rgba(23,62,53,.38)");
   grad.addColorStop(0.6, "rgba(23,62,53,.16)");
@@ -51,7 +53,13 @@ function snippet(lines: string[], title: string): Card {
     title,
     blocks: [{ view: "code", rows: lines.map((l): ["c", string] => ["c", l]) }],
     annotations: [
-      { block: 0, row: 1, match: lines[1]!.trim(), kind: "problem", note: "" },
+      {
+        block: 0,
+        row: 1,
+        match: nth(lines, 1, "snippet lines").trim(),
+        kind: "problem",
+        note: "",
+      },
     ],
   };
 }
@@ -167,9 +175,9 @@ export class TitleShowcase {
   update(dt: number) {
     this.t += dt;
     this.hero.aimAt(
-      this.windows[0]!.group.position.clone().add(
-        new THREE.Vector3(0, -0.6, 0),
-      ),
+      nth(this.windows, 0, "showcase windows")
+        .group.position.clone()
+        .add(new THREE.Vector3(0, -0.6, 0)),
     );
     this.hero.update(dt);
     this.sidekick.update(dt);

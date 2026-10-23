@@ -53,16 +53,16 @@ export class AutoGunner {
       this.wait = Math.max(this.wait, 0.18 + r() * 0.3);
       this.speed = 3.5 + r() * 3.5;
       this.pickError(target);
-      this.aim ??= rest.clone();
     }
+    const aim = (this.aim ??= rest.clone());
     const goal = target.centre.clone().add(this.error);
-    this.aim!.lerp(goal, 1 - Math.exp(-dt * this.speed));
+    aim.lerp(goal, 1 - Math.exp(-dt * this.speed));
     // A little tremble, so even a steady aim is never perfectly still.
-    this.aim!.x += (r() - 0.5) * 0.02;
-    this.aim!.y += (r() - 0.5) * 0.02;
+    aim.x += (r() - 0.5) * 0.02;
+    aim.y += (r() - 0.5) * 0.02;
     this.wait -= dt;
     if (this.wait > 0) return null;
-    const shot: Shot = { at: this.aim!.clone(), target };
+    const shot: Shot = { at: aim.clone(), target };
     if (this.burst > 0) {
       this.burst--;
       this.wait = 0.07 + r() * 0.05;

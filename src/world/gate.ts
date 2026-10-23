@@ -3,6 +3,7 @@ import { gateLabel } from "../content/gatelabel";
 import { ROAD_HALF } from "./city";
 import { INK, kit } from "./toon";
 import { isDrawable, mapOf } from "./objects";
+import { context2d } from "../dom";
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
@@ -39,7 +40,7 @@ export class Gate {
     const cv = document.createElement("canvas");
     cv.width = 1024;
     cv.height = 200;
-    const g = cv.getContext("2d")!;
+    const g = context2d(cv);
     g.fillStyle = "#173e35";
     g.beginPath();
     g.roundRect(0, 0, 1024, 200, 26);
