@@ -4,6 +4,45 @@ import { isDrawable } from "./objects";
 
 export const INK = "#173e35";
 
+const TONE_SHADOW = 96;
+const TONE_DIM = 150;
+const TONE_MID = 196;
+const TONE_LIGHT = 232;
+const TONE_FULL = 255;
+const TONE_STEPS = [TONE_SHADOW, TONE_DIM, TONE_MID, TONE_LIGHT, TONE_FULL];
+const RGBA_CHANNELS = 4;
+const OPAQUE_BYTE = 255;
+const DEFAULT_EMISSIVE_INTENSITY = 0.6;
+const DEFAULT_OUTLINE_THICKNESS = 0.022;
+const BOX_SEGMENTS = 3;
+const BOX_RADIUS = 0.16;
+const SOFT_BOX_SEGMENTS = 4;
+const SOFT_BOX_RADIUS = 0.3;
+const SPHERE_WIDTH_SEGMENTS = 24;
+const SPHERE_HEIGHT_SEGMENTS = 16;
+const ROUND_SEGMENTS = 20;
+const TORUS_TUBE_RADIUS = 0.28;
+const TORUS_TUBE_SEGMENTS = 10;
+const TORUS_RING_SEGMENTS = 28;
+const MIN_CAPSULE_LENGTH = 0.001;
+const CAPSULE_CAP_SEGMENTS = 6;
+const CAPSULE_RADIAL_SEGMENTS = 14;
+const DEFAULT_EXTRUDE_BEVEL = 0.01;
+const EXTRUDE_CURVE_SEGMENTS = 6;
+const XORSHIFT_LEFT_A = 13;
+const XORSHIFT_RIGHT = 17;
+const XORSHIFT_LEFT_B = 5;
+const UINT32_RANGE = 4294967296;
+const EASE_CUBIC_POWER = 3;
+const EASE_IN_HALF_SCALE = 4;
+const EASE_OUT_HALF_SLOPE = -2;
+const ELASTIC_PERIOD_DIVISOR = 3;
+const EASE_MIDPOINT = 0.5;
+const ELASTIC_DECAY = -10;
+const ELASTIC_FREQUENCY = 10;
+const ELASTIC_PHASE = 0.75;
+const OVERSHOOT = 1.70158;
+
 /** Five soft bands: cel-shaded, but gentle enough to keep the daylight toy look. */
 let gradient: THREE.DataTexture | undefined;
 
@@ -12,11 +51,11 @@ export function toonGradient(): THREE.DataTexture {
     return gradient;
   }
 
-  const tones = [96, 150, 196, 232, 255];
-  const data = new Uint8Array(tones.length * 4);
+  const tones = TONE_STEPS;
+  const data = new Uint8Array(tones.length * RGBA_CHANNELS);
 
   for (const [i, t] of tones.entries()) {
-    data.set([t, t, t, 255], i * 4);
+    data.set([t, t, t, OPAQUE_BYTE], i * RGBA_CHANNELS);
   }
 
   gradient = new THREE.DataTexture(data, tones.length, 1, THREE.RGBAFormat);
@@ -33,7 +72,7 @@ const cache = new Map<string, THREE.MeshToonMaterial>();
 export function toon(
   color: THREE.ColorRepresentation,
   emissive?: THREE.ColorRepresentation,
-  emissiveIntensity = 0.6,
+  emissiveIntensity = DEFAULT_EMISSIVE_INTENSITY,
 ): THREE.MeshToonMaterial {
   const emissiveKey =
     emissive === undefined ? "" : new THREE.Color(emissive).getHexString();
@@ -57,7 +96,9 @@ export function toon(
 /** Ink outline via the inverted-hull trick: a back-face shell pushed out along normals. */
 const outlineMaterials = new Map<number, THREE.ShaderMaterial>();
 
-export function outlineMaterial(thickness = 0.022): THREE.ShaderMaterial {
+export function outlineMaterial(
+  thickness = DEFAULT_OUTLINE_THICKNESS,
+): THREE.ShaderMaterial {
   let m = outlineMaterials.get(thickness);
 
   if (m) {
@@ -92,19 +133,28 @@ void main() {
 }
 
 export const geo = {
-  box: new RoundedBoxGeometry(1, 1, 1, 3, 0.16),
-  softBox: new RoundedBoxGeometry(1, 1, 1, 4, 0.3),
-  sphere: new THREE.SphereGeometry(1, 24, 16),
-  cylinder: new THREE.CylinderGeometry(1, 1, 1, 20),
-  cone: new THREE.ConeGeometry(1, 1, 20),
-  torus: new THREE.TorusGeometry(1, 0.28, 10, 28),
+  box: new RoundedBoxGeometry(1, 1, 1, BOX_SEGMENTS, BOX_RADIUS),
+  softBox: new RoundedBoxGeometry(1, 1, 1, SOFT_BOX_SEGMENTS, SOFT_BOX_RADIUS),
+  sphere: new THREE.SphereGeometry(
+    1,
+    SPHERE_WIDTH_SEGMENTS,
+    SPHERE_HEIGHT_SEGMENTS,
+  ),
+  cylinder: new THREE.CylinderGeometry(1, 1, 1, ROUND_SEGMENTS),
+  cone: new THREE.ConeGeometry(1, 1, ROUND_SEGMENTS),
+  torus: new THREE.TorusGeometry(
+    1,
+    TORUS_TUBE_RADIUS,
+    TORUS_TUBE_SEGMENTS,
+    TORUS_RING_SEGMENTS,
+  ),
 };
 for (const g of Object.values(geo)) {
   g.userData.shared = true;
 }
 
 /** A small modelling kit: every part is a toon mesh with an ink outline, casting soft shadows. */
-export function kit(outline = 0.022) {
+export function kit(outline = DEFAULT_OUTLINE_THICKNESS) {
   function mesh(
     parent: THREE.Object3D,
     g: THREE.BufferGeometry,
@@ -219,9 +269,9 @@ export function kit(outline = 0.022) {
   ) {
     const g = new THREE.CapsuleGeometry(
       r,
-      Math.max(0.001, a.distanceTo(b)),
-      6,
-      14,
+      Math.max(MIN_CAPSULE_LENGTH, a.distanceTo(b)),
+      CAPSULE_CAP_SEGMENTS,
+      CAPSULE_RADIAL_SEGMENTS,
     );
     const m = mesh(
       p,
@@ -249,7 +299,7 @@ export function kit(outline = 0.022) {
     pts: [number, number][],
     depth: number,
     z: number,
-    bevel = 0.01,
+    bevel = DEFAULT_EXTRUDE_BEVEL,
   ) {
     const shape = new THREE.Shape();
 
@@ -265,7 +315,7 @@ export function kit(outline = 0.022) {
       bevelSize: bevel,
       bevelThickness: bevel,
       bevelSegments: 2,
-      curveSegments: 6,
+      curveSegments: EXTRUDE_CURVE_SEGMENTS,
     });
 
     return mesh(p, g, c, 0, 0, z, 1, 1, 1);
@@ -313,25 +363,27 @@ export function rng(seed: number) {
   let s = seed >>> 0 || 1;
 
   return () => {
-    s ^= s << 13;
+    s ^= s << XORSHIFT_LEFT_A;
     s >>>= 0;
-    s ^= s >>> 17;
-    s ^= s << 5;
+    s ^= s >>> XORSHIFT_RIGHT;
+    s ^= s << XORSHIFT_LEFT_B;
     s >>>= 0;
 
-    return s / 4294967296;
+    return s / UINT32_RANGE;
   };
 }
 
 export const ease = {
-  outCubic: (t: number) => 1 - Math.pow(1 - t, 3),
+  outCubic: (t: number) => 1 - Math.pow(1 - t, EASE_CUBIC_POWER),
   inOutCubic: (t: number) =>
-    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+    t < EASE_MIDPOINT
+      ? EASE_IN_HALF_SCALE * t * t * t
+      : 1 - Math.pow(EASE_OUT_HALF_SLOPE * t + 2, EASE_CUBIC_POWER) / 2,
   outBack: (t: number) => {
-    const c1 = 1.70158;
+    const c1 = OVERSHOOT;
     const c3 = c1 + 1;
 
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    return 1 + c3 * Math.pow(t - 1, EASE_CUBIC_POWER) + c1 * Math.pow(t - 1, 2);
   },
   inCubic: (t: number) => t * t * t,
   outElastic: (t: number) =>
@@ -339,8 +391,11 @@ export const ease = {
       ? 0
       : t === 1
         ? 1
-        : Math.pow(2, -10 * t) *
-            Math.sin((t * 10 - 0.75) * ((2 * Math.PI) / 3)) +
+        : Math.pow(2, ELASTIC_DECAY * t) *
+            Math.sin(
+              (t * ELASTIC_FREQUENCY - ELASTIC_PHASE) *
+                ((2 * Math.PI) / ELASTIC_PERIOD_DIVISOR),
+            ) +
           1,
 };
 export const clamp01 = (t: number) => Math.min(1, Math.max(0, t));

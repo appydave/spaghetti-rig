@@ -471,9 +471,7 @@
         "src/world/effects.ts",
         "src/world/enemies.ts",
         "src/world/gate.ts",
-        "src/world/physics.ts",
         "src/world/showcase.ts",
-        "src/world/toon.ts",
         "src/world/world.ts"
       ],
       "rules": {
