@@ -18,6 +18,8 @@ import {
   type LeadVoice,
 } from "./tracks";
 import { nth, present } from "../nth";
+import rawSfx from "./sfx.json";
+import { expandSfx, parseSfx } from "./sfx";
 
 export type { Theme } from "./tracks";
 
@@ -52,6 +54,9 @@ export interface PlayOptions {
   pan?: number;
   volume?: number;
 }
+
+/** The effects whose voices are written as data in sfx.json; the rest are still played by playSfx below. */
+const RECIPES = parseSfx(rawSfx);
 
 export const TRACKS: { name: string; theme: Theme; bpm: number }[] = TRACK_LIST;
 
@@ -108,7 +113,7 @@ const pick = <T>(arr: readonly T[]): T =>
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
 
-interface ToneOpts {
+export interface ToneOpts {
   type?: OscillatorType;
   f: number;
   f2?: number;
@@ -119,7 +124,7 @@ interface ToneOpts {
   detune?: number;
   sweep?: number;
 }
-interface NoiseOpts {
+export interface NoiseOpts {
   filter: BiquadFilterType;
   f: number;
   f2?: number;
@@ -1323,6 +1328,19 @@ export class AudioEngine {
   private playSfx(sfx: Sfx, t: number, opts: PlayOptions): void {
     const out = this.sfxOut(opts, SFX_LIFE[sfx] ?? 0.6);
     const n = (midi: number): number => midiToFreq(midi);
+    const layers = RECIPES.get(sfx);
+
+    if (layers) {
+      for (const v of expandSfx(layers, t)) {
+        if (v.kind === "tone") {
+          this.tone(out, v.at, v.opts);
+        } else {
+          this.noise(out, v.at, v.opts);
+        }
+      }
+
+      return;
+    }
 
     switch (sfx) {
       case "shoot": {
@@ -1899,32 +1917,12 @@ export class AudioEngine {
         break;
       }
 
-      case "uiMove": {
-        this.tone(out, t, {
-          type: "sine",
-          f: rand(1650, 1750),
-          dur: 0.03,
-          vol: 0.08,
-        });
-        break;
-      }
-
       case "uiSelect": {
         this.tone(out, t, { type: "triangle", f: 880, dur: 0.07, vol: 0.12 });
         this.tone(out, t + 0.06, {
           type: "triangle",
           f: 1320,
           dur: 0.15,
-          vol: 0.12,
-        });
-        break;
-      }
-
-      case "step": {
-        this.noise(out, t, {
-          filter: "lowpass",
-          f: rand(250, 450),
-          dur: 0.05,
           vol: 0.12,
         });
         break;

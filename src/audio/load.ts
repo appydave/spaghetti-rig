@@ -84,6 +84,7 @@ export function parseTrackDefs(raw: unknown): TrackDef[] {
       comp: typeof t.comp === "string" ? t.comp : undefined,
       perc: typeof t.perc === "string" ? t.perc : undefined,
       mix: mix(t.mix),
+      notes: typeof t.notes === "string" ? t.notes : undefined,
     };
   });
 }

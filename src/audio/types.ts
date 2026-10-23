@@ -35,4 +35,6 @@ export interface TrackDef {
   comp?: string;
   perc?: string;
   mix?: TrackMix;
+  /** Free text for whoever edits the score (chord names such as Fmaj7); the engine ignores it. */
+  notes?: string;
 }
