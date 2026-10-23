@@ -13,6 +13,8 @@ import {
   TRACKS as TRACK_LIST,
   tracksForTheme,
   midiToFreq,
+  SEMITONES_PER_OCTAVE,
+  STEPS_PER_BEAT,
   type CompiledTrack,
   type Theme,
   type LeadVoice,
@@ -66,19 +68,80 @@ const XFADE = 1.2;
 const MASTER_LEVEL = 0.9;
 const MUSIC_LEVEL = 0.3;
 const SFX_LEVEL = 0.8;
+/** The quietest a gain ramp may reach: an exponential ramp cannot end at 0. */
+const SILENCE = 0.0001;
+/** Seconds a gain change on the master takes to settle (mute and unmute). */
+const MUTE_FADE = 0.04;
+/** A new sound effect starts this long after it is asked for, so it is never scheduled in the past. */
+const SFX_START_DELAY = 0.005;
+/** How many sound effects may overlap before a new one is dropped (a low-priority one is dropped sooner). */
+const SFX_VOICE_CAP = 64;
+const LOW_PRIORITY_VOICE_CAP = 24;
+/** The soft toy-room reverb: its length in seconds and how sharply its noise dies away. */
+const REVERB_SECONDS = 2.2;
+const REVERB_DECAY_POWER = 3.2;
+/** A new theme's first track starts this long after the theme is set. */
+const THEME_START_DELAY = 0.06;
+/** A deck's gain starts rising this long before its first step. */
+const DECK_FADE_LEAD = 0.05;
+/** The ping-pong delay is at most this long, and one dotted eighth is three steps. */
+const DELAY_MAX_SECONDS = 1.5;
+const DELAY_STEPS = 3;
+/** A deck that has stopped scheduling is kept this long for its tails to ring out, then disposed. */
+const DECK_TAIL_SECONDS = 3;
+/** If the scheduler falls this far behind (a hidden tab), it jumps forward instead of bursting. */
+const STALL_SECONDS = 0.25;
+/** The scheduler plays at most this many steps in one tick. */
+const SCHEDULE_GUARD = 256;
+/** The next track of a theme fades in this fast. */
+const NEXT_DECK_FADE_IN = 0.03;
+/** A sound effect's output is kept this long after its tail, and a tone or noise voice's gain behaves as follows. */
+const SFX_TAIL_SECONDS = 0.4;
+const MS_PER_SECOND = 1000;
+const DEFAULT_TONE_ATTACK = 0.004;
+const DEFAULT_NOISE_ATTACK = 0.003;
+const DEFAULT_NOISE_Q = 0.8;
+/** A tone ramps to at least this peak, and its decay lasts at least this long after its attack. */
+const MIN_PEAK = 0.0002;
+const MIN_DECAY = 0.01;
+/** An oscillator or noise source is stopped this long after its gain has died away. */
+const STOP_PADDING = 0.02;
+/** The shared noise buffer is two seconds long, so a noise voice may last at most this long. */
+const NOISE_MAX_SECONDS = 1.95;
+/** A step this far in the past is still played. */
+const LATE_STEP_SECONDS = 0.02;
+/** Off the beat the bass and the lead play this much softer. */
+const OFFBEAT_BASS = 0.85;
+const OFFBEAT_LEAD = 0.86;
+/** The second time round a quiet bell doubles the hook an octave up. */
+const HOOK_BELL_LEVEL = 0.1;
+const HOOK_BELL_DECAY = 0.9;
+/** The arpeggio swings between the speakers, and plays as a bell or a pluck. */
+const ARP_PAN = 0.45;
+const ARP_BELL_LEVEL = 0.06;
+const ARP_BELL_DECAY = 0.7;
+const ARP_PLUCK_LEVEL = 0.075;
 
-/** Minimum seconds between two plays of the same effect. */
+/** Minimum seconds between two plays of the same effect: the chattiest effects, shots, crackles, steps, damage and bounces. */
+const CHATTY_GAP = 0.03;
+const SHOOT_GAP = 0.035;
+const CRACKLE_GAP = 0.04;
+const STEP_GAP = 0.07;
+const DAMAGE_GAP = 0.08;
+const BOUNCE_GAP = 0.06;
+/** The gap for every effect not listed here. */
+const DEFAULT_GAP = 0.02;
 const RATE_LIMIT: Partial<Record<Sfx, number>> = {
-  debrisBounce: 0.04,
-  step: 0.07,
-  enemyHit: 0.03,
-  shoot: 0.035,
-  shootP1: 0.035,
-  uiMove: 0.03,
-  glassCrack: 0.04,
-  enemyPop: 0.03,
-  damage: 0.08,
-  bounce: 0.06,
+  debrisBounce: CRACKLE_GAP,
+  step: STEP_GAP,
+  enemyHit: CHATTY_GAP,
+  shoot: SHOOT_GAP,
+  shootP1: SHOOT_GAP,
+  uiMove: CHATTY_GAP,
+  glassCrack: CRACKLE_GAP,
+  enemyPop: CHATTY_GAP,
+  damage: DAMAGE_GAP,
+  bounce: BOUNCE_GAP,
 };
 const LOW_PRIORITY = new Set<Sfx>([
   "debrisBounce",
@@ -86,15 +149,23 @@ const LOW_PRIORITY = new Set<Sfx>([
   "enemyHit",
   "uiMove",
 ]);
+/** Seconds an effect's output stays connected before it is torn down: the longest tail it can have. */
+const WIN_LIFE = 3;
+const LOSE_LIFE = 2.6;
+const BOSS_ARRIVE_LIFE = 2.6;
+const BOSS_DEFEAT_LIFE = 2.2;
+const HEAL_LIFE = 1.6;
+const CODE_FIX_LIFE = 1.2;
+const SHATTER_LIFE = 0.8;
 const SFX_LIFE: Partial<Record<Sfx, number>> = {
-  win: 3,
-  lose: 2.6,
-  bossArrive: 2.6,
-  bossDefeat: 2.2,
-  heal: 1.6,
-  codeFix: 1.2,
+  win: WIN_LIFE,
+  lose: LOSE_LIFE,
+  bossArrive: BOSS_ARRIVE_LIFE,
+  bossDefeat: BOSS_DEFEAT_LIFE,
+  heal: HEAL_LIFE,
+  codeFix: CODE_FIX_LIFE,
   cardPlay: 1,
-  shatter: 0.8,
+  shatter: SHATTER_LIFE,
 };
 
 interface Deck {
@@ -220,7 +291,7 @@ export class AudioEngine {
 
     g.cancelScheduledValues(ctx.currentTime);
     g.setValueAtTime(g.value, ctx.currentTime);
-    g.setTargetAtTime(v ? 0 : MASTER_LEVEL, ctx.currentTime, 0.04);
+    g.setTargetAtTime(v ? 0 : MASTER_LEVEL, ctx.currentTime, MUTE_FADE);
   }
 
   get paused(): boolean {
@@ -261,17 +332,20 @@ export class AudioEngine {
     const now = ctx.currentTime;
     const last = this.lastPlayed.get(sfx) ?? -1;
 
-    if (now - last < (RATE_LIMIT[sfx] ?? 0.02)) {
+    if (now - last < (RATE_LIMIT[sfx] ?? DEFAULT_GAP)) {
       return;
     }
 
-    if (this.activeSfx > (LOW_PRIORITY.has(sfx) ? 24 : 64)) {
+    if (
+      this.activeSfx >
+      (LOW_PRIORITY.has(sfx) ? LOW_PRIORITY_VOICE_CAP : SFX_VOICE_CAP)
+    ) {
       return;
     }
 
     this.lastPlayed.set(sfx, now);
     try {
-      this.playSfx(sfx, now + 0.005, opts);
+      this.playSfx(sfx, now + SFX_START_DELAY, opts);
     } catch {
       /* ignore */
     }
@@ -351,14 +425,15 @@ export class AudioEngine {
     this.noiseBuf = nb;
 
     // Generated-noise impulse response reverb (soft toy room).
-    const len = Math.floor(ctx.sampleRate * 2.2);
+    const len = Math.floor(ctx.sampleRate * REVERB_SECONDS);
     const ir = ctx.createBuffer(2, len, ctx.sampleRate);
 
     for (let ch = 0; ch < 2; ch++) {
       const d = ir.getChannelData(ch);
 
       for (let i = 0; i < len; i++) {
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+        d[i] =
+          (Math.random() * 2 - 1) * Math.pow(1 - i / len, REVERB_DECAY_POWER);
       }
     }
 
@@ -443,7 +518,7 @@ export class AudioEngine {
       return;
     }
 
-    this.current = this.createDeck(track, now + 0.06, XFADE);
+    this.current = this.createDeck(track, now + THEME_START_DELAY, XFADE);
     this.setTrackName(track.def.name);
   }
 
@@ -458,7 +533,7 @@ export class AudioEngine {
 
     g.cancelScheduledValues(from);
     g.setValueAtTime(g.value || 1, from);
-    g.linearRampToValueAtTime(0.0001, from + fade);
+    g.linearRampToValueAtTime(SILENCE, from + fade);
   }
 
   private createDeck(
@@ -469,7 +544,10 @@ export class AudioEngine {
     const ctx = this.audioContext;
     const out = ctx.createGain();
 
-    out.gain.setValueAtTime(0.0001, Math.max(ctx.currentTime, start - 0.05));
+    out.gain.setValueAtTime(
+      SILENCE,
+      Math.max(ctx.currentTime, start - DECK_FADE_LEAD),
+    );
     out.gain.linearRampToValueAtTime(1, start + fadeIn);
     out.connect(this.musicBusNode);
 
@@ -483,7 +561,7 @@ export class AudioEngine {
     tone.type = "lowpass";
     tone.frequency.value = 2800;
 
-    const dt = Math.min(1.5, track.stepSec * 3);
+    const dt = Math.min(DELAY_MAX_SECONDS, track.stepSec * DELAY_STEPS);
     const dL = ctx.createDelay(2);
 
     dL.delayTime.value = dt;
@@ -562,7 +640,7 @@ export class AudioEngine {
       }
 
       this.decks = this.decks.filter((d) => {
-        if (d.stopAt !== null && now > d.stopAt + 3) {
+        if (d.stopAt !== null && now > d.stopAt + DECK_TAIL_SECONDS) {
           this.disposeDeck(d);
 
           return false;
@@ -579,11 +657,11 @@ export class AudioEngine {
     const tr = deck.track;
 
     // After a long stall (hidden tab), jump forward instead of bursting.
-    if (deck.start + deck.abs * tr.stepSec < now - 0.25) {
+    if (deck.start + deck.abs * tr.stepSec < now - STALL_SECONDS) {
       deck.abs = Math.ceil((now - deck.start) / tr.stepSec);
     }
 
-    for (let guard = 0; guard < 256; guard++) {
+    for (let guard = 0; guard < SCHEDULE_GUARD; guard++) {
       const base = deck.start + deck.abs * tr.stepSec;
 
       if (base >= horizon) {
@@ -611,7 +689,7 @@ export class AudioEngine {
           if (next) {
             this.retire(deck, base, 1.0);
             deck.stopAt = base; // hard stop scheduling; tails fade
-            this.current = this.createDeck(next, base, 0.03);
+            this.current = this.createDeck(next, base, NEXT_DECK_FADE_IN);
             this.setTrackName(next.def.name);
 
             return;
@@ -621,7 +699,7 @@ export class AudioEngine {
 
       const swing = deck.abs % 2 === 1 ? (tr.def.swing ?? 0) * tr.stepSec : 0;
 
-      if (base >= now - 0.02) {
+      if (base >= now - LATE_STEP_SECONDS) {
         this.scheduleStep(deck, idx, loop, Math.max(now, base + swing));
       }
 
@@ -640,7 +718,7 @@ export class AudioEngine {
 
     const mix = def.mix ?? {};
     const sp = tr.stepSec;
-    const onBeat = idx % 4 === 0;
+    const onBeat = idx % STEPS_PER_BEAT === 0;
 
     if (ev.chord) {
       this.padChord(deck, t, ev.chord.pad, ev.chord.len * sp, mix.pad ?? 1);
@@ -652,27 +730,41 @@ export class AudioEngine {
         t,
         ev.bass.midi,
         ev.bass.len * sp,
-        (mix.bass ?? 1) * (onBeat ? 1 : 0.85),
+        (mix.bass ?? 1) * (onBeat ? 1 : OFFBEAT_BASS),
       );
     }
 
     if (ev.lead) {
-      const vel = (mix.lead ?? 1) * (onBeat ? 1 : 0.86);
+      const vel = (mix.lead ?? 1) * (onBeat ? 1 : OFFBEAT_LEAD);
 
       this.leadNote(deck, t, ev.lead.midi, ev.lead.len * sp, vel, def.lead);
       // Second time round, a quiet bell doubles the hook an octave up.
       if (loop % 2 === 1 && def.theme !== "stop") {
-        this.bell(deck, t, ev.lead.midi + 12, 0.1 * vel, 0, 0.9);
+        this.bell(
+          deck,
+          t,
+          ev.lead.midi + SEMITONES_PER_OCTAVE,
+          HOOK_BELL_LEVEL * vel,
+          0,
+          HOOK_BELL_DECAY,
+        );
       }
     }
 
     if (ev.arp !== undefined) {
-      const pan = idx % 2 === 0 ? -0.45 : 0.45;
+      const pan = idx % 2 === 0 ? -ARP_PAN : ARP_PAN;
 
       if (def.arpVoice === "bell") {
-        this.bell(deck, t, ev.arp, 0.06 * (mix.arp ?? 1), pan, 0.7);
+        this.bell(
+          deck,
+          t,
+          ev.arp,
+          ARP_BELL_LEVEL * (mix.arp ?? 1),
+          pan,
+          ARP_BELL_DECAY,
+        );
       } else {
-        this.pluck(deck, t, ev.arp, 0.075 * (mix.arp ?? 1), pan);
+        this.pluck(deck, t, ev.arp, ARP_PLUCK_LEVEL * (mix.arp ?? 1), pan);
       }
     }
 
@@ -1132,7 +1224,7 @@ export class AudioEngine {
           /* ignore */
         }
       },
-      (life + 0.4) * 1000,
+      (life + SFX_TAIL_SECONDS) * MS_PER_SECOND,
     );
 
     return g;
@@ -1156,11 +1248,14 @@ export class AudioEngine {
     }
 
     const g = ctx.createGain();
-    const a = o.attack ?? 0.004;
+    const a = o.attack ?? DEFAULT_TONE_ATTACK;
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.vol), t + a);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(a + 0.01, o.dur));
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(MIN_PEAK, o.vol), t + a);
+    g.gain.exponentialRampToValueAtTime(
+      SILENCE,
+      t + Math.max(a + MIN_DECAY, o.dur),
+    );
 
     const nodes: AudioNode[] = [osc, g];
 
@@ -1177,7 +1272,7 @@ export class AudioEngine {
 
     g.connect(dest);
     osc.start(t);
-    osc.stop(t + o.dur + 0.02);
+    osc.stop(t + o.dur + STOP_PADDING);
     this.cleanup(osc, nodes);
   }
 
@@ -1195,21 +1290,24 @@ export class AudioEngine {
     const f = ctx.createBiquadFilter();
 
     f.type = o.filter;
-    f.Q.value = o.q ?? 0.8;
+    f.Q.value = o.q ?? DEFAULT_NOISE_Q;
     f.frequency.setValueAtTime(o.f, t);
     if (o.f2 !== undefined) {
       f.frequency.exponentialRampToValueAtTime(o.f2, t + o.dur);
     }
 
     const g = ctx.createGain();
-    const a = o.attack ?? 0.003;
+    const a = o.attack ?? DEFAULT_NOISE_ATTACK;
 
-    g.gain.setValueAtTime(0.0001, t);
+    g.gain.setValueAtTime(SILENCE, t);
     g.gain.exponentialRampToValueAtTime(o.vol, t + a);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(a + 0.01, o.dur));
+    g.gain.exponentialRampToValueAtTime(
+      SILENCE,
+      t + Math.max(a + MIN_DECAY, o.dur),
+    );
     src.connect(f).connect(g).connect(dest);
 
-    const dur = Math.min(o.dur + 0.02, 1.95);
+    const dur = Math.min(o.dur + STOP_PADDING, NOISE_MAX_SECONDS);
 
     src.start(t, rand(0, 2 - dur));
     src.stop(t + dur);
