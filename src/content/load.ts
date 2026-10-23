@@ -41,24 +41,28 @@ function rows(v: unknown): Row[] {
 
 function blocks(v: unknown): Block[] {
   if (!Array.isArray(v)) return [];
-  return v.filter(isObj).map((b) => ({
-    view: b.view === "diff" || b.view === "output" ? b.view : "code",
-    rows: rows(b.rows),
-  }));
+  return v
+    .filter((o) => isObj(o))
+    .map((b) => ({
+      view: b.view === "diff" || b.view === "output" ? b.view : "code",
+      rows: rows(b.rows),
+    }));
 }
 
 function annotations(v: unknown, bs: Block[]): Annotation[] {
   if (!Array.isArray(v)) return [];
-  return v.filter(isObj).flatMap((a): Annotation[] => {
-    const block = Number(a.block ?? 0),
-      row = Number(a.row ?? 0);
-    if (!bs[block]?.rows[row]) return [];
-    const kind =
-      a.kind === "fix" || a.kind === "note" || a.kind === "number"
-        ? a.kind
-        : "problem";
-    return [{ block, row, match: str(a.match), kind, note: str(a.note) }];
-  });
+  return v
+    .filter((o) => isObj(o))
+    .flatMap((a): Annotation[] => {
+      const block = Number(a.block ?? 0),
+        row = Number(a.row ?? 0);
+      if (!bs[block]?.rows[row]) return [];
+      const kind =
+        a.kind === "fix" || a.kind === "note" || a.kind === "number"
+          ? a.kind
+          : "problem";
+      return [{ block, row, match: str(a.match), kind, note: str(a.note) }];
+    });
 }
 
 function card(v: unknown, fallbackTitle: string): Card {
@@ -76,10 +80,12 @@ function card(v: unknown, fallbackTitle: string): Card {
     num: typeof c.num === "string" ? c.num : undefined,
     tool: typeof c.tool === "string" ? c.tool : undefined,
     steps: Array.isArray(c.steps)
-      ? c.steps.filter(isObj).map((s) => ({
-          text: str(s.text),
-          block: typeof s.block === "number" ? s.block : null,
-        }))
+      ? c.steps
+          .filter((o) => isObj(o))
+          .map((s) => ({
+            text: str(s.text),
+            block: typeof s.block === "number" ? s.block : null,
+          }))
       : undefined,
   };
 }
@@ -87,11 +93,13 @@ function card(v: unknown, fallbackTitle: string): Card {
 function boss(v: unknown, tierName: string): Boss {
   const b = isObj(v) ? v : {};
   const parts = Array.isArray(b.parts)
-    ? b.parts.filter(isObj).map((p) => ({
-        part: str(p.part, "a part"),
-        from: str(p.from),
-        beatenBy: str(p.beatenBy),
-      }))
+    ? b.parts
+        .filter((o) => isObj(o))
+        .map((p) => ({
+          part: str(p.part, "a part"),
+          from: str(p.from),
+          beatenBy: str(p.beatenBy),
+        }))
     : [];
   return {
     ...(b as Partial<Boss>),
@@ -147,7 +155,7 @@ export function parseContent(raw: unknown): Game {
   }
 
   const tierList: Tier[] = (
-    Array.isArray(r.tiers) ? r.tiers.filter(isObj) : []
+    Array.isArray(r.tiers) ? r.tiers.filter((o) => isObj(o)) : []
   ).map((t, i) => {
     const name = str(t.name, `Tier ${i + 1}`);
     return {
@@ -161,7 +169,7 @@ export function parseContent(raw: unknown): Game {
   });
 
   const stops: Stop[] = (
-    Array.isArray(r.stops) ? r.stops.filter(isObj) : []
+    Array.isArray(r.stops) ? r.stops.filter((o) => isObj(o)) : []
   ).map((s) => ({
     tier: str(s.tier),
     gate: str(s.gate, "Gate"),
@@ -207,7 +215,7 @@ export const hitFor = (tier: PlayTier) => 90 / Math.max(1, tier.stops.length);
 
 export const toolFor = (game: Game, key: string | undefined): Tool =>
   (key && game.content.tools[key]) || {
-    name: key ? key : "Tool",
+    name: key || "Tool",
     what: "",
     why: "",
     how: "",

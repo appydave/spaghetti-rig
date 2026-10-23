@@ -53,7 +53,7 @@ export class AutoGunner {
       this.wait = Math.max(this.wait, 0.18 + r() * 0.3);
       this.speed = 3.5 + r() * 3.5;
       this.pickError(target);
-      if (!this.aim) this.aim = rest.clone();
+      this.aim ??= rest.clone();
     }
     const goal = target.centre.clone().add(this.error);
     this.aim!.lerp(goal, 1 - Math.exp(-dt * this.speed));

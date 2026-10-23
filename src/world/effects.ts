@@ -304,7 +304,7 @@ export class Effects {
     this.sparks.count = n;
     this.sparks.instanceMatrix.needsUpdate = true;
     if (this.sparks.instanceColor) this.sparks.instanceColor.needsUpdate = true;
-    for (const f of [...this.faders]) {
+    for (const f of this.faders.slice()) {
       f.age += dt;
       const k = Math.min(1, f.age / f.life);
       f.tick(k, f.obj);

@@ -82,12 +82,12 @@ export function paintBossPanel(p: {
   g.fillRect(0, 0, W, BAR + 30);
   g.restore();
   g.textBaseline = "middle";
-  ["#ff8b69", "#ffd96a", "#aee5a3"].forEach((col, i) => {
+  for (const [i, col] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
     g.fillStyle = col;
     g.beginPath();
     g.arc(66 + i * 50, 16 + BAR / 2, 17, 0, Math.PI * 2);
     g.fill();
-  });
+  }
   const hx = 66 + 3 * 50;
   const head = fit(
     g,
@@ -371,7 +371,9 @@ export class BossModel {
   }
 
   destroy(debris: Debris, from: THREE.Vector3) {
-    this.parts.forEach((_, i) => this.breakPart(i, debris, from));
+    for (const i of this.parts.keys()) {
+      this.breakPart(i, debris, from);
+    }
     this.core.shatter(debris, from, 9, [7, 5], 99);
     debris.breakObject(this.frame, { from, power: 8, up: 6 });
     debris.breakObject(this.head, { from, power: 9, up: 8 });
@@ -386,13 +388,13 @@ export class BossModel {
       t = this.t;
     this.core.group.position.y = Math.sin(t * 1.3) * 0.08;
     this.core.group.rotation.z = (Math.random() - 0.5) * s * 0.05;
-    this.parts.forEach((p, i) => {
-      if (!p) return;
+    for (const [i, p] of this.parts.entries()) {
+      if (!p) continue;
       const home = p.group.userData.home as THREE.Vector3;
       p.group.position.y = home.y + Math.sin(t * 2 + i) * 0.06;
       p.group.rotation.z = Math.sin(t * 1.4 + i * 2) * 0.025;
       p.update(dt);
-    });
+    }
     this.core.update(dt);
     // The head bobs, chomps and scowls.
     this.head.position.y =
@@ -403,19 +405,21 @@ export class BossModel {
       Math.sin(t * 1.1) * 0.05 + (Math.random() - 0.5) * s * 0.12;
     this.jaw.position.y =
       -this.layout.head.h * 0.3 - Math.max(0, Math.sin(t * 5)) * 0.12;
-    this.brows.forEach((b, i) => {
+    for (const [i, b] of this.brows.entries()) {
       b.position.y =
         this.layout.head.h * 0.36 + Math.sin(t * 6 + i) * 0.03 - s * 0.1;
-    });
-    this.pupils.forEach((p, i) => {
+    }
+    for (const [i, p] of this.pupils.entries()) {
       p.position.x =
         (i ? 1 : -1) * this.layout.head.w * 0.18 + Math.sin(t * 0.8) * 0.06;
-    });
+    }
     this.glow.intensity = 5 + Math.sin(t * 4) * 2 + s * 10;
   }
 
   dispose() {
-    this.parts.forEach((p) => p?.dispose());
+    for (const p of this.parts) {
+      p?.dispose();
+    }
     this.core.dispose();
     this.frame.removeFromParent();
     this.head.removeFromParent();

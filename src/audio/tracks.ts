@@ -442,7 +442,11 @@ export function parseChord(entry: string, beatsPerBar: number): Chord {
       }
       return true;
     });
-  return { bass: parseNote(bassStr), pad: tokens.map(parseNote), beats };
+  return {
+    bass: parseNote(bassStr),
+    pad: tokens.map((token) => parseNote(token)),
+    beats,
+  };
 }
 
 export interface NoteEvent {
@@ -484,9 +488,9 @@ export function compileTrack(def: TrackDef): CompiledTrack {
     steps[((i % totalSteps) + totalSteps) % totalSteps]!;
 
   // Harmony
-  const chordAt: (Chord | undefined)[] = new Array<Chord | undefined>(
-    totalSteps,
-  );
+  const chordAt: (Chord | undefined)[] = Array.from<Chord | undefined>({
+    length: totalSteps,
+  });
   let pos = 0;
   for (const entry of def.harmony) {
     const c = parseChord(entry, def.beatsPerBar);
@@ -497,14 +501,14 @@ export function compileTrack(def: TrackDef): CompiledTrack {
   }
 
   // Melody
-  def.melody.forEach((bar, b) => {
+  for (const [b, bar] of def.melody.entries()) {
     let s = b * stepsPerBar;
     for (const tok of parseMelodyBar(bar)) {
       if (tok.midi !== null && s < totalSteps)
         at(s).lead = { midi: tok.midi, len: tok.len };
       s += tok.len;
     }
-  });
+  }
 
   // Per-bar patterns
   for (let b = 0; b < bars; b++) {
@@ -547,7 +551,9 @@ export function compileTrack(def: TrackDef): CompiledTrack {
   };
 }
 
-export const COMPILED_TRACKS: CompiledTrack[] = TRACK_DEFS.map(compileTrack);
+export const COMPILED_TRACKS: CompiledTrack[] = TRACK_DEFS.map((def) =>
+  compileTrack(def),
+);
 
 export const MUSIC_THEMES: MusicTheme[] = [
   "title",

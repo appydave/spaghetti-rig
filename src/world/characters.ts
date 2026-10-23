@@ -412,12 +412,12 @@ function laptopScreen() {
   g.fillRect(0, 0, 256, 156);
   g.fillStyle = "#35556b";
   g.fillRect(0, 0, 256, 22);
-  ["#ff8b69", "#ffd96a", "#aee5a3"].forEach((col, i) => {
+  for (const [i, col] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
     g.fillStyle = col;
     g.beginPath();
     g.arc(14 + i * 14, 11, 4.5, 0, 7);
     g.fill();
-  });
+  }
   g.font = "bold 18px ui-monospace, Menlo, monospace";
   const lines: [string, string][] = [
     ["#bd9bff", "const"],
@@ -426,10 +426,10 @@ function laptopScreen() {
     ["#6889a6", "// lgtm"],
     ["#ffbc79", "ship(1)"],
   ];
-  lines.forEach(([col, s], i) => {
+  for (const [i, [col, s]] of lines.entries()) {
     g.fillStyle = col;
     g.fillText(s, 12 + (i % 2) * 30, 46 + i * 24);
-  });
+  }
   g.fillStyle = "#f9db48";
   g.font = "bold 24px ui-monospace, Menlo, monospace";
   g.fillText("LGTM 🚀", 120, 140);

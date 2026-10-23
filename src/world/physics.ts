@@ -161,7 +161,7 @@ export class Debris {
     this.world.timestep = Math.min(1 / 30, dt);
     this.world.step();
     const p = new THREE.Vector3();
-    for (const piece of [...this.pieces]) {
+    for (const piece of this.pieces.slice()) {
       piece.age += dt;
       const t = piece.body.translation(),
         r = piece.body.rotation(),
@@ -187,7 +187,7 @@ export class Debris {
   }
 
   clear() {
-    for (const p of [...this.pieces]) this.remove(p);
+    for (const p of this.pieces.slice()) this.remove(p);
   }
   dispose() {
     this.clear();

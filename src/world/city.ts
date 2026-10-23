@@ -84,10 +84,10 @@ class Batch {
       material,
       Math.max(1, this.matrices.length),
     );
-    this.matrices.forEach((m, i) => {
+    for (const [i, m] of this.matrices.entries()) {
       mesh.setMatrixAt(i, m);
       mesh.setColorAt(i, this.colors[i]!);
-    });
+    }
     mesh.count = this.matrices.length;
     mesh.castShadow = cast;
     mesh.receiveShadow = receive;

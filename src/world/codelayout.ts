@@ -161,17 +161,19 @@ export function layoutCard(
 ): Layout {
   const lines: Line[] = [];
   const pinOf = new Map<object, number>();
-  card.annotations.forEach((a, i) => pinOf.set(a, i + 1));
+  for (const [i, a] of card.annotations.entries()) {
+    pinOf.set(a, i + 1);
+  }
   let filename = "";
   const stepFor = (b: number) =>
     (card.steps ?? []).filter((s) => s.block === b).map((s) => s.text);
   for (const s of card.steps ?? [])
     if (s.block === null) pushCaption(lines, s.text, cols);
 
-  card.blocks.forEach((block, bi) => {
+  for (const [bi, block] of card.blocks.entries()) {
     if (bi > 0) lines.push(blankLine("rule", block.view, bi));
     for (const text of stepFor(bi)) pushCaption(lines, text, cols, bi);
-    block.rows.forEach(([kind, text], ri) => {
+    for (const [ri, [kind, text]] of block.rows.entries()) {
       const pinned = card.annotations.some(
         (a) => a.block === bi && a.row === ri,
       );
@@ -183,7 +185,7 @@ export function layoutCard(
         !pinned
       ) {
         filename = text;
-        return;
+        continue;
       }
       const tokens = tokenize(text, block.view, kind);
       const marks: Mark[] = card.annotations
@@ -203,7 +205,7 @@ export function layoutCard(
       const usable = Math.max(12, cols - prefix);
       const indent = Math.min(8, (text.match(/^\s*/)?.[0].length ?? 0) + 2);
       const cuts = wrapPoints(text, usable, indent);
-      cuts.forEach((from, ci) => {
+      for (const [ci, from] of cuts.entries()) {
         const to = cuts[ci + 1] ?? text.length;
         const lineMarks = marks.flatMap((m): Mark[] => {
           const s = Math.max(m.from, from),
@@ -229,9 +231,9 @@ export function layoutCard(
           block: bi,
           row: ri,
         });
-      });
-    });
-  });
+      }
+    }
+  }
   const notes = card.annotations.map((a, i) => ({
     pin: i + 1,
     kind: a.kind,

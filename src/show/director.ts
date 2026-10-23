@@ -480,7 +480,7 @@ export class Director {
     const el = $("result");
     el.style.setProperty("--cols", String(this.visible().length));
     el.innerHTML = `${this.visible()
-      .map(col)
+      .map((c) => col(c))
       .join("")}<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
     if (this.mode === "p1") {
       this.audio.play("lose");

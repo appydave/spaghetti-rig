@@ -1,5 +1,5 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
-import { loadContent, type Game } from "./content/load";
+import { loadContent } from "./content/load";
 import { Director, type PresenterState } from "./show/director";
 import { isSplit, MODES, type Mode, type Player } from "./show/script";
 import { gatesText } from "./content/gatelabel";
@@ -29,19 +29,32 @@ const store = {
   },
 };
 
-function showError(err: unknown) {
-  console.error(err);
+function showError(message: string, cause?: unknown) {
+  console.error(cause ?? message);
   const el = document.createElement("div");
   el.className = "error";
-  el.textContent = `Something broke: ${err instanceof Error ? err.message : String(err)}`;
+  el.textContent = `Something broke: ${message}`;
   document.body.append(el);
   setTimeout(() => el.remove(), 8000);
 }
-addEventListener("error", (e) => showError(e.error ?? e.message));
-addEventListener("unhandledrejection", (e) => showError(e.reason));
+addEventListener("error", (e) =>
+  showError(e.error instanceof Error ? e.error.message : e.message, e.error),
+);
+addEventListener("unhandledrejection", (e) =>
+  showError(
+    e.reason instanceof Error ? e.reason.message : String(e.reason),
+    e.reason,
+  ),
+);
 
 if (new URLSearchParams(location.search).has("presenter")) presenter();
-else boot().catch(showError);
+else {
+  try {
+    await boot();
+  } catch (err) {
+    showError(err instanceof Error ? err.message : String(err), err);
+  }
+}
 
 async function boot() {
   const backdrop = document.createElement("div");
@@ -109,11 +122,9 @@ async function boot() {
     mode = m;
     store.set("mode", m);
     director.setMode(m);
-    document
-      .querySelectorAll<HTMLElement>("[data-mode]")
-      .forEach((b) =>
-        b.setAttribute("aria-checked", String(b.dataset.mode === m)),
-      );
+    for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
+      b.setAttribute("aria-checked", String(b.dataset.mode === m));
+    }
     $("map-mode").textContent = MODES.find((x) => x.mode === m)!.map;
     audio.play("uiMove");
   }
@@ -187,9 +198,9 @@ async function boot() {
   function toggleMute() {
     audio.muted = !audio.muted;
     document.body.classList.toggle("muted", audio.muted);
-    document
-      .querySelectorAll(".sound-label")
-      .forEach((e) => (e.textContent = audio.muted ? "SOUND OFF" : "SOUND ON"));
+    for (const e of document.querySelectorAll(".sound-label")) {
+      e.textContent = audio.muted ? "SOUND OFF" : "SOUND ON";
+    }
   }
 
   function toggleHelp() {
@@ -211,12 +222,12 @@ async function boot() {
     show("map");
     audio.play("uiSelect");
   });
-  document.querySelectorAll<HTMLElement>("[data-mode]").forEach((b) =>
+  for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
     b.addEventListener("click", () => {
       setMode(b.dataset.mode as Mode);
       b.blur();
-    }),
-  );
+    });
+  }
   document.addEventListener("click", (e) => {
     const a = (e.target as HTMLElement).closest<HTMLElement>("[data-action]");
     if (!a) return;
@@ -370,7 +381,7 @@ async function boot() {
   requestAnimationFrame(frame);
   stage.canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
-    showError(new Error("Graphics context lost — reload the page."));
+    showError("Graphics context lost — reload the page.");
   });
 
   // Hooks for the browser tests (dev builds only).
@@ -445,4 +456,4 @@ function presenter() {
   });
 }
 
-export type { Game };
+export type { Game } from "./content/load";

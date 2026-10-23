@@ -171,7 +171,7 @@ export class TitleShowcase {
     );
     this.hero.update(dt);
     this.sidekick.update(dt);
-    this.windows.forEach((w, i) => {
+    for (const [i, w] of this.windows.entries()) {
       const home = w.group.userData.home as THREE.Vector3;
       w.group.position.set(
         home.x + Math.sin(this.t * 0.7 + i) * 0.12,
@@ -180,7 +180,7 @@ export class TitleShowcase {
       );
       w.group.rotation.y = 0.35 + Math.sin(this.t * 0.5 + i) * 0.08;
       w.update(dt);
-    });
+    }
     this.scene.traverse((o) => {
       if (o.userData.spin) o.rotation.y += dt * 1.5;
     });

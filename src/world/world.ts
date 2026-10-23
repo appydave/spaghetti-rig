@@ -241,9 +241,9 @@ export class PlayerWorld {
     this.character.root.position.set(0, 0, s.z);
     this.character.root.rotation.y = 0;
     this.character.pose = s.pose;
-    s.gates.forEach((g, i) => {
+    for (const [i, g] of s.gates.entries()) {
       if (this.gates[i]) this.gates[i]!.state = g;
-    });
+    }
     // Stop window.
     const wantKey =
       s.window === "none" ? "" : `${s.stop}:${s.window}:${this.shape}`;
@@ -808,7 +808,9 @@ export class PlayerWorld {
     this.tween(0.001, () => void 0);
     if (this.player === "p1") {
       // Player 1 has nothing that works: shots bounce off.
-      [2.6, 3.0, 3.4].forEach((t) => this.after(t, () => this.shootBoss()));
+      for (const t of [2.6, 3.0, 3.4]) {
+        this.after(t, () => this.shootBoss());
+      }
     }
     void s;
   }
@@ -1393,7 +1395,7 @@ export class PlayerWorld {
       this.cues.splice(this.cues.indexOf(cue), 1);
       cue.fn();
     }
-    for (const t of [...this.tweens]) {
+    for (const t of this.tweens.slice()) {
       t.age += dt;
       const k = Math.min(1, t.age / t.dur);
       t.fn(k);
@@ -1404,7 +1406,7 @@ export class PlayerWorld {
     }
     this.shake = Math.max(0, this.shake - dt * 2.5);
     const me = this.character.root.position;
-    for (const e of [...this.enemies]) {
+    for (const e of this.enemies.slice()) {
       e.update(dt, this.camera.position);
       if (e.finished || e.group.position.z > me.z + 4) {
         this.slip(e);
@@ -1435,7 +1437,7 @@ export class PlayerWorld {
       }
       w.win.update(dt);
     }
-    this.debt.forEach((d, i) => {
+    for (const [i, d] of this.debt.entries()) {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
       d.win.group.visible =
         this.camMode !== "portrait" && this.camMode !== "boss";
@@ -1443,7 +1445,7 @@ export class PlayerWorld {
       this.faceCamera(d.win.group);
       d.win.group.rotateZ(Math.sin(this.clock * 3 + i) * 0.08);
       d.win.update(dt);
-    });
+    }
     if (this.boss) {
       this.boss.update(dt);
       this.boss.group.lookAt(
@@ -1504,12 +1506,14 @@ function toolBolt(name: string) {
   g.fillStyle = "#173e35";
   g.font = "italic 800 46px Barlow, Impact, sans-serif";
   g.textAlign = "center";
-  name
+  for (const [i, w] of name
     .split("(")[0]!
     .trim()
     .split(" ")
     .slice(0, 3)
-    .forEach((w, i) => g.fillText(w, 128, 130 + i * 52));
+    .entries()) {
+    g.fillText(w, 128, 130 + i * 52);
+  }
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.MeshBasicMaterial({

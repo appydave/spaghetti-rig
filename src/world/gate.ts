@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { gateLabel } from "../content/gatelabel";
 import { ROAD_HALF } from "./city";
-import { INK, kit, toon } from "./toon";
+import { INK, kit } from "./toon";
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
@@ -160,4 +160,4 @@ export class Gate {
   }
 }
 
-export const gateToon = toon;
+export { toon as gateToon } from "./toon";
