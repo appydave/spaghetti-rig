@@ -93,13 +93,15 @@ export function sceneOf(root: THREE.Object3D): string {
 
 /** What the world holds besides its scene: the numbers and flags a split of world.ts could drop or reorder. */
 export function stateOf(w: any): string {
+  // The shooting state lives on the world's combat when it has one, else on the world itself.
+  const c = w.combat ?? w;
   const v = (p: THREE.Vector3 | null | undefined) =>
     p ? nums(p.toArray()) : "-";
 
   return JSON.stringify([
-    w.score,
-    w.shots,
-    w.shipped,
+    c.score,
+    c.shots,
+    c.shipped,
     num(w.health),
     w.bossTotal,
     w.bossLeft,
@@ -112,13 +114,13 @@ export function stateOf(w: any): string {
     nums(w.camera.quaternion.toArray()),
     v(w.rig?.pos ?? w.camPos),
     v(w.rig?.look ?? w.camLook),
-    v(w.aim),
-    w.autoTarget,
+    v(c.aim),
+    c.autoTarget,
     w.state,
     w.walk ? [w.walk.from, w.walk.to, num(w.walk.u), w.walk.next] : null,
     w.gates.map((g: any) => g.state),
-    w.enemies.length,
-    w.enemies.map((e: any) => nums(e.center().toArray())),
+    c.enemies.length,
+    c.enemies.map((e: any) => nums(e.center().toArray())),
     w.tweens.length,
     w.cues.length,
     w.window ? [w.window.key, w.window.reading] : null,
