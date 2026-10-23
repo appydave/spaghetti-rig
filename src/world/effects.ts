@@ -45,7 +45,8 @@ const CONFETTI_LIFE = 2.6;
 const CONFETTI_GRAVITY = 5;
 const CONFETTI_UP = 1.4;
 const HEAL_SPARKLES = 60;
-const HEAL_SPIRAL_HALF_TURNS = 8;
+/** The sparkles spiral up through this many full turns. */
+const HEAL_SPIRAL_TURNS = 4;
 const HEAL_RADIUS = 0.7;
 const HEAL_RISE_PER_SPARKLE = 0.03;
 const HEAL_START_DROP = 0.6;
@@ -203,7 +204,7 @@ export class Effects {
   /** Rising green-and-yellow sparkles around a body. */
   heal(at: THREE.Vector3) {
     for (let i = 0; i < HEAL_SPARKLES; i++) {
-      const a = (i / HEAL_SPARKLES) * Math.PI * HEAL_SPIRAL_HALF_TURNS;
+      const a = (i / HEAL_SPARKLES) * Math.PI * HEAL_SPIRAL_TURNS * 2;
       const r = HEAL_RADIUS;
 
       if (this.particles.length >= MAX) {
