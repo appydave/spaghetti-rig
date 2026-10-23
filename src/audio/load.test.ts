@@ -38,6 +38,15 @@ describe("parseTrackDefs", () => {
     expect(t?.mix).toEqual({ lead: 0.5 });
   });
 
+  it("keeps a track's notes when they are text, and drops them when they are not", () => {
+    expect(
+      parseTrackDefs([{ ...minimal, notes: "Fmaj7 | Am7" }])[0]?.notes,
+    ).toBe("Fmaj7 | Am7");
+    expect(
+      parseTrackDefs([{ ...minimal, notes: 7 }])[0]?.notes,
+    ).toBeUndefined();
+  });
+
   it("falls back on an unknown voice and drops entries that are not objects", () => {
     const list = parseTrackDefs([{ ...minimal, pad: "kazoo" }, 7, null, "x"]);
 
