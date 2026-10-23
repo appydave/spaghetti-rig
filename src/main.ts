@@ -1,219 +1,361 @@
-import { AudioEngine, TRACKS } from './audio/audio';
-import { loadContent, type Game } from './content/load';
-import { Director, type PresenterState } from './show/director';
-import { isSplit, MODES, type Mode, type Player } from './show/script';
-import { gatesText } from './content/gatelabel';
-import { esc } from './ui/card';
-import { initPhysics } from './world/physics';
-import { Stage } from './world/stage';
-import { PlayerWorld } from './world/world';
+import { AudioEngine, TRACKS } from "./audio/audio";
+import { loadContent, type Game } from "./content/load";
+import { Director, type PresenterState } from "./show/director";
+import { isSplit, MODES, type Mode, type Player } from "./show/script";
+import { gatesText } from "./content/gatelabel";
+import { esc } from "./ui/card";
+import { initPhysics } from "./world/physics";
+import { Stage } from "./world/stage";
+import { PlayerWorld } from "./world/world";
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-type Screen = 'prelude' | 'title' | 'map' | 'game';
+const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
+  document.getElementById(id) as T;
+type Screen = "prelude" | "title" | "map" | "game";
 
 const store = {
-  get: (k: string) => { try { return localStorage.getItem(`spaghetti-rig:${k}`); } catch { return null; } },
-  set: (k: string, v: string) => { try { localStorage.setItem(`spaghetti-rig:${k}`, v); } catch { /* private mode */ } },
+  get: (k: string) => {
+    try {
+      return localStorage.getItem(`spaghetti-rig:${k}`);
+    } catch {
+      return null;
+    }
+  },
+  set: (k: string, v: string) => {
+    try {
+      localStorage.setItem(`spaghetti-rig:${k}`, v);
+    } catch {
+      /* private mode */
+    }
+  },
 };
 
 function showError(err: unknown) {
   console.error(err);
-  const el = document.createElement('div');
-  el.className = 'error';
+  const el = document.createElement("div");
+  el.className = "error";
   el.textContent = `Something broke: ${err instanceof Error ? err.message : String(err)}`;
   document.body.append(el);
   setTimeout(() => el.remove(), 8000);
 }
-addEventListener('error', (e) => showError(e.error ?? e.message));
-addEventListener('unhandledrejection', (e) => showError(e.reason));
+addEventListener("error", (e) => showError(e.error ?? e.message));
+addEventListener("unhandledrejection", (e) => showError(e.reason));
 
-if (new URLSearchParams(location.search).has('presenter')) presenter();
+if (new URLSearchParams(location.search).has("presenter")) presenter();
 else boot().catch(showError);
 
 async function boot() {
-  const backdrop = document.createElement('div');
-  backdrop.id = 'backdrop';
+  const backdrop = document.createElement("div");
+  backdrop.id = "backdrop";
   document.body.prepend(backdrop);
   const [game] = await Promise.all([
     loadContent(),
     initPhysics(),
-    document.fonts.load('italic 800 40px Barlow'), document.fonts.load('800 40px Barlow'), document.fonts.load('500 20px Space'),
+    document.fonts.load("italic 800 40px Barlow"),
+    document.fonts.load("800 40px Barlow"),
+    document.fonts.load("500 20px Space"),
   ]);
   const audio = new AudioEngine();
-  const stage = new Stage($('stage') as unknown as HTMLCanvasElement);
-  let mode: Mode = MODES.find((m) => m.mode === store.get('mode'))?.mode ?? 'both';
-  const pan = (p: Player) => (): number => (isSplit(mode) ? (p === 'p1' ? -0.5 : 0.5) : 0);
-  const worlds = { p1: new PlayerWorld('p1', game, audio, pan('p1')), p2: new PlayerWorld('p2', game, audio, pan('p2')) };
+  const stage = new Stage($("stage") as unknown as HTMLCanvasElement);
+  let mode: Mode =
+    MODES.find((m) => m.mode === store.get("mode"))?.mode ?? "both";
+  const pan = (p: Player) => (): number =>
+    isSplit(mode) ? (p === "p1" ? -0.5 : 0.5) : 0;
+  const worlds = {
+    p1: new PlayerWorld("p1", game, audio, pan("p1")),
+    p2: new PlayerWorld("p2", game, audio, pan("p2")),
+  };
   stage.setMode(mode);
   stage.attach(worlds);
   const director = new Director(game, stage, worlds, audio, mode);
-  let screen: Screen = 'prelude';
-  let selected = Math.max(0, game.tiers.findIndex((t) => t.playable));
-  let best = Number(store.get('best') ?? 0);
+  let screen: Screen = "prelude";
+  let selected = Math.max(
+    0,
+    game.tiers.findIndex((t) => t.playable),
+  );
+  let best = Number(store.get("best") ?? 0);
 
   // Words from the content file.
   const words = game.content.screens.title.big.trim().split(/\s+/);
-  $('title-1').textContent = (words.slice(0, -1).join(' ') || words[0] || '').toUpperCase();
-  $('title-2').firstChild!.textContent = (words.length > 1 ? words.at(-1)! : '').toUpperCase();
-  $('tagline').textContent = game.content.screens.title.sub;
+  $("title-1").textContent = (
+    words.slice(0, -1).join(" ") ||
+    words[0] ||
+    ""
+  ).toUpperCase();
+  $("title-2").firstChild!.textContent = (
+    words.length > 1 ? words.at(-1)! : ""
+  ).toUpperCase();
+  $("tagline").textContent = game.content.screens.title.sub;
   document.title = game.content.screens.title.big;
-  $('best').textContent = String(best).padStart(6, '0');
-  $('track-list').textContent = `Soundtrack: ${TRACKS.map((t) => t.name).join(', ')}.`;
-  director.onScore = (s) => { if (s > best) { best = s; store.set('best', String(s)); $('best').textContent = String(best).padStart(6, '0'); } };
-  director.onExit = () => show('map');
+  $("best").textContent = String(best).padStart(6, "0");
+  $("track-list").textContent =
+    `Soundtrack: ${TRACKS.map((t) => t.name).join(", ")}.`;
+  director.onScore = (s) => {
+    if (s > best) {
+      best = s;
+      store.set("best", String(s));
+      $("best").textContent = String(best).padStart(6, "0");
+    }
+  };
+  director.onExit = () => show("map");
 
   audio.onTrackChange((name) => {
-    const s = name ? `♫ ${name}` : '♫ —';
-    $('now-playing').textContent = s;
-    $('title-track').textContent = `${s} · ${audio.muted ? 'SOUND OFF' : 'SOUND ON'}`;
+    const s = name ? `♫ ${name}` : "♫ —";
+    $("now-playing").textContent = s;
+    $("title-track").textContent =
+      `${s} · ${audio.muted ? "SOUND OFF" : "SOUND ON"}`;
   });
 
   function setMode(m: Mode) {
-    mode = m; store.set('mode', m);
+    mode = m;
+    store.set("mode", m);
     director.setMode(m);
-    document.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === m)));
-    $('map-mode').textContent = MODES.find((x) => x.mode === m)!.map;
-    audio.play('uiMove');
+    document
+      .querySelectorAll<HTMLElement>("[data-mode]")
+      .forEach((b) =>
+        b.setAttribute("aria-checked", String(b.dataset.mode === m)),
+      );
+    $("map-mode").textContent = MODES.find((x) => x.mode === m)!.map;
+    audio.play("uiMove");
   }
 
   function renderMap() {
-    const list = $('tiers');
-    list.style.setProperty('--n', String(game.tiers.length));
-    list.innerHTML = game.tiers.map((t, i) => {
-      const art = t.playable ? `/assets/tiers/${t.key}.svg` : `/assets/bosses/${t.key}.svg`;
-      const fallback = t.playable ? '/assets/tiers/generic.svg' : '/assets/bosses/generic.svg';
-      return `<li class="tier${t.playable ? '' : ' locked'}${i === selected ? ' sel' : ''}" data-i="${i}">
-        ${t.playable ? '' : '<span class="lock">LOCKED</span>'}
-        <span class="n">${String(t.n).padStart(2, '0')}</span>
-        <img class="${t.playable ? '' : 'boss-shadow'}" src="${art}" alt="" onerror="this.onerror=null;this.src='${fallback}'">
+    const list = $("tiers");
+    list.style.setProperty("--n", String(game.tiers.length));
+    list.innerHTML = game.tiers
+      .map((t, i) => {
+        const art = t.playable
+          ? `/assets/tiers/${t.key}.svg`
+          : `/assets/bosses/${t.key}.svg`;
+        const fallback = t.playable
+          ? "/assets/tiers/generic.svg"
+          : "/assets/bosses/generic.svg";
+        return `<li class="tier${t.playable ? "" : " locked"}${i === selected ? " sel" : ""}" data-i="${i}">
+        ${t.playable ? "" : '<span class="lock">LOCKED</span>'}
+        <span class="n">${String(t.n).padStart(2, "0")}</span>
+        <img class="${t.playable ? "" : "boss-shadow"}" src="${art}" alt="" onerror="this.onerror=null;this.src='${fallback}'">
         <h3>${esc(t.name)}</h3>
-        <span class="meta">${esc(gatesText(t.gates))} · ${t.stops.length} STOP${t.stops.length === 1 ? '' : 'S'}</span>
-        <p>${esc(t.idea ?? '')}</p>
+        <span class="meta">${esc(gatesText(t.gates))} · ${t.stops.length} STOP${t.stops.length === 1 ? "" : "S"}</span>
+        <p>${esc(t.idea ?? "")}</p>
         <div class="boss"><span class="label">BOSS</span><b>${esc(t.boss.name)}</b></div>
-        ${t.playable && i === selected ? '<span class="primary-button go">ENTER · PLAY ↗</span>' : ''}
+        ${t.playable && i === selected ? '<span class="primary-button go">ENTER · PLAY ↗</span>' : ""}
       </li>`;
-    }).join('');
+      })
+      .join("");
   }
 
   function show(s: Screen) {
     screen = s;
-    $('prelude').hidden = s !== 'prelude';
-    $('title').hidden = s !== 'title';
-    $('map').hidden = s !== 'map';
-    $('game').hidden = s !== 'game';
-    director.active = s === 'game';
-    if (s === 'title') { stage.view = 'title'; audio.setTheme('title'); backdrop.className = 'menu'; }
-    if (s === 'map') { stage.view = 'none'; renderMap(); audio.setTheme('title'); backdrop.className = 'menu'; }
-    if (s !== 'game') { $('notes').hidden = true; document.body.dataset.phase = s; }
-    if (s === 'game') backdrop.className = '';
+    $("prelude").hidden = s !== "prelude";
+    $("title").hidden = s !== "title";
+    $("map").hidden = s !== "map";
+    $("game").hidden = s !== "game";
+    director.active = s === "game";
+    if (s === "title") {
+      stage.view = "title";
+      audio.setTheme("title");
+      backdrop.className = "menu";
+    }
+    if (s === "map") {
+      stage.view = "none";
+      renderMap();
+      audio.setTheme("title");
+      backdrop.className = "menu";
+    }
+    if (s !== "game") {
+      $("notes").hidden = true;
+      document.body.dataset.phase = s;
+    }
+    if (s === "game") backdrop.className = "";
   }
 
   function start(tierIndex: number) {
     const t = game.tiers[tierIndex];
-    if (!t?.playable) { audio.play('bounce'); return; }
-    audio.play('uiSelect');
-    show('game');
+    if (!t?.playable) {
+      audio.play("bounce");
+      return;
+    }
+    audio.play("uiSelect");
+    show("game");
     director.startTier(tierIndex);
   }
 
   function togglePause() {
-    if (screen !== 'game') return;
+    if (screen !== "game") return;
     director.setPaused(!director.paused);
   }
 
   function toggleMute() {
     audio.muted = !audio.muted;
-    document.body.classList.toggle('muted', audio.muted);
-    document.querySelectorAll('.sound-label').forEach((e) => (e.textContent = audio.muted ? 'SOUND OFF' : 'SOUND ON'));
+    document.body.classList.toggle("muted", audio.muted);
+    document
+      .querySelectorAll(".sound-label")
+      .forEach((e) => (e.textContent = audio.muted ? "SOUND OFF" : "SOUND ON"));
   }
 
   function toggleHelp() {
-    const h = $('help');
+    const h = $("help");
     h.hidden = !h.hidden;
-    if (!h.hidden && screen === 'game' && !director.paused) director.setPaused(true);
+    if (!h.hidden && screen === "game" && !director.paused)
+      director.setPaused(true);
   }
 
   async function enter() {
     await audio.unlock();
-    show('title');
+    show("title");
     setMode(mode);
-    $('start').focus();
+    $("start").focus();
   }
 
-  $('enter').addEventListener('click', () => void enter());
-  $('start').addEventListener('click', () => { show('map'); audio.play('uiSelect'); });
-  document.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode as Mode); b.blur(); }));
-  document.addEventListener('click', (e) => {
-    const a = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+  $("enter").addEventListener("click", () => void enter());
+  $("start").addEventListener("click", () => {
+    show("map");
+    audio.play("uiSelect");
+  });
+  document.querySelectorAll<HTMLElement>("[data-mode]").forEach((b) =>
+    b.addEventListener("click", () => {
+      setMode(b.dataset.mode as Mode);
+      b.blur();
+    }),
+  );
+  document.addEventListener("click", (e) => {
+    const a = (e.target as HTMLElement).closest<HTMLElement>("[data-action]");
     if (!a) return;
     const act = a.dataset.action;
-    if (act === 'mute') toggleMute();
-    if (act === 'pause') { if (!$('help').hidden) $('help').hidden = true; togglePause(); }
-    if (act === 'help') toggleHelp();
-    if (act === 'to-map') { director.setPaused(false); show('map'); }
-    if (act === 'auto') { director.toggleAutoplay(); audio.play('uiMove'); }
+    if (act === "mute") toggleMute();
+    if (act === "pause") {
+      if (!$("help").hidden) $("help").hidden = true;
+      togglePause();
+    }
+    if (act === "help") toggleHelp();
+    if (act === "to-map") {
+      director.setPaused(false);
+      show("map");
+    }
+    if (act === "auto") {
+      director.toggleAutoplay();
+      audio.play("uiMove");
+    }
     // A clicked button keeps focus; let it go, so Space stays "next" and never presses it again.
     if (a instanceof HTMLButtonElement) a.blur();
   });
-  $('tiers').addEventListener('click', (e) => {
-    const li = (e.target as HTMLElement).closest<HTMLElement>('.tier');
+  $("tiers").addEventListener("click", (e) => {
+    const li = (e.target as HTMLElement).closest<HTMLElement>(".tier");
     if (!li) return;
     const i = Number(li.dataset.i);
-    if (i === selected) start(i); else { selected = i; renderMap(); audio.play('uiMove'); }
+    if (i === selected) start(i);
+    else {
+      selected = i;
+      renderMap();
+      audio.play("uiMove");
+    }
   });
 
   /** Every key, so the whole show runs from the keyboard. */
   function key(code: string, shift: boolean, k: string) {
-    if (screen === 'prelude') { if (['Enter', 'Space', 'ArrowRight'].includes(code)) void enter(); return; }
+    if (screen === "prelude") {
+      if (["Enter", "Space", "ArrowRight"].includes(code)) void enter();
+      return;
+    }
     const digit = /^Digit([1-9])$/.exec(code)?.[1];
     if (shift && digit) {
-      const n = Number(digit), t = game.tiers.find((x) => x.n === n) ?? game.tiers[n - 1];
-      if (t) { selected = t.index; start(t.index); }
+      const n = Number(digit),
+        t = game.tiers.find((x) => x.n === n) ?? game.tiers[n - 1];
+      if (t) {
+        selected = t.index;
+        start(t.index);
+      }
       return;
     }
-    if (code === 'KeyM') return toggleMute();
-    if (code === 'KeyH' || k === '?') return toggleHelp();
+    if (code === "KeyM") return toggleMute();
+    if (code === "KeyH" || k === "?") return toggleHelp();
     const pick = MODES.find((m) => m.code === code);
     if (pick) return setMode(pick.mode);
-    if (code === 'Escape') {
-      if (!$('help').hidden) { $('help').hidden = true; return; }
-      if (screen === 'game') { if (director.paused) director.setPaused(false); show('map'); }
-      else if (screen === 'map') show('title');
-      return;
-    }
-    if (screen === 'title') {
-      if (['Enter', 'Space', 'ArrowRight'].includes(code)) { show('map'); audio.play('uiSelect'); }
-      return;
-    }
-    if (screen === 'map') {
-      if (code === 'ArrowRight' || code === 'ArrowLeft') {
-        selected = (selected + (code === 'ArrowRight' ? 1 : -1) + game.tiers.length) % game.tiers.length;
-        renderMap(); audio.play('uiMove');
+    if (code === "Escape") {
+      if (!$("help").hidden) {
+        $("help").hidden = true;
+        return;
       }
-      if (code === 'Enter' || code === 'Space') start(selected);
+      if (screen === "game") {
+        if (director.paused) director.setPaused(false);
+        show("map");
+      } else if (screen === "map") show("title");
+      return;
+    }
+    if (screen === "title") {
+      if (["Enter", "Space", "ArrowRight"].includes(code)) {
+        show("map");
+        audio.play("uiSelect");
+      }
+      return;
+    }
+    if (screen === "map") {
+      if (code === "ArrowRight" || code === "ArrowLeft") {
+        selected =
+          (selected + (code === "ArrowRight" ? 1 : -1) + game.tiers.length) %
+          game.tiers.length;
+        renderMap();
+        audio.play("uiMove");
+      }
+      if (code === "Enter" || code === "Space") start(selected);
       return;
     }
     // In the game.
-    if (code === 'KeyP') return togglePause();
-    if (code === 'KeyN') { director.toggleNotes(); return; }
-    if (code === 'KeyA') { director.toggleAutoplay(); audio.play('uiMove'); return; }
-    if (director.paused) { if (code === 'Space' || code === 'ArrowRight') togglePause(); return; }
-    if (code === 'ArrowRight' || code === 'Space' || code === 'PageDown' || code === 'Enter') director.next();
-    if (code === 'ArrowLeft' || code === 'PageUp') director.back();
+    if (code === "KeyP") return togglePause();
+    if (code === "KeyN") {
+      director.toggleNotes();
+      return;
+    }
+    if (code === "KeyA") {
+      director.toggleAutoplay();
+      audio.play("uiMove");
+      return;
+    }
+    if (director.paused) {
+      if (code === "Space" || code === "ArrowRight") togglePause();
+      return;
+    }
+    if (
+      code === "ArrowRight" ||
+      code === "Space" ||
+      code === "PageDown" ||
+      code === "Enter"
+    )
+      director.next();
+    if (code === "ArrowLeft" || code === "PageUp") director.back();
   }
 
-  addEventListener('keydown', (e) => {
+  addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (['Space', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'PageDown', 'PageUp'].includes(e.code)) e.preventDefault();
-    if (e.repeat && !['ArrowRight', 'ArrowLeft'].includes(e.code)) return;
+    if (
+      [
+        "Space",
+        "ArrowRight",
+        "ArrowLeft",
+        "ArrowUp",
+        "ArrowDown",
+        "PageDown",
+        "PageUp",
+      ].includes(e.code)
+    )
+      e.preventDefault();
+    if (e.repeat && !["ArrowRight", "ArrowLeft"].includes(e.code)) return;
     key(e.code, e.shiftKey, e.key);
   });
   // The presenter window can drive the show too.
-  addEventListener('rig-command', (e) => {
+  addEventListener("rig-command", (e) => {
     const k = (e as CustomEvent<string>).detail;
-    const map: Record<string, [string, boolean]> = { next: ['ArrowRight', false], back: ['ArrowLeft', false], pause: ['KeyP', false], p1: ['Digit1', false], p2: ['Digit2', false], both: ['KeyB', false], spec: ['KeyS', false], auto: ['KeyA', false] };
+    const map: Record<string, [string, boolean]> = {
+      next: ["ArrowRight", false],
+      back: ["ArrowLeft", false],
+      pause: ["KeyP", false],
+      p1: ["Digit1", false],
+      p2: ["Digit2", false],
+      both: ["KeyB", false],
+      spec: ["KeyS", false],
+      auto: ["KeyA", false],
+    };
     const m = map[k];
-    if (m) key(m[0], m[1], '');
+    if (m) key(m[0], m[1], "");
   });
 
   // Frame loop.
@@ -222,46 +364,84 @@ async function boot() {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     director.update(dt);
-    stage.render(director.paused && screen === 'game' ? 0 : dt);
+    stage.render(director.paused && screen === "game" ? 0 : dt);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  stage.canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showError(new Error('Graphics context lost — reload the page.')); });
+  stage.canvas.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    showError(new Error("Graphics context lost — reload the page."));
+  });
 
   // Hooks for the browser tests (dev builds only).
   if (import.meta.env.DEV) {
-    Object.assign(window, { __rig: { game, director, worlds, stage, audio, show, start, key, get screen() { return screen; } } });
+    Object.assign(window, {
+      __rig: {
+        game,
+        director,
+        worlds,
+        stage,
+        audio,
+        show,
+        start,
+        key,
+        get screen() {
+          return screen;
+        },
+      },
+    });
   }
-  show('prelude');
-  $('enter').focus();
+  show("prelude");
+  $("enter").focus();
 }
 
 /** ?presenter: a second window that follows the game and shows the notes for the current card. */
 function presenter() {
-  document.body.classList.add('presenter-mode');
-  const root = $('presenter');
+  document.body.classList.add("presenter-mode");
+  const root = $("presenter");
   root.hidden = false;
-  root.innerHTML = '<p class="status">Waiting for the game window… open the game in another window or tab.</p>';
-  const ch = new BroadcastChannel('spaghetti-rig');
-  const send = (key: string) => ch.postMessage({ type: 'cmd', key });
-  ch.postMessage({ type: 'hello' });
-  ch.addEventListener('message', (e) => {
+  root.innerHTML =
+    '<p class="status">Waiting for the game window… open the game in another window or tab.</p>';
+  const ch = new BroadcastChannel("spaghetti-rig");
+  const send = (key: string) => ch.postMessage({ type: "cmd", key });
+  ch.postMessage({ type: "hello" });
+  ch.addEventListener("message", (e) => {
     const s = e.data as PresenterState;
-    if (s.type !== 'state') return;
+    if (s.type !== "state") return;
     const n = s.notes;
     root.innerHTML = `
-      <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? ' · PAUSED' : ''}</span><br><b>${esc(n.heading)}</b></div>
+      <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? " · PAUSED" : ""}</span><br><b>${esc(n.heading)}</b></div>
         <div class="ctl"><button data-k="back">← Back</button><button data-k="next">Next →</button><button data-k="pause">Pause</button></div></div>
       <div class="status">${esc(s.label)}</div>
       <div class="say">${esc(n.say)}</div>
-      ${n.presenter.length ? `<ul>${n.presenter.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
-      ${n.extra.map((x) => `<h3>${esc(x.label.toUpperCase())}</h3><table>${x.rows.map((r) => `<tr>${r.map((c, i) => `<td>${i === 0 ? `<code>${esc(c)}</code>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table>`).join('')}
+      ${n.presenter.length ? `<ul>${n.presenter.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      ${n.extra.map((x) => `<h3>${esc(x.label.toUpperCase())}</h3><table>${x.rows.map((r) => `<tr>${r.map((c, i) => `<td>${i === 0 ? `<code>${esc(c)}</code>` : esc(c)}</td>`).join("")}</tr>`).join("")}</table>`).join("")}
       <p class="next">Next: ${esc(s.next)}</p>`;
   });
-  root.addEventListener('click', (e) => { const k = (e.target as HTMLElement).dataset.k; if (k) send(k); });
-  addEventListener('keydown', (e) => {
-    const k = ({ ArrowRight: 'next', Space: 'next', PageDown: 'next', ArrowLeft: 'back', PageUp: 'back', KeyP: 'pause', Digit1: 'p1', Digit2: 'p2', KeyB: 'both', KeyS: 'spec', KeyA: 'auto' } as Record<string, string>)[e.code];
-    if (k) { e.preventDefault(); send(k); }
+  root.addEventListener("click", (e) => {
+    const k = (e.target as HTMLElement).dataset.k;
+    if (k) send(k);
+  });
+  addEventListener("keydown", (e) => {
+    const k = (
+      {
+        ArrowRight: "next",
+        Space: "next",
+        PageDown: "next",
+        ArrowLeft: "back",
+        PageUp: "back",
+        KeyP: "pause",
+        Digit1: "p1",
+        Digit2: "p2",
+        KeyB: "both",
+        KeyS: "spec",
+        KeyA: "auto",
+      } as Record<string, string>
+    )[e.code];
+    if (k) {
+      e.preventDefault();
+      send(k);
+    }
   });
 }
 

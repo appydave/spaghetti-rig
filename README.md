@@ -14,11 +14,11 @@ Every card is real: the bad code, the fix and the tool config come from Omer Gil
 
 The game was built by AI from one prompt, played by a human, then refactored from David's notes. Each step is a release:
 
-| Release | What it is |
-|---|---|
-| [v1 – The build](https://github.com/appydave/spaghetti-rig/releases/tag/v1-build) | One prompt, one build: the whole game, made playable over the network and fixed after a first Chrome play-through |
-| [v2 – The refactor](https://github.com/appydave/spaghetti-rig/releases/tag/v2-refactor) | Eight fixes from a human play-through: real clicks fire, a boss you can read, gate badges, human-like autoplay, a "you vs autopilot" mode, missed enemies become bugs shipped |
-| [v2.1 – Architecture](https://github.com/appydave/spaghetti-rig/releases/tag/v2.1-architecture) | Tier 6 unlocked with cards from the last three gates; the frozen version the Spaghetti rig runs against |
+| Release                                                                                         | What it is                                                                                                                                                                    |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [v1 – The build](https://github.com/appydave/spaghetti-rig/releases/tag/v1-build)               | One prompt, one build: the whole game, made playable over the network and fixed after a first Chrome play-through                                                             |
+| [v2 – The refactor](https://github.com/appydave/spaghetti-rig/releases/tag/v2-refactor)         | Eight fixes from a human play-through: real clicks fire, a boss you can read, gate badges, human-like autoplay, a "you vs autopilot" mode, missed enemies become bugs shipped |
+| [v2.1 – Architecture](https://github.com/appydave/spaghetti-rig/releases/tag/v2.1-architecture) | Tier 6 unlocked with cards from the last three gates; the frozen version the Spaghetti rig runs against                                                                       |
 
 Next, the game's own code goes up the same ladder. The **Spaghetti** rig, built on AppyRig, will run the gates against this repo, one pull request per gate. That's why the game has no CI or linter yet: adding them is the first gates' job.
 
@@ -37,26 +37,26 @@ Click to play, pick a mode with `1`, `2`, `B` or `S`, and press `Enter` on the t
 
 ![The walk: both players shooting spaghetti, bugs and AI robots on the road to a gate](docs/images/the-walk.jpg)
 
-| Mode | Key | Who plays |
-|---|---|---|
-| Player 1 | `1` | The vibe coder alone, full screen |
-| Player 2 | `2` | The specialist alone, full screen |
-| Both | `B` | Side by side |
+| Mode             | Key | Who plays                                                                         |
+| ---------------- | --- | --------------------------------------------------------------------------------- |
+| Player 1         | `1` | The vibe coder alone, full screen                                                 |
+| Player 2         | `2` | The specialist alone, full screen                                                 |
+| Both             | `B` | Side by side                                                                      |
 | You vs autopilot | `S` | Side by side: you play the specialist with the mouse, the vibe coder plays itself |
 
 The whole show runs from the keyboard, so a presentation clicker works:
 
-| Key | Does |
-|---|---|
-| `→` / `Space` / `Page Down` | Next: walk on, play the card, skip a pause. Keys never shoot. |
-| `←` / `Page Up` | Back one step |
-| `Shift+1` … `Shift+6` | Jump to a tier |
-| `A` | Autoplay on / off (or click its button in the top bar). It aims, misses and fires in bursts like a person. |
-| `M` / `P` | Mute / pause |
-| `N` | Speaker notes strip |
-| `H` | How to play |
-| `Esc` | Close / back to the map |
-| Mouse / trackpad | Aim, then click or tap to shoot |
+| Key                         | Does                                                                                                       |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `→` / `Space` / `Page Down` | Next: walk on, play the card, skip a pause. Keys never shoot.                                              |
+| `←` / `Page Up`             | Back one step                                                                                              |
+| `Shift+1` … `Shift+6`       | Jump to a tier                                                                                             |
+| `A`                         | Autoplay on / off (or click its button in the top bar). It aims, misses and fires in bursts like a person. |
+| `M` / `P`                   | Mute / pause                                                                                               |
+| `N`                         | Speaker notes strip                                                                                        |
+| `H`                         | How to play                                                                                                |
+| `Esc`                       | Close / back to the map                                                                                    |
+| Mouse / trackpad            | Aim, then click or tap to shoot                                                                            |
 
 Switching mode keeps your place. An enemy that gets past player 1 adds to **bugs shipped**; one that gets past player 2 is **caught by CI**. Missing never costs health.
 
