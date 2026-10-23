@@ -56,7 +56,7 @@ const HEAL_LIFT_BASE = 2;
 const HEAL_LIFE_BASE = 1.2;
 const HEAL_LIFE_JITTER = 0.6;
 const HEAL_SPARKLE_SIZE = 0.09;
-const HEAL_GREEN_EVERY = 3;
+const HEAL_ACCENT_EVERY = 3;
 const HEAL_SINK = -0.5;
 const HEAL_SPARKLE_SPIN = 4;
 const HEAL_RING_SIZE = 1.6;
@@ -222,7 +222,7 @@ export class Effects {
         age: 0,
         size: HEAL_SPARKLE_SIZE,
         color: new THREE.Color(
-          i % HEAL_GREEN_EVERY ? FX.healGreen : FX.healGold,
+          i % HEAL_ACCENT_EVERY ? FX.healSparkle : FX.healSparkleAccent,
         ),
         gravity: HEAL_SINK,
         spin: HEAL_SPARKLE_SPIN,
