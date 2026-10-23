@@ -1,3 +1,4 @@
+import { nth } from "../nth";
 import { hitFor, toolFor, type Game, type PlayTier } from "../content/load";
 import { gatesText, gateText } from "../content/gatelabel";
 import type { Card } from "../content/types";
@@ -65,6 +66,13 @@ export const MODES: {
     map: "YOU PLAY THE SPECIALIST · THE VIBE CODER PLAYS ITSELF",
   },
 ];
+
+/** The label set for a mode; throws on a mode the list does not know. */
+export function modeInfo(mode: Mode) {
+  const info = MODES.find((m) => m.mode === mode);
+  if (!info) throw new Error(`Unknown mode "${mode}"`);
+  return info;
+}
 export type Player = "p1" | "p2";
 
 export function buildScript(game: Game): Step[] {
@@ -90,7 +98,8 @@ export function buildScript(game: Game): Step[] {
     }
     s("result", t.index);
   }
-  if (playable.length) s("ending", playable.at(-1)!.index);
+  const lastPlayable = playable.at(-1);
+  if (lastPlayable) s("ending", lastPlayable.index);
   return steps;
 }
 
@@ -105,7 +114,8 @@ export function nextIndex(
   mode: Mode,
 ): number {
   let i = at + dir;
-  while (i >= 0 && i < script.length && hiddenIn(script[i]!, mode)) i += dir;
+  for (let step = script[i]; step && hiddenIn(step, mode); step = script[i])
+    i += dir;
   return i < 0 || i >= script.length ? at : i;
 }
 
@@ -282,7 +292,7 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
     case "boss":
     case "bossPart":
     case "bossDown": {
-      const b = tier!.boss;
+      const b = nth(game.tiers, step.tier, "tiers").boss;
       return {
         heading: `${b.id ?? ""} · Boss · ${b.name}`,
         say: b.say ?? "",

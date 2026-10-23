@@ -12,11 +12,13 @@ const num = (digits: string, letter: string) =>
   `${Number(digits)}${letter.toLowerCase()}`;
 
 export function gateLabel(gate: string): GateLabel {
-  const m = /^\s*G(\d+)([a-z]?)\s*[·:–—-]\s*(.*)$/i.exec(gate);
-  if (!m) return { num: "", title: gate.trim() };
+  const [, digits, letter, rest] =
+    /^\s*G(\d+)([a-z]?)\s*[·:–—-]\s*(.*)$/i.exec(gate) ?? [];
+  if (digits === undefined || letter === undefined || rest === undefined)
+    return { num: "", title: gate.trim() };
   return {
-    num: num(m[1]!, m[2]!),
-    title: m[3]!.trim() || `Gate ${num(m[1]!, m[2]!)}`,
+    num: num(digits, letter),
+    title: rest.trim() || `Gate ${num(digits, letter)}`,
   };
 }
 
