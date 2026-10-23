@@ -2,11 +2,24 @@ import * as THREE from "three";
 import type { Layout, Line, Mark } from "./codelayout";
 import { Debris } from "./physics";
 import { INK, kit, rng, toon } from "./toon";
+import {
+  CARD,
+  CRACK,
+  EYE_WHITE,
+  LINE,
+  MARK,
+  PALETTE,
+  PIN,
+  SLAB_TOON,
+  WINDOW_DOTS,
+  type Mood,
+} from "./palette";
 import { meshNamed } from "./objects";
 import { context2d } from "../dom";
 import { nth } from "../nth";
 
-export type Mood = "angry" | "calm" | "fixed" | "boss";
+export { PALETTE } from "./palette";
+export type { Mood } from "./palette";
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 const FONT = 34;
@@ -79,69 +92,6 @@ const RULE_DASH = 8;
 const NOTE_PIN_OFFSET = 18;
 const NOTE_TEXT_INDENT = 52;
 const NOTE_BASELINE = 29;
-
-export const PALETTE: Record<
-  Mood,
-  {
-    body: string;
-    header: string;
-    edge: string;
-    side: string;
-    label: string;
-    title: string;
-    output: string;
-  }
-> = {
-  angry: {
-    body: "#3a1b26",
-    header: "#c4473f",
-    edge: "#ff9f7f",
-    side: "#7c2f33",
-    label: "#ffb7a3",
-    title: "#ffd96a",
-    output: "#2c1520",
-  },
-  calm: {
-    body: "#122d40",
-    header: "#35556b",
-    edge: "#8ebebf",
-    side: "#547e92",
-    label: "#9fc3d6",
-    title: "#ffd96a",
-    output: "#0d2333",
-  },
-  fixed: {
-    body: "#122d40",
-    header: "#35556b",
-    edge: "#aee5a3",
-    side: "#547e92",
-    label: "#aee5a3",
-    title: "#d6f5c9",
-    output: "#0d2333",
-  },
-  boss: {
-    body: "#2f202a",
-    header: "#8b3329",
-    edge: "#ffae59",
-    side: "#e85b2b",
-    label: "#ffae59",
-    title: "#ffd96a",
-    output: "#26161f",
-  },
-};
-
-const MARK = {
-  problem: "#ff5d4f",
-  fix: "#8ef08a",
-  note: "#ffbf47",
-  number: "#ffbf47",
-};
-const PIN = {
-  problem: "#ff5d4f",
-  fix: "#4fc46a",
-  note: "#ffb52e",
-  number: "#ffb52e",
-};
 
 export interface Paint {
   label: string;
@@ -276,7 +226,7 @@ export function paintCard(
   g.fillStyle = p.header;
   g.fillRect(0, 0, width, HEADER + BAR_OVERHANG);
   g.restore();
-  for (const [i, c] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
+  for (const [i, c] of WINDOW_DOTS.entries()) {
     g.fillStyle = c;
     g.beginPath();
     g.arc(
@@ -290,7 +240,7 @@ export function paintCard(
   }
 
   g.font = `600 28px ${MONO}`;
-  g.fillStyle = "#f4f4e8";
+  g.fillStyle = CARD.filename;
   g.textBaseline = "middle";
 
   const fname =
@@ -315,7 +265,7 @@ export function paintCard(
 
     const bw = g.measureText(paint.badge).width + BADGE_PAD;
 
-    g.fillStyle = mood === "angry" ? "#de6a47" : "#f9db48";
+    g.fillStyle = mood === "angry" ? CARD.badgeAngry : CARD.badgeCalm;
     roundRect(
       g,
       width - PAD - bw,
@@ -353,7 +303,7 @@ export function paintCard(
   void top;
 
   if (layout.notes.length) {
-    g.strokeStyle = "rgba(214,226,240,.22)";
+    g.strokeStyle = CARD.notesRule;
     g.lineWidth = 2;
     g.setLineDash([RULE_DASH, RULE_DASH]);
     g.beginPath();
@@ -367,7 +317,7 @@ export function paintCard(
 
       pin(g, PAD + NOTE_PIN_OFFSET, y + NOTE_PIN_OFFSET, n.pin, PIN[n.kind]);
       g.font = `500 30px Space, Arial, sans-serif`;
-      g.fillStyle = "#e6eef7";
+      g.fillStyle = CARD.note;
       for (const [j, l] of ls.entries()) {
         g.fillText(
           l,
@@ -383,7 +333,7 @@ export function paintCard(
   if (footLines.length) {
     y += FOOT_TOP;
     g.font = `500 28px Space, Arial, sans-serif`;
-    g.fillStyle = mood === "angry" ? "#ffcdbd" : "#b9d3e3";
+    g.fillStyle = mood === "angry" ? CARD.footerAngry : CARD.footerCalm;
     for (const l of footLines) {
       g.fillText(l, PAD, y + FOOT_BASELINE);
       y += FOOT_LINE;
@@ -422,9 +372,9 @@ function pin(
   g.arc(x, y, PIN_RADIUS, 0, Math.PI * 2);
   g.fill();
   g.lineWidth = 3;
-  g.strokeStyle = "#0b1d29";
+  g.strokeStyle = CARD.pinInk;
   g.stroke();
-  g.fillStyle = "#0b1d29";
+  g.fillStyle = CARD.pinInk;
   g.font = `700 21px Space, Arial, sans-serif`;
   g.textAlign = "center";
   g.fillText(String(n), x, y + PIN_DIGIT_DROP);
@@ -468,7 +418,7 @@ function drawLine(
   p: (typeof PALETTE)[Mood],
 ) {
   if (line.type === "rule") {
-    g.strokeStyle = "rgba(214,226,240,.25)";
+    g.strokeStyle = CARD.codeRule;
     g.lineWidth = 2;
     g.beginPath();
     g.moveTo(x0, y + h / 2);
@@ -480,7 +430,7 @@ function drawLine(
 
   if (line.type === "caption") {
     g.font = `500 31px Space, Arial, sans-serif`;
-    g.fillStyle = "#f4f4e8";
+    g.fillStyle = CARD.caption;
     g.fillText(line.text, x0, y + CAPTION_BASELINE);
 
     return;
@@ -495,8 +445,7 @@ function drawLine(
   }
 
   if (line.view === "diff" && (line.diff === "a" || line.diff === "d")) {
-    g.fillStyle =
-      line.diff === "a" ? "rgba(126,220,140,.15)" : "rgba(222,106,71,.17)";
+    g.fillStyle = line.diff === "a" ? LINE.addedTint : LINE.removedTint;
     g.fillRect(
       x0 - PANEL_BLEED,
       y + 2,
@@ -505,20 +454,20 @@ function drawLine(
     );
     if (!line.cont) {
       g.font = `700 ${FONT}px ${MONO}`;
-      g.fillStyle = line.diff === "a" ? "#8ef08a" : "#ff7b6b";
+      g.fillStyle = line.diff === "a" ? LINE.addedSign : LINE.removedSign;
       g.fillText(line.diff === "a" ? "+" : "−", x0, base);
     }
   }
 
   if (line.cont) {
-    g.fillStyle = "rgba(125,166,198,.5)";
+    g.fillStyle = LINE.continuationArrow;
     g.font = `600 ${FONT * CONT_FONT_SHARE}px ${MONO}`;
     g.fillText("↳", x0 + (line.view === "diff" ? cw : 0), base);
   }
 
   if (line.diff === "l") {
     g.font = `600 ${FONT * LABEL_FONT_SHARE}px ${MONO}`;
-    g.fillStyle = line.view === "output" ? "#ffd96a" : p.label;
+    g.fillStyle = line.view === "output" ? LINE.outputLabel : p.label;
     g.fillText((line.view === "output" ? "▸ " : "") + line.text, x0, base);
     drawMarks(
       g,
@@ -551,7 +500,7 @@ function drawLine(
 
   if (line.diff === "d" && line.view === "diff") {
     // Removed: red strike-through.
-    g.strokeStyle = "#ff6b5a";
+    g.strokeStyle = LINE.strikeThrough;
     g.lineWidth = 4;
     g.beginPath();
     g.moveTo(tx + lead - STRIKE_OVERHANG, y + h * LINE_MIDDLE);
@@ -561,7 +510,7 @@ function drawLine(
 
   if (line.diff === "a" && line.view === "diff") {
     // Added: green box.
-    g.strokeStyle = "rgba(142,240,138,.75)";
+    g.strokeStyle = LINE.addedBoxOutline;
     g.lineWidth = 2.5;
     roundRect(
       g,
@@ -657,7 +606,7 @@ function drawMarks(
       g.strokeStyle = col;
       g.lineWidth = 4.5;
       if (m.kind === "fix") {
-        g.fillStyle = "rgba(142,240,138,.13)";
+        g.fillStyle = LINE.fixMarkFill;
         roundRect(
           g,
           x1 - MARK_BOX_PAD,
@@ -728,8 +677,8 @@ export function paintCracks(
   const arms = MIN_CRACK_ARMS + Math.floor(r() * EXTRA_CRACK_ARMS);
 
   for (const [w, c] of [
-    [SHADOW_WIDTH, "rgba(10,20,30,.55)"],
-    [HIGHLIGHT_WIDTH, "rgba(240,250,255,.95)"],
+    [SHADOW_WIDTH, CRACK.shadow],
+    [HIGHLIGHT_WIDTH, CRACK.highlight],
   ] as const) {
     const rr = rng(seed);
 
@@ -771,7 +720,7 @@ export function paintCracks(
     }
   }
 
-  g.fillStyle = "rgba(255,255,255,.85)";
+  g.fillStyle = CRACK.impactDot;
   g.beginPath();
   g.arc(x0, y0, IMPACT_RADIUS, 0, Math.PI * 2);
   g.fill();
@@ -937,7 +886,7 @@ export class CodeWindow {
     });
     this.side = new THREE.MeshToonMaterial({
       color: PALETTE[mood].side,
-      gradientMap: toon("#fff").gradientMap,
+      gradientMap: toon(SLAB_TOON).gradientMap,
     });
 
     const geo = extrudeMapped(
@@ -973,7 +922,7 @@ export class CodeWindow {
     for (const side of [-1, 1]) {
       a.ball(
         eyes,
-        "#fffdf0",
+        EYE_WHITE,
         side * s * EYE_SPACING,
         0,
         0,

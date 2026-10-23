@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Mode, Player } from "../show/script";
 import type { PlayerWorld } from "./world";
 import { TitleShowcase, VsShowcase } from "./showcase";
+import { STAGE_CLEAR } from "./palette";
 
 /** Dense screens render at most this many pixels per CSS pixel, to keep the frame rate. */
 const MAX_PIXEL_RATIO = 1.75;
@@ -40,7 +41,7 @@ export class Stage {
     this.renderer.toneMappingExposure = 1.1;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.setClearColor(STAGE_CLEAR, 0);
     this.resize();
     addEventListener("resize", () => this.resize());
   }
