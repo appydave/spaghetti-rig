@@ -104,10 +104,13 @@ test("autoplay in B: both players fire during the same walk, each with their own
   await walk(page, "b");
   await press(page, "a");
   const before = await shots(page);
-  await page.waitForTimeout(4000);
-  const after = await shots(page);
-  expect(after.p1).toBeGreaterThan(before.p1 + 2);
-  expect(after.p2).toBeGreaterThan(before.p2 + 2);
+  // Wait for the shots, not for a fixed time: autoplay fires on the game clock, so a slow runner fires fewer in the same wall-clock span.
+  await expect
+    .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
+    .toBeGreaterThan(before.p1 + 2);
+  await expect
+    .poll(async () => (await shots(page)).p2, { timeout: 30_000 })
+    .toBeGreaterThan(before.p2 + 2);
   await expect(page.locator(".lane[data-p='p1'] .reticle.auto")).toBeVisible();
   await expect(page.locator(".lane[data-p='p2'] .reticle.auto")).toBeVisible();
 });
@@ -121,9 +124,11 @@ test("mode S: player 1 plays itself, real clicks fire for player 2 only", async 
   await expect(page.locator(".lane")).toHaveCount(2);
   await expect(page.locator("#hud-mode")).toHaveText("YOU VS AUTOPILOT");
   const before = await shots(page);
-  await page.waitForTimeout(3000);
+  // Nobody touched the mouse: wait until player 1's autopilot has fired, then player 2 must still be at its old count.
+  await expect
+    .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
+    .toBeGreaterThan(before.p1);
   const mid = await shots(page);
-  expect(mid.p1).toBeGreaterThan(before.p1); // nobody touched the mouse
   expect(mid.p2).toBe(before.p2);
   await tap(page, (W * 3) / 4, H * 0.45);
   expect((await shots(page)).p2).toBe(mid.p2 + 1);
