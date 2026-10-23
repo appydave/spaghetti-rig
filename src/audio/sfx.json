@@ -1,6 +1,70 @@
 {
+  "shoot": {
+    "layers": [
+      { "kind": "tone", "wave": "square", "f": 1100, "f2": 180, "dur": 0.11, "vol": 0.2, "lp": 4200 },
+      { "kind": "tone", "wave": "sine", "f": 190, "f2": 45, "dur": 0.16, "vol": 0.5 },
+      { "kind": "noise", "filter": "bandpass", "f": 2600, "dur": 0.06, "vol": 0.28, "q": 0.8 }
+    ]
+  },
+  "enemyHit": {
+    "layers": [
+      { "kind": "noise", "filter": "highpass", "f": 2500, "dur": 0.05, "vol": 0.28 },
+      { "kind": "tone", "wave": "triangle", "f": { "min": 600, "max": 800 }, "f2": 330, "dur": 0.07, "vol": 0.18 }
+    ]
+  },
+  "enemyPop": {
+    "layers": [
+      { "kind": "noise", "filter": "bandpass", "f": 900, "f2": 280, "dur": 0.18, "vol": 0.4, "q": 1.2 },
+      { "kind": "tone", "wave": "sine", "f": 300, "f2": { "min": 1200, "max": 1600 }, "dur": 0.07, "vol": 0.3 },
+      { "kind": "tone", "wave": "triangle", "note": [84, 86, 88, 91, 93], "dur": 0.14, "vol": 0.1, "at": 0.05 }
+    ]
+  },
+  "damage": {
+    "layers": [
+      { "kind": "tone", "wave": "square", "f": 640, "f2": 540, "dur": 0.09, "vol": 0.12, "lp": 2600 },
+      { "kind": "tone", "wave": "square", "f": 450, "f2": 290, "dur": 0.18, "vol": 0.12, "at": 0.09, "lp": 2000 },
+      { "kind": "tone", "wave": "sine", "f": 150, "f2": 60, "dur": 0.15, "vol": 0.3 }
+    ]
+  },
+  "glassCrack": {
+    "layers": [
+      { "kind": "noise", "filter": "highpass", "f": { "min": 2500, "max": 4500 }, "dur": 0.015, "vol": 0.32, "at": { "min": 0, "max": 0.1 }, "repeat": { "count": 5 }, "attack": 0.001 },
+      { "kind": "tone", "wave": "sine", "f": { "min": 4800, "max": 5600 }, "f2": 4400, "dur": 0.09, "vol": 0.05 }
+    ]
+  },
+  "slam": {
+    "layers": [
+      { "kind": "tone", "wave": "sine", "f": 115, "f2": 36, "dur": 0.42, "vol": 0.85 },
+      { "kind": "noise", "filter": "lowpass", "f": 600, "f2": 120, "dur": 0.3, "vol": 0.55 },
+      { "kind": "noise", "filter": "highpass", "f": 4200, "dur": 0.2, "vol": 0.18, "at": 0.01 },
+      { "kind": "tone", "wave": "sine", "f": { "min": 2600, "max": 6200 }, "dur": { "min": 0.1, "max": 0.3 }, "vol": 0.05, "at": { "min": 0.005, "max": 0.06 }, "repeat": { "count": 4 } }
+    ]
+  },
+  "shatter": {
+    "layers": [
+      { "kind": "noise", "filter": "highpass", "f": 2600, "dur": 0.5, "vol": 0.32, "attack": 0.002 },
+      { "kind": "noise", "filter": "lowpass", "f": 800, "dur": 0.12, "vol": 0.32 },
+      { "kind": "tone", "wave": "sine", "f": 210, "f2": 55, "dur": 0.25, "vol": 0.5 },
+      { "kind": "tone", "wave": "triangle", "f": { "min": 2200, "max": 7500 }, "dur": { "min": 0.06, "max": 0.25 }, "vol": { "min": 0.03, "max": 0.07 }, "at": { "min": 0, "max": 0.35 }, "repeat": { "count": 9 } }
+    ]
+  },
+  "debrisBounce": {
+    "layers": [{ "kind": "tone", "wave": "triangle", "f": { "min": 1400, "max": 3600 }, "dur": { "min": 0.025, "max": 0.05 }, "vol": { "min": 0.035, "max": 0.065 } }]
+  },
+  "cardFly": {
+    "layers": [
+      { "kind": "noise", "filter": "bandpass", "f": 500, "f2": 3500, "dur": 0.42, "vol": 0.28, "attack": 0.15, "q": 2 },
+      { "kind": "tone", "wave": "sine", "note": [88, 91, 93, 96, 98], "dur": 0.25, "vol": 0.04, "repeat": { "count": 4, "start": 0.15, "step": 0.05 } }
+    ]
+  },
   "uiMove": {
     "layers": [{ "kind": "tone", "wave": "sine", "f": { "min": 1650, "max": 1750 }, "dur": 0.03, "vol": 0.08 }]
+  },
+  "uiSelect": {
+    "layers": [
+      { "kind": "tone", "wave": "triangle", "f": 880, "dur": 0.07, "vol": 0.12 },
+      { "kind": "tone", "wave": "triangle", "f": 1320, "dur": 0.15, "vol": 0.12, "at": 0.06 }
+    ]
   },
   "step": {
     "layers": [{ "kind": "noise", "filter": "lowpass", "f": { "min": 250, "max": 450 }, "dur": 0.05, "vol": 0.12 }]

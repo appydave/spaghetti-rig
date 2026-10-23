@@ -17,7 +17,7 @@ import {
   type Theme,
   type LeadVoice,
 } from "./tracks";
-import { nth, present } from "../nth";
+import { present } from "../nth";
 import rawSfx from "./sfx.json";
 import { expandSfx, parseSfx } from "./sfx";
 
@@ -108,8 +108,6 @@ interface Deck {
 }
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
-const pick = <T>(arr: readonly T[]): T =>
-  nth(arr, Math.floor(Math.random() * arr.length), "pick list");
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
 
@@ -1343,32 +1341,6 @@ export class AudioEngine {
     }
 
     switch (sfx) {
-      case "shoot": {
-        this.tone(out, t, {
-          type: "square",
-          f: 1100,
-          f2: 180,
-          dur: 0.11,
-          vol: 0.2,
-          lp: 4200,
-        });
-        this.tone(out, t, {
-          type: "sine",
-          f: 190,
-          f2: 45,
-          dur: 0.16,
-          vol: 0.5,
-        });
-        this.noise(out, t, {
-          filter: "bandpass",
-          f: 2600,
-          q: 0.8,
-          dur: 0.06,
-          vol: 0.28,
-        });
-        break;
-      }
-
       case "shootP1": {
         const p = rand(0.93, 1.07);
 
@@ -1394,48 +1366,6 @@ export class AudioEngine {
           dur: 0.1,
           vol: 0.05,
           lp: 1300,
-        });
-        break;
-      }
-
-      case "enemyHit": {
-        this.noise(out, t, {
-          filter: "highpass",
-          f: 2500,
-          dur: 0.05,
-          vol: 0.28,
-        });
-        this.tone(out, t, {
-          type: "triangle",
-          f: rand(600, 800),
-          f2: 330,
-          dur: 0.07,
-          vol: 0.18,
-        });
-        break;
-      }
-
-      case "enemyPop": {
-        this.noise(out, t, {
-          filter: "bandpass",
-          f: 900,
-          f2: 280,
-          q: 1.2,
-          dur: 0.18,
-          vol: 0.4,
-        });
-        this.tone(out, t, {
-          type: "sine",
-          f: 300,
-          f2: rand(1200, 1600),
-          dur: 0.07,
-          vol: 0.3,
-        });
-        this.tone(out, t + 0.05, {
-          type: "triangle",
-          f: n(pick([84, 86, 88, 91, 93])),
-          dur: 0.14,
-          vol: 0.1,
         });
         break;
       }
@@ -1479,150 +1409,6 @@ export class AudioEngine {
           dur: 0.32,
           vol: 0.06,
         });
-        break;
-      }
-
-      case "slam": {
-        this.tone(out, t, {
-          type: "sine",
-          f: 115,
-          f2: 36,
-          dur: 0.42,
-          vol: 0.85,
-        });
-        this.noise(out, t, {
-          filter: "lowpass",
-          f: 600,
-          f2: 120,
-          dur: 0.3,
-          vol: 0.55,
-        });
-        this.noise(out, t + 0.01, {
-          filter: "highpass",
-          f: 4200,
-          dur: 0.2,
-          vol: 0.18,
-        });
-        for (let i = 0; i < 4; i++) {
-          this.tone(out, t + rand(0.005, 0.06), {
-            type: "sine",
-            f: rand(2600, 6200),
-            dur: rand(0.1, 0.3),
-            vol: 0.05,
-          });
-        }
-
-        break;
-      }
-
-      case "damage": {
-        this.tone(out, t, {
-          type: "square",
-          f: 640,
-          f2: 540,
-          dur: 0.09,
-          vol: 0.12,
-          lp: 2600,
-        });
-        this.tone(out, t + 0.09, {
-          type: "square",
-          f: 450,
-          f2: 290,
-          dur: 0.18,
-          vol: 0.12,
-          lp: 2000,
-        });
-        this.tone(out, t, {
-          type: "sine",
-          f: 150,
-          f2: 60,
-          dur: 0.15,
-          vol: 0.3,
-        });
-        break;
-      }
-
-      case "glassCrack": {
-        for (let i = 0; i < 5; i++) {
-          this.noise(out, t + rand(0, 0.1), {
-            filter: "highpass",
-            f: rand(2500, 4500),
-            dur: 0.015,
-            vol: 0.32,
-            attack: 0.001,
-          });
-        }
-
-        this.tone(out, t, {
-          type: "sine",
-          f: rand(4800, 5600),
-          f2: 4400,
-          dur: 0.09,
-          vol: 0.05,
-        });
-        break;
-      }
-
-      case "shatter": {
-        this.noise(out, t, {
-          filter: "highpass",
-          f: 2600,
-          dur: 0.5,
-          vol: 0.32,
-          attack: 0.002,
-        });
-        this.noise(out, t, { filter: "lowpass", f: 800, dur: 0.12, vol: 0.32 });
-        this.tone(out, t, {
-          type: "sine",
-          f: 210,
-          f2: 55,
-          dur: 0.25,
-          vol: 0.5,
-        });
-        for (let i = 0; i < 9; i++) {
-          this.tone(out, t + rand(0, 0.35), {
-            type: "triangle",
-            f: rand(2200, 7500),
-            dur: rand(0.06, 0.25),
-            vol: rand(0.03, 0.07),
-          });
-        }
-
-        break;
-      }
-
-      case "debrisBounce": {
-        this.tone(out, t, {
-          type: "triangle",
-          f: rand(1400, 3600),
-          dur: rand(0.025, 0.05),
-          vol: rand(0.035, 0.065),
-        });
-        break;
-      }
-
-      case "cardFly": {
-        this.noise(out, t, {
-          filter: "bandpass",
-          f: 500,
-          f2: 3500,
-          q: 2,
-          dur: 0.42,
-          vol: 0.28,
-          attack: 0.15,
-        });
-
-        const shimmer = [88, 91, 93, 96, 98];
-
-        for (let i = 0; i < 4; i++) {
-          this.tone(out, t + 0.15 + i * 0.05, {
-            type: "sine",
-            f: n(pick(shimmer)),
-            dur: 0.25,
-            vol: 0.04,
-          });
-        }
-
         break;
       }
 
@@ -1914,17 +1700,6 @@ export class AudioEngine {
           this.brass(out, t, m, 0.3, 0.07);
         }
 
-        break;
-      }
-
-      case "uiSelect": {
-        this.tone(out, t, { type: "triangle", f: 880, dur: 0.07, vol: 0.12 });
-        this.tone(out, t + 0.06, {
-          type: "triangle",
-          f: 1320,
-          dur: 0.15,
-          vol: 0.12,
-        });
         break;
       }
     }
