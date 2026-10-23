@@ -424,7 +424,10 @@ export class AudioEngine {
     try {
       const now = ctx.currentTime;
       const horizon = now + LOOKAHEAD;
-      for (const deck of this.decks) this.scheduleDeck(deck, now, horizon);
+      // Iterate a snapshot: scheduleDeck can roll over to a new track, and createDeck pushes onto decks.
+      const decksAtTickStart = this.decks.slice();
+      for (const deck of decksAtTickStart)
+        this.scheduleDeck(deck, now, horizon);
       this.decks = this.decks.filter((d) => {
         if (d.stopAt !== null && now > d.stopAt + 3) {
           this.disposeDeck(d);
