@@ -469,8 +469,7 @@
         "src/world/city.ts",
         "src/world/enemies.ts",
         "src/world/gate.ts",
-        "src/world/showcase.ts",
-        "src/world/world.ts"
+        "src/world/showcase.ts"
       ],
       "rules": {
         "no-magic-numbers": [
