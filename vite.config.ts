@@ -16,7 +16,7 @@ export default defineConfig({
   preview: { port: DEV_PORT, host: true, allowedHosts: [".local", ".ts.net"] },
   build: { target: "es2022", chunkSizeWarningLimit: CHUNK_WARNING_KB },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "lint/**/*.test.ts"],
     environment: "node",
     coverage: {
       // Count every source file, not only the ones a test imports, so an untested file lowers the numbers.
