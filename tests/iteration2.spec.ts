@@ -124,10 +124,11 @@ test("mode S: player 1 plays itself, real clicks fire for player 2 only", async 
   await expect(page.locator(".lane")).toHaveCount(2);
   await expect(page.locator("#hud-mode")).toHaveText("YOU VS AUTOPILOT");
   const before = await shots(page);
-  // Nobody touched the mouse: wait until player 1's autopilot has fired, then player 2 must still be at its old count.
+  // Nobody touched the mouse: wait until player 1's autopilot has fired as many shots as autoplay in B needs to show an autopilot
+  // is running (more than 2), so an autopilot on player 2 would have fired too. Then player 2 must still be at its old count.
   await expect
     .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
-    .toBeGreaterThan(before.p1);
+    .toBeGreaterThan(before.p1 + 2);
   const mid = await shots(page);
   expect(mid.p2).toBe(before.p2);
   await tap(page, (W * 3) / 4, H * 0.45);
