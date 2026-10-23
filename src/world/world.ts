@@ -15,6 +15,7 @@ import { healthAt, partsBroken, type Player, type Step } from "../show/script";
 import { AutoGunner } from "./autogunner";
 import { BossModel, paintBossPanel } from "./boss";
 import { bossLayout, type BossLayout } from "./bosslayout";
+import { CameraRig, type ShotView } from "./camera-rig";
 import { Character } from "./characters";
 import { buildCity, SEGMENT } from "./city";
 import { layoutCard, longestRow, slugFile, type Layout } from "./codelayout";
@@ -28,17 +29,12 @@ import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from "./toon";
 import { BOLT, EVENT, PILE, WORLD } from "./palette";
 import {
   BOSS,
-  CameraMode,
   Cue,
   DEBT_WINDOW_COLS,
   KILL_TEXT_SIZE,
   RANDOM_CENTRE,
-  SCREEN_MIDDLE,
-  Shape,
   State,
-  TALL_ASPECT_BELOW,
   Tween,
-  USABLE_WIDTH_FRACTION,
   standZ,
   stopZ,
 } from "./world-shared";
@@ -53,11 +49,6 @@ const WIDESCREEN_WIDTH = 16;
 const WIDESCREEN_HEIGHT = 9;
 /** The picture shape a player lane starts with, before the real window size is known. */
 const WIDESCREEN = WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT;
-const CAM_START_X = 3;
-const CAM_START_Y = 3;
-const CAM_START_Z = 8;
-const CAM_LOOK_START_Y = 1.5;
-const CAM_LOOK_START_Z = -6;
 const FOG_NEAR = 40;
 const FOG_FAR = 120;
 const HEMISPHERE_INTENSITY = 2.2;
@@ -329,60 +320,10 @@ const DEBT_BOB_HEIGHT = 0.1;
 const DEBT_SLOT_Z = 0.3;
 const DEBT_DEPTH_STEPS = 3;
 const DEBT_SLOT_DEPTH_SPACING = 0.35;
-const TALL_READING_Y = 2.45;
-const TALL_READING_NUDGE = 0.6;
-const WIDE_READING_RAISE = 0.5;
-const WIDE_READING_MIN_Y = 2.3;
-const WIDE_READING_GAP = 0.8;
-const FOLLOW_X = 1.7;
-const FOLLOW_Y = 2.6;
-const FOLLOW_Z = 5.4;
-const FOLLOW_LOOK_X = 0.5;
-const FOLLOW_LOOK_Y = 1.7;
-const FOLLOW_LOOK_Z = -9;
-const TALL_NUDGE_X = -0.4;
-const TALL_NUDGE_Y = 0.6;
-const TALL_NUDGE_Z = 1.6;
-const PORTRAIT_X = 2.8;
-const PORTRAIT_Y = 2.2;
-const PORTRAIT_Z = -7.2;
-const PORTRAIT_LOOK_Y = 2.3;
-const PILE_NUDGE_X = 0.5;
-const PILE_NUDGE_Y = 1.5;
-const PILE_LOOK_Y = 0.6;
-const SHOT_BOX_HALF_WIDTH = 0.6;
-const SHOT_BOX_WAIST_Y = 1.1;
-const SHOT_BOX_BACK = 0.9;
-const SHOT_BOX_TOP = 2.5;
-const SHOT_BOSS_TOP = 12;
-const SHOT_BOSS_BEHIND = 22;
-const SHOT_BOSS_FLOOR = -0.2;
-const SHOT_BOSS_NEAR = 8;
-const SHOT_MARGIN = 0.6;
-const SHOT_SIDE_RATIO = 0.985;
-const SHOT_RISE_RATIO = 0.05;
-const SHOT_DEPTH_RATIO = 0.17;
-const CAMERA_FOLLOW_RATE = 3.2;
-const SHAKE_SCALE = 0.12;
 const SUN_OFFSET_X = 14;
 const SUN_HEIGHT = 30;
 const SUN_OFFSET_Z = 16;
 const SUN_TARGET_AHEAD = 8;
-const BOSS_EYE_X_TALL = 1.7;
-const BOSS_EYE_X_WIDE = 4.3;
-const BOSS_EYE_Y_TALL = 2.95;
-const BOSS_EYE_Y_WIDE = 2.0;
-const BOSS_EYE_Z_TALL = 7.4;
-const BOSS_EYE_Z_WIDE = 8.0;
-const BAND_TOP_TALL = 0.245;
-const BAND_BOTTOM_TALL = 0.615;
-const BAND_TOP_WIDE = 0.28;
-const BAND_BOTTOM_WIDE = 0.72;
-const BOSS_BACK_DEFAULT = 20;
-const BOSS_FIT_MARGIN = 0.8;
-const BOSS_BACK_MIN = 12;
-const BOSS_LOOK_SWAY = 0.15;
-const SNAP_SECONDS = 1e3;
 const SHAKE_DECAY = 2.5;
 const SLIP_PAST_CHARACTER = 4;
 const STEP_RATE = 4.2;
@@ -439,8 +380,6 @@ export class PlayerWorld {
   bossTotal = 0;
   bossLeft = 0;
   autoplay = false;
-  aspect = WIDESCREEN;
-  shape: Shape = "wide";
 
   private tier: PlayTier | null = null;
   private city: THREE.Group | null = null;
@@ -466,22 +405,24 @@ export class PlayerWorld {
     next: number;
   } | null = null;
   private shake = 0;
-  private readonly camPos = new THREE.Vector3(
-    CAM_START_X,
-    CAM_START_Y,
-    CAM_START_Z,
-  );
-  private readonly camLook = new THREE.Vector3(
-    0,
-    CAM_LOOK_START_Y,
-    CAM_LOOK_START_Z,
-  );
-  private camMode: CameraMode = "follow";
+  private readonly rig = new CameraRig(this.camera);
   private readonly gunner: AutoGunner;
   private aim: THREE.Vector3 | null = null;
   private autoTarget = -1;
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
+
+  get aspect() {
+    return this.rig.aspect;
+  }
+
+  get shape() {
+    return this.rig.shape;
+  }
+
+  private get camMode() {
+    return this.rig.mode;
+  }
 
   constructor(
     readonly player: Player,
@@ -673,7 +614,7 @@ export class PlayerWorld {
 
     // Stop window.
     const wantKey =
-      s.window === "none" ? "" : `${s.stop}:${s.window}:${this.shape}`;
+      s.window === "none" ? "" : `${s.stop}:${s.window}:${this.rig.shape}`;
 
     if ((this.window?.key ?? "") !== wantKey) {
       this.window?.win.dispose();
@@ -734,7 +675,11 @@ export class PlayerWorld {
         this.boss.dropPart(i);
       }
 
-      this.boss.group.position.set(0, BOSS.y, s.z - this.bossBack());
+      this.boss.group.position.set(
+        0,
+        BOSS.y,
+        s.z - this.rig.bossBack(present(this.bossLayout, "boss layout")),
+      );
     }
 
     this.bossTotal = tier.hasBoss ? tier.boss.parts.length : 0;
@@ -755,7 +700,7 @@ export class PlayerWorld {
     }
 
     this.health = s.health;
-    this.camMode = s.camera;
+    this.rig.mode = s.camera;
     this.state = s;
   }
 
@@ -825,7 +770,7 @@ export class PlayerWorld {
   // ───────────────────────────── content → objects ─────────────────────────────
 
   private cols() {
-    return this.shape === "tall" ? TALL_CARD_COLS : WIDE_CARD_COLS;
+    return this.rig.shape === "tall" ? TALL_CARD_COLS : WIDE_CARD_COLS;
   }
 
   private paint(
@@ -870,11 +815,11 @@ export class PlayerWorld {
 
     return new CodeWindow(
       cv,
-      this.shape === "tall" ? TALL_WINDOW_WIDTH : WIDE_WINDOW_WIDTH,
+      this.rig.shape === "tall" ? TALL_WINDOW_WIDTH : WIDE_WINDOW_WIDTH,
       kind === "problem" ? "angry" : "fixed",
       {
         maxHeight:
-          this.shape === "tall"
+          this.rig.shape === "tall"
             ? TALL_WINDOW_MAX_HEIGHT
             : WIDE_WINDOW_MAX_HEIGHT,
       },
@@ -1254,7 +1199,7 @@ export class PlayerWorld {
         );
         g.rotation.set(0, 0, (1 - e) * CARD_FLIGHT_SPIN);
         g.quaternion.premultiply(new THREE.Quaternion());
-        this.faceCamera(g);
+        this.rig.face(g);
       });
     });
     this.after(launch + flight, () => {
@@ -1301,11 +1246,14 @@ export class PlayerWorld {
         CARD_BOUNCE_SECONDS,
         (k) => {
           const e = ease.outBack(k);
-          const target = this.readingPose(w.win);
+          const target = this.rig.readingPose(
+            w.win,
+            this.character.root.position.z,
+          );
 
           g.position.lerpVectors(hitPos, target.pos, e);
           g.scale.setScalar(lerp(hitScale, target.scale, e));
-          this.faceCamera(g);
+          this.rig.face(g);
         },
         () => {
           w.reading = true;
@@ -1332,11 +1280,11 @@ export class PlayerWorld {
     old.rattle = OLD_CARD_RATTLE;
     this.scene.add(old.group);
 
-    const pose = this.readingPose(old);
+    const pose = this.rig.readingPose(old, this.character.root.position.z);
 
     old.group.position.copy(pose.pos);
     old.group.scale.setScalar(pose.scale);
-    this.faceCamera(old.group);
+    this.rig.face(old.group);
     this.health = FULL_HEALTH - TIER_HEALTH_LOSS / this.playing.stops.length;
     this.gateAt(step.stop).state = "alarm";
     this.character.pose = "aim";
@@ -1375,7 +1323,7 @@ export class PlayerWorld {
         this.debris,
         from.setY(from.y - 1),
         SHATTER_POWER,
-        this.shape === "tall"
+        this.rig.shape === "tall"
           ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
           : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
         SHATTER_SEED_BASE + step.stop,
@@ -1393,7 +1341,10 @@ export class PlayerWorld {
       this.tween(
         FIXED_CARD_SECONDS,
         (k) => {
-          const t = this.readingPose(fixed.win);
+          const t = this.rig.readingPose(
+            fixed.win,
+            this.character.root.position.z,
+          );
 
           g.position
             .copy(t.pos)
@@ -1403,7 +1354,7 @@ export class PlayerWorld {
           g.scale.setScalar(
             t.scale * lerp(FIXED_CARD_START_SCALE, 1, ease.outBack(k)),
           );
-          this.faceCamera(g);
+          this.rig.face(g);
         },
         () => {
           fixed.reading = true;
@@ -1584,7 +1535,7 @@ export class PlayerWorld {
         (k) => {
           card.group.position.lerpVectors(from, to, ease.inCubic(k));
           card.group.rotation.z = k * TOOL_BOLT_SPIN;
-          this.faceCamera(card.group, true);
+          this.rig.face(card.group, true);
         },
         () => {
           this.fx.beam(from, to, EVENT.partBeam);
@@ -2007,163 +1958,46 @@ export class PlayerWorld {
     );
   }
 
-  /** Where a stop window sits so the code is as big as possible, with the character beside or below it. */
-  private readingPose(win: CodeWindow) {
-    const z = this.character.root.position.z;
-
-    if (this.shape === "tall") {
-      return {
-        pos: new THREE.Vector3(
-          0,
-          TALL_READING_Y + win.h / 2,
-          z - win.w / 2 + TALL_READING_NUDGE,
-        ),
-        scale: 1,
-      };
-    }
-
-    return {
-      pos: new THREE.Vector3(
-        0,
-        Math.max(WIDE_READING_RAISE + win.h / 2, WIDE_READING_MIN_Y),
-        z - WIDE_READING_GAP - win.w / 2,
-      ),
-      scale: 1,
-    };
-  }
-
-  private faceCamera(o: THREE.Object3D, keepRoll = false) {
-    const roll = o.rotation.z;
-
-    o.quaternion.copy(this.camera.quaternion);
-    if (keepRoll) {
-      o.rotateZ(roll);
-    }
-  }
-
   setAspect(aspect: number) {
-    this.aspect = aspect;
-    this.camera.aspect = aspect;
-    this.camera.updateProjectionMatrix();
+    const changed = this.rig.setAspect(aspect);
+
     if (this.boss && this.state) {
-      this.boss.group.position.z = this.state.z - this.bossBack();
+      this.boss.group.position.z =
+        this.state.z -
+        this.rig.bossBack(present(this.bossLayout, "boss layout"));
     }
 
-    const shape: Shape = aspect < TALL_ASPECT_BELOW ? "tall" : "wide";
+    // Re-lay the stop window for the new shape.
+    if (changed && this.state && this.stepRef) {
+      const keep = this.health;
 
-    if (shape !== this.shape) {
-      this.shape = shape;
-      // Re-lay the stop window for the new shape.
-      if (this.state && this.stepRef) {
-        const keep = this.health;
-
-        this.reconcile(this.state);
-        this.health = keep;
-      }
+      this.reconcile(this.state);
+      this.health = keep;
     }
+  }
+
+  private shotView(): ShotView {
+    return {
+      layout: this.bossLayout,
+      window: this.window?.win ?? null,
+      pile: this.pile !== null,
+    };
   }
 
   private updateCamera(dt: number) {
     const c = this.character.root.position;
-    let pos: THREE.Vector3;
-    let look: THREE.Vector3;
-    const fov = THREE.MathUtils.degToRad(this.camera.fov);
 
-    if (this.camMode === "follow") {
-      pos = c.clone().add(new THREE.Vector3(FOLLOW_X, FOLLOW_Y, FOLLOW_Z));
-      look = c
-        .clone()
-        .add(new THREE.Vector3(FOLLOW_LOOK_X, FOLLOW_LOOK_Y, FOLLOW_LOOK_Z));
-      if (this.aspect < TALL_ASPECT_BELOW) {
-        pos.add(new THREE.Vector3(TALL_NUDGE_X, TALL_NUDGE_Y, TALL_NUDGE_Z));
-      }
-    } else if (this.camMode === "boss" && this.bossLayout) {
-      ({ pos, look } = this.bossShot(c, fov));
-    } else if (this.camMode === "portrait") {
-      // Front three-quarter, character low in frame so the result text sits above them.
-      pos = c
-        .clone()
-        .add(new THREE.Vector3(PORTRAIT_X, PORTRAIT_Y, PORTRAIT_Z));
-      look = c.clone().add(new THREE.Vector3(0, PORTRAIT_LOOK_Y, 0));
-      if (this.player === "p1" && this.pile) {
-        pos.add(new THREE.Vector3(PILE_NUDGE_X, PILE_NUDGE_Y, 0));
-        look.y = PILE_LOOK_Y;
-      }
-    } else {
-      // Side-on, like Spaghetti Busters: frame the character and the window (or boss), leaving room for the HUD.
-      // Legs may sit behind the tray; the box starts at the waist.
-      const box = new THREE.Box3(
-        new THREE.Vector3(
-          -SHOT_BOX_HALF_WIDTH,
-          this.camMode === "stop" ? SHOT_BOX_WAIST_Y : 0,
-          c.z - SHOT_BOX_BACK,
-        ),
-        new THREE.Vector3(SHOT_BOX_HALF_WIDTH, SHOT_BOX_TOP, c.z + 1.0),
-      );
+    this.rig.step(dt, c, this.shotView(), this.shake);
+    this.syncScenery();
+  }
 
-      if (this.camMode === "stop" && this.window) {
-        const w = this.window.win;
-        const p = this.readingPose(w).pos;
-
-        box
-          .expandByPoint(new THREE.Vector3(0, p.y - w.h / 2, p.z - w.w / 2))
-          .expandByPoint(new THREE.Vector3(0, p.y + w.h / 2, p.z + w.w / 2));
-      }
-
-      if (this.camMode === "boss") {
-        box
-          .expandByPoint(
-            new THREE.Vector3(0, SHOT_BOSS_TOP, c.z - SHOT_BOSS_BEHIND),
-          )
-          .expandByPoint(
-            new THREE.Vector3(0, SHOT_BOSS_FLOOR, c.z - SHOT_BOSS_NEAR),
-          );
-      }
-
-      const size = box.getSize(new THREE.Vector3());
-      const centre = box.getCenter(new THREE.Vector3());
-      // The HUD takes the top ~20% and the tray and captions the bottom ~24%; fit the box between them.
-      const top = 0.18;
-      const bottom = 0.21;
-      const usableH = 1 - top - bottom;
-      const usableW = USABLE_WIDTH_FRACTION;
-      const t = Math.tan(fov / 2);
-      const distH = size.y / usableH / 2 / t;
-      const distW = size.z / usableW / 2 / t / this.aspect;
-      const d = Math.max(distH, distW) + SHOT_MARGIN;
-      const visibleH = 2 * d * t;
-      const lift = (bottom + usableH / 2 - SCREEN_MIDDLE) * visibleH;
-
-      look = new THREE.Vector3(0, centre.y - lift, centre.z);
-      pos = new THREE.Vector3(
-        d * SHOT_SIDE_RATIO,
-        centre.y - lift + d * SHOT_RISE_RATIO,
-        centre.z + d * SHOT_DEPTH_RATIO,
-      );
-    }
-
-    const k = 1 - Math.exp(-dt * CAMERA_FOLLOW_RATE);
-
-    this.camPos.lerp(pos, k);
-    this.camLook.lerp(look, k);
-    this.camera.position.copy(this.camPos);
-    if (this.shake > 0) {
-      const s = this.shake * SHAKE_SCALE;
-
-      this.camera.position.add(
-        new THREE.Vector3(
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-        ),
-      );
-    }
-
-    this.camera.lookAt(this.camLook);
+  /** What the camera's position decides about the scenery. */
+  private syncScenery() {
+    const c = this.character.root.position;
 
     // Side-on views look across the street, so the near side's buildings step out of the way.
     const right = this.city?.getObjectByName("city-right");
-    const ahead = this.camMode === "follow" || this.camMode === "boss";
+    const ahead = this.rig.mode === "follow" || this.rig.mode === "boss";
 
     if (right) {
       right.visible = ahead;
@@ -2178,73 +2012,10 @@ export class PlayerWorld {
     this.sun.target.position.set(c.x, 0, c.z - SUN_TARGET_AHEAD);
   }
 
-  /** Where the camera stands, relative to the character, in the boss fight: close behind and to one side. */
-  private bossEye() {
-    const tall = this.aspect < TALL_ASPECT_BELOW;
-
-    return new THREE.Vector3(
-      tall ? BOSS_EYE_X_TALL : BOSS_EYE_X_WIDE,
-      tall ? BOSS_EYE_Y_TALL : BOSS_EYE_Y_WIDE,
-      tall ? BOSS_EYE_Z_TALL : BOSS_EYE_Z_WIDE,
-    );
-  }
-
-  /** The boss's band on screen, as fractions from the top: under the HUD, above the character. */
-  private bossBand() {
-    return this.aspect < TALL_ASPECT_BELOW
-      ? { top: BAND_TOP_TALL, bottom: BAND_BOTTOM_TALL }
-      : { top: BAND_TOP_WIDE, bottom: BAND_BOTTOM_WIDE };
-  }
-
-  /** How far beyond the character the boss stands, so that all of it fits its band in this lane. */
-  private bossBack() {
-    const L = this.bossLayout;
-
-    if (!L) {
-      return BOSS_BACK_DEFAULT;
-    }
-
-    const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
-    const band = this.bossBand();
-    const distH = (L.top - L.bottom) / ((band.bottom - band.top) * 2 * t);
-    const distW =
-      (L.width + BOSS_FIT_MARGIN) /
-      (USABLE_WIDTH_FRACTION * 2 * t * this.aspect);
-
-    return Math.max(BOSS_BACK_MIN, Math.max(distH, distW) - this.bossEye().z);
-  }
-
-  /**
-   * Boss fight: over the character's shoulder. The whole boss (head, main window and every part)
-   * fits the band between the HUD and the character's head; the character stands big in the
-   * foreground, off to one side so they never cover a part.
-   */
-  private bossShot(c: THREE.Vector3, fov: number) {
-    const L = present(this.bossLayout, "boss layout");
-    const back = this.bossBack();
-    const t = Math.tan(fov / 2);
-    const band = this.bossBand();
-    const pos = c.clone().add(this.bossEye());
-    const centre = new THREE.Vector3(
-      0,
-      BOSS.y + (L.top + L.bottom) / 2,
-      c.z - back,
-    );
-    const d = pos.z - centre.z;
-    // Aim below the boss's centre so it sits in its band, not in the middle of the screen.
-    const lower = (SCREEN_MIDDLE - (band.top + band.bottom) / 2) * 2 * d * t;
-    const look = new THREE.Vector3(
-      pos.x * BOSS_LOOK_SWAY,
-      centre.y - lower,
-      centre.z,
-    );
-
-    return { pos, look };
-  }
-
   /** Jump the camera to its target at once (after a cut). */
   snapCamera() {
-    this.updateCamera(SNAP_SECONDS);
+    this.rig.snap(this.character.root.position, this.shotView(), this.shake);
+    this.syncScenery();
   }
 
   update(dt: number) {
@@ -2307,7 +2078,7 @@ export class PlayerWorld {
       const w = this.window;
 
       if (w.reading) {
-        const t = this.readingPose(w.win);
+        const t = this.rig.readingPose(w.win, this.character.root.position.z);
 
         w.win.group.position.lerp(t.pos, 1 - Math.exp(-dt * READING_EASE_RATE));
         w.win.group.scale.setScalar(
@@ -2317,7 +2088,7 @@ export class PlayerWorld {
             1 - Math.exp(-dt * READING_EASE_RATE),
           ),
         );
-        this.faceCamera(w.win.group);
+        this.rig.face(w.win.group);
         w.win.group.position.y +=
           Math.sin(this.clock * READING_BOB_SPEED) * READING_BOB_HEIGHT;
       }
@@ -2328,12 +2099,12 @@ export class PlayerWorld {
     for (const [i, d] of this.debt.entries()) {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
       d.win.group.visible =
-        this.camMode !== "portrait" && this.camMode !== "boss";
+        this.rig.mode !== "portrait" && this.rig.mode !== "boss";
       d.win.group.position.lerp(
         this.debtSlot(i),
         1 - Math.exp(-dt * DEBT_EASE_RATE),
       );
-      this.faceCamera(d.win.group);
+      this.rig.face(d.win.group);
       d.win.group.rotateZ(
         Math.sin(this.clock * DEBT_WOBBLE_SPEED + i) * DEBT_WOBBLE,
       );
