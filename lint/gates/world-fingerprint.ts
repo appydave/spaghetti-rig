@@ -125,6 +125,7 @@ export function stateOf(w: any): string {
     w.shots,
     w.shipped,
     w.enemyCount,
+    w.windowKey,
     num(w.health),
     w.bossTotal,
     w.bossLeft,
