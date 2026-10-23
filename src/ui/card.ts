@@ -12,6 +12,9 @@ const ESCAPES = new Map([
 export const esc = (s: string) =>
   s.replaceAll(/[&<>"']/g, (c) => ESCAPES.get(c) ?? c);
 
+/** A tool name without its bracketed note: "Prettier (code formatter)" → "Prettier". */
+export const beforeParen = (name: string) => name.replace(/\(.*$/s, "").trim();
+
 /** Short tool name for tight spots: "Prettier (code formatter)" → "Prettier". */
 export const shortTool = (name: string) =>
   name.replace(/[(+][\s\S]*$/, "").trim();

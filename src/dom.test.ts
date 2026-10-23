@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { byId, closestEl, queryAllEl, queryEl, queryElOrNull } from "./dom";
+import {
+  byId,
+  closestEl,
+  context2d,
+  queryAllEl,
+  queryEl,
+  queryElOrNull,
+} from "./dom";
 
 // Node has no DOM, so these stand in for the browser's classes while a test runs.
 class FakeElement extends EventTarget {
@@ -94,5 +101,18 @@ describe("queryEl, queryElOrNull and queryAllEl", () => {
     const a = new FakeHTMLElement();
     stubQueries(null, [a, new FakeElement()]);
     expect(queryAllEl(document, "[data-mode]")).toEqual([a]);
+  });
+});
+
+describe("context2d", () => {
+  it("returns the 2D context the canvas gives", () => {
+    const ctx = Object.create(null);
+    expect(context2d({ getContext: () => ctx })).toBe(ctx);
+  });
+
+  it("throws when the browser cannot make one", () => {
+    expect(() => context2d({ getContext: () => null })).toThrow(
+      "cannot draw to a 2D canvas",
+    );
   });
 });
