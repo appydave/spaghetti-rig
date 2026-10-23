@@ -21,21 +21,14 @@ import { Effects } from "./effects";
 import { Enemy, type EnemyKind } from "./enemies";
 import { Gate } from "./gate";
 import { makePile } from "./pile";
+import { Timeline } from "./timeline";
 import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
 import { stateFor } from "./world-state";
 import { Debris } from "./physics";
 import { beforeParen } from "../ui/card";
 import { clamp01, disposeTree, ease, lerp, rng } from "./toon";
 import { BOLT, EVENT, WORLD } from "./palette";
-import {
-  BOSS,
-  Cue,
-  DEBT_WINDOW_COLS,
-  State,
-  Tween,
-  standZ,
-  stopZ,
-} from "./world-shared";
+import { BOSS, DEBT_WINDOW_COLS, State, standZ, stopZ } from "./world-shared";
 
 export { walkSeconds } from "./world-shared";
 export type { CameraMode } from "./world-shared";
@@ -286,10 +279,6 @@ export class PlayerWorld {
   /** Kept after the boss breaks, so the camera holds its shot. */
   private bossLayout: BossLayout | null = null;
   private pile: THREE.Group | null = null;
-  private temps: { dispose(): void }[] = [];
-  private tweens: Tween[] = [];
-  private cues: Cue[] = [];
-  private clock = 0;
   private state: State | null = null;
   private walk: {
     from: number;
@@ -301,6 +290,7 @@ export class PlayerWorld {
   private shake = 0;
   private readonly rig = new CameraRig(this.camera);
   readonly combat: Combat;
+  private readonly timeline = new Timeline();
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
 
@@ -570,13 +560,7 @@ export class PlayerWorld {
   }
 
   private clearAnimations() {
-    this.tweens = [];
-    this.cues = [];
-    for (const t of this.temps) {
-      t.dispose();
-    }
-
-    this.temps = [];
+    this.timeline.clear();
     this.walk = null;
   }
 
@@ -693,32 +677,18 @@ export class PlayerWorld {
     }
   }
 
-  private after(seconds: number, fn: () => void) {
-    this.cues.push({ at: this.clock + seconds, fn });
-  }
-
-  private tween(dur: number, fn: (k: number) => void, done?: () => void) {
-    this.tweens.push({ age: 0, dur, fn, done });
-  }
-
-  private track<T extends { dispose(): void }>(t: T) {
-    this.temps.push(t);
-
-    return t;
-  }
-
   private exitWindow(w: { win: CodeWindow } | null) {
     if (!w) {
       return;
     }
 
     const win = w.win;
-    const entry = this.track({ dispose: () => win.dispose() });
+    const entry = this.timeline.track({ dispose: () => win.dispose() });
     const from = win.group.position.clone();
     const s0 = win.group.scale.x;
     const p1 = this.player === "p1";
 
-    this.tween(
+    this.timeline.tween(
       EXIT_WINDOW_SECONDS,
       (k) => {
         const e = ease.inOutCubic(k);
@@ -742,7 +712,7 @@ export class PlayerWorld {
         }
 
         win.dispose();
-        this.temps.splice(this.temps.indexOf(entry), 1);
+        this.timeline.untrack(entry);
       },
     );
   }
@@ -866,14 +836,14 @@ export class PlayerWorld {
     this.health = before;
     this.gateAt(step.stop).state = "idle";
     this.character.pose = "idle";
-    this.after(PROBLEM_ALARM_DELAY, () => {
+    this.timeline.after(PROBLEM_ALARM_DELAY, () => {
       this.gateAt(step.stop).state = "alarm";
     });
 
     const launch = CARD_LAUNCH_DELAY;
     const flight = CARD_FLIGHT_SECONDS;
 
-    this.after(launch, () => {
+    this.timeline.after(launch, () => {
       g.visible = true;
 
       const start = this.character.root.position
@@ -881,7 +851,7 @@ export class PlayerWorld {
         .add(new THREE.Vector3(0, CARD_LAUNCH_Y, CARD_LAUNCH_Z));
       const chest = this.character.chestWorld();
 
-      this.tween(flight, (k) => {
+      this.timeline.tween(flight, (k) => {
         const e = ease.inCubic(k);
 
         g.position.lerpVectors(
@@ -897,7 +867,7 @@ export class PlayerWorld {
         this.rig.face(g);
       });
     });
-    this.after(launch + flight, () => {
+    this.timeline.after(launch + flight, () => {
       this.sfx("slam");
       this.sfx("damage", DAMAGE_VOLUME);
       this.character.hit();
@@ -928,7 +898,7 @@ export class PlayerWorld {
 
       const from = this.health;
 
-      this.tween(HEALTH_DROP_SECONDS, (k) => {
+      this.timeline.tween(HEALTH_DROP_SECONDS, (k) => {
         this.health = lerp(from, s.health, ease.outCubic(k));
       });
       this.character.pose = s.pose;
@@ -937,7 +907,7 @@ export class PlayerWorld {
       const hitPos = g.position.clone();
       const hitScale = g.scale.x;
 
-      this.tween(
+      this.timeline.tween(
         CARD_BOUNCE_SECONDS,
         (k) => {
           const e = ease.outBack(k);
@@ -970,7 +940,7 @@ export class PlayerWorld {
     fixed.reading = true;
     fixed.win.group.visible = false;
 
-    const old = this.track(
+    const old = this.timeline.track(
       makeStopWindow(
         { game: this.game, tier: this.playing },
         stop,
@@ -990,7 +960,7 @@ export class PlayerWorld {
     this.health = FULL_HEALTH - TIER_HEALTH_LOSS / this.playing.stops.length;
     this.gateAt(step.stop).state = "alarm";
     this.character.pose = "aim";
-    this.after(AIM_TO_FIRE_DELAY, () => {
+    this.timeline.after(AIM_TO_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
@@ -1008,15 +978,15 @@ export class PlayerWorld {
       );
       this.sfx("cardPlay");
     });
-    this.after(FIRST_CRACK_DELAY, () => {
+    this.timeline.after(FIRST_CRACK_DELAY, () => {
       old.crack(FIRST_CRACK_SEED);
       this.sfx("glassCrack");
     });
-    this.after(MORE_CRACKS_DELAY, () => {
+    this.timeline.after(MORE_CRACKS_DELAY, () => {
       old.crack(SECOND_CRACK_SEED, SECOND_CRACK_U, SECOND_CRACK_V);
       old.crack(THIRD_CRACK_SEED, THIRD_CRACK_U, THIRD_CRACK_V);
     });
-    this.after(SHATTER_DELAY, () => {
+    this.timeline.after(SHATTER_DELAY, () => {
       this.sfx("shatter");
 
       const from = this.character.muzzleWorld();
@@ -1030,17 +1000,17 @@ export class PlayerWorld {
           : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
         SHATTER_SEED_BASE + step.stop,
       );
-      this.temps.splice(this.temps.indexOf(old), 1);
+      this.timeline.untrack(old);
       this.shake = SHATTER_SHAKE;
     });
-    this.after(FIXED_CARD_DELAY, () => {
+    this.timeline.after(FIXED_CARD_DELAY, () => {
       this.sfx("codeFix");
       fixed.win.group.visible = true;
 
       const g = fixed.win.group;
 
       fixed.reading = false;
-      this.tween(
+      this.timeline.tween(
         FIXED_CARD_SECONDS,
         (k) => {
           const t = this.rig.readingPose(
@@ -1064,7 +1034,7 @@ export class PlayerWorld {
       );
       this.gateAt(step.stop).state = "open";
     });
-    this.after(HEAL_DELAY, () => {
+    this.timeline.after(HEAL_DELAY, () => {
       this.sfx("heal");
       this.fx.heal(
         this.character.root.position
@@ -1083,11 +1053,11 @@ export class PlayerWorld {
 
       const from = this.health;
 
-      this.tween(HEAL_SECONDS, (k) => {
+      this.timeline.tween(HEAL_SECONDS, (k) => {
         this.health = lerp(from, FULL_HEALTH, ease.outCubic(k));
       });
       this.character.pose = "victory";
-      this.after(VICTORY_POSE_SECONDS, () => {
+      this.timeline.after(VICTORY_POSE_SECONDS, () => {
         this.character.pose = "idle";
       });
     });
@@ -1100,8 +1070,8 @@ export class PlayerWorld {
     const home = boss.group.position.clone();
 
     boss.group.position.y = home.y + BOSS_DROP_HEIGHT;
-    this.after(BOSS_ARRIVE_SOUND_DELAY, () => this.sfx("bossArrive"));
-    this.tween(
+    this.timeline.after(BOSS_ARRIVE_SOUND_DELAY, () => this.sfx("bossArrive"));
+    this.timeline.tween(
       BOSS_DROP_SECONDS,
       (k) => {
         boss.group.position.y =
@@ -1117,7 +1087,7 @@ export class PlayerWorld {
         });
       },
     );
-    this.tween(MIN_TWEEN_SECONDS, () => void 0);
+    this.timeline.tween(MIN_TWEEN_SECONDS, () => void 0);
     if (this.player === "p1") {
       // Player 1 has nothing that works: shots bounce off.
       for (const t of [
@@ -1125,7 +1095,7 @@ export class PlayerWorld {
         BOSS_BOUNCE_SHOT_B,
         BOSS_BOUNCE_SHOT_C,
       ]) {
-        this.after(t, () => this.combat.shootBoss());
+        this.timeline.after(t, () => this.combat.shootBoss());
       }
     }
 
@@ -1142,13 +1112,13 @@ export class PlayerWorld {
             ? healthAt(this.game, { ...step, phase: "boss" }, "p1")
             : 0,
       });
-      this.after(PART_SHOT_A_DELAY, () => this.combat.shootBoss());
-      this.after(PART_SHOT_B_DELAY, () => this.combat.shootBoss());
+      this.timeline.after(PART_SHOT_A_DELAY, () => this.combat.shootBoss());
+      this.timeline.after(PART_SHOT_B_DELAY, () => this.combat.shootBoss());
       if (step.part === 0) {
         // The boss finishes player 1 with one blow.
-        this.after(KO_BLOW_DELAY, () => {
+        this.timeline.after(KO_BLOW_DELAY, () => {
           const firstStop = nth(this.playing.stops, 0, "stops");
-          const blow = this.track(
+          const blow = this.timeline.track(
             new CodeWindow(
               paintStopCard(
                 { game: this.game, tier: this.playing },
@@ -1166,7 +1136,7 @@ export class PlayerWorld {
           const from = this.bossModel.partWorld(0);
           const to = this.character.chestWorld();
 
-          this.tween(
+          this.timeline.tween(
             KO_BLOW_SECONDS,
             (k) => {
               blow.group.position.lerpVectors(from, to, ease.inCubic(k));
@@ -1194,11 +1164,11 @@ export class PlayerWorld {
                 KO_SHATTER_GRID_COLS,
                 KO_SHATTER_GRID_ROWS,
               ]);
-              this.temps.splice(this.temps.indexOf(blow), 1);
+              this.timeline.untrack(blow);
 
               const h0 = this.health;
 
-              this.tween(KO_HEALTH_SECONDS, (k) => {
+              this.timeline.tween(KO_HEALTH_SECONDS, (k) => {
                 this.health = lerp(h0, 0, k);
               });
             },
@@ -1219,7 +1189,7 @@ export class PlayerWorld {
     const part = nth(this.playing.boss.parts, step.part, "boss parts");
     const tool = toolFor(this.game, part.beatenBy);
 
-    this.after(TOOL_FIRE_DELAY, () => {
+    this.timeline.after(TOOL_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
@@ -1228,10 +1198,10 @@ export class PlayerWorld {
       this.fx.muzzle(from, EVENT.partMuzzle);
       this.sfx("cardPlay");
 
-      const card = this.track(toolBolt(tool.name));
+      const card = this.timeline.track(toolBolt(tool.name));
 
       this.scene.add(card.group);
-      this.tween(
+      this.timeline.tween(
         TOOL_BOLT_SECONDS,
         (k) => {
           card.group.position.lerpVectors(from, to, ease.inCubic(k));
@@ -1260,11 +1230,11 @@ export class PlayerWorld {
           this.bossLeft = this.bossTotal - step.part - 1;
           this.shake = PART_BREAK_SHAKE;
           card.dispose();
-          this.temps.splice(this.temps.indexOf(card), 1);
+          this.timeline.untrack(card);
 
           const h0 = this.health;
 
-          this.tween(PART_HEALTH_SECONDS, (k) => {
+          this.timeline.tween(PART_HEALTH_SECONDS, (k) => {
             this.health = lerp(h0, s.health, k);
           });
         },
@@ -1282,7 +1252,7 @@ export class PlayerWorld {
       this.pile = pile;
       this.scene.add(pile);
       pile.position.set(0, PILE_DROP_HEIGHT, s.z);
-      this.tween(
+      this.timeline.tween(
         PILE_DROP_SECONDS,
         (k) => {
           pile.position.y = PILE_DROP_HEIGHT * (1 - ease.outCubic(k));
@@ -1296,7 +1266,7 @@ export class PlayerWorld {
           });
         },
       );
-      this.after(PILE_LOSE_SOUND_DELAY, () =>
+      this.timeline.after(PILE_LOSE_SOUND_DELAY, () =>
         this.sfx("lose", PILE_LOSE_VOLUME),
       );
 
@@ -1313,7 +1283,7 @@ export class PlayerWorld {
     const boss = this.bossModel;
 
     this.bossLeft = 0;
-    this.after(FINISH_FIRE_DELAY, () => {
+    this.timeline.after(FINISH_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
@@ -1323,12 +1293,12 @@ export class PlayerWorld {
       boss.core.crack(CORE_CRACK_SEED_FIRST);
       this.sfx("glassCrack");
     });
-    this.after(CORE_CRACKS_DELAY, () => {
+    this.timeline.after(CORE_CRACKS_DELAY, () => {
       boss.core.crack(CORE_CRACK_SEED_B, CORE_CRACK_B_U, CORE_CRACK_B_V);
       boss.core.crack(CORE_CRACK_SEED_C, CORE_CRACK_C_U, CORE_CRACK_C_V);
       boss.shake = 1;
     });
-    this.after(BOSS_DESTROY_DELAY, () => {
+    this.timeline.after(BOSS_DESTROY_DELAY, () => {
       const at = boss.core.group.getWorldPosition(new THREE.Vector3());
 
       boss.destroy(this.debris, this.character.muzzleWorld().setY(0));
@@ -1347,14 +1317,14 @@ export class PlayerWorld {
       );
       this.character.pose = "victory";
     });
-    this.after(WIN_SOUND_DELAY, () => this.sfx("win"));
+    this.timeline.after(WIN_SOUND_DELAY, () => this.sfx("win"));
   }
 
   // ───────────────────────────── per frame ─────────────────────────────
 
   private debtSlot(i: number) {
     const c = this.character.root.position;
-    const t = this.clock;
+    const t = this.timeline.clock;
 
     // Above and beside player 1's far shoulder: off the follow camera's lens, behind the stop window in side views.
     return new THREE.Vector3(
@@ -1427,26 +1397,7 @@ export class PlayerWorld {
   }
 
   update(dt: number) {
-    this.clock += dt;
-    for (const cue of this.cues.filter((c) => c.at <= this.clock)) {
-      this.cues.splice(this.cues.indexOf(cue), 1);
-      cue.fn();
-    }
-
-    // Iterate a snapshot: finished tweens are spliced out of the live list inside the loop.
-    const tweenSnapshot = this.tweens.slice();
-
-    for (const t of tweenSnapshot) {
-      t.age += dt;
-
-      const k = Math.min(1, t.age / t.dur);
-
-      t.fn(k);
-      if (k >= 1) {
-        this.tweens.splice(this.tweens.indexOf(t), 1);
-        t.done?.();
-      }
-    }
+    this.timeline.step(dt);
 
     this.shake = Math.max(0, this.shake - dt * SHAKE_DECAY);
 
@@ -1458,8 +1409,8 @@ export class PlayerWorld {
     this.character.aimAt(this.combat.aim);
     if (
       this.walk &&
-      Math.floor(this.clock * STEP_RATE) !==
-        Math.floor((this.clock - dt) * STEP_RATE)
+      Math.floor(this.timeline.clock * STEP_RATE) !==
+        Math.floor((this.timeline.clock - dt) * STEP_RATE)
     ) {
       this.sfx("step", STEP_VOLUME);
     }
@@ -1486,7 +1437,8 @@ export class PlayerWorld {
         );
         this.rig.face(w.win.group);
         w.win.group.position.y +=
-          Math.sin(this.clock * READING_BOB_SPEED) * READING_BOB_HEIGHT;
+          Math.sin(this.timeline.clock * READING_BOB_SPEED) *
+          READING_BOB_HEIGHT;
       }
 
       w.win.update(dt);
@@ -1502,7 +1454,7 @@ export class PlayerWorld {
       );
       this.rig.face(d.win.group);
       d.win.group.rotateZ(
-        Math.sin(this.clock * DEBT_WOBBLE_SPEED + i) * DEBT_WOBBLE,
+        Math.sin(this.timeline.clock * DEBT_WOBBLE_SPEED + i) * DEBT_WOBBLE,
       );
       d.win.update(dt);
     }
