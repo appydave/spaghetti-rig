@@ -28,7 +28,7 @@ Needs Node 20.19 or later (Vite 7).
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (DEV_PORT=5174 npm run dev for another port; a taken port fails)
 ```
 
 Click to play, pick a mode with `1`, `2`, `B` or `S`, and press `Enter` on the tier map. The dev server listens on the network, so another machine can open it by its Bonjour (`.local`) or Tailscale (`.ts.net`) name or by IP.
