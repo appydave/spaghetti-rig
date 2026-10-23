@@ -7,9 +7,9 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
 // Coverage floors: see the note at `thresholds`.
-const STATEMENTS_FLOOR = 11.1;
-const BRANCHES_FLOOR = 17.6;
-const FUNCTIONS_FLOOR = 17.5;
+const STATEMENTS_FLOOR = 28.0;
+const BRANCHES_FLOOR = 30.7;
+const FUNCTIONS_FLOOR = 35.0;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -35,9 +35,13 @@ export default defineConfig({
       // Count every source file, not only the ones a test imports, so an untested file lowers the numbers.
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts"],
-      // The floor is the measured coverage on 2026-10-23 rounded down to one decimal: it fails if coverage falls.
-      // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change,
-      // while statements (the same code) did not move.
+      // A floor is a ratchet at the measured coverage (G00b): it fails if coverage falls, and a gate never lowers it; any drop goes to David.
+      // Since G05 H most of the coverage comes from lint/gates/model-proof.test.ts, which builds every model: it runs the builders but
+      // asserts no visuals, so this coverage is shallow, and it still must not fall. Branches (30.7) and functions (35.0) are rounded down
+      // from the measured 30.78 and 35.06. Statements is lower on purpose: measured 37.21 on 2026-10-23, but naming a number adds a
+      // `const X = n` statement in modules no test loads (world.ts, effects.ts), so the percentage falls about 8 points over G05 with no
+      // code or test change. 28.0 is where the G05 plan ends; G05's closing PR re-ratchets it to the measured value, never below 28.0.
+      // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change, while statements did not move.
       thresholds: {
         statements: STATEMENTS_FLOOR,
         branches: BRANCHES_FLOOR,
