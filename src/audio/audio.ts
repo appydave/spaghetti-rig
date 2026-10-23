@@ -1325,15 +1325,23 @@ export class AudioEngine {
 
   private playSfx(sfx: Sfx, t: number, opts: PlayOptions): void {
     const out = this.sfxOut(opts, SFX_LIFE[sfx] ?? 0.6);
-    const n = (midi: number): number => midiToFreq(midi);
     const layers = RECIPES.get(sfx);
 
     if (layers) {
       for (const v of expandSfx(layers, t)) {
-        if (v.kind === "tone") {
-          this.tone(out, v.at, v.opts);
-        } else {
-          this.noise(out, v.at, v.opts);
+        switch (v.kind) {
+          case "tone":
+            this.tone(out, v.at, v.opts);
+            break;
+          case "noise":
+            this.noise(out, v.at, v.opts);
+            break;
+          case "brass":
+            this.brass(out, v.at, v.midi, v.dur, v.vol);
+            break;
+          case "trombone":
+            this.trombone(out, v.at, v.midi, v.dur, v.wobble);
+            break;
         }
       }
 
@@ -1412,171 +1420,6 @@ export class AudioEngine {
         break;
       }
 
-      case "cardPlay": {
-        this.tone(out, t, {
-          type: "sine",
-          f: 220,
-          f2: 1320,
-          dur: 0.25,
-          vol: 0.14,
-        });
-        this.noise(out, t, {
-          filter: "highpass",
-          f: 5000,
-          dur: 0.2,
-          vol: 0.12,
-        });
-        for (const [i, m] of [72, 76, 79, 84, 88].entries()) {
-          this.tone(out, t + i * 0.035, {
-            type: "triangle",
-            f: n(m),
-            dur: 0.42,
-            vol: 0.11,
-          });
-        }
-
-        this.tone(out, t + 0.18, {
-          type: "sine",
-          f: n(96),
-          dur: 0.55,
-          vol: 0.05,
-          attack: 0.01,
-        });
-        break;
-      }
-
-      case "codeFix": {
-        for (const [i, m] of [
-          72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96, 98,
-        ].entries()) {
-          this.tone(out, t + i * 0.045, {
-            type: "sine",
-            f: n(m),
-            dur: 0.3,
-            vol: 0.065,
-          });
-        }
-
-        this.noise(out, t, {
-          filter: "bandpass",
-          f: 1000,
-          f2: 8000,
-          q: 3,
-          dur: 0.6,
-          vol: 0.12,
-          attack: 0.3,
-        });
-        break;
-      }
-
-      case "heal": {
-        for (const [i, m] of [65, 69, 72, 76, 79, 84].entries()) {
-          const ti = t + i * 0.09;
-
-          this.tone(out, ti, {
-            type: "sine",
-            f: n(m),
-            dur: 1.0,
-            vol: 0.1,
-            attack: 0.008,
-          });
-          this.tone(out, ti, {
-            type: "triangle",
-            f: n(m + 12),
-            dur: 0.4,
-            vol: 0.03,
-          });
-        }
-
-        break;
-      }
-
-      case "gateBanner": {
-        const sting = (ti: number, m: number, d: number): void => {
-          this.tone(out, ti, { type: "triangle", f: n(m), dur: d, vol: 0.18 });
-          this.tone(out, ti, {
-            type: "square",
-            f: n(m),
-            dur: d,
-            vol: 0.05,
-            lp: 3000,
-          });
-          this.tone(out, ti, {
-            type: "sine",
-            f: n(m + 12),
-            dur: d * 0.8,
-            vol: 0.05,
-          });
-        };
-
-        sting(t, 79, 0.14);
-        sting(t + 0.12, 84, 0.55);
-        break;
-      }
-
-      case "bossArrive": {
-        for (const m of [38, 45, 50, 51, 53]) {
-          this.brass(out, t, m, 1.5, 0.075);
-        }
-
-        this.tone(out, t, {
-          type: "sine",
-          f: 58,
-          f2: 34,
-          dur: 2.0,
-          vol: 0.5,
-          attack: 0.02,
-        });
-        this.noise(out, t, {
-          filter: "lowpass",
-          f: 180,
-          f2: 90,
-          dur: 2.2,
-          vol: 0.5,
-          attack: 0.3,
-        });
-        break;
-      }
-
-      case "bossPartBreak": {
-        this.noise(out, t, {
-          filter: "bandpass",
-          f: 1500,
-          f2: 400,
-          q: 1,
-          dur: 0.3,
-          vol: 0.42,
-        });
-        this.tone(out, t, {
-          type: "square",
-          f: 320,
-          f2: 70,
-          dur: 0.25,
-          vol: 0.12,
-          lp: 2000,
-        });
-        this.tone(out, t, {
-          type: "sine",
-          f: 600,
-          f2: 150,
-          dur: 0.2,
-          vol: 0.3,
-        });
-        this.tone(out, t + 0.12, {
-          type: "triangle",
-          f: n(88),
-          dur: 0.2,
-          vol: 0.1,
-        });
-        this.tone(out, t + 0.2, {
-          type: "triangle",
-          f: n(95),
-          dur: 0.35,
-          vol: 0.1,
-        });
-        break;
-      }
-
       case "bounce": {
         const ctx = this.audioContext;
         const o = ctx.createOscillator();
@@ -1607,99 +1450,6 @@ export class AudioEngine {
         lfo.stop(t + 0.47);
         this.cleanup(o, [o, lfo, depth, g]);
         this.tone(out, t, { type: "triangle", f: 2300, dur: 0.05, vol: 0.12 });
-        break;
-      }
-
-      case "bossDefeat": {
-        this.noise(out, t, {
-          filter: "lowpass",
-          f: 3000,
-          f2: 150,
-          dur: 1.6,
-          vol: 0.6,
-          attack: 0.005,
-        });
-        this.tone(out, t, { type: "sine", f: 120, f2: 28, dur: 1.0, vol: 0.8 });
-        for (const [i, m] of [67, 72, 76, 79, 84, 88].entries()) {
-          this.tone(out, t + 0.35 + i * 0.07, {
-            type: "triangle",
-            f: n(m),
-            dur: 0.5,
-            vol: 0.12,
-          });
-        }
-
-        for (const m of [60, 64, 67, 72]) {
-          this.brass(out, t + 0.8, m, 0.9, 0.06);
-        }
-
-        break;
-      }
-
-      case "win": {
-        const seq: [number, number, number][] = [
-          [67, 0, 0.15],
-          [72, 0.17, 0.15],
-          [76, 0.34, 0.15],
-          [79, 0.51, 0.42],
-          [76, 0.98, 0.14],
-          [79, 1.15, 1.25],
-        ];
-
-        for (const [m, at, d] of seq) {
-          this.brass(out, t + at, m, d, 0.11);
-          this.tone(out, t + at, {
-            type: "triangle",
-            f: n(m + 12),
-            dur: d + 0.1,
-            vol: 0.05,
-          });
-        }
-
-        for (const m of [48, 55, 60, 64, 67]) {
-          this.brass(out, t + 1.15, m, 1.25, 0.05);
-        }
-
-        for (const [i, m] of [84, 88, 91, 96].entries()) {
-          this.tone(out, t + 1.2 + i * 0.08, {
-            type: "sine",
-            f: n(m),
-            dur: 0.8,
-            vol: 0.05,
-          });
-        }
-
-        break;
-      }
-
-      case "lose": {
-        for (const [i, m] of [58, 57, 56].entries()) {
-          this.trombone(out, t + i * 0.42, m, 0.4, false);
-        }
-
-        this.trombone(out, t + 1.26, 55, 0.95, true);
-        break;
-      }
-
-      case "vs": {
-        this.tone(out, t, { type: "sine", f: 160, f2: 40, dur: 0.5, vol: 0.8 });
-        this.noise(out, t, {
-          filter: "lowpass",
-          f: 3000,
-          f2: 300,
-          dur: 0.35,
-          vol: 0.5,
-        });
-        this.noise(out, t, {
-          filter: "highpass",
-          f: 6000,
-          dur: 0.08,
-          vol: 0.22,
-        });
-        for (const m of [40, 47, 52, 55]) {
-          this.brass(out, t, m, 0.3, 0.07);
-        }
-
         break;
       }
     }

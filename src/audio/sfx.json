@@ -68,5 +68,101 @@
   },
   "step": {
     "layers": [{ "kind": "noise", "filter": "lowpass", "f": { "min": 250, "max": 450 }, "dur": 0.05, "vol": 0.12 }]
+  },
+  "bossPartBreak": {
+    "layers": [
+      { "kind": "noise", "filter": "bandpass", "f": 1500, "dur": 0.3, "vol": 0.42, "f2": 400, "q": 1 },
+      { "kind": "tone", "wave": "square", "f": 320, "f2": 70, "dur": 0.25, "vol": 0.12, "lp": 2000 },
+      { "kind": "tone", "wave": "sine", "f": 600, "f2": 150, "dur": 0.2, "vol": 0.3 },
+      { "kind": "tone", "wave": "triangle", "note": 88, "at": 0.12, "dur": 0.2, "vol": 0.1 },
+      { "kind": "tone", "wave": "triangle", "note": 95, "at": 0.2, "dur": 0.35, "vol": 0.1 }
+    ]
+  },
+  "cardPlay": {
+    "layers": [
+      { "kind": "tone", "wave": "sine", "f": 220, "f2": 1320, "dur": 0.25, "vol": 0.14 },
+      { "kind": "noise", "filter": "highpass", "f": 5000, "dur": 0.2, "vol": 0.12 },
+      { "kind": "tone", "wave": "triangle", "notes": [72, 76, 79, 84, 88], "repeat": { "step": 0.035 }, "dur": 0.42, "vol": 0.11 },
+      { "kind": "tone", "wave": "sine", "note": 96, "at": 0.18, "dur": 0.55, "vol": 0.05, "attack": 0.01 }
+    ]
+  },
+  "codeFix": {
+    "layers": [
+      { "kind": "tone", "wave": "sine", "notes": [72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96, 98], "repeat": { "step": 0.045 }, "dur": 0.3, "vol": 0.065 },
+      { "kind": "noise", "filter": "bandpass", "f": 1000, "dur": 0.6, "vol": 0.12, "f2": 8000, "q": 3, "attack": 0.3 }
+    ]
+  },
+  "heal": {
+    "layers": [
+      { "kind": "tone", "wave": "sine", "note": 65, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 77, "dur": 0.4, "vol": 0.03 },
+      { "kind": "tone", "wave": "sine", "note": 69, "at": 0.09, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 81, "at": 0.09, "dur": 0.4, "vol": 0.03 },
+      { "kind": "tone", "wave": "sine", "note": 72, "at": 0.18, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 84, "at": 0.18, "dur": 0.4, "vol": 0.03 },
+      { "kind": "tone", "wave": "sine", "note": 76, "at": 0.27, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 88, "at": 0.27, "dur": 0.4, "vol": 0.03 },
+      { "kind": "tone", "wave": "sine", "note": 79, "at": 0.36, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 91, "at": 0.36, "dur": 0.4, "vol": 0.03 },
+      { "kind": "tone", "wave": "sine", "note": 84, "at": 0.44999999999999996, "dur": 1.0, "vol": 0.1, "attack": 0.008 },
+      { "kind": "tone", "wave": "triangle", "note": 96, "at": 0.44999999999999996, "dur": 0.4, "vol": 0.03 }
+    ]
+  },
+  "gateBanner": {
+    "layers": [
+      { "kind": "tone", "wave": "triangle", "note": 79, "dur": 0.14, "vol": 0.18 },
+      { "kind": "tone", "wave": "square", "note": 79, "dur": 0.14, "vol": 0.05, "lp": 3000 },
+      { "kind": "tone", "wave": "sine", "note": 91, "dur": 0.11200000000000002, "vol": 0.05 },
+      { "kind": "tone", "wave": "triangle", "note": 84, "at": 0.12, "dur": 0.55, "vol": 0.18 },
+      { "kind": "tone", "wave": "square", "note": 84, "at": 0.12, "dur": 0.55, "vol": 0.05, "lp": 3000 },
+      { "kind": "tone", "wave": "sine", "note": 96, "at": 0.12, "dur": 0.44000000000000006, "vol": 0.05 }
+    ]
+  },
+  "bossArrive": {
+    "layers": [
+      { "kind": "brass", "notes": [38, 45, 50, 51, 53], "dur": 1.5, "vol": 0.075 },
+      { "kind": "tone", "wave": "sine", "f": 58, "f2": 34, "dur": 2.0, "vol": 0.5, "attack": 0.02 },
+      { "kind": "noise", "filter": "lowpass", "f": 180, "dur": 2.2, "vol": 0.5, "f2": 90, "attack": 0.3 }
+    ]
+  },
+  "bossDefeat": {
+    "layers": [
+      { "kind": "noise", "filter": "lowpass", "f": 3000, "dur": 1.6, "vol": 0.6, "f2": 150, "attack": 0.005 },
+      { "kind": "tone", "wave": "sine", "f": 120, "f2": 28, "dur": 1.0, "vol": 0.8 },
+      { "kind": "tone", "wave": "triangle", "notes": [67, 72, 76, 79, 84, 88], "repeat": { "start": 0.35, "step": 0.07 }, "dur": 0.5, "vol": 0.12 },
+      { "kind": "brass", "notes": [60, 64, 67, 72], "repeat": { "start": 0.8 }, "dur": 0.9, "vol": 0.06 }
+    ]
+  },
+  "win": {
+    "layers": [
+      { "kind": "brass", "note": 67, "dur": 0.15, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 79, "dur": 0.25, "vol": 0.05 },
+      { "kind": "brass", "note": 72, "at": 0.17, "dur": 0.15, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 84, "at": 0.17, "dur": 0.25, "vol": 0.05 },
+      { "kind": "brass", "note": 76, "at": 0.34, "dur": 0.15, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 88, "at": 0.34, "dur": 0.25, "vol": 0.05 },
+      { "kind": "brass", "note": 79, "at": 0.51, "dur": 0.42, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 91, "at": 0.51, "dur": 0.52, "vol": 0.05 },
+      { "kind": "brass", "note": 76, "at": 0.98, "dur": 0.14, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 88, "at": 0.98, "dur": 0.24000000000000002, "vol": 0.05 },
+      { "kind": "brass", "note": 79, "at": 1.15, "dur": 1.25, "vol": 0.11 },
+      { "kind": "tone", "wave": "triangle", "note": 91, "at": 1.15, "dur": 1.35, "vol": 0.05 },
+      { "kind": "brass", "notes": [48, 55, 60, 64, 67], "repeat": { "start": 1.15 }, "dur": 1.25, "vol": 0.05 },
+      { "kind": "tone", "wave": "sine", "notes": [84, 88, 91, 96], "repeat": { "start": 1.2, "step": 0.08 }, "dur": 0.8, "vol": 0.05 }
+    ]
+  },
+  "lose": {
+    "layers": [
+      { "kind": "trombone", "notes": [58, 57, 56], "repeat": { "step": 0.42 }, "dur": 0.4, "wobble": false },
+      { "kind": "trombone", "note": 55, "at": 1.26, "dur": 0.95, "wobble": true }
+    ]
+  },
+  "vs": {
+    "layers": [
+      { "kind": "tone", "wave": "sine", "f": 160, "f2": 40, "dur": 0.5, "vol": 0.8 },
+      { "kind": "noise", "filter": "lowpass", "f": 3000, "dur": 0.35, "vol": 0.5, "f2": 300 },
+      { "kind": "noise", "filter": "highpass", "f": 6000, "dur": 0.08, "vol": 0.22 },
+      { "kind": "brass", "notes": [40, 47, 52, 55], "dur": 0.3, "vol": 0.07 }
+    ]
   }
 }

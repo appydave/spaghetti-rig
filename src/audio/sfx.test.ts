@@ -115,3 +115,64 @@ describe("sfx repeat", () => {
     );
   });
 });
+
+describe("sfx widened in N6c", () => {
+  const brass = { kind: "brass", note: 60, dur: 0.5, vol: 0.1 };
+
+  it("plays a fixed note, and a list of notes in order, without drawing any random number", () => {
+    const random = vi.spyOn(Math, "random");
+    const fixed = { kind: "tone", wave: "sine", dur: 0.1, vol: 0.2 };
+    const seq = play(
+      { ...fixed, notes: [60, 64], repeat: { start: 1, step: 0.5 } },
+      2,
+    );
+
+    expect(play({ ...fixed, note: 88 })[0]?.opts.f).toBe(midiToFreq(88));
+    expect(seq.map((p) => [p.at, p.opts.f])).toEqual([
+      [3, midiToFreq(60)],
+      [3.5, midiToFreq(64)],
+    ]);
+    expect(random).not.toHaveBeenCalled();
+  });
+
+  it("refuses notes that are not a list, or that go with note or repeat.count", () => {
+    bad({ ...tone, notes: "C4" }, /notes must be a list/);
+    bad(
+      { ...tone, notes: [60], note: 60 },
+      /notes cannot go with note or repeat.count/,
+    );
+    bad({ ...tone, notes: [60], repeat: { count: 2 } }, /notes cannot go with/);
+  });
+
+  it("refuses a wobble that is not true or false", () => {
+    bad(
+      { kind: "trombone", note: 55, dur: 1, wobble: "yes" },
+      /fx.layers\[0\].wobble must be true or false/,
+    );
+  });
+
+  it("plays brass and trombone voices from a note", () => {
+    expect(
+      play({ kind: "brass", notes: [60, 64], dur: 0.5, vol: 0.1 }, 1),
+    ).toEqual([
+      { kind: "brass", at: 1, midi: 60, dur: 0.5, vol: 0.1 },
+      { kind: "brass", at: 1, midi: 64, dur: 0.5, vol: 0.1 },
+    ]);
+    expect(play({ kind: "trombone", note: 55, dur: 1, wobble: true })).toEqual([
+      { kind: "trombone", at: 0, midi: 55, dur: 1, wobble: true },
+    ]);
+  });
+
+  it("refuses a field its kind does not have, and a brass layer with no note", () => {
+    bad(
+      { ...brass, wave: "sine" },
+      /fx.layers\[0\].wave is not a field of a brass layer/,
+    );
+    bad({ ...noise, lp: 100 }, /lp is not a field of a noise layer/);
+    bad(
+      { kind: "brass", dur: 1, vol: 1 },
+      /fx.layers\[0\].note: a brass layer needs note or notes/,
+    );
+    bad({ kind: "trombone", dur: 1 }, /a trombone layer needs note or notes/);
+  });
+});

@@ -1,38 +1,61 @@
-import { nth } from "../nth";
-import { list, num, numOr, obj, oneOf } from "../world/model-load";
+import { nth, present } from "../nth";
+import { bool, list, num, numOr, obj, oneOf } from "../world/model-load";
 import type { NoiseOpts, ToneOpts } from "./audio";
 import { midiToFreq } from "./tracks";
 
 /**
- * The sound-effect recipe grammar (sfx.json). It is closed: a fifth shape is a ruling, not an edit.
+ * The sound-effect recipe grammar (sfx.json). It is closed: a new shape is a ruling, not an edit. Widened once, in N6c.
  *   recipe = a list of layers, played in order.
- *   layer  = { kind: "tone" | "noise", wave (tone) | filter (noise), f | note, f2?, dur, vol, at?, repeat?, attack?, lp? (tone), q? (noise) }
+ *   layer  = { kind: "tone" | "noise" | "brass" | "trombone", dur, at?, repeat?, and by kind:
+ *              tone: wave, f | note | notes, f2?, vol, attack?, lp?      noise: filter, f, f2?, vol, attack?, q?
+ *              brass: note | notes, vol                                  trombone: note | notes, wobble }
  *   range  = { min, max }  a number drawn between the two; f, f2, dur, vol and at may each be one.
- *   choice = [midi, ...]   `note` only: one of the list is drawn and played at its pitch.
- *   repeat = { count, start, step }  the layer plays count times, the first start seconds in, then every step seconds.
- * A play draws its random numbers in the order at, f (or note), f2, dur, vol, so a seeded run replays exactly.
+ *   note   = a midi number (a fixed note), or a list [midi, ...] of which one is drawn at random.
+ *   notes  = [midi, ...]   the layer plays once per note, in order, one step apart: the note is the only thing that changes.
+ *   repeat = { count, start, step }  the layer plays count times (not with notes), the first start seconds in, then every step seconds.
+ * A parsed layer with a field its kind does not have is refused. A play draws its random numbers in the order at, f (or a drawn
+ * note), f2, dur, vol; a fixed note, notes and the brass and trombone voices draw none, so a seeded run replays exactly.
+ * A value such as 0.11200000000000002 is the exact double the old arithmetic produced (0.14 * 0.8); it stays exact so the seeded proof stays exact.
  * sfx.json keeps one layer per line: .prettierrc.json gives it printWidth 240 (widest layer 212 columns the day it was set; 160 and 200 wrapped).
  * A layer that wraps at 240 has outgrown this grammar and comes back as a ruling; the width never goes up.
  */
 type Amount = number | { min: number; max: number };
-export type Layer = {
-  pitch: Amount | number[];
-  f2?: Amount;
+type Pitch = { hz: Amount } | { pick: number[] } | { seq: number[] };
+export interface Layer {
+  kind: "tone" | "noise" | "brass" | "trombone";
+  pitch: Pitch;
   dur: Amount;
-  vol: Amount;
   at?: Amount;
-  attack?: number;
   repeat: { count: number; start: number; step: number };
-} & (
-  | { kind: "tone"; shape: OscillatorType; lp?: number }
-  | { kind: "noise"; shape: BiquadFilterType; q?: number }
-);
+  wave: OscillatorType;
+  filter: BiquadFilterType;
+  vol: Amount;
+  f2?: Amount;
+  attack?: number;
+  lp?: number;
+  q?: number;
+  wobble: boolean;
+}
 export type Play =
   | { kind: "tone"; at: number; opts: ToneOpts }
-  | { kind: "noise"; at: number; opts: NoiseOpts };
+  | { kind: "noise"; at: number; opts: NoiseOpts }
+  | { kind: "brass"; at: number; midi: number; dur: number; vol: number }
+  | {
+      kind: "trombone";
+      at: number;
+      midi: number;
+      dur: number;
+      wobble: boolean;
+    };
 
-const WAVES = ["sine", "square", "sawtooth", "triangle"] as const;
-const FILTERS = ["lowpass", "highpass", "bandpass"] as const;
+const KINDS = ["tone", "noise", "brass", "trombone"] as const;
+const SHARED = ["kind", "dur", "at", "repeat", "note", "notes"];
+const OWN = {
+  tone: ["wave", "f", "f2", "vol", "attack", "lp"],
+  noise: ["filter", "f", "f2", "vol", "attack", "q"],
+  brass: ["vol"],
+  trombone: ["wobble"],
+};
 
 const amount = (v: unknown, path: string): Amount => {
   if (typeof v === "number") {
@@ -50,39 +73,58 @@ const maybe = <T>(v: unknown, read: (x: unknown) => T): T | undefined =>
 function parseLayer(raw: unknown, path: string): Layer {
   const o = obj(raw, path);
   const at = (k: string): string => `${path}.${k}`;
+  const kind = oneOf(o.kind, KINDS, at("kind"));
+  const has = (k: string): boolean => OWN[kind].includes(k);
+  const notes = (v: unknown, k: string): number[] =>
+    list(v, at(k)).map((m) => num(m, at(k)));
   const rep = obj(o.repeat ?? {}, at("repeat"));
-  const number = (k: string): number | undefined =>
-    maybe(o[k], (v) => num(v, at(k)));
-  const common = {
-    pitch:
-      maybe(o.note, (v) =>
-        list(v, at("note")).map((m) => num(m, at("note"))),
-      ) ?? amount(o.f, at("f")),
-    f2: maybe(o.f2, (v) => amount(v, at("f2"))),
+  const unknown = Object.keys(o).find(
+    (k) => ![...SHARED, ...OWN[kind]].includes(k),
+  );
+
+  if (unknown) {
+    throw new Error(`${at(unknown)} is not a field of a ${kind} layer`);
+  }
+
+  if (!has("f") && o.note === undefined && o.notes === undefined) {
+    throw new Error(`${at("note")}: a ${kind} layer needs note or notes`);
+  }
+
+  if (o.notes !== undefined && (o.note ?? rep.count) !== undefined) {
+    throw new Error(`${at("notes")} cannot go with note or repeat.count`);
+  }
+
+  const seq =
+    maybe(o.notes, (v) => notes(v, "notes")) ??
+    (typeof o.note === "number" ? [o.note] : undefined);
+
+  return {
+    kind,
+    pitch: seq
+      ? { seq }
+      : (maybe(o.note, (v) => ({ pick: notes(v, "note") })) ?? {
+          hz: amount(o.f, at("f")),
+        }),
     dur: amount(o.dur, at("dur")),
-    vol: amount(o.vol, at("vol")),
     at: maybe(o.at, (v) => amount(v, at("at"))),
-    attack: number("attack"),
     repeat: {
-      count: numOr(rep.count, 1, at("repeat.count")),
+      count: seq ? seq.length : numOr(rep.count, 1, at("repeat.count")),
       start: numOr(rep.start, 0, at("repeat.start")),
       step: numOr(rep.step, 0, at("repeat.step")),
     },
+    wave: has("wave")
+      ? oneOf(o.wave, ["sine", "square", "sawtooth", "triangle"], at("wave"))
+      : "sine",
+    filter: has("filter")
+      ? oneOf(o.filter, ["lowpass", "highpass", "bandpass"], at("filter"))
+      : "lowpass",
+    vol: has("vol") ? amount(o.vol, at("vol")) : 0,
+    f2: maybe(o.f2, (v) => amount(v, at("f2"))),
+    attack: maybe(o.attack, (v) => num(v, at("attack"))),
+    lp: maybe(o.lp, (v) => num(v, at("lp"))),
+    q: maybe(o.q, (v) => num(v, at("q"))),
+    wobble: bool(o.wobble, false, at("wobble")),
   };
-
-  return oneOf(o.kind, ["tone", "noise"], at("kind")) === "tone"
-    ? {
-        ...common,
-        kind: "tone",
-        shape: oneOf(o.wave, WAVES, at("wave")),
-        lp: number("lp"),
-      }
-    : {
-        ...common,
-        kind: "noise",
-        shape: oneOf(o.filter, FILTERS, at("filter")),
-        q: number("q"),
-      };
 }
 
 /** sfx.json parsed: one list of layers per effect name. */
@@ -102,14 +144,28 @@ const draw = (a: Amount): number =>
 
 function play(l: Layer, t: number, i: number): Play {
   const r = l.repeat;
+  const p = l.pitch;
   const at = t + r.start + i * r.step + (l.at === undefined ? 0 : draw(l.at));
-  const f = Array.isArray(l.pitch)
-    ? midiToFreq(
-        nth(l.pitch, Math.floor(Math.random() * l.pitch.length), "note list"),
-      )
-    : draw(l.pitch);
+  const midi =
+    "hz" in p
+      ? undefined
+      : "seq" in p
+        ? nth(p.seq, i, "notes")
+        : nth(p.pick, Math.floor(Math.random() * p.pick.length), "note list");
+
+  if (l.kind === "brass" || l.kind === "trombone") {
+    const [dur, note] = [
+      draw(l.dur),
+      present(midi, "the note of a brass or trombone layer"),
+    ];
+
+    return l.kind === "brass"
+      ? { kind: "brass", at, midi: note, dur, vol: draw(l.vol) }
+      : { kind: "trombone", at, midi: note, dur, wobble: l.wobble };
+  }
+
   const voice = {
-    f,
+    f: "hz" in p ? draw(p.hz) : midiToFreq(present(midi, "the note")),
     f2: l.f2 && draw(l.f2),
     dur: draw(l.dur),
     vol: draw(l.vol),
@@ -117,8 +173,8 @@ function play(l: Layer, t: number, i: number): Play {
   };
 
   return l.kind === "tone"
-    ? { kind: "tone", at, opts: { ...voice, type: l.shape, lp: l.lp } }
-    : { kind: "noise", at, opts: { ...voice, filter: l.shape, q: l.q } };
+    ? { kind: "tone", at, opts: { ...voice, type: l.wave, lp: l.lp } }
+    : { kind: "noise", at, opts: { ...voice, filter: l.filter, q: l.q } };
 }
 
 /** Every voice an effect plays from time t, in the order the old code played them. */
