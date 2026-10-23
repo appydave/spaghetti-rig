@@ -26,7 +26,7 @@ export const step = (page: Page) =>
   page.evaluate(() => (window.__rig as TestHooks).director.step);
 export const at = (page: Page) =>
   page.evaluate(() => (window.__rig as TestHooks).director.at);
-/** Read the app's test hooks: the lambda is checked against TestHooks by tsc, then run in the page on window.__rig. */
+/** Read the app's test hooks: the lambda is checked against TestHooks by tsc, then its source is serialised into the page and run on window.__rig, so it must not close over test-scope values. */
 export const rig = <T>(page: Page, fn: (r: TestHooks) => T) =>
   page.evaluate(`(${fn.toString()})(window.__rig)`) as Promise<T>;
 
