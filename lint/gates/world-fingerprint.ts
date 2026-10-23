@@ -111,6 +111,8 @@ export function sceneOf(root: THREE.Object3D): string {
 
 /** What the world holds besides its scene: the numbers and flags a split of world.ts could drop or reorder. */
 export function stateOf(w: any): string {
+  // The clock, the tweens and the cues have no public reading: they live on the world's timeline when it has one, else on the world.
+  const t = w.timeline ?? w;
   const v = (p: THREE.Vector3 | null | undefined) =>
     p ? nums(p.toArray()) : "-";
 
@@ -127,7 +129,7 @@ export function stateOf(w: any): string {
     w.aspect,
     w.shape,
     w.camMode,
-    num(w.clock),
+    num(t.clock),
     num(w.shake),
     nums(w.camera.position.toArray()),
     nums(w.camera.quaternion.toArray()),
@@ -136,8 +138,8 @@ export function stateOf(w: any): string {
     w.state,
     w.walk ? [w.walk.from, w.walk.to, num(w.walk.u), w.walk.next] : null,
     w.gates.map((g: any) => g.state),
-    w.tweens.length,
-    w.cues.length,
+    t.tweens.length,
+    t.cues.length,
     w.window ? [w.window.key, w.window.reading] : null,
     w.debt.map((d: any) => d.key),
     w.boss ? "boss" : null,
