@@ -2,6 +2,18 @@ import type { AnnotationKind, Card, RowKind, View } from "../content/types";
 import { present } from "../nth";
 
 /** Editor colours (Spaghetti Busters palette). */
+/** A break in a long line is searched for backwards only as far as this share of the wrap width. */
+const WRAP_SEARCH_SHARE = 0.5;
+/** Code is never wrapped narrower than this many columns, and a wrapped line indents at most this many. */
+const MIN_CODE_COLUMNS = 12;
+const MAX_WRAP_INDENT = 8;
+/** Captions are prose in a proportional font: this many times as many characters fit on a line as code. */
+const CAPTION_COLUMNS_FACTOR = 1.35;
+/** A file name made from a card title is cut to this many characters (before the extension). */
+const MAX_FILE_STEM = 28;
+/** The narrowest wrap width longestRow reports. */
+const MIN_ROW_WIDTH = 10;
+
 export const SYNTAX = {
   text: "#d6e2f0",
   keyword: "#bd9bff",
@@ -180,7 +192,7 @@ export function wrapPoints(
     const width = start ? cols - indent : cols;
     let cut = start + width;
 
-    for (let i = start + width; i > start + width * 0.5; i--) {
+    for (let i = start + width; i > start + width * WRAP_SEARCH_SHARE; i--) {
       if (/[\s,;({[=>]/.test(text.charAt(i - 1))) {
         cut = i;
         break;
@@ -258,8 +270,11 @@ export function layoutCard(
           };
         });
       const prefix = block.view === "diff" && kind !== "l" ? 2 : 0;
-      const usable = Math.max(12, cols - prefix);
-      const indent = Math.min(8, (text.match(/^\s*/)?.[0].length ?? 0) + 2);
+      const usable = Math.max(MIN_CODE_COLUMNS, cols - prefix);
+      const indent = Math.min(
+        MAX_WRAP_INDENT,
+        (text.match(/^\s*/)?.[0].length ?? 0) + 2,
+      );
       const cuts = wrapPoints(text, usable, indent);
 
       for (const [ci, from] of cuts.entries()) {
@@ -322,7 +337,7 @@ function blankLine(type: Line["type"], view: View, block: number): Line {
 
 function pushCaption(lines: Line[], text: string, cols: number, block = -1) {
   // Captions are prose in a proportional font, roughly 1.35× as many characters fit per line.
-  const width = Math.floor(cols * 1.35);
+  const width = Math.floor(cols * CAPTION_COLUMNS_FACTOR);
   const words = text.split(/\s+/);
   let cur = "";
 
@@ -348,14 +363,14 @@ export function slugFile(title: string, ext = ".ts") {
       .replace(/^tool:\s*/, "")
       .replaceAll(/[^a-z0-9]+/g, "-")
       .replaceAll(/^-|-$/g, "")
-      .slice(0, 28) + ext
+      .slice(0, MAX_FILE_STEM) + ext
   );
 }
 
 /** Longest row in a card, in characters (to pick a wrap width). */
 export function longestRow(card: Card) {
   return Math.max(
-    10,
+    MIN_ROW_WIDTH,
     ...card.blocks.flatMap((b) =>
       b.rows.map(([, t]) => t.length + (b.view === "diff" ? 2 : 0)),
     ),

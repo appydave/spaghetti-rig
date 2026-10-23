@@ -1,6 +1,34 @@
 import * as THREE from "three";
 import { rng } from "./toon";
 
+// The hand's feel. Times are in seconds, and the "spread" values are multiplied by a random 0..1 and added to the base.
+const DEFAULT_MISS_CHANCE = 0.22;
+const DEFAULT_BURST_CHANCE = 0.3;
+const FIRST_SHOT_DELAY = 0.3;
+const FIRST_SHOT_DELAY_SPREAD = 0.5;
+/** With nothing to shoot, how fast the aim drifts back to the middle of the road, per second. */
+const DRIFT_BACK_RATE = 1.5;
+/** A new target: the reaction time before the first shot, and how fast the hand closes on it. */
+const REACTION_DELAY = 0.18;
+const REACTION_DELAY_SPREAD = 0.3;
+const CLOSE_SPEED = 3.5;
+const CLOSE_SPEED_SPREAD = 3.5;
+/** A random 0..1 minus this is an offset either side of zero. */
+const RANDOM_CENTRE = 0.5;
+/** How far a steady aim trembles. */
+const TREMBLE = 0.02;
+/** The pause between shots in a burst, and how many extra shots a burst can have. */
+const BURST_GAP = 0.07;
+const BURST_GAP_SPREAD = 0.05;
+const MAX_BURST_FOLLOW_UPS = 3;
+/** The pause after a lone shot: mostly quick, sometimes a long look. */
+const QUICK_PAUSE = 0.22;
+const LONG_LOOK_SPREAD = 1.1;
+/** Where a shot lands, in target radii from the centre: a miss lands beyond MISS_DISTANCE, a hit inside HIT_SPREAD. */
+const MISS_DISTANCE = 1.5;
+const MISS_DISTANCE_SPREAD = 0.9;
+const HIT_SPREAD = 0.45;
+
 export interface Target {
   id: number;
   centre: THREE.Vector3;
@@ -29,11 +57,11 @@ export class AutoGunner {
 
   constructor(
     seed: number,
-    readonly missChance = 0.22,
-    readonly burstChance = 0.3,
+    readonly missChance = DEFAULT_MISS_CHANCE,
+    readonly burstChance = DEFAULT_BURST_CHANCE,
   ) {
     this.r = rng(seed);
-    this.wait = 0.3 + this.r() * 0.5;
+    this.wait = FIRST_SHOT_DELAY + this.r() * FIRST_SHOT_DELAY_SPREAD;
     this.speed = 5;
   }
 
@@ -44,7 +72,7 @@ export class AutoGunner {
     if (!target) {
       // Nothing to shoot: the hand drifts back towards the middle of the road.
       if (this.aim) {
-        this.aim.lerp(rest, 1 - Math.exp(-dt * 1.5));
+        this.aim.lerp(rest, 1 - Math.exp(-dt * DRIFT_BACK_RATE));
       }
 
       this.targetId = -1;
@@ -56,8 +84,11 @@ export class AutoGunner {
     if (target.id !== this.targetId) {
       // A new target: a moment to react, and a hand that starts somewhere else.
       this.targetId = target.id;
-      this.wait = Math.max(this.wait, 0.18 + r() * 0.3);
-      this.speed = 3.5 + r() * 3.5;
+      this.wait = Math.max(
+        this.wait,
+        REACTION_DELAY + r() * REACTION_DELAY_SPREAD,
+      );
+      this.speed = CLOSE_SPEED + r() * CLOSE_SPEED_SPREAD;
       this.pickError(target);
     }
 
@@ -66,8 +97,8 @@ export class AutoGunner {
 
     aim.lerp(goal, 1 - Math.exp(-dt * this.speed));
     // A little tremble, so even a steady aim is never perfectly still.
-    aim.x += (r() - 0.5) * 0.02;
-    aim.y += (r() - 0.5) * 0.02;
+    aim.x += (r() - RANDOM_CENTRE) * TREMBLE;
+    aim.y += (r() - RANDOM_CENTRE) * TREMBLE;
     this.wait -= dt;
     if (this.wait > 0) {
       return null;
@@ -77,13 +108,13 @@ export class AutoGunner {
 
     if (this.burst > 0) {
       this.burst--;
-      this.wait = 0.07 + r() * 0.05;
+      this.wait = BURST_GAP + r() * BURST_GAP_SPREAD;
     } else if (r() < this.burstChance) {
-      this.burst = 1 + Math.floor(r() * 3);
-      this.wait = 0.07 + r() * 0.05;
+      this.burst = 1 + Math.floor(r() * MAX_BURST_FOLLOW_UPS);
+      this.wait = BURST_GAP + r() * BURST_GAP_SPREAD;
     } else {
       // Mostly quick, sometimes a long look before the next pull.
-      this.wait = 0.22 + r() * r() * 1.1;
+      this.wait = QUICK_PAUSE + r() * r() * LONG_LOOK_SPREAD;
     }
 
     if (this.burst === 0) {
@@ -97,7 +128,9 @@ export class AutoGunner {
     const r = this.r;
     const a = r() * Math.PI * 2;
     const miss = r() < this.missChance;
-    const d = t.radius * (miss ? 1.5 + r() * 0.9 : r() * 0.45);
+    const d =
+      t.radius *
+      (miss ? MISS_DISTANCE + r() * MISS_DISTANCE_SPREAD : r() * HIT_SPREAD);
 
     this.error.set(Math.cos(a) * d, Math.sin(a) * d, 0);
   }
