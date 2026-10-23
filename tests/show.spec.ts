@@ -99,13 +99,13 @@ test("the tool card flies in over player 2 only, then fixes the code and heals",
     page,
     `r.director.go(r.director.script.findIndex(s => s.phase === 'problem'), true)`,
   );
-  await page.waitForTimeout(3200);
-  const hit = await rig<{ p1: number; p2: number }>(
-    page,
-    "({ p1: r.worlds.p1.health, p2: r.worlds.p2.health })",
-  );
-  expect(hit.p1).toBeCloseTo(77.5, 0);
-  expect(hit.p2).toBeCloseTo(77.5, 0);
+  // Wait for the hit to land, not for a fixed time: health is tweened in game time, so a slow runner reads it mid-fall.
+  await expect
+    .poll(() => rig<number>(page, "r.worlds.p1.health"), { timeout: 15_000 })
+    .toBeCloseTo(77.5, 0);
+  await expect
+    .poll(() => rig<number>(page, "r.worlds.p2.health"), { timeout: 15_000 })
+    .toBeCloseTo(77.5, 0);
   await press(page, "ArrowRight", 900);
   expect((await step(page)).phase).toBe("tool");
   await expect(page.locator(".lane[data-p='p2'] .tcard")).toHaveCount(1);
@@ -117,15 +117,13 @@ test("the tool card flies in over player 2 only, then fixes the code and heals",
   );
   await expect(page.locator(".tcard .cfg")).toContainText(cfg.file);
   await expect(page.locator(".tcard .cfg")).toContainText(cfg.lines[0]![0]!);
-  await press(page, "ArrowRight", 3500);
+  await press(page, "ArrowRight");
   expect((await step(page)).phase).toBe("fixed");
-  const healed = await rig<{ p1: number; p2: number; win: string }>(
-    page,
-    "({ p1: r.worlds.p1.health, p2: r.worlds.p2.health, win: r.worlds.p2.window.key })",
-  );
-  expect(healed.p2).toBeCloseTo(100, 0);
-  expect(healed.p1).toBeCloseTo(77.5, 0);
-  expect(healed.win).toContain("fixed");
+  await expect
+    .poll(() => rig<number>(page, "r.worlds.p2.health"), { timeout: 15_000 })
+    .toBeCloseTo(100, 0);
+  expect(await rig<number>(page, "r.worlds.p1.health")).toBeCloseTo(77.5, 0);
+  expect(await rig<string>(page, "r.worlds.p2.window.key")).toContain("fixed");
   await expect(
     page.locator(".lane[data-p='p2'] .tray .slot.earned"),
   ).toHaveCount(1);
@@ -147,14 +145,20 @@ test("player 1 reaches the boss on 10% and the boss finishes them; player 2 wins
     page,
     `r.director.go(r.director.script.findIndex(s => s.phase === 'boss'), false)`,
   );
-  await page.waitForTimeout(300);
-  expect(await rig<number>(page, "r.worlds.p1.health")).toBeCloseTo(10, 0);
-  await expect(page.locator(".lane[data-p='p2'] .bossbar")).toBeVisible();
-  await press(page, "ArrowRight", 2500);
-  expect(await rig<number>(page, "r.worlds.p1.health")).toBeLessThan(1);
-  expect(await rig<number>(page, "r.worlds.p2.bossLeft")).toBe(
-    (await rig<number>(page, "r.worlds.p2.bossTotal")) - 1,
+  // Player 1 sits at 10% only until the boss lands its blow, so sample every frame rather than at one wall-clock moment.
+  await page.waitForFunction(
+    () => Math.abs((window as any).__rig.worlds.p1.health - 10) < 0.5,
+    null,
+    { polling: "raf", timeout: 15_000 },
   );
+  await expect(page.locator(".lane[data-p='p2'] .bossbar")).toBeVisible();
+  await press(page, "ArrowRight");
+  await expect
+    .poll(() => rig<number>(page, "r.worlds.p1.health"), { timeout: 15_000 })
+    .toBeLessThan(1);
+  await expect
+    .poll(() => rig<number>(page, "r.worlds.p2.bossLeft"), { timeout: 15_000 })
+    .toBe((await rig<number>(page, "r.worlds.p2.bossTotal")) - 1);
   expect(await rig<number>(page, "r.worlds.p1.bossLeft")).toBe(
     await rig<number>(page, "r.worlds.p1.bossTotal"),
   );
