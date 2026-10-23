@@ -443,7 +443,8 @@
         "src/content/load.ts",
         "src/audio/load.ts",
         "src/audio/sfx.ts",
-        "src/world/model-load.ts"
+        "src/world/model-load.ts",
+        "src/world/schema.ts"
       ],
       "rules": {
         "anti-slop/no-unknown-parameters": "off",
