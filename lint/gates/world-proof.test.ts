@@ -37,6 +37,7 @@ const WIDE = 16 / 9;
 const TALL = 9 / 16;
 const WIDER_TALL = 1.2;
 const POINTER_EVERY = 6;
+const POINTER_LEAVES_EVERY = 4;
 const SKIP_FRAMES = 3;
 
 type Mode = "watch" | "autoplay" | "pointer" | "jump" | "skip";
@@ -68,7 +69,13 @@ function seeded(seed: number): () => number {
 }
 
 /** What a scenario plays with: the world, how it is played, and how it is looked at. */
-type Run = { w: any; mode: Mode; look: (label: string) => void };
+type Run = {
+  w: any;
+  mode: Mode;
+  look: (label: string) => void;
+  /** What the world told its caller since the last look: the enemies that slipped, what the pointer returned. */
+  events: string[];
+};
 type Scenario = {
   player: "p1" | "p2";
   tier: number;
@@ -81,7 +88,7 @@ type Scenario = {
 
 /** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
 function playStep(run: Run, step: Step, first: boolean): void {
-  const { w, mode, look } = run;
+  const { w, mode, look, events } = run;
 
   if (mode === "jump" && step.phase !== "walk") {
     w.settle(step);
@@ -112,10 +119,16 @@ function playStep(run: Run, step: Step, first: boolean): void {
     }
 
     if (mode === "pointer" && f % POINTER_EVERY === 0) {
-      w.pointer(
-        w.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
-        true,
+      events.push(
+        `hit:${w.pointer(
+          w.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
+          true,
+        )}`,
       );
+      // The pointer leaves the window now and then.
+      if (f % (POINTER_EVERY * POINTER_LEAVES_EVERY) === 0) {
+        events.push(`left:${w.pointer(null, false)}`);
+      }
     }
 
     w.update(FRAME);
@@ -148,6 +161,7 @@ function play({
   try {
     const w: any = new PlayerWorld(player, game, audio, () => PAN);
     const log: string[] = [];
+    const events: string[] = [];
     const look = (label: string): void => {
       if (resize && log.length % RESIZE_EVERY === RESIZE_EVERY - 1) {
         w.setAspect(
@@ -162,14 +176,15 @@ function play({
       }
 
       log.push(
-        `${label} ${sha(`${sceneOf(w.scene)}#${stateOf(w)}#${JSON.stringify(sounds.splice(0))}`)}`,
+        `${label} ${sha(`${sceneOf(w.scene)}#${stateOf(w)}#${JSON.stringify(sounds.splice(0))}#${events.splice(0).join()}`)}`,
       );
     };
 
     w.setAspect(tall ? TALL : WIDE);
     w.autoplay = mode === "autoplay";
+    w.onSlip = (kind: string) => events.push(`slip:${kind}`);
     for (const [i, step] of script.filter((s) => s.tier === tier).entries()) {
-      playStep({ w, mode, look }, step, i === 0);
+      playStep({ w, mode, look, events }, step, i === 0);
     }
 
     return log;
