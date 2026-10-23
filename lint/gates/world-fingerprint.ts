@@ -54,6 +54,15 @@ function positionsOf(a: Positions | undefined): string {
   return hash;
 }
 
+/** What was drawn on a texture's canvas: its size and a hash of every drawing call and property set the builders made. */
+function paintedOn(
+  image: { width: number; height: number; log?: string[] } | undefined,
+) {
+  return image?.log
+    ? `${image.width}x${image.height}:${createHash("sha1").update(image.log.join("\n")).digest("hex").slice(0, HASH_CHARS)}`
+    : "";
+}
+
 /** Every node of the scene: its place in the graph, transform, visibility, material and light. */
 export function sceneOf(root: THREE.Object3D): string {
   root.updateMatrixWorld(true);
@@ -71,6 +80,7 @@ export function sceneOf(root: THREE.Object3D): string {
         nums(o.matrixWorld.elements),
         positionsOf(o.geometry?.attributes?.position),
         m ? [m.color?.getHexString(), m.opacity, m.visible].join("/") : "",
+        paintedOn(m?.map?.image),
         o.isLight ? [o.color.getHexString(), o.intensity].join("/") : "",
       ].join("|"),
     );
