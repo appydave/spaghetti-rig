@@ -57,7 +57,9 @@ const EXEMPT = [
 ];
 const BAD_SOURCE =
   'export const n = Math.max(7, 1);\nexport const c = "#ffffff";\n';
+/** The override that exempts the asset files from the number and colour rules (the size gate has its own, in size.test.ts). */
 const EXEMPTION = (o: Override): boolean =>
+  "no-magic-numbers" in (o.rules ?? {}) &&
   (o.files ?? []).some((f) => EXEMPT.includes(f));
 
 const PROBES: readonly Probe[] = [
