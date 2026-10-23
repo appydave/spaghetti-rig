@@ -23,6 +23,7 @@ const HARNESS_FILES = [
   HARNESS,
   "lint/gates/world-fingerprint.ts",
   "lint/gates/recording-canvas.ts",
+  "lint/gates/disposal-spy.ts",
 ];
 const WORKTREE = "WORKTREE";
 const EXIT_DIFFERENT = 1;
