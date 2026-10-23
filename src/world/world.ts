@@ -241,6 +241,90 @@ const PART_TEXT_SIZE = 1.1;
 const PART_TEXT_LIFE = 1.6;
 const PART_BREAK_SHAKE = 0.8;
 const PART_HEALTH_SECONDS = 0.6;
+const PILE_DROP_HEIGHT = 9;
+const PILE_DROP_SECONDS = 0.9;
+const PILE_LANDING_SHAKE = 0.7;
+const PILE_DUST_Y = 0.4;
+const PILE_BURST_COUNT = 40;
+const PILE_BURST_SPEED = 6;
+const PILE_LOSE_SOUND_DELAY = 0.2;
+const PILE_LOSE_VOLUME = 0.6;
+const FINISH_FIRE_DELAY = 0.3;
+const CORE_CRACK_SEED_FIRST = 5;
+const CORE_CRACKS_DELAY = 0.7;
+const CORE_CRACK_SEED_B = 17;
+const CORE_CRACK_B_U = 0.3;
+const CORE_CRACK_B_V = 0.4;
+const CORE_CRACK_SEED_C = 23;
+const CORE_CRACK_C_U = 0.7;
+const CORE_CRACK_C_V = 0.7;
+const BOSS_DESTROY_DELAY = 1.1;
+const BOSS_DEFEAT_SHAKE = 1.5;
+const BOSS_CONFETTI_COUNT = 200;
+const BOSS_RING_SIZE = 6;
+const BOSS_RING_LIFE = 0.8;
+const WIN_SOUND_DELAY = 1.6;
+const STREET_CLEAR_BURST_COUNT = 10;
+const STREET_CLEAR_BURST_SPEED = 3;
+
+const POINTER_FALLBACK_DISTANCE = 30;
+const ENEMY_HIT_PADDING = 1.15;
+const TRACER_WIDTH_P1 = 0.04;
+const TRACER_WIDTH_P2 = 0.07;
+const SHOT_VOLUME = 0.7;
+const ENEMY_HIT_VOLUME = 0.6;
+const ENEMY_HIT_BURST_COUNT = 12;
+const ENEMY_HIT_BURST_SPEED = 5;
+const GROUND_SPLASH_BELOW = 0.3;
+const GROUND_SPLASH_Y = 0.05;
+const MISS_BURST_COUNT = 5;
+const BOSS_AIM_SPREAD_X = 3;
+const BOSS_AIM_FRONT_Z = 0.6;
+const BOUNCE_VOLUME = 0.8;
+const BOUNCE_BURST_COUNT = 14;
+const BOUNCE_BURST_SPEED = 6;
+const BOUNCE_RING_SIZE = 0.8;
+const BOUNCE_RING_LIFE = 0.25;
+const BOUNCE_RISE_BASE = 3;
+const BOUNCE_AWAY_BASE = 4;
+const BOUNCE_AWAY_JITTER = 3;
+const BOUNCE_TRACER_WIDTH = 0.03;
+const NO_EFFECT_CHANCE = 0.6;
+const NO_EFFECT_TEXT_SIZE = 0.7;
+const NO_EFFECT_TEXT_LIFE = 0.9;
+const ROBOT_KILL_BURST_COUNT = 50;
+const KILL_BURST_COUNT = 30;
+const KILL_BURST_SPEED = 8;
+const KILL_RING_SIZE = 1.4;
+const KILL_RING_LIFE = 0.35;
+const KILL_TEXT_SIZE = 0.8;
+const KILL_DEBRIS_ORIGIN_LERP = 0.7;
+const KILL_DEBRIS_POWER = 6;
+const KILL_DEBRIS_UP = 5;
+const KILL_DEBRIS_LIFE = 3.5;
+const KILL_SHAKE = 0.25;
+const AUTO_RANGE_NEAR = 3;
+const AUTO_RANGE_FAR = 30;
+const AUTO_REST_Y = 1.2;
+const AUTO_REST_Z = -14;
+const SLIP_TEXT_RISE = 1.1;
+const SLIP_TEXT_AHEAD = 6;
+const SLIP_TEXT_MAX_X = 3;
+const SLIP_TEXT_LIFE = 1.2;
+const SLIP_VOLUME = 0.5;
+const DEBT_SLOT_X = -1.1;
+const DEBT_SLOT_SPACING_X = 0.7;
+const DEBT_SLOT_Y = 2.8;
+const DEBT_SLOT_ROW_RISE = 0.5;
+const DEBT_BOB_HEIGHT = 0.1;
+const DEBT_SLOT_Z = 0.3;
+const DEBT_DEPTH_STEPS = 3;
+const DEBT_SLOT_DEPTH_SPACING = 0.35;
+const TALL_READING_Y = 2.45;
+const TALL_READING_NUDGE = 0.6;
+const WIDE_READING_RAISE = 0.5;
+const WIDE_READING_MIN_Y = 2.3;
+const WIDE_READING_GAP = 0.8;
 
 /** Boss arena: how far down the road the boss stands and how high its main window floats. */
 const BOSS = { y: BOSS_HEIGHT };
@@ -1487,22 +1571,24 @@ export class PlayerWorld {
 
       this.pile = pile;
       this.scene.add(pile);
-      pile.position.set(0, 9, s.z);
+      pile.position.set(0, PILE_DROP_HEIGHT, s.z);
       this.tween(
-        0.9,
+        PILE_DROP_SECONDS,
         (k) => {
-          pile.position.y = 9 * (1 - ease.outCubic(k));
+          pile.position.y = PILE_DROP_HEIGHT * (1 - ease.outCubic(k));
         },
         () => {
-          this.shake = 0.7;
-          this.fx.burst(pile.position.clone().setY(0.4), {
-            n: 40,
+          this.shake = PILE_LANDING_SHAKE;
+          this.fx.burst(pile.position.clone().setY(PILE_DUST_Y), {
+            n: PILE_BURST_COUNT,
             colors: ["#f3d27a", "#de6a47"],
-            speed: 6,
+            speed: PILE_BURST_SPEED,
           });
         },
       );
-      this.after(0.2, () => this.sfx("lose", 0.6));
+      this.after(PILE_LOSE_SOUND_DELAY, () =>
+        this.sfx("lose", PILE_LOSE_VOLUME),
+      );
 
       return;
     }
@@ -1517,43 +1603,50 @@ export class PlayerWorld {
     const boss = this.bossModel;
 
     this.bossLeft = 0;
-    this.after(0.3, () => {
+    this.after(FINISH_FIRE_DELAY, () => {
       this.character.fire();
 
       const from = this.character.muzzleWorld();
       const to = boss.core.group.getWorldPosition(new THREE.Vector3());
 
       this.fx.beam(from, to, "#f9db48");
-      boss.core.crack(5);
+      boss.core.crack(CORE_CRACK_SEED_FIRST);
       this.sfx("glassCrack");
     });
-    this.after(0.7, () => {
-      boss.core.crack(17, 0.3, 0.4);
-      boss.core.crack(23, 0.7, 0.7);
+    this.after(CORE_CRACKS_DELAY, () => {
+      boss.core.crack(CORE_CRACK_SEED_B, CORE_CRACK_B_U, CORE_CRACK_B_V);
+      boss.core.crack(CORE_CRACK_SEED_C, CORE_CRACK_C_U, CORE_CRACK_C_V);
       boss.shake = 1;
     });
-    this.after(1.1, () => {
+    this.after(BOSS_DESTROY_DELAY, () => {
       const at = boss.core.group.getWorldPosition(new THREE.Vector3());
 
       boss.destroy(this.debris, this.character.muzzleWorld().setY(0));
       this.boss = null;
       this.sfx("bossDefeat");
       this.sfx("shatter");
-      this.shake = 1.5;
-      this.fx.confetti(at, 200);
-      this.fx.ring(at, "#f9db48", 6, 0.8, false, this.camera.position);
+      this.shake = BOSS_DEFEAT_SHAKE;
+      this.fx.confetti(at, BOSS_CONFETTI_COUNT);
+      this.fx.ring(
+        at,
+        "#f9db48",
+        BOSS_RING_SIZE,
+        BOSS_RING_LIFE,
+        false,
+        this.camera.position,
+      );
       this.character.pose = "victory";
     });
-    this.after(1.6, () => this.sfx("win"));
+    this.after(WIN_SOUND_DELAY, () => this.sfx("win"));
   }
 
   /** Tidy the street when a stop begins: remaining enemies poof away. */
   private clearStreet() {
     for (const e of this.enemies) {
       this.fx.burst(e.center(), {
-        n: 10,
+        n: STREET_CLEAR_BURST_COUNT,
         colors: ["#f4f4e8", "#aee5a3"],
-        speed: 3,
+        speed: STREET_CLEAR_BURST_SPEED,
       });
       disposeTree(e.group);
     }
@@ -1576,7 +1669,8 @@ export class PlayerWorld {
     ray.setFromCamera(ndc, this.camera);
 
     const hit = this.pick(ray.ray);
-    const point = hit?.point ?? ray.ray.at(30, new THREE.Vector3());
+    const point =
+      hit?.point ?? ray.ray.at(POINTER_FALLBACK_DISTANCE, new THREE.Vector3());
 
     this.aim = point;
     if (fire) {
@@ -1597,7 +1691,7 @@ export class PlayerWorld {
     for (const e of this.enemies) {
       e.center(c);
 
-      const sphere = new THREE.Sphere(c, e.radius * 1.15);
+      const sphere = new THREE.Sphere(c, e.radius * ENEMY_HIT_PADDING);
       const p = ray.intersectSphere(sphere, new THREE.Vector3());
 
       if (p) {
@@ -1631,11 +1725,19 @@ export class PlayerWorld {
     const p1 = this.player === "p1";
 
     this.fx.muzzle(from, p1 ? "#ff9ad5" : "#ffdc85");
-    this.fx.tracer(from, point, p1 ? "#ff9ad5" : "#fff1a8", p1 ? 0.04 : 0.07);
-    this.sfx(p1 ? "shootP1" : "shoot", 0.7);
+    this.fx.tracer(
+      from,
+      point,
+      p1 ? "#ff9ad5" : "#fff1a8",
+      p1 ? TRACER_WIDTH_P1 : TRACER_WIDTH_P2,
+    );
+    this.sfx(p1 ? "shootP1" : "shoot", SHOT_VOLUME);
     if (enemy) {
-      this.sfx("enemyHit", 0.6);
-      this.fx.burst(point, { n: 12, speed: 5 });
+      this.sfx("enemyHit", ENEMY_HIT_VOLUME);
+      this.fx.burst(point, {
+        n: ENEMY_HIT_BURST_COUNT,
+        speed: ENEMY_HIT_BURST_SPEED,
+      });
       if (enemy.hit()) {
         this.kill(enemy, from);
       }
@@ -1644,11 +1746,14 @@ export class PlayerWorld {
         this.bounce(point);
       }
     } else {
-      this.fx.burst(point.y < 0.3 ? point.setY(0.05) : point, {
-        n: 5,
-        speed: 2,
-        colors: ["#f4f4e8"],
-      });
+      this.fx.burst(
+        point.y < GROUND_SPLASH_BELOW ? point.setY(GROUND_SPLASH_Y) : point,
+        {
+          n: MISS_BURST_COUNT,
+          speed: 2,
+          colors: ["#f4f4e8"],
+        },
+      );
     }
   }
 
@@ -1661,9 +1766,9 @@ export class PlayerWorld {
       .getWorldPosition(new THREE.Vector3())
       .add(
         new THREE.Vector3(
-          (Math.random() - 0.5) * 3,
-          (Math.random() - 0.5) * 2,
-          0.6,
+          (Math.random() - RANDOM_CENTRE) * BOSS_AIM_SPREAD_X,
+          (Math.random() - RANDOM_CENTRE) * 2,
+          BOSS_AIM_FRONT_Z,
         ),
       );
 
@@ -1673,28 +1778,39 @@ export class PlayerWorld {
 
   /** A useless shot bounces off with a plink. */
   private bounce(at: THREE.Vector3) {
-    this.sfx("bounce", 0.8);
-    this.fx.burst(at, { n: 14, colors: ["#ffffff", "#ffae59"], speed: 6 });
-    this.fx.ring(at, "#ffffff", 0.8, 0.25, false, this.camera.position);
+    this.sfx("bounce", BOUNCE_VOLUME);
+    this.fx.burst(at, {
+      n: BOUNCE_BURST_COUNT,
+      colors: ["#ffffff", "#ffae59"],
+      speed: BOUNCE_BURST_SPEED,
+    });
+    this.fx.ring(
+      at,
+      "#ffffff",
+      BOUNCE_RING_SIZE,
+      BOUNCE_RING_LIFE,
+      false,
+      this.camera.position,
+    );
 
     const back = at
       .clone()
       .add(
         new THREE.Vector3(
           Math.random() * 2,
-          3 + Math.random() * 2,
-          4 + Math.random() * 3,
+          BOUNCE_RISE_BASE + Math.random() * 2,
+          BOUNCE_AWAY_BASE + Math.random() * BOUNCE_AWAY_JITTER,
         ),
       );
 
-    this.fx.tracer(at, back, "#ffffff", 0.03);
-    if (Math.random() < 0.6) {
+    this.fx.tracer(at, back, "#ffffff", BOUNCE_TRACER_WIDTH);
+    if (Math.random() < NO_EFFECT_CHANCE) {
       this.fx.text(
         at.clone().add(new THREE.Vector3(0, 1, 0)),
         "NO EFFECT",
         "#ffffff",
-        0.7,
-        0.9,
+        NO_EFFECT_TEXT_SIZE,
+        NO_EFFECT_TEXT_LIFE,
       );
     }
   }
@@ -1706,8 +1822,8 @@ export class PlayerWorld {
     this.score += SCORE[e.kind];
     this.sfx(e.kind === "robot" ? "robotBreak" : "enemyPop");
     this.fx.burst(at, {
-      n: e.kind === "robot" ? 50 : 30,
-      speed: 8,
+      n: e.kind === "robot" ? ROBOT_KILL_BURST_COUNT : KILL_BURST_COUNT,
+      speed: KILL_BURST_SPEED,
       colors:
         e.kind === "spaghetti"
           ? ["#f3d27a", "#de6a47", "#fff3b0"]
@@ -1715,28 +1831,36 @@ export class PlayerWorld {
             ? ["#de6a47", "#173e35", "#f9db48"]
             : ["#e0ebee", "#76e4f9", "#f8c355"],
     });
-    this.fx.ring(at, "#f9db48", 1.4, 0.35, false, this.camera.position);
+    this.fx.ring(
+      at,
+      "#f9db48",
+      KILL_RING_SIZE,
+      KILL_RING_LIFE,
+      false,
+      this.camera.position,
+    );
     this.fx.text(
       at.clone().add(new THREE.Vector3(0, 1, 0)),
       `+${SCORE[e.kind]}`,
       "#f9db48",
-      0.8,
+      KILL_TEXT_SIZE,
       1,
     );
     this.debris.breakObject(e.group, {
-      from: from.clone().lerp(at, 0.7),
-      power: 6,
-      up: 5,
-      life: 3.5,
+      from: from.clone().lerp(at, KILL_DEBRIS_ORIGIN_LERP),
+      power: KILL_DEBRIS_POWER,
+      up: KILL_DEBRIS_UP,
+      life: KILL_DEBRIS_LIFE,
     });
-    this.shake = Math.max(this.shake, 0.25);
+    this.shake = Math.max(this.shake, KILL_SHAKE);
   }
 
   /** Autoplay: a seeded hand that drifts onto the nearest enemy ahead and fires like a person would. */
   private autoShoot(dt: number) {
     const me = this.character.root.position;
     const ahead = (e: Enemy) =>
-      e.group.position.z < me.z - 3 && e.group.position.z > me.z - 30;
+      e.group.position.z < me.z - AUTO_RANGE_NEAR &&
+      e.group.position.z > me.z - AUTO_RANGE_FAR;
     // Stay on the current target while it is still there; otherwise take the nearest one ahead.
     let target = this.enemies.find(
       (e) => e.seed === this.autoTarget && ahead(e),
@@ -1747,7 +1871,7 @@ export class PlayerWorld {
       .sort((a, b) => b.group.position.z - a.group.position.z)[0];
     this.autoTarget = target?.seed ?? -1;
 
-    const rest = me.clone().add(new THREE.Vector3(0, 1.2, -14));
+    const rest = me.clone().add(new THREE.Vector3(0, AUTO_REST_Y, AUTO_REST_Z));
     const shot = this.gunner.update(
       dt,
       target
@@ -1771,16 +1895,28 @@ export class PlayerWorld {
   /** An enemy reached the end of its path alive. */
   private slip(e: Enemy) {
     // Enemies often slip past right beside the camera; say it a few steps up the road instead.
-    const at = e.center().add(new THREE.Vector3(0, 1.1, 0));
+    const at = e.center().add(new THREE.Vector3(0, SLIP_TEXT_RISE, 0));
 
-    at.z = Math.min(at.z, this.character.root.position.z - 6);
-    at.x = THREE.MathUtils.clamp(at.x, -3, 3);
+    at.z = Math.min(at.z, this.character.root.position.z - SLIP_TEXT_AHEAD);
+    at.x = THREE.MathUtils.clamp(at.x, -SLIP_TEXT_MAX_X, SLIP_TEXT_MAX_X);
     if (this.player === "p1") {
       this.shipped++;
-      this.fx.text(at, "BUG SHIPPED", "#ff5d4f", 0.8, 1.2);
-      this.sfx("bounce", 0.5);
+      this.fx.text(
+        at,
+        "BUG SHIPPED",
+        "#ff5d4f",
+        KILL_TEXT_SIZE,
+        SLIP_TEXT_LIFE,
+      );
+      this.sfx("bounce", SLIP_VOLUME);
     } else {
-      this.fx.text(at, "CAUGHT BY CI", "#8ef08a", 0.8, 1.2);
+      this.fx.text(
+        at,
+        "CAUGHT BY CI",
+        "#8ef08a",
+        KILL_TEXT_SIZE,
+        SLIP_TEXT_LIFE,
+      );
     }
 
     this.onSlip?.(e.kind);
@@ -1805,9 +1941,11 @@ export class PlayerWorld {
 
     // Above and beside player 1's far shoulder: off the follow camera's lens, behind the stop window in side views.
     return new THREE.Vector3(
-      -1.1 - (i % 2) * 0.7,
-      2.8 + Math.floor(i / 2) * 0.5 + Math.sin(t * 2 + i) * 0.1,
-      c.z - 0.3 - (i % 3) * 0.35,
+      DEBT_SLOT_X - (i % 2) * DEBT_SLOT_SPACING_X,
+      DEBT_SLOT_Y +
+        Math.floor(i / 2) * DEBT_SLOT_ROW_RISE +
+        Math.sin(t * 2 + i) * DEBT_BOB_HEIGHT,
+      c.z - DEBT_SLOT_Z - (i % DEBT_DEPTH_STEPS) * DEBT_SLOT_DEPTH_SPACING,
     );
   }
 
@@ -1817,7 +1955,11 @@ export class PlayerWorld {
 
     if (this.shape === "tall") {
       return {
-        pos: new THREE.Vector3(0, 2.45 + win.h / 2, z - win.w / 2 + 0.6),
+        pos: new THREE.Vector3(
+          0,
+          TALL_READING_Y + win.h / 2,
+          z - win.w / 2 + TALL_READING_NUDGE,
+        ),
         scale: 1,
       };
     }
@@ -1825,8 +1967,8 @@ export class PlayerWorld {
     return {
       pos: new THREE.Vector3(
         0,
-        Math.max(0.5 + win.h / 2, 2.3),
-        z - 0.8 - win.w / 2,
+        Math.max(WIDE_READING_RAISE + win.h / 2, WIDE_READING_MIN_Y),
+        z - WIDE_READING_GAP - win.w / 2,
       ),
       scale: 1,
     };
