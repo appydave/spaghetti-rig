@@ -2,11 +2,17 @@
 // tone, noise, brass and trombone voice the effect asked for, with its start time and every parameter. Two trees that write the same
 // log play the same sounds. scripts/audio-proof.mjs runs this file on an old and a new tree and compares what it writes.
 //
+// It also drives the rest of the engine against a recording AudioContext that logs every node made, every parameter set and every
+// connection: the graph setup (init), a deck per track, every step of every track (the instrument voices), the scheduler, and the
+// tone, noise, brass and trombone bodies. Those logs are long, so they are written as a hash and an entry count per scenario.
+//
 // As a normal test it also guards the effects for good: the same seed gives the same log, and no effect is silent.
 // AUDIO_PROOF_OUT=<file> writes the log and runs the full 20-seed sweep.
+import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
+import { COMPILED_TRACKS } from "../../src/audio/tracks";
 
 const OUT = process.env.AUDIO_PROOF_OUT;
 const SEEDS = OUT ? 20 : 2;
@@ -98,10 +104,210 @@ function record(sfx: string, seed: number): Arg[][] {
   return calls;
 }
 
-describe("audio proof harness", () => {
-  it("plays every effect, the same way twice, and none of them silent", () => {
-    const all: Record<string, unknown[]> = {};
+const PATH = Symbol("path");
+const WORLD = new Map<string, number | string>([
+  ["currentTime", 1],
+  ["sampleRate", 44100],
+  ["state", "running"],
+]);
 
+/** Anything an engine method may touch on an AudioContext, recording what it does (log) and handing back more of the same. */
+function recorder(log: Arg[][], buffers: Float32Array[][]) {
+  const made = new Map<string, number>();
+  const name = (what: string): string => {
+    const n = made.get(what) ?? 0;
+
+    made.set(what, n + 1);
+
+    return `${what}#${n}`;
+  };
+
+  const show = (v: any): Arg =>
+    typeof v === "function"
+      ? String(v[PATH])
+      : typeof v === "object"
+        ? JSON.stringify(v)
+        : v;
+  const node = (
+    path: string,
+    own?: Record<string, number | ((c: number) => Float32Array)>,
+  ): any => {
+    const store = new Map<string, Arg>();
+
+    return new Proxy(function () {}, {
+      get(_t, p) {
+        const key = String(p);
+
+        return p === PATH
+          ? path
+          : p === Symbol.toPrimitive
+            ? () => 1
+            : typeof p === "symbol"
+              ? undefined
+              : own && key in own
+                ? own[key]
+                : WORLD.has(key)
+                  ? WORLD.get(key)
+                  : store.has(key)
+                    ? store.get(key)
+                    : node(`${path}.${key}`);
+      },
+      set(_t, p, v) {
+        log.push([path, String(p), show(v)]);
+        store.set(String(p), v);
+
+        return true;
+      },
+      apply(_t, _this, args) {
+        log.push([path, "()", ...args.map(show)]);
+
+        if (path.endsWith(".connect")) {
+          return args[0];
+        }
+
+        const method = path.slice(path.lastIndexOf(".") + 1);
+
+        if (method === "createBuffer") {
+          const [channels, length] = args;
+          const data = Array.from(
+            { length: channels },
+            () => new Float32Array(length),
+          );
+
+          buffers.push(data);
+
+          return node(name("buffer"), {
+            length,
+            getChannelData: (c: number) => data[c],
+          });
+        }
+
+        return node(
+          method.startsWith("create")
+            ? name(method.slice(6).toLowerCase())
+            : `${path}()`,
+        );
+      },
+      construct: () => node("ctx"),
+    });
+  };
+
+  return node("ctx");
+}
+
+/** One scenario: a fresh engine on a recording context and a seeded Math.random; returns a hash and the entry count of its log. */
+function scenario(seed: number, run: (engine: any) => void): [string, number] {
+  const log: Arg[][] = [];
+  const buffers: Float32Array[][] = [];
+  const engine: any = new AudioEngine();
+  const root = recorder(log, buffers);
+
+  const random = Math.random;
+
+  Math.random = seeded(seed);
+  vi.stubGlobal("setInterval", () => 0);
+  vi.stubGlobal("AudioContext", root);
+  try {
+    engine.init();
+    run(engine);
+  } finally {
+    Math.random = random;
+    vi.unstubAllGlobals();
+  }
+
+  for (const data of buffers) {
+    log.push(["buffer sum", ...data.map((d) => d.reduce((a, b) => a + b, 0))]);
+  }
+
+  return [
+    createHash("sha1").update(JSON.stringify(log)).digest("hex"),
+    log.length,
+  ];
+}
+
+const bodies = (e: any): void => {
+  const out = e.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
+
+  for (const o of [
+    { f: 440, dur: 0.1, vol: 0.2 },
+    {
+      type: "square",
+      f: 900,
+      f2: 200,
+      dur: 0.2,
+      vol: 0.3,
+      lp: 3000,
+      attack: 0.02,
+      detune: 7,
+      sweep: 0.5,
+    },
+  ]) {
+    e.tone(out, 1, o);
+  }
+
+  for (const filter of ["lowpass", "highpass", "bandpass"]) {
+    e.noise(out, 1, {
+      filter,
+      f: 800,
+      f2: 300,
+      q: 2,
+      dur: 0.2,
+      vol: 0.2,
+      attack: 0.05,
+    });
+    e.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
+  }
+
+  for (const midi of [38, 60, 84]) {
+    e.brass(out, 1, midi, 0.8, 0.1);
+    e.trombone(out, 1, midi, 0.8, midi > 50);
+  }
+};
+
+const all: Record<string, Arg[][] | [string, number]> = {};
+
+afterAll(() => {
+  if (OUT) {
+    writeFileSync(OUT, JSON.stringify(all));
+  }
+});
+
+describe("audio proof harness", () => {
+  it("drives the engine, a deck per track and the instrument voices, the same way twice", () => {
+    const runs: [string, (e: any) => void][] = [
+      ["engine bodies", bodies],
+      ...COMPILED_TRACKS.map((track): [string, (e: any) => void] => [
+        `track ${track.def.name}`,
+        (e: any) => {
+          const deck = e.createDeck(track, 1, 0.03);
+
+          e.current = deck;
+          e._theme = track.def.theme;
+          for (let loop = 0; loop < 2; loop++) {
+            for (let idx = 0; idx < track.totalSteps; idx++) {
+              e.scheduleStep(deck, idx, loop, 1 + idx * 0.01);
+            }
+          }
+
+          e.scheduleDeck(deck, 1, 1 + track.stepSec * track.totalSteps * 2.5);
+          e.retire(deck, 2, 1);
+          e.disposeDeck(deck);
+        },
+      ]),
+    ];
+
+    for (const [what, run] of runs) {
+      for (let seed = 0; seed < Math.min(SEEDS, 2); seed++) {
+        const result = scenario(seed, run);
+
+        expect(scenario(seed, run)).toEqual(result);
+        expect(result[1]).toBeGreaterThan(0);
+        all[`${what} seed ${seed}`] = result;
+      }
+    }
+  });
+
+  it("plays every effect, the same way twice, and none of them silent", () => {
     for (const sfx of SFX) {
       for (let seed = 0; seed < SEEDS; seed++) {
         const calls = record(sfx, seed);
@@ -110,10 +316,6 @@ describe("audio proof harness", () => {
         expect(calls.length).toBeGreaterThan(0);
         all[`${sfx} seed ${seed}`] = calls;
       }
-    }
-
-    if (OUT) {
-      writeFileSync(OUT, JSON.stringify(all));
     }
   });
 });
