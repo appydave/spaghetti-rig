@@ -1,7 +1,9 @@
 import { defineConfig } from "vitest/config";
 
-// The port the dev and preview servers listen on; playwright.config.ts points the e2e tests at the same one.
-const DEV_PORT = 5173;
+// The port the dev and preview servers listen on, 5173 unless DEV_PORT says otherwise (each desk sharing a machine sets its own).
+// playwright.config.ts reads the same variable, so the e2e tests drive this server.
+const DEFAULT_DEV_PORT = 5173;
+const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
 // Coverage floors: see the note at `thresholds`.
@@ -12,8 +14,19 @@ const FUNCTIONS_FLOOR = 17.5;
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
   // Bonjour names (roamy.local) and Tailscale MagicDNS names (*.ts.net) are allowed.
-  server: { port: DEV_PORT, host: true, allowedHosts: [".local", ".ts.net"] },
-  preview: { port: DEV_PORT, host: true, allowedHosts: [".local", ".ts.net"] },
+  server: {
+    port: DEV_PORT,
+    // A taken port is an error, never a quiet slide to the next free one: a test must not end up on somebody else's server.
+    strictPort: true,
+    host: true,
+    allowedHosts: [".local", ".ts.net"],
+  },
+  preview: {
+    port: DEV_PORT,
+    strictPort: true,
+    host: true,
+    allowedHosts: [".local", ".ts.net"],
+  },
   build: { target: "es2022", chunkSizeWarningLimit: CHUNK_WARNING_KB },
   test: {
     include: ["src/**/*.test.ts", "lint/**/*.test.ts"],

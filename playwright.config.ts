@@ -1,8 +1,9 @@
 import { defineConfig } from "@playwright/test";
 
 const inCI = !!process.env.CI;
-// The dev server the tests drive; vite.config.ts makes it listen on the same port.
-const DEV_PORT = 5173;
+// The dev server the tests drive: 5173 unless DEV_PORT says otherwise; vite.config.ts reads the same variable.
+const DEFAULT_DEV_PORT = 5173;
+const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // One slow test (the full tier walk) can take minutes on a busy runner.
 const TEST_TIMEOUT_MS = 180_000;
 // Wide enough for the two 3D lanes side by side.
@@ -36,7 +37,8 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: `http://localhost:${DEV_PORT}`,
-    reuseExistingServer: !inCI,
+    // Never run the tests against a server somebody else started: if the port is taken, fail.
+    reuseExistingServer: false,
     timeout: SERVER_START_TIMEOUT_MS,
   },
 });
