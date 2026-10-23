@@ -395,10 +395,19 @@ const PITCH_CLASS = new Map([
 /** "C4" -> 60, "F#5" -> 78, "Bb1" -> 34. Throws on bad input. */
 export function parseNote(name: string): number {
   const m = /^([A-G])(#|b)?(-?\d)$/.exec(name.trim());
-  if (!m) throw new Error(`Bad note "${name}"`);
+
+  if (!m) {
+    throw new Error(`Bad note "${name}"`);
+  }
+
   const pc = PITCH_CLASS.get(m[1] ?? "");
-  if (pc === undefined) throw new Error(`Bad note "${name}"`);
+
+  if (pc === undefined) {
+    throw new Error(`Bad note "${name}"`);
+  }
+
   const acc = m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0;
+
   return (Number(m[3]) + 1) * 12 + pc + acc;
 }
 
@@ -419,8 +428,11 @@ export function parseMelodyBar(bar: string): MelodyToken[] {
     .map((tok) => {
       const [note, lenStr] = tok.split("/");
       const len = Number(lenStr);
-      if (!note || !Number.isInteger(len) || len <= 0)
+
+      if (!note || !Number.isInteger(len) || len <= 0) {
         throw new Error(`Bad melody token "${tok}"`);
+      }
+
       return { midi: note === "r" ? null : parseNote(note), len };
     });
 }
@@ -433,7 +445,11 @@ export interface Chord {
 
 export function parseChord(entry: string, beatsPerBar: number): Chord {
   const [bassStr, rest] = entry.split(":");
-  if (!bassStr || rest === undefined) throw new Error(`Bad chord "${entry}"`);
+
+  if (!bassStr || rest === undefined) {
+    throw new Error(`Bad chord "${entry}"`);
+  }
+
   let beats = beatsPerBar;
   const tokens = rest
     .trim()
@@ -441,10 +457,13 @@ export function parseChord(entry: string, beatsPerBar: number): Chord {
     .filter((t) => {
       if (t.startsWith("*")) {
         beats = Number(t.slice(1));
+
         return false;
       }
+
       return true;
     });
+
   return {
     bass: parseNote(bassStr),
     pad: tokens.map((token) => parseNote(token)),
@@ -495,20 +514,31 @@ export function compileTrack(def: TrackDef): CompiledTrack {
     length: totalSteps,
   });
   let pos = 0;
+
   for (const entry of def.harmony) {
     const c = parseChord(entry, def.beatsPerBar);
     const len = c.beats * 4;
-    if (pos < totalSteps) at(pos).chord = { pad: c.pad, bass: c.bass, len };
-    for (let i = 0; i < len && pos + i < totalSteps; i++) chordAt[pos + i] = c;
+
+    if (pos < totalSteps) {
+      at(pos).chord = { pad: c.pad, bass: c.bass, len };
+    }
+
+    for (let i = 0; i < len && pos + i < totalSteps; i++) {
+      chordAt[pos + i] = c;
+    }
+
     pos += len;
   }
 
   // Melody
   for (const [b, bar] of def.melody.entries()) {
     let s = b * stepsPerBar;
+
     for (const tok of parseMelodyBar(bar)) {
-      if (tok.midi !== null && s < totalSteps)
+      if (tok.midi !== null && s < totalSteps) {
         at(s).lead = { midi: tok.midi, len: tok.len };
+      }
+
       s += tok.len;
     }
   }
@@ -516,33 +546,57 @@ export function compileTrack(def: TrackDef): CompiledTrack {
   // Per-bar patterns
   for (let b = 0; b < bars; b++) {
     const base = b * stepsPerBar;
+
     for (let i = 0; i < stepsPerBar; i++) {
       const step = base + i;
       const chord = chordAt[step];
-      if (!chord) continue;
+
+      if (!chord) {
+        continue;
+      }
+
       const bc = def.bass[i];
+
       if (bc && bc !== ".") {
         let next = i + 1;
-        while (next < stepsPerBar && def.bass[next] === ".") next++;
+
+        while (next < stepsPerBar && def.bass[next] === ".") {
+          next++;
+        }
+
         const off = bc === "5" ? 7 : bc === "O" ? 12 : 0;
+
         at(step).bass = { midi: chord.bass + off, len: next - i };
       }
+
       const ac = def.arp[i];
+
       if (ac && ac !== ".") {
         const idx = Number(ac);
         const n = chord.pad.length;
         const note = chord.pad[idx % n];
-        if (note !== undefined)
+
+        if (note !== undefined) {
           at(step).arp = note + 12 + 12 * Math.floor(idx / n);
+        }
       }
+
       const cc = def.comp?.[i];
-      if (cc === "x") at(step).comp = chord.pad;
+
+      if (cc === "x") {
+        at(step).comp = chord.pad;
+      }
+
       const pc = def.perc?.[i];
-      if (pc === "t" || pc === "T" || pc === "s") at(step).perc = pc;
+
+      if (pc === "t" || pc === "T" || pc === "s") {
+        at(step).perc = pc;
+      }
     }
   }
 
   const stepSec = 60 / def.bpm / 4;
+
   return {
     def,
     stepsPerBar,

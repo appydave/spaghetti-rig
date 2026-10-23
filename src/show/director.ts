@@ -73,23 +73,41 @@ export class Director {
     this.mode = mode;
     this.buildLanes();
     this.applyAutoplay();
-    for (const p of PLAYERS) worlds[p].onSlip = () => this.slipped(p);
+    for (const p of PLAYERS) {
+      worlds[p].onSlip = () => this.slipped(p);
+    }
+
     this.channel?.addEventListener("message", (e) => {
       const m = parseDirectorMessage(e.data);
-      if (!m) return;
-      if (m.type === "hello") this.broadcast();
-      else dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
+
+      if (!m) {
+        return;
+      }
+
+      if (m.type === "hello") {
+        this.broadcast();
+      } else {
+        dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
+      }
     });
+
     // The HUD lets the pointer through, so a press over the street lands on the canvas, which sits
     // beside #game rather than inside it. Listen on the window and fire on the press itself: a quick
     // trackpad tap is a very short press, and waiting for `click` would add nothing.
     const move = (e: PointerEvent) => {
       this.pointer = { x: e.clientX, y: e.clientY };
     };
+
     addEventListener("pointermove", move);
     addEventListener("pointerdown", (e) => {
-      if (!this.active || this.paused || e.button !== 0) return;
-      if (closestEl(e.target, "button, a, .tcard, .overlay")) return;
+      if (!this.active || this.paused || e.button !== 0) {
+        return;
+      }
+
+      if (closestEl(e.target, "button, a, .tcard, .overlay")) {
+        return;
+      }
+
       this.pointer = { x: e.clientX, y: e.clientY };
       this.aim(true);
     });
@@ -101,12 +119,15 @@ export class Director {
   get step() {
     return nth(this.script, this.at, "script");
   }
+
   get tier() {
     return nth(this.game.tiers, this.step.tier, "tiers");
   }
+
   visible(): Player[] {
     return isSplit(this.mode) ? PLAYERS : [this.mode];
   }
+
   /** In spec mode player 1 is driven by autoplay and the mouse plays player 2 only. */
   private machine(p: Player) {
     return p === "p1" && this.mode === "spec";
@@ -116,26 +137,40 @@ export class Director {
 
   startTier(tierIndex: number) {
     const i = tierStart(this.script, tierIndex);
-    if (i >= 0) this.go(i, true);
+
+    if (i >= 0) {
+      this.go(i, true);
+    }
   }
 
   next() {
     if (this.step.phase === "ending") {
       this.onExit?.();
+
       return;
     }
+
     const i = nextIndex(this.script, this.at, 1, this.mode);
-    if (i !== this.at) this.go(i, true);
+
+    if (i !== this.at) {
+      this.go(i, true);
+    }
   }
 
   back() {
     const i = nextIndex(this.script, this.at, -1, this.mode);
-    if (i !== this.at) this.go(i, false);
+
+    if (i !== this.at) {
+      this.go(i, false);
+    }
   }
 
   jumpTier(n: number) {
     const t = this.game.tiers.find((x) => x.n === n || x.index === n - 1);
-    if (t?.playable) this.startTier(t.index);
+
+    if (t?.playable) {
+      this.startTier(t.index);
+    }
   }
 
   setMode(mode: Mode) {
@@ -143,60 +178,94 @@ export class Director {
     this.applyAutoplay();
     this.stage.setMode(mode);
     this.buildLanes();
-    if (!this.active) return;
+    if (!this.active) {
+      return;
+    }
+
     this.render(false);
-    for (const p of PLAYERS) this.worlds[p].snapCamera();
+    for (const p of PLAYERS) {
+      this.worlds[p].snapCamera();
+    }
   }
 
   go(i: number, animate: boolean) {
     const prev = this.step;
+
     this.at = i;
+
     const step = this.step;
+
     this.cues = [];
     this.walkT = -1;
     this.vsT = -1;
+
     const cut =
       !animate ||
       prev.tier !== step.tier ||
       prev.phase === "vs" ||
       ["vs", "result", "ending"].includes(step.phase);
+
     for (const p of PLAYERS) {
       const w = this.worlds[p];
-      if (step.phase === "walk" || (animate && step.phase !== "vs"))
+
+      if (step.phase === "walk" || (animate && step.phase !== "vs")) {
         w.enter(step);
-      else w.settle(step);
-      if (cut) w.snapCamera();
+      } else {
+        w.settle(step);
+      }
+
+      if (cut) {
+        w.snapCamera();
+      }
     }
-    if (step.phase === "walk") this.walkT = 0;
-    if (step.phase === "vs") this.vsT = 0;
+
+    if (step.phase === "walk") {
+      this.walkT = 0;
+    }
+
+    if (step.phase === "vs") {
+      this.vsT = 0;
+    }
+
     this.render(animate, prev);
   }
 
   // ───────────── per step UI ─────────────
 
   private render(animate: boolean, prev?: Step) {
-    const step = this.step,
-      tier = this.tier,
-      stop = tier.stops[step.stop];
+    const step = this.step;
+    const tier = this.tier;
+    const stop = tier.stops[step.stop];
+
     this.stage.view = step.phase === "vs" ? "vs" : "game";
     document.body.dataset.phase = step.phase;
-    if (step.phase !== "vs") $("backdrop").className = "";
+    if (step.phase !== "vs") {
+      $("backdrop").className = "";
+    }
+
     $("vs").hidden = step.phase !== "vs";
     $("result").hidden = step.phase !== "result";
     $("ending").hidden = step.phase !== "ending";
-    if (!animate || !["problem", "boss"].includes(step.phase))
+    if (!animate || !["problem", "boss"].includes(step.phase)) {
       this.hideBanner(true);
+    }
+
     // Top bar.
     $("hud-tier").textContent = String(tier.n).padStart(2, "0");
     $("hud-tier-name").textContent = `/ ${tier.name.toUpperCase()}`;
-    const stopLabel = $("hud-stop-label"),
-      stopName = $("hud-stop");
+
+    const stopLabel = $("hud-stop-label");
+    const stopName = $("hud-stop");
+
     if (step.phase === "walk") {
       stopLabel.textContent = stop
         ? `WALKING TO STOP ${step.stop + 1} OF ${tier.stops.length}`
         : "WALKING TO THE BOSS";
-      if (stop) stopName.innerHTML = gateHtml(stop.gate);
-      else stopName.textContent = tier.boss.name;
+      if (stop) {
+        stopName.innerHTML = gateHtml(stop.gate);
+      } else {
+        stopName.textContent = tier.boss.name;
+      }
     } else if (stop) {
       stopLabel.textContent = `STOP ${step.stop + 1} OF ${tier.stops.length}`;
       stopName.innerHTML = gateHtml(stop.gate);
@@ -210,15 +279,26 @@ export class Director {
           ? "The end of the road"
           : gatesText(tier.gates) || tier.name;
     }
+
     $("hud-progress").textContent =
       `${this.at + 1} / ${this.script.length} · ${stepLabel(this.game, step).toUpperCase()}`;
     this.renderChips();
 
-    if (step.phase === "vs") this.renderVs();
-    if (step.phase === "result") this.renderResult();
-    if (step.phase === "ending") this.renderEnding();
+    if (step.phase === "vs") {
+      this.renderVs();
+    }
 
-    for (const p of PLAYERS) this.renderLane(p, animate);
+    if (step.phase === "result") {
+      this.renderResult();
+    }
+
+    if (step.phase === "ending") {
+      this.renderEnding();
+    }
+
+    for (const p of PLAYERS) {
+      this.renderLane(p, animate);
+    }
 
     if (animate && step.phase === "problem" && stop) {
       this.audio.play("gateBanner");
@@ -228,6 +308,7 @@ export class Director {
         1.45,
       );
     }
+
     if (animate && step.phase === "boss") {
       this.banner(
         "PRODUCTION INCIDENT",
@@ -235,9 +316,16 @@ export class Director {
         2.6,
       );
     }
-    if (step.phase === "vs") this.audio.play("vs");
+
+    if (step.phase === "vs") {
+      this.audio.play("vs");
+    }
+
     this.audio.setTheme(this.theme(step));
-    if (prev && prev.tier !== step.tier) this.lastHealth = { p1: 100, p2: 100 };
+    if (prev && prev.tier !== step.tier) {
+      this.lastHealth = { p1: 100, p2: 100 };
+    }
+
     this.renderNotes();
     this.broadcast();
   }
@@ -261,6 +349,7 @@ export class Director {
 
   private buildLanes() {
     const lanes = $("lanes");
+
     lanes.innerHTML = this.stage
       .lanes()
       .map(
@@ -291,15 +380,22 @@ export class Director {
 
   private renderLane(p: Player, animate: boolean) {
     const el = this.lane(p);
-    if (!el) return;
-    const step = this.step,
-      tier = this.tier,
-      stop = tier.stops[step.stop];
+
+    if (!el) {
+      return;
+    }
+
+    const step = this.step;
+    const tier = this.tier;
+    const stop = tier.stops[step.stop];
+
     el.hidden = step.phase === "vs";
+
     // Tool card overlay: player 2 only, never player 1.
     const slot = queryEl(el, ".card-slot");
     const showCard = p === "p2" && step.phase === "tool" && stop;
     const playing = p === "p2" && step.phase === "fixed" && animate && stop;
+
     if (showCard) {
       slot.innerHTML = toolCardHtml(this.game, tier, stop, step.stop);
       if (animate) {
@@ -307,15 +403,21 @@ export class Director {
         this.audio.play("cardFly", { pan: this.pan(p) });
       }
     } else if (playing) {
-      if (!slot.querySelector(".tcard"))
+      if (!slot.querySelector(".tcard")) {
         slot.innerHTML = toolCardHtml(this.game, tier, stop, step.stop);
+      }
+
       const card = queryEl(slot, ".tcard");
+
       card.classList.remove("fly-in");
       card.classList.add("play");
       this.after(0.6, () => {
         slot.innerHTML = "";
       });
-    } else slot.innerHTML = "";
+    } else {
+      slot.innerHTML = "";
+    }
+
     // Caption: what this side is told.
     this.caption(
       p,
@@ -330,6 +432,7 @@ export class Director {
               : 0
         : 0,
     );
+
     // Tray: player 2's earned tool cards; player 1's empty slots.
     const earned = toolsEarned(this.game, step);
     const beaten =
@@ -339,24 +442,30 @@ export class Director {
           ? tier.boss.parts.map((x) => x.beatenBy)
           : [];
     const tray = queryEl(el, ".tray");
+
     tray.hidden = step.phase === "ending" || step.phase === "result";
     tray.innerHTML = tier.stops
       .map((s, i) => {
         const key = s.p2.tool;
-        if (p === "p1" || i >= earned.length)
+
+        if (p === "p1" || i >= earned.length) {
           return `<div class="slot empty"><span class="k">${i + 1}</span><b>${p === "p1" ? "NO TOOL" : `GATE ${esc(gateLabel(s.gate).num)}`}<small>${p === "p1" ? "VIBES ONLY" : "NOT YET"}</small></b></div>`;
+        }
+
         const fresh = animate && step.phase === "fixed" && i === step.stop;
         const used = beaten.includes(key ?? "");
+
         return `<div class="slot earned${fresh ? " fresh" : ""}${used ? " used" : ""}"><span class="k">${i + 1}</span>${toolImg(key)}<b>${esc(shortTool(toolFor(this.game, key).name))}<small>GATE ${esc(gateLabel(s.gate).num)}</small></b></div>`;
       })
       .join("");
   }
 
   private captionFor(p: Player): { label: string; text: string } | null {
-    const step = this.step,
-      tier = this.tier,
-      b = tier.boss,
-      stop = tier.stops[step.stop];
+    const step = this.step;
+    const tier = this.tier;
+    const b = tier.boss;
+    const stop = tier.stops[step.stop];
+
     switch (step.phase) {
       case "problem":
         return p === "p1"
@@ -379,6 +488,7 @@ export class Director {
         return { label: "THE BOSS ATTACKS", text: b.attack ?? b.idea ?? "" };
       case "bossPart": {
         const part = nth(b.parts, step.part, "boss parts");
+
         return p === "p1"
           ? {
               label: "NOTHING WORKS",
@@ -392,6 +502,7 @@ export class Director {
               text: `${part.part} ← ${shortTool(toolFor(this.game, part.beatenBy).name)}`,
             };
       }
+
       case "bossDown":
         return {
           label: p === "p1" ? "PLAYER 1" : "PLAYER 2",
@@ -409,19 +520,31 @@ export class Director {
   ) {
     const lane = this.lane(p);
     const el = lane ? queryElOrNull(lane, ".caption") : null;
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     el.hidden = true;
-    if (!c?.text) return;
+    if (!c?.text) {
+      return;
+    }
+
     const show = () => {
       el.innerHTML = `<span class="label">${esc(c.label)}</span>${esc(c.text)}`;
       el.hidden = false;
     };
-    if (delay > 0) this.after(delay, show);
-    else show();
+
+    if (delay > 0) {
+      this.after(delay, show);
+    } else {
+      show();
+    }
   }
 
   private banner(label: string, html: string, seconds: number) {
     const b = $("banner");
+
     $("banner-label").textContent = label;
     $("banner-text").innerHTML = html;
     b.classList.remove("out");
@@ -435,13 +558,16 @@ export class Director {
   }
 
   private hideBanner(now: boolean) {
-    if (now) $("banner").hidden = true;
+    if (now) {
+      $("banner").hidden = true;
+    }
   }
 
   private renderVs() {
-    const t = this.tier,
-      vs = this.game.content.screens.vs;
+    const t = this.tier;
+    const vs = this.game.content.screens.vs;
     const solo = isSplit(this.mode) ? null : this.mode;
+
     this.stage.vs.reset();
     this.stage.vs.solo = solo;
     $("backdrop").className = solo ? `solo-bg ${solo}` : "vs-bg";
@@ -455,8 +581,10 @@ export class Director {
           <div class="who"><span class="label">${WHO[solo].n}</span><b>${WHO[solo].name}</b><small>${esc(solo === "p1" ? vs.p1 : vs.p2)}</small></div>
           <div class="boss-name"><span class="label">AT THE END OF THE ROAD</span><b>${esc(t.boss.name)}</b></div>
         </div>`;
+
       return;
     }
+
     $("vs").innerHTML = `
       <div class="tierline"><span class="label">TIER ${t.n} OF ${this.game.tiers.length} · ${esc(gatesText(t.gates))}</span><b>${esc(t.name)}</b><span>${esc(t.idea ?? "")}</span></div>
       <div class="side p1"><div class="who"><span class="label">PLAYER 1</span><b>Vibe coder</b></div><span class="sub">${esc(vs.p1)}</span></div>
@@ -465,8 +593,8 @@ export class Director {
   }
 
   private renderResult() {
-    const t = this.tier,
-      b = t.boss;
+    const t = this.tier;
+    const b = t.boss;
     const next = this.script
       .slice(this.at + 1)
       .find((s) => s.phase === "vs" || s.phase === "ending");
@@ -477,6 +605,7 @@ export class Director {
         ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(this.worlds.p1.score).padStart(6, "0")} · ${this.worlds.p1.shipped} BUGS SHIPPED</span></div>`
         : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(6, "0")}</span></div>`;
     const el = $("result");
+
     el.style.setProperty("--cols", String(this.visible().length));
     el.innerHTML = `${this.visible()
       .map((c) => col(c))
@@ -486,12 +615,14 @@ export class Director {
     } else {
       this.audio.play("win");
     }
+
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
   private renderEnding() {
     const e = this.game.content.endings;
     const el = $("ending");
+
     el.style.setProperty("--cols", String(this.visible().length));
     el.innerHTML = `${this.visible()
       .map(
@@ -504,6 +635,7 @@ export class Director {
 
   private vsLabel(tierIndex: number) {
     const tier = nth(this.game.tiers, tierIndex, "tiers");
+
     return `TIER ${tier.n} · ${tier.name.toUpperCase()}`;
   }
 
@@ -523,22 +655,31 @@ export class Director {
   }
 
   private applyAutoplay() {
-    for (const p of PLAYERS)
+    for (const p of PLAYERS) {
       this.worlds[p].autoplay = this.autoplay || this.machine(p);
+    }
   }
 
   /** A missed enemy: a bug shipped on player 1's side, caught by CI on player 2's. */
   private slipped(p: Player) {
     const el = this.lane(p);
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
+
     if (p === "p1") {
       const box = queryElOrNull(el, ".shipped-box");
+
       box?.classList.remove("bump");
       void box?.offsetWidth;
       box?.classList.add("bump");
+
       return;
     }
+
     const pop = document.createElement("div");
+
     pop.className = "ci-pop";
     pop.innerHTML = '<span class="tick">✓</span>CAUGHT BY CI';
     pop.style.left = `${30 + Math.random() * 40}%`;
@@ -553,9 +694,14 @@ export class Director {
 
   private renderNotes() {
     const el = $("notes");
+
     el.hidden = !this.notesOn || !this.active;
-    if (el.hidden) return;
+    if (el.hidden) {
+      return;
+    }
+
     const n = notesFor(this.game, this.step, this.mode);
+
     el.innerHTML = `<span class="h">${esc(n.heading.toUpperCase())}</span>${n.say ? `<span class="say">${esc(n.say)}</span>` : ""}${n.presenter
       .slice(0, 2)
       .map((t) => `<span class="p">${esc(t)}</span>`)
@@ -563,7 +709,10 @@ export class Director {
   }
 
   broadcast() {
-    if (!this.channel || !this.active) return;
+    if (!this.channel || !this.active) {
+      return;
+    }
+
     const i = nextIndex(this.script, this.at, 1, this.mode);
     const msg: PresenterState = {
       type: "state",
@@ -579,6 +728,7 @@ export class Director {
       notes: notesFor(this.game, this.step, this.mode),
       paused: this.paused,
     };
+
     this.channel.postMessage(msg);
   }
 
@@ -594,6 +744,7 @@ export class Director {
 
   private aim(fire: boolean) {
     const ptr = this.pointer;
+
     for (const l of this.stage.lanes()) {
       const el = this.lane(l.player);
       const inside =
@@ -603,68 +754,99 @@ export class Director {
         this.stage.view === "game" &&
         !this.paused &&
         !this.machine(l.player);
+
       el?.classList.toggle("aiming", inside);
       if (!inside || !ptr) {
-        if (!this.worlds[l.player].autoplay)
+        if (!this.worlds[l.player].autoplay) {
           this.worlds[l.player].pointer(null, false);
+        }
+
         continue;
       }
+
       const ndc = new THREE.Vector2(
         ((ptr.x - l.x) / l.w) * 2 - 1,
         -((ptr.y - l.y) / l.h) * 2 + 1,
       );
+
       this.worlds[l.player].pointer(ndc, fire);
+
       const ret = el ? queryElOrNull(el, ".reticle") : null;
+
       if (ret) {
         ret.style.left = `${ptr.x - l.x}px`;
         ret.style.top = `${ptr.y - l.y}px`;
       }
     }
+
     $("game").classList.toggle("shooting", !!ptr && this.stage.view === "game");
   }
 
   update(dt: number) {
-    if (!this.active || this.paused) return;
+    if (!this.active || this.paused) {
+      return;
+    }
+
     this.clock += dt;
     for (const c of this.cues.filter((c) => c.at <= this.clock)) {
       this.cues.splice(this.cues.indexOf(c), 1);
       c.fn();
     }
+
     if (this.vsT >= 0) {
       this.vsT += dt;
       if (this.vsT > 4.2) {
         this.vsT = -1;
         this.next();
+
         return;
       }
     }
+
     if (this.walkT >= 0) {
       this.walkT += dt;
+
       const u = Math.min(1, this.walkT / walkSeconds());
-      for (const p of PLAYERS) this.worlds[p].setWalk(u);
+
+      for (const p of PLAYERS) {
+        this.worlds[p].setWalk(u);
+      }
+
       if (u >= 1) {
         this.walkT = -1;
         this.next();
+
         return;
       }
     }
+
     this.aim(false);
-    for (const p of PLAYERS) this.worlds[p].update(dt);
+    for (const p of PLAYERS) {
+      this.worlds[p].update(dt);
+    }
+
     this.updateHud();
   }
 
   private updateHud() {
     for (const p of PLAYERS) {
       const el = this.lane(p);
-      if (!el) continue;
+
+      if (!el) {
+        continue;
+      }
+
       const w = this.worlds[p];
       const h = Math.max(0, Math.min(100, w.health));
       const hp = queryEl(el, ".hp");
+
       queryEl(hp, ".bar i").style.width = `${h}%`;
       queryEl(hp, ".pct").textContent = `${Math.round(h)}%`;
       hp.classList.toggle("low", h <= 35);
       hp.classList.toggle("mid", h > 35 && h < 70);
+
       const last = this.lastHealth[p];
+
       if (h < last - 5) {
         hp.classList.remove("flash", "heal");
         void hp.offsetWidth;
@@ -675,24 +857,34 @@ export class Director {
         void hp.offsetWidth;
         hp.classList.add("heal");
         this.lastHealth[p] = h;
-      } else if (Math.abs(h - last) > 0.5 && !hp.classList.contains("flash"))
+      } else if (Math.abs(h - last) > 0.5 && !hp.classList.contains("flash")) {
         this.lastHealth[p] = h;
+      }
+
       queryEl(el, ".score").textContent = String(w.score).padStart(6, "0");
+
       const shipped = el.querySelector(".shipped");
-      if (shipped) shipped.textContent = String(w.shipped);
+
+      if (shipped) {
+        shipped.textContent = String(w.shipped);
+      }
+
       // Autoplay's own reticle, where its hand is pointing.
       const auto = queryEl(el, ".reticle.auto");
       const a = w.autoAimScreen();
       const l = this.stage.lanes().find((x) => x.player === p);
+
       auto.hidden = !a || !l;
       if (a && l) {
         auto.style.left = `${((a.x + 1) / 2) * l.w}px`;
         auto.style.top = `${((1 - a.y) / 2) * l.h}px`;
       }
+
       const bb = queryEl(el, ".bossbar");
       const bossPhase = ["boss", "bossPart", "bossDown"].includes(
         this.step.phase,
       );
+
       bb.hidden = !bossPhase || w.bossTotal === 0;
       if (!bb.hidden) {
         queryEl(bb, ".name").textContent = this.tier.boss.name;

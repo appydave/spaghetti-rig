@@ -16,20 +16,24 @@ export function userData<T extends object>(
   type: abstract new (...args: never[]) => T,
 ): T {
   const value: unknown = o.userData[key];
+
   if (!(value instanceof type)) {
     throw new Error(
       `${o.name || o.type}.userData.${key} is not a ${type.name}`,
     );
   }
+
   return value;
 }
 
 /** The mesh with this name below a group; throws if it is missing or not a mesh. */
 export function meshNamed(group: THREE.Object3D, name: string): THREE.Mesh {
   const found = group.getObjectByName(name);
+
   if (!(found instanceof THREE.Mesh)) {
     throw new Error(`${group.name || group.type} has no mesh named "${name}"`);
   }
+
   return found;
 }
 

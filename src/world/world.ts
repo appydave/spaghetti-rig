@@ -28,6 +28,7 @@ const standZ = (k: number) => stopZ(k) + 4;
 const WALK_SECONDS = 9;
 /** Boss arena: how far down the road the boss stands and how high its main window floats. */
 const BOSS = { y: 6.2 };
+
 export const walkSeconds = () => WALK_SECONDS;
 
 interface Tween {
@@ -127,7 +128,9 @@ export class PlayerWorld {
     this.sun = new THREE.DirectionalLight("#fff0c1", 2.9);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
+
     const sc = this.sun.shadow.camera;
+
     sc.left = -28;
     sc.right = 28;
     sc.top = 28;
@@ -138,7 +141,9 @@ export class PlayerWorld {
     this.sun.shadow.normalBias = 0.04;
     this.sun.shadow.radius = 3;
     this.scene.add(this.sun, this.sun.target);
+
     const rim = new THREE.DirectionalLight("#93cfff", 1.1);
+
     rim.position.set(-30, 20, -40);
     this.scene.add(rim);
     this.gunner = new AutoGunner(player === "p1" ? 11 : 29);
@@ -153,12 +158,15 @@ export class PlayerWorld {
   private get playing(): PlayTier {
     return present(this.tier, "the tier");
   }
+
   private get shownWindow() {
     return present(this.window, "the stop window");
   }
+
   private get bossModel(): BossModel {
     return present(this.boss, "the boss");
   }
+
   private gateAt(stop: number): Gate {
     return nth(this.gates, stop, "gates");
   }
@@ -189,8 +197,11 @@ export class PlayerWorld {
       health: hp,
     };
     const passed = (k: number) => {
-      for (let i = 0; i < k; i++) s.gates[i] = p1 ? "broken" : "open";
+      for (let i = 0; i < k; i++) {
+        s.gates[i] = p1 ? "broken" : "open";
+      }
     };
+
     switch (step.phase) {
       case "vs":
         s.z = 0;
@@ -210,12 +221,15 @@ export class PlayerWorld {
         s.stop = step.stop;
         passed(step.stop);
         s.debt = p1 ? step.stop : 0;
+
         const fixed = step.phase === "fixed" && !p1;
+
         s.window = fixed ? "fixed" : "problem";
         s.gates[step.stop] = fixed ? "open" : "alarm";
         s.pose = p1 ? "hurt" : fixed ? "idle" : "aim";
         break;
       }
+
       default: {
         // Boss arena and after.
         s.z = standZ(n);
@@ -228,8 +242,10 @@ export class PlayerWorld {
           step.phase === "bossDown" ||
           step.phase === "result" ||
           step.phase === "ending"
-        )
+        ) {
           s.boss = p1 ? "alive" : "dead";
+        }
+
         s.pose = p1
           ? step.phase === "boss"
             ? "hurt"
@@ -238,32 +254,48 @@ export class PlayerWorld {
             ? "aim"
             : "victory";
         s.pile = p1 && step.phase !== "boss" && step.phase !== "bossPart";
-        if (step.phase === "result" || step.phase === "ending")
+        if (step.phase === "result" || step.phase === "ending") {
           s.camera = "portrait";
-        if (p1 && (step.phase === "result" || step.phase === "ending"))
+        }
+
+        if (p1 && (step.phase === "result" || step.phase === "ending")) {
           s.boss = "none";
-        if (!p1 && (step.phase === "result" || step.phase === "ending"))
+        }
+
+        if (!p1 && (step.phase === "result" || step.phase === "ending")) {
           s.boss = "dead";
+        }
       }
     }
+
     return s;
   }
 
   /** Make the world match a state, reusing whatever already matches. */
   private reconcile(s: State) {
     this.clearAnimations();
+
     const tier = nth(this.game.tiers, s.tier, "tiers");
-    if (this.tier !== tier) this.buildTier(tier);
+
+    if (this.tier !== tier) {
+      this.buildTier(tier);
+    }
+
     this.character.root.position.set(0, 0, s.z);
     this.character.root.rotation.y = 0;
     this.character.pose = s.pose;
     for (const [i, g] of s.gates.entries()) {
       const gate = this.gates[i];
-      if (gate) gate.state = g;
+
+      if (gate) {
+        gate.state = g;
+      }
     }
+
     // Stop window.
     const wantKey =
       s.window === "none" ? "" : `${s.stop}:${s.window}:${this.shape}`;
+
     if ((this.window?.key ?? "") !== wantKey) {
       this.window?.win.dispose();
       this.window = null;
@@ -273,17 +305,23 @@ export class PlayerWorld {
           stop,
           s.window === "fixed" ? "fixed" : "problem",
         );
+
         this.scene.add(win.group);
         this.window = { win, key: wantKey, reading: true };
       }
     }
+
     if (this.window) {
       this.window.reading = true;
       this.window.win.rattle =
         s.window === "problem" ? (this.player === "p1" ? 0.5 : 0.3) : 0;
     }
+
     // Tech debt trailing player 1.
-    while (this.debt.length > s.debt) this.debt.pop()?.win.dispose();
+    while (this.debt.length > s.debt) {
+      this.debt.pop()?.win.dispose();
+    }
+
     for (let k = this.debt.length; k < s.debt; k++) {
       const stop = nth(tier.stops, k, "stops");
       const win = new CodeWindow(
@@ -291,9 +329,11 @@ export class PlayerWorld {
         1.1,
         "angry",
       );
+
       this.scene.add(win.group);
       this.debt.push({ win, key: String(k) });
     }
+
     // Boss.
     if (s.boss === "none" || s.boss === "dead") {
       this.boss?.dispose();
@@ -306,9 +346,14 @@ export class PlayerWorld {
         this.boss?.dispose();
         this.boss = this.makeBoss(tier);
       }
-      for (let i = 0; i < s.broken; i++) this.boss.dropPart(i);
+
+      for (let i = 0; i < s.broken; i++) {
+        this.boss.dropPart(i);
+      }
+
       this.boss.group.position.set(0, BOSS.y, s.z - this.bossBack());
     }
+
     this.bossTotal = tier.hasBoss ? tier.boss.parts.length : 0;
     this.bossLeft = s.boss === "dead" ? 0 : this.bossTotal - s.broken;
     // Spaghetti burying player 1.
@@ -316,11 +361,16 @@ export class PlayerWorld {
       this.pile = this.makePile();
       this.scene.add(this.pile);
     }
+
     if (!s.pile && this.pile) {
       disposeTree(this.pile);
       this.pile = null;
     }
-    if (this.pile) this.pile.position.set(0, 0, s.z);
+
+    if (this.pile) {
+      this.pile.position.set(0, 0, s.z);
+    }
+
     this.health = s.health;
     this.camMode = s.camera;
     this.state = s;
@@ -329,28 +379,45 @@ export class PlayerWorld {
   private clearAnimations() {
     this.tweens = [];
     this.cues = [];
-    for (const t of this.temps) t.dispose();
+    for (const t of this.temps) {
+      t.dispose();
+    }
+
     this.temps = [];
     this.walk = null;
   }
 
   private buildTier(tier: PlayTier) {
-    if (this.city) disposeTree(this.city);
-    for (const g of this.gates) g.dispose();
+    if (this.city) {
+      disposeTree(this.city);
+    }
+
+    for (const g of this.gates) {
+      g.dispose();
+    }
+
     this.window?.win.dispose();
     this.window = null;
-    for (const d of this.debt) d.win.dispose();
+    for (const d of this.debt) {
+      d.win.dispose();
+    }
+
     this.debt = [];
     this.boss?.dispose();
     this.boss = null;
     this.bossLayout = null;
-    for (const e of this.enemies) disposeTree(e.group);
+    for (const e of this.enemies) {
+      disposeTree(e.group);
+    }
+
     this.enemies = [];
     this.debris.clear();
     this.fx.clear();
+
     const length = (tier.stops.length + 1) * SEGMENT + 40;
     // The boss stands in an open plaza beyond the last stop, so no building can hide any part of it.
     const arena = standZ(tier.stops.length);
+
     this.city = buildCity(
       length,
       1000 + tier.index * 77,
@@ -359,7 +426,9 @@ export class PlayerWorld {
     this.scene.add(this.city);
     this.gates = tier.stops.map((s, k) => {
       const g = new Gate(s.gate, stopZ(k));
+
       this.scene.add(g.group);
+
       return g;
     });
     this.tier = tier;
@@ -381,6 +450,7 @@ export class PlayerWorld {
     const width = Math.min(cols, Math.max(34, longestRow(card)));
     const layout: Layout = layoutCard(card, width, slugFile(card.title));
     const tier = this.playing;
+
     if (role === "problem") {
       return paintCard(layout, mood, {
         label: `Problem card ${card.id} · ${gateText(stop.gate)}`,
@@ -389,7 +459,9 @@ export class PlayerWorld {
         badge: `−${Math.round(90 / tier.stops.length)}%`,
       });
     }
+
     const tool = toolFor(this.game, stop.p2.tool);
+
     return paintCard(layout, "fixed", {
       label: `Fixed by ${beforeParen(tool.name)} · ${card.id}`,
       title: card.title.replace(/^Tool:\s*/i, "✓ "),
@@ -407,6 +479,7 @@ export class PlayerWorld {
       this.cols(),
       stop,
     );
+
     return new CodeWindow(
       cv,
       this.shape === "tall" ? 7.2 : 7.6,
@@ -426,6 +499,7 @@ export class PlayerWorld {
     });
     const parts = b.parts.map((p, i) => {
       const slot = nth(L.parts, i, "boss layout parts");
+
       return paintBossPanel({
         aspect: slot.w / slot.h,
         header: `Sin ${i + 1} of ${b.parts.length}`,
@@ -435,18 +509,24 @@ export class PlayerWorld {
       });
     });
     const boss = new BossModel(core, parts);
+
     this.bossLayout = boss.layout;
     this.scene.add(boss.group);
+
     return boss;
   }
 
   private makePile() {
     const pile = new THREE.Group();
+
     pile.name = "spaghetti-pile";
+
     const r = rng(42);
+
     for (let i = 0; i < 26; i++) {
       const pts: THREE.Vector3[] = [];
-      for (let k = 0; k < 6; k++)
+
+      for (let k = 0; k < 6; k++) {
         pts.push(
           new THREE.Vector3(
             (r() - 0.5) * 2.4,
@@ -454,25 +534,35 @@ export class PlayerWorld {
             -1.2 + (r() - 0.2) * 2.4,
           ),
         );
+      }
+
       const tube = new THREE.Mesh(
         new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.09, 6),
         toon(i % 3 ? "#f3d27a" : "#efc25e"),
       );
+
       tube.castShadow = true;
       pile.add(tube);
     }
+
     const a = kit(0.02);
+
     a.ball(pile, "#de6a47", 0.2, 0.75, -0.9, 0.7, 0.3, 0.6);
     for (const [x, z] of [
       [0.5, -0.6],
       [-0.2, -1.2],
       [0.1, -0.3],
-    ] as const)
+    ] as const) {
       a.ball(pile, "#8b4a3a", x, 0.95, z, 0.22);
+    }
+
     // A white flag of surrender poking out.
     a.cyl(pile, "#7a6e5e", -0.6, 1.2, -0.4, 0.03, 1.6);
+
     const flag = a.box(pile, "#fffdf0", -0.35, 1.8, -0.4, 0.5, 0.32, 0.02);
+
     flag.rotation.y = 0.2;
+
     return pile;
   }
 
@@ -482,17 +572,25 @@ export class PlayerWorld {
   settle(step: Step) {
     this.stepRef = step;
     this.reconcile(this.stateFor(step));
-    if (step.phase === "walk") this.character.pose = "idle";
+    if (step.phase === "walk") {
+      this.character.pose = "idle";
+    }
   }
 
   /** Play a step forward from the previous one. */
   enter(step: Step) {
     this.stepRef = step;
+
     const prevWindow = this.window;
     const keepWin =
       prevWindow && (step.phase === "walk" || step.phase === "boss");
-    if (keepWin) this.window = null; // keep it alive for its exit animation
+
+    if (keepWin) {
+      this.window = null;
+    } // keep it alive for its exit animation
+
     const s = this.stateFor(step);
+
     switch (step.phase) {
       case "walk":
         this.reconcile(s);
@@ -507,7 +605,10 @@ export class PlayerWorld {
         break;
       case "boss":
         this.reconcile(s);
-        if (keepWin) this.exitWindow(prevWindow);
+        if (keepWin) {
+          this.exitWindow(prevWindow);
+        }
+
         this.enterBoss(s);
         break;
       case "bossPart":
@@ -518,7 +619,10 @@ export class PlayerWorld {
         break;
       case "tool":
         this.reconcile(s);
-        if (this.player === "p2") this.character.fire();
+        if (this.player === "p2") {
+          this.character.fire();
+        }
+
         break;
       default:
         this.reconcile(s);
@@ -528,21 +632,28 @@ export class PlayerWorld {
   private after(seconds: number, fn: () => void) {
     this.cues.push({ at: this.clock + seconds, fn });
   }
+
   private tween(dur: number, fn: (k: number) => void, done?: () => void) {
     this.tweens.push({ age: 0, dur, fn, done });
   }
+
   private track<T extends { dispose(): void }>(t: T) {
     this.temps.push(t);
+
     return t;
   }
 
   private exitWindow(w: { win: CodeWindow } | null) {
-    if (!w) return;
+    if (!w) {
+      return;
+    }
+
     const win = w.win;
     const entry = this.track({ dispose: () => win.dispose() });
-    const from = win.group.position.clone(),
-      s0 = win.group.scale.x;
+    const from = win.group.position.clone();
+    const s0 = win.group.scale.x;
     const p1 = this.player === "p1";
+
     this.tween(
       0.7,
       (k) => {
@@ -550,17 +661,20 @@ export class PlayerWorld {
         const to = p1
           ? this.debtSlot(this.debt.length - 1)
           : this.character.muzzleWorld();
+
         win.group.position.lerpVectors(from, to, e);
         win.group.scale.setScalar(lerp(s0, p1 ? 0.2 : 0.02, e));
         win.group.rotation.z = e * (p1 ? 0.3 : 4);
       },
       () => {
-        if (!p1)
+        if (!p1) {
           this.fx.burst(this.character.muzzleWorld(), {
             colors: ["#aee5a3", "#f9db48"],
             n: 18,
             speed: 3,
           });
+        }
+
         win.dispose();
         this.temps.splice(this.temps.indexOf(entry), 1);
       },
@@ -577,14 +691,17 @@ export class PlayerWorld {
     const r = rng(500 + step.tier * 31 + step.stop * 7);
     const spawns: { at: number; kind: EnemyKind; seed: number }[] = [];
     const count = 7 + Math.floor(r() * 3);
+
     for (let i = 0; i < count; i++) {
       const roll = r();
+
       spawns.push({
         at: 0.04 + (i / count) * 0.72 + r() * 0.05,
         kind: roll < 0.45 ? "spaghetti" : roll < 0.75 ? "bug" : "robot",
         seed: Math.floor(r() * 1e6),
       });
     }
+
     this.walk = { from, to, u: 0, spawns, next: 0 };
     this.character.pose = "walk";
   }
@@ -592,7 +709,11 @@ export class PlayerWorld {
   /** Director drives walking so both players stay in lockstep. u: 0 → 1. */
   setWalk(u: number) {
     const w = this.walk;
-    if (!w) return;
+
+    if (!w) {
+      return;
+    }
+
     w.u = u;
     this.character.root.position.z = lerp(
       w.from,
@@ -601,10 +722,15 @@ export class PlayerWorld {
     );
     for (;;) {
       const next = w.spawns[w.next];
-      if (!next || next.at > u) break;
+
+      if (!next || next.at > u) {
+        break;
+      }
+
       w.next++;
       this.spawn(next);
     }
+
     if (u >= 1) {
       this.character.pose = "idle";
     }
@@ -614,7 +740,10 @@ export class PlayerWorld {
     const r = rng(sp.seed);
     const z0 = this.character.root.position.z - 18 - r() * 8;
     const side = r() < 0.5 ? -1 : 1;
-    let from: THREE.Vector3, to: THREE.Vector3, speed: number;
+    let from: THREE.Vector3;
+    let to: THREE.Vector3;
+    let speed: number;
+
     if (sp.kind === "spaghetti") {
       from = new THREE.Vector3(side * 3, 0, z0);
       to = new THREE.Vector3(-side * 1.5, 0, z0 + 10);
@@ -628,7 +757,9 @@ export class PlayerWorld {
       to = new THREE.Vector3(-side * 9, 0, z0 + 2);
       speed = 2.6;
     }
+
     const e = new Enemy(sp.kind, sp.seed, from, to, speed);
+
     this.enemies.push(e);
     this.scene.add(e.group);
   }
@@ -639,11 +770,16 @@ export class PlayerWorld {
       this.player === "p1"
         ? healthAt(this.game, { ...step, phase: "walk" }, "p1")
         : 100;
+
     this.reconcile(s);
     this.clearStreet();
+
     const w = this.shownWindow;
+
     w.reading = false;
+
     const g = w.win.group;
+
     g.visible = false;
     this.health = before;
     this.gateAt(step.stop).state = "idle";
@@ -651,16 +787,21 @@ export class PlayerWorld {
     this.after(0.2, () => {
       this.gateAt(step.stop).state = "alarm";
     });
-    const launch = 1.5,
-      flight = 0.5;
+
+    const launch = 1.5;
+    const flight = 0.5;
+
     this.after(launch, () => {
       g.visible = true;
+
       const start = this.character.root.position
         .clone()
         .add(new THREE.Vector3(0, 6, -34));
       const chest = this.character.chestWorld();
+
       this.tween(flight, (k) => {
         const e = ease.inCubic(k);
+
         g.position.lerpVectors(
           start,
           chest.clone().add(new THREE.Vector3(0, 0.6, -0.6)),
@@ -677,7 +818,9 @@ export class PlayerWorld {
       this.sfx("damage", 0.8);
       this.character.hit();
       this.shake = 1;
+
       const chest = this.character.chestWorld();
+
       this.fx.burst(chest, {
         colors: ["#ff5d4f", "#ffae59", "#fff3b0"],
         n: 40,
@@ -691,19 +834,24 @@ export class PlayerWorld {
         1.0,
         1.4,
       );
+
       const from = this.health;
+
       this.tween(0.5, (k) => {
         this.health = lerp(from, s.health, ease.outCubic(k));
       });
       this.character.pose = s.pose;
+
       // Bounce back into the reading spot.
-      const hitPos = g.position.clone(),
-        hitScale = g.scale.x;
+      const hitPos = g.position.clone();
+      const hitScale = g.scale.x;
+
       this.tween(
         0.55,
         (k) => {
           const e = ease.outBack(k);
           const target = this.readingPose(w.win);
+
           g.position.lerpVectors(hitPos, target.pos, e);
           g.scale.setScalar(lerp(hitScale, target.scale, e));
           this.faceCamera(g);
@@ -717,15 +865,24 @@ export class PlayerWorld {
 
   private enterFixed(step: Step, s: State) {
     this.reconcile(s);
+
     const stop = nth(this.playing.stops, step.stop, "stops");
     const fixed = this.shownWindow;
-    if (this.player === "p1") return;
+
+    if (this.player === "p1") {
+      return;
+    }
+
     fixed.reading = true;
     fixed.win.group.visible = false;
+
     const old = this.track(this.makeStopWindow(stop, "problem"));
+
     old.rattle = 0.4;
     this.scene.add(old.group);
+
     const pose = this.readingPose(old);
+
     old.group.position.copy(pose.pos);
     old.group.scale.setScalar(pose.scale);
     this.faceCamera(old.group);
@@ -734,8 +891,10 @@ export class PlayerWorld {
     this.character.pose = "aim";
     this.after(0.45, () => {
       this.character.fire();
-      const from = this.character.muzzleWorld(),
-        to = old.group.position.clone();
+
+      const from = this.character.muzzleWorld();
+      const to = old.group.position.clone();
+
       this.fx.muzzle(from, "#aee5a3");
       this.fx.beam(from, to);
       this.fx.ring(to, "#aee5a3", 2.5, 0.5, false, this.camera.position);
@@ -751,7 +910,9 @@ export class PlayerWorld {
     });
     this.after(1.05, () => {
       this.sfx("shatter");
+
       const from = this.character.muzzleWorld();
+
       old.shatter(
         this.debris,
         from.setY(from.y - 1),
@@ -765,12 +926,15 @@ export class PlayerWorld {
     this.after(1.3, () => {
       this.sfx("codeFix");
       fixed.win.group.visible = true;
+
       const g = fixed.win.group;
+
       fixed.reading = false;
       this.tween(
         0.6,
         (k) => {
           const t = this.readingPose(fixed.win);
+
           g.position
             .copy(t.pos)
             .add(new THREE.Vector3(0, (1 - ease.outBack(k)) * 3, 0));
@@ -795,7 +959,9 @@ export class PlayerWorld {
         1.0,
         1.6,
       );
+
       const from = this.health;
+
       this.tween(0.8, (k) => {
         this.health = lerp(from, 100, ease.outCubic(k));
       });
@@ -808,8 +974,10 @@ export class PlayerWorld {
 
   private enterBoss(s: State) {
     this.clearStreet();
+
     const boss = this.bossModel;
     const home = boss.group.position.clone();
+
     boss.group.position.y = home.y + 26;
     this.after(0.9, () => this.sfx("bossArrive"));
     this.tween(
@@ -834,6 +1002,7 @@ export class PlayerWorld {
         this.after(t, () => this.shootBoss());
       }
     }
+
     void s;
   }
 
@@ -860,9 +1029,12 @@ export class PlayerWorld {
               "angry",
             ),
           );
+
           this.scene.add(blow.group);
-          const from = this.bossModel.partWorld(0),
-            to = this.character.chestWorld();
+
+          const from = this.bossModel.partWorld(0);
+          const to = this.character.chestWorld();
+
           this.tween(
             0.45,
             (k) => {
@@ -889,7 +1061,9 @@ export class PlayerWorld {
               );
               blow.shatter(this.debris, from, 5, [3, 2]);
               this.temps.splice(this.temps.indexOf(blow), 1);
+
               const h0 = this.health;
+
               this.tween(0.6, (k) => {
                 this.health = lerp(h0, 0, k);
               });
@@ -897,21 +1071,31 @@ export class PlayerWorld {
           );
         });
       }
+
       return;
     }
+
     // Player 2 fires the tool earned at that stop at the matching part.
     this.reconcile({ ...s, broken: step.part });
+
     const boss = this.bossModel;
+
     this.bossLeft = this.bossTotal - step.part;
+
     const part = nth(this.playing.boss.parts, step.part, "boss parts");
     const tool = toolFor(this.game, part.beatenBy);
+
     this.after(0.25, () => {
       this.character.fire();
-      const from = this.character.muzzleWorld(),
-        to = boss.partWorld(step.part);
+
+      const from = this.character.muzzleWorld();
+      const to = boss.partWorld(step.part);
+
       this.fx.muzzle(from, "#f9db48");
       this.sfx("cardPlay");
+
       const card = this.track(toolBolt(tool.name));
+
       this.scene.add(card.group);
       this.tween(
         0.4,
@@ -940,7 +1124,9 @@ export class PlayerWorld {
           this.shake = 0.8;
           card.dispose();
           this.temps.splice(this.temps.indexOf(card), 1);
+
           const h0 = this.health;
+
           this.tween(0.6, (k) => {
             this.health = lerp(h0, s.health, k);
           });
@@ -952,8 +1138,10 @@ export class PlayerWorld {
   private enterBossDown(_step: Step, s: State) {
     if (this.player === "p1") {
       this.reconcile({ ...s, pile: false });
+
       // Spaghetti rains down and buries them.
       const pile = this.makePile();
+
       this.pile = pile;
       this.scene.add(pile);
       pile.position.set(0, 9, s.z);
@@ -972,20 +1160,26 @@ export class PlayerWorld {
         },
       );
       this.after(0.2, () => this.sfx("lose", 0.6));
+
       return;
     }
+
     this.reconcile({
       ...s,
       boss: "alive",
       broken: this.bossTotal,
       pose: "aim",
     });
+
     const boss = this.bossModel;
+
     this.bossLeft = 0;
     this.after(0.3, () => {
       this.character.fire();
-      const from = this.character.muzzleWorld(),
-        to = boss.core.group.getWorldPosition(new THREE.Vector3());
+
+      const from = this.character.muzzleWorld();
+      const to = boss.core.group.getWorldPosition(new THREE.Vector3());
+
       this.fx.beam(from, to, "#f9db48");
       boss.core.crack(5);
       this.sfx("glassCrack");
@@ -997,6 +1191,7 @@ export class PlayerWorld {
     });
     this.after(1.1, () => {
       const at = boss.core.group.getWorldPosition(new THREE.Vector3());
+
       boss.destroy(this.debris, this.character.muzzleWorld().setY(0));
       this.boss = null;
       this.sfx("bossDefeat");
@@ -1019,6 +1214,7 @@ export class PlayerWorld {
       });
       disposeTree(e.group);
     }
+
     this.enemies = [];
   }
 
@@ -1028,14 +1224,22 @@ export class PlayerWorld {
   pointer(ndc: THREE.Vector2 | null, fire: boolean): boolean {
     if (!ndc) {
       this.aim = null;
+
       return false;
     }
+
     const ray = new THREE.Raycaster();
+
     ray.setFromCamera(ndc, this.camera);
+
     const hit = this.pick(ray.ray);
     const point = hit?.point ?? ray.ray.at(30, new THREE.Vector3());
+
     this.aim = point;
-    if (fire) this.fireAt(point, hit?.enemy ?? null, hit?.boss ?? false);
+    if (fire) {
+      this.fireAt(point, hit?.enemy ?? null, hit?.boss ?? false);
+    }
+
     return !!hit;
   }
 
@@ -1043,43 +1247,59 @@ export class PlayerWorld {
     ray: THREE.Ray,
   ): { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null {
     let best: { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null =
-        null,
-      bestD = Infinity;
+      null;
+    let bestD = Infinity;
     const c = new THREE.Vector3();
+
     for (const e of this.enemies) {
       e.center(c);
+
       const sphere = new THREE.Sphere(c, e.radius * 1.15);
       const p = ray.intersectSphere(sphere, new THREE.Vector3());
+
       if (p) {
         const d = p.distanceTo(ray.origin);
+
         if (d < bestD) {
           bestD = d;
           best = { point: p, enemy: e };
         }
       }
     }
+
     if (this.boss && !best) {
       const box = new THREE.Box3().setFromObject(this.boss.core.group);
       const p = ray.intersectBox(box, new THREE.Vector3());
-      if (p) best = { point: p, boss: true };
+
+      if (p) {
+        best = { point: p, boss: true };
+      }
     }
+
     return best;
   }
 
   private fireAt(point: THREE.Vector3, enemy: Enemy | null, boss: boolean) {
     const from = this.character.muzzleWorld();
+
     this.character.fire();
     this.shots++;
+
     const p1 = this.player === "p1";
+
     this.fx.muzzle(from, p1 ? "#ff9ad5" : "#ffdc85");
     this.fx.tracer(from, point, p1 ? "#ff9ad5" : "#fff1a8", p1 ? 0.04 : 0.07);
     this.sfx(p1 ? "shootP1" : "shoot", 0.7);
     if (enemy) {
       this.sfx("enemyHit", 0.6);
       this.fx.burst(point, { n: 12, speed: 5 });
-      if (enemy.hit()) this.kill(enemy, from);
+      if (enemy.hit()) {
+        this.kill(enemy, from);
+      }
     } else if (boss) {
-      if (p1 || this.boss) this.bounce(point);
+      if (p1 || this.boss) {
+        this.bounce(point);
+      }
     } else {
       this.fx.burst(point.y < 0.3 ? point.setY(0.05) : point, {
         n: 5,
@@ -1090,7 +1310,10 @@ export class PlayerWorld {
   }
 
   private shootBoss() {
-    if (!this.boss) return;
+    if (!this.boss) {
+      return;
+    }
+
     const to = this.boss.core.group
       .getWorldPosition(new THREE.Vector3())
       .add(
@@ -1100,6 +1323,7 @@ export class PlayerWorld {
           0.6,
         ),
       );
+
     this.character.aimAt(to);
     this.fireAt(to, null, true);
   }
@@ -1109,6 +1333,7 @@ export class PlayerWorld {
     this.sfx("bounce", 0.8);
     this.fx.burst(at, { n: 14, colors: ["#ffffff", "#ffae59"], speed: 6 });
     this.fx.ring(at, "#ffffff", 0.8, 0.25, false, this.camera.position);
+
     const back = at
       .clone()
       .add(
@@ -1118,8 +1343,9 @@ export class PlayerWorld {
           4 + Math.random() * 3,
         ),
       );
+
     this.fx.tracer(at, back, "#ffffff", 0.03);
-    if (Math.random() < 0.6)
+    if (Math.random() < 0.6) {
       this.fx.text(
         at.clone().add(new THREE.Vector3(0, 1, 0)),
         "NO EFFECT",
@@ -1127,10 +1353,12 @@ export class PlayerWorld {
         0.7,
         0.9,
       );
+    }
   }
 
   private kill(e: Enemy, from: THREE.Vector3) {
     const at = e.center();
+
     this.enemies.splice(this.enemies.indexOf(e), 1);
     this.score += SCORE[e.kind];
     this.sfx(e.kind === "robot" ? "robotBreak" : "enemyPop");
@@ -1170,10 +1398,12 @@ export class PlayerWorld {
     let target = this.enemies.find(
       (e) => e.seed === this.autoTarget && ahead(e),
     );
+
     target ??= this.enemies
       .filter(ahead)
       .sort((a, b) => b.group.position.z - a.group.position.z)[0];
     this.autoTarget = target?.seed ?? -1;
+
     const rest = me.clone().add(new THREE.Vector3(0, 1.2, -14));
     const shot = this.gunner.update(
       dt,
@@ -1182,11 +1412,16 @@ export class PlayerWorld {
         : null,
       rest,
     );
+
     this.aim = this.gunner.aim;
-    if (!shot) return;
+    if (!shot) {
+      return;
+    }
+
     // Where the hand points is where the shot goes: a pulled shot really misses.
     const dir = shot.at.clone().sub(this.camera.position).normalize();
     const hit = this.pick(new THREE.Ray(this.camera.position.clone(), dir));
+
     this.fireAt(hit?.point ?? shot.at, hit?.enemy ?? null, false);
   }
 
@@ -1194,6 +1429,7 @@ export class PlayerWorld {
   private slip(e: Enemy) {
     // Enemies often slip past right beside the camera; say it a few steps up the road instead.
     const at = e.center().add(new THREE.Vector3(0, 1.1, 0));
+
     at.z = Math.min(at.z, this.character.root.position.z - 6);
     at.x = THREE.MathUtils.clamp(at.x, -3, 3);
     if (this.player === "p1") {
@@ -1203,13 +1439,18 @@ export class PlayerWorld {
     } else {
       this.fx.text(at, "CAUGHT BY CI", "#8ef08a", 0.8, 1.2);
     }
+
     this.onSlip?.(e.kind);
   }
 
   /** Autoplay's aim on screen (normalised device coords), for its reticle. */
   autoAimScreen(): THREE.Vector2 | null {
-    if (!this.autoplay || !this.walk || !this.gunner.aim) return null;
+    if (!this.autoplay || !this.walk || !this.gunner.aim) {
+      return null;
+    }
+
     const p = this.gunner.aim.clone().project(this.camera);
+
     return p.z < 1 ? new THREE.Vector2(p.x, p.y) : null;
   }
 
@@ -1218,6 +1459,7 @@ export class PlayerWorld {
   private debtSlot(i: number) {
     const c = this.character.root.position;
     const t = this.clock;
+
     // Above and beside player 1's far shoulder: off the follow camera's lens, behind the stop window in side views.
     return new THREE.Vector3(
       -1.1 - (i % 2) * 0.7,
@@ -1229,11 +1471,14 @@ export class PlayerWorld {
   /** Where a stop window sits so the code is as big as possible, with the character beside or below it. */
   private readingPose(win: CodeWindow) {
     const z = this.character.root.position.z;
-    if (this.shape === "tall")
+
+    if (this.shape === "tall") {
       return {
         pos: new THREE.Vector3(0, 2.45 + win.h / 2, z - win.w / 2 + 0.6),
         scale: 1,
       };
+    }
+
     return {
       pos: new THREE.Vector3(
         0,
@@ -1246,22 +1491,29 @@ export class PlayerWorld {
 
   private faceCamera(o: THREE.Object3D, keepRoll = false) {
     const roll = o.rotation.z;
+
     o.quaternion.copy(this.camera.quaternion);
-    if (keepRoll) o.rotateZ(roll);
+    if (keepRoll) {
+      o.rotateZ(roll);
+    }
   }
 
   setAspect(aspect: number) {
     this.aspect = aspect;
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
-    if (this.boss && this.state)
+    if (this.boss && this.state) {
       this.boss.group.position.z = this.state.z - this.bossBack();
+    }
+
     const shape: Shape = aspect < 1.25 ? "tall" : "wide";
+
     if (shape !== this.shape) {
       this.shape = shape;
       // Re-lay the stop window for the new shape.
       if (this.state && this.stepRef) {
         const keep = this.health;
+
         this.reconcile(this.state);
         this.health = keep;
       }
@@ -1270,8 +1522,10 @@ export class PlayerWorld {
 
   private updateCamera(dt: number) {
     const c = this.character.root.position;
-    let pos: THREE.Vector3, look: THREE.Vector3;
+    let pos: THREE.Vector3;
+    let look: THREE.Vector3;
     const fov = THREE.MathUtils.degToRad(this.camera.fov);
+
     if (this.camMode === "follow") {
       pos = c.clone().add(new THREE.Vector3(1.7, 2.6, 5.4));
       look = c.clone().add(new THREE.Vector3(0.5, 1.7, -9));
@@ -1295,30 +1549,36 @@ export class PlayerWorld {
         new THREE.Vector3(-0.6, this.camMode === "stop" ? 1.1 : 0, c.z - 0.9),
         new THREE.Vector3(0.6, 2.5, c.z + 1.0),
       );
+
       if (this.camMode === "stop" && this.window) {
-        const w = this.window.win,
-          p = this.readingPose(w).pos;
+        const w = this.window.win;
+        const p = this.readingPose(w).pos;
+
         box
           .expandByPoint(new THREE.Vector3(0, p.y - w.h / 2, p.z - w.w / 2))
           .expandByPoint(new THREE.Vector3(0, p.y + w.h / 2, p.z + w.w / 2));
       }
-      if (this.camMode === "boss")
+
+      if (this.camMode === "boss") {
         box
           .expandByPoint(new THREE.Vector3(0, 12, c.z - 22))
           .expandByPoint(new THREE.Vector3(0, -0.2, c.z - 8));
-      const size = box.getSize(new THREE.Vector3()),
-        centre = box.getCenter(new THREE.Vector3());
+      }
+
+      const size = box.getSize(new THREE.Vector3());
+      const centre = box.getCenter(new THREE.Vector3());
       // The HUD takes the top ~20% and the tray and captions the bottom ~24%; fit the box between them.
-      const top = 0.18,
-        bottom = 0.21,
-        usableH = 1 - top - bottom,
-        usableW = 0.94;
+      const top = 0.18;
+      const bottom = 0.21;
+      const usableH = 1 - top - bottom;
+      const usableW = 0.94;
       const t = Math.tan(fov / 2);
       const distH = size.y / usableH / 2 / t;
       const distW = size.z / usableW / 2 / t / this.aspect;
       const d = Math.max(distH, distW) + 0.6;
       const visibleH = 2 * d * t;
       const lift = (bottom + usableH / 2 - 0.5) * visibleH;
+
       look = new THREE.Vector3(0, centre.y - lift, centre.z);
       pos = new THREE.Vector3(
         d * 0.985,
@@ -1326,12 +1586,15 @@ export class PlayerWorld {
         centre.z + d * 0.17,
       );
     }
+
     const k = 1 - Math.exp(-dt * 3.2);
+
     this.camPos.lerp(pos, k);
     this.camLook.lerp(look, k);
     this.camera.position.copy(this.camPos);
     if (this.shake > 0) {
       const s = this.shake * 0.12;
+
       this.camera.position.add(
         new THREE.Vector3(
           (Math.random() - 0.5) * s,
@@ -1340,12 +1603,21 @@ export class PlayerWorld {
         ),
       );
     }
+
     this.camera.lookAt(this.camLook);
+
     // Side-on views look across the street, so the near side's buildings step out of the way.
     const right = this.city?.getObjectByName("city-right");
     const ahead = this.camMode === "follow" || this.camMode === "boss";
-    if (right) right.visible = ahead;
-    for (const g of this.gates) g.near.visible = ahead;
+
+    if (right) {
+      right.visible = ahead;
+    }
+
+    for (const g of this.gates) {
+      g.near.visible = ahead;
+    }
+
     // Keep the sun's shadow box centred on the action.
     this.sun.position.set(c.x - 14, 30, c.z + 16);
     this.sun.target.position.set(c.x, 0, c.z - 8);
@@ -1354,12 +1626,14 @@ export class PlayerWorld {
   /** Where the camera stands, relative to the character, in the boss fight: close behind and to one side. */
   private bossEye() {
     const tall = this.aspect < 1.25;
+
     return new THREE.Vector3(
       tall ? 1.7 : 4.3,
       tall ? 2.95 : 2.0,
       tall ? 7.4 : 8.0,
     );
   }
+
   /** The boss's band on screen, as fractions from the top: under the HUD, above the character. */
   private bossBand() {
     return this.aspect < 1.25
@@ -1370,11 +1644,16 @@ export class PlayerWorld {
   /** How far beyond the character the boss stands, so that all of it fits its band in this lane. */
   private bossBack() {
     const L = this.bossLayout;
-    if (!L) return 20;
-    const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2),
-      band = this.bossBand();
+
+    if (!L) {
+      return 20;
+    }
+
+    const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    const band = this.bossBand();
     const distH = (L.top - L.bottom) / ((band.bottom - band.top) * 2 * t);
     const distW = (L.width + 0.8) / (0.94 * 2 * t * this.aspect);
+
     return Math.max(12, Math.max(distH, distW) - this.bossEye().z);
   }
 
@@ -1385,9 +1664,9 @@ export class PlayerWorld {
    */
   private bossShot(c: THREE.Vector3, fov: number) {
     const L = present(this.bossLayout, "boss layout");
-    const back = this.bossBack(),
-      t = Math.tan(fov / 2),
-      band = this.bossBand();
+    const back = this.bossBack();
+    const t = Math.tan(fov / 2);
+    const band = this.bossBand();
     const pos = c.clone().add(this.bossEye());
     const centre = new THREE.Vector3(
       0,
@@ -1398,6 +1677,7 @@ export class PlayerWorld {
     // Aim below the boss's centre so it sits in its band, not in the middle of the screen.
     const lower = (0.5 - (band.top + band.bottom) / 2) * 2 * d * t;
     const look = new THREE.Vector3(pos.x * 0.15, centre.y - lower, centre.z);
+
     return { pos, look };
   }
 
@@ -1412,21 +1692,28 @@ export class PlayerWorld {
       this.cues.splice(this.cues.indexOf(cue), 1);
       cue.fn();
     }
+
     // Iterate a snapshot: finished tweens are spliced out of the live list inside the loop.
     const tweenSnapshot = this.tweens.slice();
+
     for (const t of tweenSnapshot) {
       t.age += dt;
+
       const k = Math.min(1, t.age / t.dur);
+
       t.fn(k);
       if (k >= 1) {
         this.tweens.splice(this.tweens.indexOf(t), 1);
         t.done?.();
       }
     }
+
     this.shake = Math.max(0, this.shake - dt * 2.5);
+
     const me = this.character.root.position;
     // Iterate a snapshot: enemies that got past are spliced out of the live list inside the loop.
     const enemySnapshot = this.enemies.slice();
+
     for (const e of enemySnapshot) {
       e.update(dt, this.camera.position);
       if (e.finished || e.group.position.z > me.z + 4) {
@@ -1435,20 +1722,31 @@ export class PlayerWorld {
         this.enemies.splice(this.enemies.indexOf(e), 1);
       }
     }
-    if (this.autoplay && this.walk) this.autoShoot(dt);
+
+    if (this.autoplay && this.walk) {
+      this.autoShoot(dt);
+    }
+
     this.character.aimAt(this.aim);
     if (
       this.walk &&
       Math.floor(this.clock * 4.2) !== Math.floor((this.clock - dt) * 4.2)
-    )
+    ) {
       this.sfx("step", 0.25);
+    }
+
     this.character.update(dt);
-    for (const g of this.gates) g.update(dt);
+    for (const g of this.gates) {
+      g.update(dt);
+    }
+
     this.updateCamera(dt);
     if (this.window) {
       const w = this.window;
+
       if (w.reading) {
         const t = this.readingPose(w.win);
+
         w.win.group.position.lerp(t.pos, 1 - Math.exp(-dt * 6));
         w.win.group.scale.setScalar(
           lerp(w.win.group.scale.x, t.scale, 1 - Math.exp(-dt * 6)),
@@ -1456,8 +1754,10 @@ export class PlayerWorld {
         this.faceCamera(w.win.group);
         w.win.group.position.y += Math.sin(this.clock * 1.6) * 0.004;
       }
+
       w.win.update(dt);
     }
+
     for (const [i, d] of this.debt.entries()) {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
       d.win.group.visible =
@@ -1467,6 +1767,7 @@ export class PlayerWorld {
       d.win.group.rotateZ(Math.sin(this.clock * 3 + i) * 0.08);
       d.win.update(dt);
     }
+
     if (this.boss) {
       this.boss.update(dt);
       this.boss.group.lookAt(
@@ -1475,6 +1776,7 @@ export class PlayerWorld {
         this.camera.position.z,
       );
     }
+
     this.debris.step(dt);
     this.fx.update(dt);
   }
@@ -1482,17 +1784,25 @@ export class PlayerWorld {
   get walking() {
     return !!this.walk;
   }
+
   get enemyCount() {
     return this.enemies.length;
   }
+
   get debrisCount() {
     return this.debris.count;
   }
+
   /** For tests: screen-space centre of the first enemy, if any. */
   enemyScreen(): THREE.Vector2 | null {
     const e = this.enemies[0];
-    if (!e) return null;
+
+    if (!e) {
+      return null;
+    }
+
     const p = e.center().project(this.camera);
+
     return new THREE.Vector2(p.x, p.y);
   }
 }
@@ -1502,10 +1812,15 @@ function bossTool(name: string) {
   const words = name.split(/\s+/);
   const [first = "", ...rest] = words;
   let out = first;
+
   for (const w of rest) {
-    if (`${out} ${w}`.length > 18) break;
+    if (`${out} ${w}`.length > 18) {
+      break;
+    }
+
     out += ` ${w}`;
   }
+
   return out;
 }
 
@@ -1513,9 +1828,12 @@ function bossTool(name: string) {
 function toolBolt(name: string) {
   const group = new THREE.Group();
   const cv = document.createElement("canvas");
+
   cv.width = 256;
   cv.height = 340;
+
   const g = context2d(cv);
+
   g.fillStyle = "#f9db48";
   g.beginPath();
   g.roundRect(0, 0, 256, 340, 22);
@@ -1531,17 +1849,24 @@ function toolBolt(name: string) {
   for (const [i, w] of beforeParen(name).split(" ").slice(0, 3).entries()) {
     g.fillText(w, 128, 130 + i * 52);
   }
+
   const tex = new THREE.CanvasTexture(cv);
+
   tex.colorSpace = THREE.SRGBColorSpace;
+
   const mat = new THREE.MeshBasicMaterial({
     map: tex,
     toneMapped: false,
     side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.33), mat);
+
   group.add(mesh);
+
   const light = new THREE.PointLight("#f9db48", 4, 6);
+
   group.add(light);
+
   return {
     group,
     dispose: () => {

@@ -14,8 +14,11 @@ const num = (digits: string, letter: string) =>
 export function gateLabel(gate: string): GateLabel {
   const [, digits, letter, rest] =
     /^\s*G(\d+)([a-z]?)\s*[·:–—-]\s*(.*)$/i.exec(gate) ?? [];
-  if (digits === undefined || letter === undefined || rest === undefined)
+
+  if (digits === undefined || letter === undefined || rest === undefined) {
     return { num: "", title: gate.trim() };
+  }
+
   return {
     num: num(digits, letter),
     title: rest.trim() || `Gate ${num(digits, letter)}`,
@@ -25,12 +28,17 @@ export function gateLabel(gate: string): GateLabel {
 /** One line of plain text: "Gate 1 · Formatting". */
 export function gateText(gate: string): string {
   const g = gateLabel(gate);
+
   return g.num ? `Gate ${g.num} · ${g.title}` : g.title;
 }
 
 /** A tier's gate range: "G00–G02" → "Gates 0–2", "G06" → "Gate 6". */
 export function gatesText(gates: string | undefined): string {
-  if (!gates) return "";
+  if (!gates) {
+    return "";
+  }
+
   const many = (gates.match(CODE) ?? []).length > 1;
+
   return `${many ? "Gates" : "Gate"} ${gates.replace(CODE, (_, d: string, l: string) => num(d, l))}`;
 }

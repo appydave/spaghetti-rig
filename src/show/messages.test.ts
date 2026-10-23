@@ -33,6 +33,7 @@ describe("parsePresenterState", () => {
     for (const key of Object.keys(state)) {
       expect(parsePresenterState({ ...state, [key]: undefined })).toBeNull();
     }
+
     expect(parsePresenterState({ ...state, index: "3" })).toBeNull();
     expect(parsePresenterState({ ...state, paused: "no" })).toBeNull();
     expect(parsePresenterState({ ...state, mode: "solo" })).toBeNull();
@@ -51,6 +52,7 @@ describe("parsePresenterState", () => {
       { ...n, extra: [{ label: "x" }] },
       { ...n, extra: [{ label: "x", rows: [[1]] }] },
     ];
+
     for (const notes of badNotes) {
       expect(parsePresenterState({ ...state, notes })).toBeNull();
     }

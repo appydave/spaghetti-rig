@@ -9,6 +9,7 @@ export const SCORE: Record<EnemyKind, number> = {
   bug: 150,
   robot: 500,
 };
+
 const HP: Record<EnemyKind, number> = { spaghetti: 2, bug: 1, robot: 5 };
 const ROBOT_NAMES = [
   "VIBE-BOT",
@@ -63,9 +64,12 @@ export class Enemy {
       this.radius = 1.05;
       this.centerY = 1.35;
     }
+
     this.group.userData.enemy = this;
     this.group.traverse((o) => {
-      if (o instanceof THREE.Mesh && !o.userData.outline) o.castShadow = true;
+      if (o instanceof THREE.Mesh && !o.userData.outline) {
+        o.castShadow = true;
+      }
     });
   }
 
@@ -78,14 +82,20 @@ export class Enemy {
   private buildSpaghetti() {
     const a = kit(0.02);
     const noodles = new THREE.Group();
+
     this.group.add(noodles);
     this.parts.body = noodles;
+
     let s = this.seed;
     const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+
     for (let i = 0; i < 7; i++) {
       const pts: THREE.Vector3[] = [];
-      for (let k = 0; k < 7; k++)
+
+      for (let k = 0; k < 7; k++) {
         pts.push(V((r() - 0.5) * 1.3, 0.25 + r() * 1.1, (r() - 0.5) * 1.1));
+      }
+
       const tube = new THREE.Mesh(
         new THREE.TubeGeometry(
           new THREE.CatmullRomCurve3(pts, true),
@@ -96,9 +106,11 @@ export class Enemy {
         ),
         toon(i % 3 ? "#f3d27a" : "#efc25e"),
       );
+
       tube.castShadow = true;
       noodles.add(tube);
     }
+
     a.ball(noodles, "#de6a47", 0, 1.15, 0, 0.42, 0.22, 0.42); // sauce
     a.ball(noodles, "#8b4a3a", 0.25, 1.3, 0.1, 0.18); // meatball
     for (const side of [-1, 1]) {
@@ -112,6 +124,7 @@ export class Enemy {
   private buildBug() {
     const a = kit(0.018);
     const b = new THREE.Group();
+
     this.group.add(b);
     this.parts.body = b;
     a.ball(b, "#de6a47", 0, 0.38, 0, 0.5, 0.32, 0.6);
@@ -121,8 +134,10 @@ export class Enemy {
       [0.25, -0.2],
       [-0.2, -0.3],
       [0.2, 0.25],
-    ] as const)
+    ] as const) {
       a.ball(b, INK, x, 0.62, z, 0.1, 0.06, 0.1, false);
+    }
+
     a.ball(b, INK, 0, 0.36, 0.55, 0.28, 0.22, 0.22);
     for (const side of [-1, 1]) {
       a.ball(b, "#fffdf0", side * 0.12, 0.44, 0.72, 0.09);
@@ -137,6 +152,7 @@ export class Enemy {
       a.ball(b, "#f9db48", side * 0.28, 0.87, 0.97, 0.06, 0.06, 0.06, false);
       for (const z of [-0.3, 0, 0.3]) {
         const leg = new THREE.Group();
+
         leg.position.set(side * 0.38, 0.3, z);
         b.add(leg);
         a.link(leg, INK, V(0, 0, 0), V(side * 0.3, -0.28, 0), 0.03);
@@ -147,17 +163,18 @@ export class Enemy {
 
   private buildRobot() {
     const a = kit(0.02);
-    const shell = "#e0ebee",
-      dark = "#233c4c",
-      gold = "#f8c355",
-      cyan = "#76e4f9";
+    const shell = "#e0ebee";
+    const dark = "#233c4c";
+    const gold = "#f8c355";
+    const cyan = "#76e4f9";
     const body = new THREE.Group();
+
     body.position.y = 1.0;
     this.group.add(body);
     this.parts.body = body;
     a.soft(body, shell, 0, 0.3, 0, 0.95, 0.85, 0.6);
     a.box(body, dark, 0, 0.32, 0.29, 0.66, 0.5, 0.06);
-    for (let i = 0; i < 3; i++)
+    for (let i = 0; i < 3; i++) {
       a.box(
         body,
         i === 1 ? "#ff8b69" : cyan,
@@ -169,8 +186,12 @@ export class Enemy {
         0.03,
         false,
       );
+    }
+
     a.box(body, gold, 0, -0.16, 0, 0.7, 0.14, 0.55);
+
     const head = new THREE.Group();
+
     head.position.set(0, 0.95, 0);
     body.add(head);
     this.parts.head = head;
@@ -188,34 +209,46 @@ export class Enemy {
         0.03,
         false,
       );
+
       eye.material = toon(cyan, "#278caf", 0.8);
       a.cyl(head, gold, side * 0.42, 0, 0, 0.1, 0.08).rotation.z = Math.PI / 2;
     }
+
     a.box(head, gold, 0, -0.11, 0.31, 0.2, 0.03, 0.02, false);
     a.cyl(head, gold, 0, 0.42, 0, 0.03, 0.3, false);
+
     const bulb = a.ball(head, cyan, 0, 0.6, 0, 0.09);
+
     bulb.material = toon(cyan, "#278caf", 1);
     for (const side of [-1, 1]) {
       const arm = new THREE.Group();
+
       arm.position.set(side * 0.58, 0.52, 0);
       body.add(arm);
       this.parts[`arm${side}`] = arm;
       a.ball(arm, gold, 0, 0, 0, 0.14);
       a.soft(arm, shell, side * 0.04, -0.32, 0, 0.22, 0.48, 0.24);
       a.soft(arm, dark, side * 0.06, -0.62, 0.04, 0.26, 0.2, 0.28);
+
       const leg = new THREE.Group();
+
       leg.position.set(side * 0.24, -0.25, 0);
       body.add(leg);
       this.parts[`leg${side}`] = leg;
       a.box(leg, dark, 0, -0.25, 0, 0.2, 0.5, 0.22);
       a.soft(leg, gold, side * 0.03, -0.62, 0.08, 0.36, 0.2, 0.5);
     }
+
     // Name tag floating overhead.
     const canvas = document.createElement("canvas");
+
     canvas.width = 512;
     canvas.height = 128;
+
     const tex = new THREE.CanvasTexture(canvas);
+
     tex.colorSpace = THREE.SRGBColorSpace;
+
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: tex,
@@ -223,6 +256,7 @@ export class Enemy {
         toneMapped: false,
       }),
     );
+
     sprite.scale.set(2.4, 0.6, 1);
     sprite.position.set(0, 2.95, 0);
     sprite.renderOrder = 40;
@@ -242,9 +276,15 @@ export class Enemy {
 
   private drawLabel(state: string) {
     const l = present(this.label, "the robot label");
-    if (l.state === state) return;
+
+    if (l.state === state) {
+      return;
+    }
+
     l.state = state;
+
     const g = context2d(l.canvas);
+
     g.clearRect(0, 0, 512, 128);
     g.fillStyle = "#173849";
     g.beginPath();
@@ -268,6 +308,7 @@ export class Enemy {
   update(dt: number, facing: THREE.Vector3) {
     this.age += dt;
     this.flash = Math.max(0, this.flash - dt * 5);
+
     const t = this.age;
     // Move along from → to.
     const total = this.from.distanceTo(this.to);
@@ -278,9 +319,11 @@ export class Enemy {
       this.kind === "robot" ? (t < half ? t : Math.max(half, t - 2.5)) : t;
     const travelled = Math.min(total, moving * this.speed);
     const dir = this.to.clone().sub(this.from).normalize();
+
     this.group.position.copy(this.from).addScaledVector(dir, travelled);
     if (this.kind === "spaghetti") {
       const hop = Math.abs(Math.sin(t * 5));
+
       this.group.position.y = hop * 0.6;
       this.part("body").scale.set(
         1 + (1 - hop) * 0.15,
@@ -289,12 +332,16 @@ export class Enemy {
       );
       this.part("body").rotation.y = Math.sin(t * 2) * 0.4;
     } else if (this.kind === "bug") {
-      for (const [k, leg] of Object.entries(this.parts))
-        if (k.startsWith("leg"))
+      for (const [k, leg] of Object.entries(this.parts)) {
+        if (k.startsWith("leg")) {
           leg.rotation.y = Math.sin(t * 22 + k.length) * 0.5;
+        }
+      }
+
       this.group.position.y = Math.abs(Math.sin(t * 22)) * 0.03;
     } else {
       const walking = !pause && travelled < total;
+
       for (const side of [-1, 1]) {
         this.part(`leg${side}`).rotation.x = walking
           ? Math.sin(t * 9 + side * 1.6) * 0.6
@@ -303,6 +350,7 @@ export class Enemy {
           ? -Math.sin(t * 9 + side * 1.6) * 0.6
           : -0.9 + Math.sin(t * 12) * 0.3;
       }
+
       this.part("head").rotation.z = pause ? Math.sin(t * 5) * 0.15 : 0;
       this.drawLabel(
         pause
@@ -314,11 +362,15 @@ export class Enemy {
           : "ARMORED",
       );
     }
+
     // Face the player.
     const look = facing.clone();
+
     look.y = this.group.position.y;
     this.group.lookAt(look);
+
     const s = 1 + this.flash * 0.15;
+
     this.group.scale.setScalar(s);
   }
 
@@ -329,6 +381,7 @@ export class Enemy {
     if (this.label) {
       this.label.state = "";
     }
+
     return this.hp <= 0;
   }
 

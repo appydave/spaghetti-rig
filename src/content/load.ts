@@ -23,6 +23,7 @@ export interface Game {
 }
 
 type Loose = Record<string, unknown>;
+
 const isObj = (v: unknown): v is Loose =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 const str = (v: unknown, fallback = ""): string =>
@@ -33,16 +34,26 @@ const strs = (v: unknown): string[] =>
 const ROW_KINDS = ["c", "a", "d", "l"] as const;
 
 function rows(v: unknown): Row[] {
-  if (!Array.isArray(v)) return [];
+  if (!Array.isArray(v)) {
+    return [];
+  }
+
   return v.flatMap((r): Row[] => {
-    if (!Array.isArray(r) || r.length < 2) return [];
+    if (!Array.isArray(r) || r.length < 2) {
+      return [];
+    }
+
     const kind = ROW_KINDS.find((k) => k === r[0]) ?? "c";
+
     return [[kind, String(r[1] ?? "")]];
   });
 }
 
 function blocks(v: unknown): Block[] {
-  if (!Array.isArray(v)) return [];
+  if (!Array.isArray(v)) {
+    return [];
+  }
+
   return v
     .filter((o) => isObj(o))
     .map((b) => ({
@@ -52,17 +63,25 @@ function blocks(v: unknown): Block[] {
 }
 
 function annotations(v: unknown, bs: Block[]): Annotation[] {
-  if (!Array.isArray(v)) return [];
+  if (!Array.isArray(v)) {
+    return [];
+  }
+
   return v
     .filter((o) => isObj(o))
     .flatMap((a): Annotation[] => {
-      const block = Number(a.block ?? 0),
-        row = Number(a.row ?? 0);
-      if (!bs[block]?.rows[row]) return [];
+      const block = Number(a.block ?? 0);
+      const row = Number(a.row ?? 0);
+
+      if (!bs[block]?.rows[row]) {
+        return [];
+      }
+
       const kind =
         a.kind === "fix" || a.kind === "note" || a.kind === "number"
           ? a.kind
           : "problem";
+
       return [{ block, row, match: str(a.match), kind, note: str(a.note) }];
     });
 }
@@ -70,6 +89,7 @@ function annotations(v: unknown, bs: Block[]): Annotation[] {
 function card(v: unknown, fallbackTitle: string): Card {
   const c = isObj(v) ? v : {};
   const bs = blocks(c.blocks);
+
   return {
     id: str(c.id, "#??"),
     title: str(c.title, fallbackTitle),
@@ -122,6 +142,7 @@ function boss(v: unknown, tierName: string): Boss {
           beatenBy: str(p.beatenBy),
         }))
     : [];
+
   return {
     id: typeof b.id === "string" ? b.id : null,
     idea: typeof b.idea === "string" ? b.idea : undefined,
@@ -149,10 +170,15 @@ export function parseContent(raw: unknown): Game {
   });
 
   const tools: Record<string, Tool> = {};
+
   if (isObj(r.tools)) {
     for (const [key, t] of Object.entries(r.tools)) {
-      if (!isObj(t)) continue;
+      if (!isObj(t)) {
+        continue;
+      }
+
       const cfg = isObj(t.config) ? t.config : undefined;
+
       tools[key] = {
         name: str(t.name, key),
         what: str(t.what),
@@ -181,6 +207,7 @@ export function parseContent(raw: unknown): Game {
     Array.isArray(r.tiers) ? r.tiers.filter((o) => isObj(o)) : []
   ).map((t, i) => {
     const name = str(t.name, `Tier ${i + 1}`);
+
     return {
       n: typeof t.n === "number" ? t.n : i + 1,
       key: str(t.key, `tier-${i + 1}`),
@@ -216,6 +243,7 @@ export function parseContent(raw: unknown): Game {
 
   const tiers: PlayTier[] = tierList.map((t, index) => {
     const own = stops.filter((s) => s.tier === t.key);
+
     return {
       ...t,
       index,
@@ -224,12 +252,17 @@ export function parseContent(raw: unknown): Game {
       hasBoss: own.length > 0 && t.boss.parts.length > 0,
     };
   });
+
   return { content, tiers };
 }
 
 export async function loadContent(url = "/content/cards.json"): Promise<Game> {
   const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Could not load ${url} (${res.status})`);
+
+  if (!res.ok) {
+    throw new Error(`Could not load ${url} (${res.status})`);
+  }
+
   return parseContent(await res.json());
 }
 

@@ -9,10 +9,10 @@ import { nth } from "../nth";
 export type Mood = "angry" | "calm" | "fixed" | "boss";
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-const FONT = 34,
-  LH = 50,
-  PAD = 44,
-  HEADER = 74;
+const FONT = 34;
+const LH = 50;
+const PAD = 44;
+const HEADER = 74;
 
 export const PALETTE: Record<
   Mood,
@@ -63,6 +63,7 @@ export const PALETTE: Record<
     output: "#26161f",
   },
 };
+
 const MARK = {
   problem: "#ff5d4f",
   fix: "#8ef08a",
@@ -90,14 +91,22 @@ function wrapProse(
 ): string[] {
   const out: string[] = [];
   let cur = "";
+
   for (const w of text.split(/\s+/)) {
     const next = cur ? `${cur} ${w}` : w;
+
     if (g.measureText(next).width > width && cur) {
       out.push(cur);
       cur = w;
-    } else cur = next;
+    } else {
+      cur = next;
+    }
   }
-  if (cur) out.push(cur);
+
+  if (cur) {
+    out.push(cur);
+  }
+
   return out;
 }
 
@@ -121,7 +130,9 @@ export function paintCard(
 ): HTMLCanvasElement {
   const cv = document.createElement("canvas");
   const g = context2d(cv);
+
   g.font = `600 ${FONT}px ${MONO}`;
+
   const cw = g.measureText("MMMMMMMMMM").width / 10;
   const gutter = cw * 2.2;
   const width = Math.ceil(PAD * 2 + gutter + layout.cols * cw);
@@ -129,14 +140,19 @@ export function paintCard(
 
   // Measure everything first.
   g.font = `italic 800 66px Barlow, Impact, sans-serif`;
+
   const titleLines = wrapProse(
     g,
     paint.title.toUpperCase(),
     inner - (paint.badge ? 140 : 0),
   );
+
   g.font = `500 30px Space, Arial, sans-serif`;
+
   const noteLines = layout.notes.map((n) => wrapProse(g, n.note, inner - 64));
+
   g.font = `500 28px Space, Arial, sans-serif`;
+
   const footLines = paint.footer ? wrapProse(g, paint.footer, inner) : [];
   const lineH = (l: Line) =>
     l.type === "rule" ? 34 : l.type === "caption" ? 44 : LH;
@@ -149,8 +165,10 @@ export function paintCard(
   const height = Math.ceil(
     HEADER + titleH + codeH + notesH + footH + PAD * 0.8,
   );
+
   cv.width = width;
   cv.height = height;
+
   const p = PALETTE[mood];
 
   // Body with a bright inner edge (the slab's front lip).
@@ -174,44 +192,55 @@ export function paintCard(
     g.arc(46 + i * 34, HEADER / 2 + 4, 11, 0, Math.PI * 2);
     g.fill();
   }
+
   g.font = `600 28px ${MONO}`;
   g.fillStyle = "#f4f4e8";
   g.textBaseline = "middle";
+
   const fname =
     layout.filename.length > layout.cols - 8
       ? `…${layout.filename.slice(-(layout.cols - 9))}`
       : layout.filename;
+
   g.fillText(fname, 46 + 3 * 34 + 8, HEADER / 2 + 5);
 
   let y = HEADER + 40;
+
   g.textBaseline = "alphabetic";
   g.font = `600 22px Space, Arial, sans-serif`;
   g.fillStyle = p.label;
   spaced(g, paint.label.toUpperCase(), PAD, y, 4);
   if (paint.badge) {
     g.font = `italic 800 40px Barlow, Impact, sans-serif`;
+
     const bw = g.measureText(paint.badge).width + 34;
+
     g.fillStyle = mood === "angry" ? "#de6a47" : "#f9db48";
     roundRect(g, width - PAD - bw, y - 30, bw, 58, 8);
     g.fill();
     g.fillStyle = INK;
     g.fillText(paint.badge, width - PAD - bw + 17, y + 12);
   }
+
   g.font = `italic 800 66px Barlow, Impact, sans-serif`;
   g.fillStyle = p.title;
   for (const t of titleLines) {
     y += 62;
     g.fillText(t, PAD, y);
   }
+
   y += 18;
 
   // Code.
   const top = y;
+
   for (const line of layout.lines) {
     const h = lineH(line);
+
     drawLine(g, line, PAD, y, h, cw, gutter, inner, p);
     y += h;
   }
+
   y += 24;
   // Output blocks get their own darker panel drawn underneath; re-tint by redrawing behind is costly, so it's inline above.
   void top;
@@ -228,15 +257,18 @@ export function paintCard(
     y += 26;
     for (const [i, n] of layout.notes.entries()) {
       const ls = nth(noteLines, i, "note lines");
+
       pin(g, PAD + 18, y + 18, n.pin, PIN[n.kind]);
       g.font = `500 30px Space, Arial, sans-serif`;
       g.fillStyle = "#e6eef7";
       for (const [j, l] of ls.entries()) {
         g.fillText(l, PAD + 52, y + 29 + j * 40);
       }
+
       y += Math.max(1, ls.length) * 40 + 8;
     }
   }
+
   if (footLines.length) {
     y += 18;
     g.font = `500 28px Space, Arial, sans-serif`;
@@ -246,6 +278,7 @@ export function paintCard(
       y += 38;
     }
   }
+
   return cv;
 }
 
@@ -301,20 +334,26 @@ function drawLine(
     g.moveTo(x0, y + h / 2);
     g.lineTo(x0 + inner, y + h / 2);
     g.stroke();
+
     return;
   }
+
   if (line.type === "caption") {
     g.font = `500 31px Space, Arial, sans-serif`;
     g.fillStyle = "#f4f4e8";
     g.fillText(line.text, x0, y + 32);
+
     return;
   }
+
   const base = y + h * 0.7;
   const tx = x0 + gutter;
+
   if (line.view === "output") {
     g.fillStyle = p.output;
     g.fillRect(x0 - 14, y, inner + 28, h);
   }
+
   if (line.view === "diff" && (line.diff === "a" || line.diff === "d")) {
     g.fillStyle =
       line.diff === "a" ? "rgba(126,220,140,.15)" : "rgba(222,106,71,.17)";
@@ -325,11 +364,13 @@ function drawLine(
       g.fillText(line.diff === "a" ? "+" : "−", x0, base);
     }
   }
+
   if (line.cont) {
     g.fillStyle = "rgba(125,166,198,.5)";
     g.font = `600 ${FONT * 0.8}px ${MONO}`;
     g.fillText("↳", x0 + (line.view === "diff" ? cw : 0), base);
   }
+
   if (line.diff === "l") {
     g.font = `600 ${FONT * 0.85}px ${MONO}`;
     g.fillStyle = line.view === "output" ? "#ffd96a" : p.label;
@@ -343,19 +384,26 @@ function drawLine(
       cw * 0.85,
       line,
     );
+
     return;
   }
+
   g.font = `600 ${FONT}px ${MONO}`;
+
   let x = tx;
+
   g.globalAlpha = line.diff === "d" ? 0.78 : 1;
   for (const t of line.tokens) {
     g.fillStyle = t.color;
     g.fillText(t.text, x, base);
     x += t.text.length * cw;
   }
+
   g.globalAlpha = 1;
+
   const textW = Math.max(cw * 2, line.text.trimEnd().length * cw);
   const lead = (line.text.match(/^\s*/)?.[0].length ?? 0) * cw;
+
   if (line.diff === "d" && line.view === "diff") {
     // Removed: red strike-through.
     g.strokeStyle = "#ff6b5a";
@@ -365,6 +413,7 @@ function drawLine(
     g.lineTo(tx + textW + 4, y + h * 0.5);
     g.stroke();
   }
+
   if (line.diff === "a" && line.view === "diff") {
     // Added: green box.
     g.strokeStyle = "rgba(142,240,138,.75)";
@@ -379,6 +428,7 @@ function drawLine(
     );
     g.stroke();
   }
+
   drawMarks(g, line.marks, tx, y, h, cw, line);
 }
 
@@ -393,11 +443,13 @@ function drawMarks(
 ) {
   // Pins sit after the line's last character, so they never cover the code that follows a mark.
   let pinX = tx + Math.max(line.text.trimEnd().length * cw, 0) + 24;
+
   for (const m of marks) {
     const empty = line.text.trim() === "";
-    const x1 = tx + (empty ? 0 : m.from * cw),
-      x2 = tx + (empty ? cw * 10 : m.to * cw);
+    const x1 = tx + (empty ? 0 : m.from * cw);
+    const x2 = tx + (empty ? cw * 10 : m.to * cw);
     const col = MARK[m.kind];
+
     if (m.kind === "problem") {
       if (line.view === "diff") {
         g.strokeStyle = col;
@@ -411,9 +463,13 @@ function drawMarks(
         g.strokeStyle = col;
         g.lineWidth = 4;
         g.beginPath();
+
         const yy = y + h - 7;
-        for (let x = x1; x <= x2; x += 2)
+
+        for (let x = x1; x <= x2; x += 2) {
           g.lineTo(x, yy + Math.sin((x - x1) / 5) * 4.5);
+        }
+
         g.stroke();
       }
     } else if (m.kind === "note") {
@@ -433,9 +489,11 @@ function drawMarks(
         roundRect(g, x1 - 6, y + 3, x2 - x1 + 12, h - 6, 7);
         g.fill();
       }
+
       roundRect(g, x1 - 6, y + 3, x2 - x1 + 12, h - 6, 7);
       g.stroke();
     }
+
     if (m.pin) {
       pinX = Math.max(pinX, x2 + 24);
       pin(g, pinX, y + 14, m.pin, PIN[m.kind]);
@@ -451,24 +509,27 @@ export function paintCracks(
   cx?: number,
   cy?: number,
 ) {
-  const g = context2d(cv),
-    r = rng(seed);
-  const x0 = cx ?? cv.width * (0.3 + r() * 0.4),
-    y0 = cy ?? cv.height * (0.3 + r() * 0.4);
+  const g = context2d(cv);
+  const r = rng(seed);
+  const x0 = cx ?? cv.width * (0.3 + r() * 0.4);
+  const y0 = cy ?? cv.height * (0.3 + r() * 0.4);
   const arms = 9 + Math.floor(r() * 5);
+
   for (const [w, c] of [
     [7, "rgba(10,20,30,.55)"],
     [3, "rgba(240,250,255,.95)"],
   ] as const) {
     const rr = rng(seed);
+
     g.strokeStyle = c;
     g.lineWidth = w;
     g.lineJoin = "round";
     for (let i = 0; i < arms; i++) {
-      let a = (i / arms) * Math.PI * 2 + rr() * 0.5,
-        x = x0,
-        y = y0;
+      let a = (i / arms) * Math.PI * 2 + rr() * 0.5;
+      let x = x0;
+      let y = y0;
       const len = Math.max(cv.width, cv.height) * (0.25 + rr() * 0.4);
+
       g.beginPath();
       g.moveTo(x, y);
       for (let s = 0; s < 7; s++) {
@@ -477,12 +538,15 @@ export function paintCracks(
         y += (Math.sin(a) * len) / 7;
         g.lineTo(x, y);
       }
+
       g.stroke();
     }
+
     // A ring of short cross-cracks.
     for (let i = 0; i < arms; i++) {
-      const a = rr() * Math.PI * 2,
-        d = 50 + rr() * 90;
+      const a = rr() * Math.PI * 2;
+      const d = 50 + rr() * 90;
+
       g.beginPath();
       g.moveTo(x0 + Math.cos(a) * d, y0 + Math.sin(a) * d);
       g.lineTo(
@@ -492,6 +556,7 @@ export function paintCracks(
       g.stroke();
     }
   }
+
   g.fillStyle = "rgba(255,255,255,.85)";
   g.beginPath();
   g.arc(x0, y0, 14, 0, Math.PI * 2);
@@ -501,6 +566,7 @@ export function paintCracks(
 /** Rounded rectangle outline used for the slab. */
 function slabShape(w: number, h: number, r: number) {
   const s = new THREE.Shape();
+
   s.moveTo(-w / 2 + r, -h / 2);
   s.lineTo(w / 2 - r, -h / 2);
   s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
@@ -510,6 +576,7 @@ function slabShape(w: number, h: number, r: number) {
   s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
   s.lineTo(-w / 2, -h / 2 + r);
   s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+
   return s;
 }
 
@@ -530,13 +597,19 @@ function extrudeMapped(
     curveSegments: 5,
     steps: 1,
   });
+
   geo.translate(0, 0, -depth / 2);
-  const pos = geo.getAttribute("position"),
-    uv = geo.getAttribute("uv");
+
+  const pos = geo.getAttribute("position");
+  const uv = geo.getAttribute("uv");
   const caps = nth(geo.groups, 0, "geometry groups");
-  for (let i = caps.start; i < caps.start + caps.count; i++)
+
+  for (let i = caps.start; i < caps.start + caps.count; i++) {
     uv.setXY(i, pos.getX(i) / w + 0.5, pos.getY(i) / h + 0.5);
+  }
+
   uv.needsUpdate = true;
+
   return geo;
 }
 
@@ -560,12 +633,14 @@ export class CodeWindow {
     readonly mood: Mood,
     opts: { maxHeight?: number; depth?: number; eyes?: boolean } = {},
   ) {
-    let w = worldWidth,
-      h = (worldWidth * canvas.height) / canvas.width;
+    let w = worldWidth;
+    let h = (worldWidth * canvas.height) / canvas.width;
+
     if (opts.maxHeight && h > opts.maxHeight) {
       w *= opts.maxHeight / h;
       h = opts.maxHeight;
     }
+
     this.w = w;
     this.h = h;
     this.depth = opts.depth ?? Math.max(0.16, w * 0.04);
@@ -580,6 +655,7 @@ export class CodeWindow {
       color: PALETTE[mood].side,
       gradientMap: toon("#fff").gradientMap,
     });
+
     const geo = extrudeMapped(
       slabShape(w, h, Math.min(w, h) * 0.035),
       this.depth,
@@ -588,20 +664,23 @@ export class CodeWindow {
       0.02,
     );
     const slab = new THREE.Mesh(geo, [this.face, this.side]);
+
     slab.name = "code-slab";
     slab.castShadow = true;
     slab.receiveShadow = false;
     this.group.add(slab);
     this.group.name = `code-window-${mood}`;
-    if ((mood === "angry" || mood === "boss") && opts.eyes !== false)
+    if ((mood === "angry" || mood === "boss") && opts.eyes !== false) {
       this.addEyes();
+    }
   }
 
   private addEyes() {
-    const a = kit(0.012),
-      eyes = new THREE.Group();
+    const a = kit(0.012);
+    const eyes = new THREE.Group();
     const s = Math.min(1.4, this.w * 0.09);
     const headerH = (HEADER / this.canvas.height) * this.h;
+
     eyes.position.set(
       this.w / 2 - s * 1.5,
       this.h / 2 - headerH * 0.55,
@@ -618,6 +697,7 @@ export class CodeWindow {
         s * 0.24,
         s * 0.12,
       );
+
       const pupil = a.ball(
         eyes,
         INK,
@@ -629,7 +709,9 @@ export class CodeWindow {
         s * 0.05,
         false,
       );
+
       pupil.name = "pupil";
+
       const brow = a.box(
         eyes,
         INK,
@@ -640,8 +722,10 @@ export class CodeWindow {
         s * 0.1,
         s * 0.08,
       );
+
       brow.rotation.z = side * -0.45;
     }
+
     this.eyes = eyes;
     this.group.add(eyes);
   }
@@ -666,8 +750,10 @@ export class CodeWindow {
     this.t += dt;
     if (this.eyes) {
       const blink = Math.sin(this.t * 0.9) > 0.985 ? 0.15 : 1;
+
       this.eyes.scale.y = blink;
     }
+
     if (this.rattle > 0) {
       nth(this.group.children, 0, "window group children").position.set(
         (Math.random() - 0.5) * 0.04 * this.rattle,
@@ -689,15 +775,17 @@ export class CodeWindow {
     seed = 7,
   ) {
     this.group.updateMatrixWorld(true);
+
     const [cols, rows] = grid;
     const r = rng(seed);
-    const w = this.w,
-      h = this.h,
-      d = this.depth;
+    const w = this.w;
+    const h = this.h;
+    const d = this.depth;
     const P = Array.from({ length: cols + 1 }, (_, i) =>
       Array.from({ length: rows + 1 }, (_, j): [number, number] => {
         const jx = i > 0 && i < cols ? (r() - 0.5) * 0.55 * (w / cols) : 0;
         const jy = j > 0 && j < rows ? (r() - 0.5) * 0.55 * (h / rows) : 0;
+
         return [-w / 2 + (i * w) / cols + jx, -h / 2 + (j * h) / rows + jy];
       }),
     );
@@ -711,34 +799,43 @@ export class CodeWindow {
       inner: boolean,
     ) => {
       let pts = jag.get(key);
+
       if (!pts) {
         pts = [a];
-        if (inner)
+        if (inner) {
           for (let k = 1; k <= 2; k++) {
-            const t = k / 3,
-              nx = -(b[1] - a[1]),
-              ny = b[0] - a[0],
-              len = Math.hypot(nx, ny) || 1;
+            const t = k / 3;
+            const nx = -(b[1] - a[1]);
+            const ny = b[0] - a[0];
+            const len = Math.hypot(nx, ny) || 1;
             const off = (r() - 0.5) * 0.18 * len;
+
             pts.push([
               a[0] + (b[0] - a[0]) * t + (nx / len) * off,
               a[1] + (b[1] - a[1]) * t + (ny / len) * off,
             ]);
           }
+        }
+
         pts.push(b);
         jag.set(key, pts);
       }
+
       return pts;
     };
+
     const H = (i: number, j: number) =>
       edge(corner(i, j), corner(i + 1, j), `h${i},${j}`, j > 0 && j < rows);
     const Vt = (i: number, j: number) =>
       edge(corner(i, j), corner(i, j + 1), `v${i},${j}`, i > 0 && i < cols);
     const refs = { n: 0 };
+
     this.face.userData.refs = 0;
     this.side.userData.refs = 0;
+
     const centre = new THREE.Vector3();
-    for (let i = 0; i < cols; i++)
+
+    for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
         const poly = [
           ...H(i, j).slice(0, -1),
@@ -746,34 +843,43 @@ export class CodeWindow {
           ...[...H(i, j + 1)].reverse().slice(0, -1),
           ...[...Vt(i, j)].reverse().slice(0, -1),
         ];
-        const cx = poly.reduce((s, p) => s + p[0], 0) / poly.length,
-          cy = poly.reduce((s, p) => s + p[1], 0) / poly.length;
+        const cx = poly.reduce((s, p) => s + p[0], 0) / poly.length;
+        const cy = poly.reduce((s, p) => s + p[1], 0) / poly.length;
         const shape = new THREE.Shape(
           poly.map(([x, y]) => new THREE.Vector2(x, y)),
         );
         const geo = extrudeMapped(shape, d, w, h, 0);
+
         geo.translate(-cx, -cy, 0);
+
         const mesh = new THREE.Mesh(geo, [this.face, this.side]);
+
         mesh.castShadow = true;
         mesh.position.set(cx, cy, 0);
         this.group.add(mesh);
+
         const hull = new Float32Array(poly.length * 6);
+
         for (const [k, [x, y]] of poly.entries()) {
           hull.set([x - cx, y - cy, d / 2], k * 6);
           hull.set([x - cx, y - cy, -d / 2], k * 6 + 3);
         }
+
         const world = mesh.getWorldPosition(centre);
         const away = world
           .clone()
           .sub(from)
           .normalize()
           .multiplyScalar(power * (0.5 + r() * 0.8));
+
         away.y += 2 + r() * 4;
+
         const spin = new THREE.Vector3(
           (r() - 0.5) * 9,
           (r() - 0.5) * 9,
           (r() - 0.5) * 9,
         );
+
         this.face.userData.refs++;
         this.side.userData.refs++;
         refs.n++;
@@ -786,24 +892,32 @@ export class CodeWindow {
           4.5 + r() * 2.5,
         );
       }
+    }
+
     // The slab itself and the eyes go; eyes tumble as their own pieces.
     const slab = meshNamed(this.group, "code-slab");
+
     slab.geometry.dispose();
     slab.removeFromParent();
-    if (this.eyes) debris.breakObject(this.eyes, { from, power: power * 0.8 });
+    if (this.eyes) {
+      debris.breakObject(this.eyes, { from, power: power * 0.8 });
+    }
+
     this.group.removeFromParent();
   }
 
   dispose() {
     this.group.traverse((o) => {
-      if (o instanceof THREE.Mesh && !o.geometry.userData.shared)
+      if (o instanceof THREE.Mesh && !o.geometry.userData.shared) {
         o.geometry.dispose();
+      }
     });
     if (!this.face.userData.refs) {
       this.texture.dispose();
       this.face.dispose();
       this.side.dispose();
     }
+
     this.group.removeFromParent();
   }
 }

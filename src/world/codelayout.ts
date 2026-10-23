@@ -52,7 +52,10 @@ const KEYWORDS = new Set(
 
 /** Tiny tokenizer: enough to colour TypeScript, JSON, YAML and shell like an editor would. */
 export function tokenize(src: string, view: View, diff: RowKind): Token[] {
-  if (diff === "l") return [{ text: src, color: "#9fc3d6" }];
+  if (diff === "l") {
+    return [{ text: src, color: "#9fc3d6" }];
+  }
+
   if (view === "output") {
     // Tool output: numbers stand out, the rest is plain.
     return splitBy(
@@ -69,23 +72,37 @@ export function tokenize(src: string, view: View, diff: RowKind): Token[] {
       diff === "d" ? "#f3b2a4" : SYNTAX.text,
     );
   }
+
   const out: Token[] = [];
   const re =
     /(\/\/.*$|\/\*.*?\*\/|#\s.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|(\b\d[\d_.]*\b)|([A-Za-z_$][\w$]*)|([{}()[\];,.:<>=!&|?+\-*/%^~@]+)|(\s+)|(.)/g;
   let m: RegExpExecArray | null;
+
   while ((m = re.exec(src))) {
     const [all, comment, str, num, word, punct] = m;
     let color = SYNTAX.text;
-    if (comment) color = SYNTAX.comment;
-    else if (str) color = SYNTAX.string;
-    else if (num) color = SYNTAX.number;
-    else if (word) {
-      if (KEYWORDS.has(word)) color = SYNTAX.keyword;
-      else if (/^[A-Z]/.test(word)) color = SYNTAX.type;
-      else if (src[re.lastIndex] === "(") color = SYNTAX.fn;
-    } else if (punct) color = SYNTAX.punct;
+
+    if (comment) {
+      color = SYNTAX.comment;
+    } else if (str) {
+      color = SYNTAX.string;
+    } else if (num) {
+      color = SYNTAX.number;
+    } else if (word) {
+      if (KEYWORDS.has(word)) {
+        color = SYNTAX.keyword;
+      } else if (/^[A-Z]/.test(word)) {
+        color = SYNTAX.type;
+      } else if (src[re.lastIndex] === "(") {
+        color = SYNTAX.fn;
+      }
+    } else if (punct) {
+      color = SYNTAX.punct;
+    }
+
     out.push({ text: all, color });
   }
+
   return merge(out);
 }
 
@@ -96,25 +113,38 @@ function splitBy(
   base: string,
 ): Token[] {
   const out: Token[] = [];
-  let last = 0,
-    m: RegExpExecArray | null;
+  let last = 0;
+  let m: RegExpExecArray | null;
+
   while ((m = re.exec(src))) {
-    if (m.index > last)
+    if (m.index > last) {
       out.push({ text: src.slice(last, m.index), color: base });
+    }
+
     out.push({ text: m[0], color: colorOf(m[0]) });
     last = m.index + m[0].length;
   }
-  if (last < src.length) out.push({ text: src.slice(last), color: base });
+
+  if (last < src.length) {
+    out.push({ text: src.slice(last), color: base });
+  }
+
   return out;
 }
 
 function merge(tokens: Token[]): Token[] {
   const out: Token[] = [];
+
   for (const t of tokens) {
     const prev = out.at(-1);
-    if (prev && prev.color === t.color) prev.text += t.text;
-    else out.push({ ...t });
+
+    if (prev && prev.color === t.color) {
+      prev.text += t.text;
+    } else {
+      out.push({ ...t });
+    }
   }
+
   return out;
 }
 
@@ -122,12 +152,18 @@ function merge(tokens: Token[]): Token[] {
 function sliceTokens(tokens: Token[], from: number, to: number): Token[] {
   const out: Token[] = [];
   let at = 0;
+
   for (const t of tokens) {
-    const s = Math.max(from, at),
-      e = Math.min(to, at + t.text.length);
-    if (e > s) out.push({ text: t.text.slice(s - at, e - at), color: t.color });
+    const s = Math.max(from, at);
+    const e = Math.min(to, at + t.text.length);
+
+    if (e > s) {
+      out.push({ text: t.text.slice(s - at, e - at), color: t.color });
+    }
+
     at += t.text.length;
   }
+
   return out;
 }
 
@@ -139,18 +175,22 @@ export function wrapPoints(
 ): number[] {
   const cuts = [0];
   let start = 0;
+
   while (text.length - start > (start ? cols - indent : cols)) {
     const width = start ? cols - indent : cols;
     let cut = start + width;
+
     for (let i = start + width; i > start + width * 0.5; i--) {
       if (/[\s,;({[=>]/.test(text.charAt(i - 1))) {
         cut = i;
         break;
       }
     }
+
     cuts.push(cut);
     start = cut;
   }
+
   return cuts;
 }
 
@@ -162,22 +202,35 @@ export function layoutCard(
 ): Layout {
   const lines: Line[] = [];
   const pinOf = new Map<object, number>();
+
   for (const [i, a] of card.annotations.entries()) {
     pinOf.set(a, i + 1);
   }
+
   let filename = "";
   const stepFor = (b: number) =>
     (card.steps ?? []).filter((s) => s.block === b).map((s) => s.text);
-  for (const s of card.steps ?? [])
-    if (s.block === null) pushCaption(lines, s.text, cols);
+
+  for (const s of card.steps ?? []) {
+    if (s.block === null) {
+      pushCaption(lines, s.text, cols);
+    }
+  }
 
   for (const [bi, block] of card.blocks.entries()) {
-    if (bi > 0) lines.push(blankLine("rule", block.view, bi));
-    for (const text of stepFor(bi)) pushCaption(lines, text, cols, bi);
+    if (bi > 0) {
+      lines.push(blankLine("rule", block.view, bi));
+    }
+
+    for (const text of stepFor(bi)) {
+      pushCaption(lines, text, cols, bi);
+    }
+
     for (const [ri, [kind, text]] of block.rows.entries()) {
       const pinned = card.annotations.some(
         (a) => a.block === bi && a.row === ri,
       );
+
       if (
         kind === "l" &&
         !filename &&
@@ -188,12 +241,14 @@ export function layoutCard(
         filename = text;
         continue;
       }
+
       const tokens = tokenize(text, block.view, kind);
       const marks: Mark[] = card.annotations
         .filter((a) => a.block === bi && a.row === ri)
         .map((a) => {
           const idx = a.match ? text.indexOf(a.match) : -1;
           const whole = idx < 0;
+
           return {
             from: whole ? 0 : idx,
             to: whole ? Math.max(1, text.length) : idx + a.match.length,
@@ -206,12 +261,17 @@ export function layoutCard(
       const usable = Math.max(12, cols - prefix);
       const indent = Math.min(8, (text.match(/^\s*/)?.[0].length ?? 0) + 2);
       const cuts = wrapPoints(text, usable, indent);
+
       for (const [ci, from] of cuts.entries()) {
         const to = cuts[ci + 1] ?? text.length;
         const lineMarks = marks.flatMap((m): Mark[] => {
-          const s = Math.max(m.from, from),
-            e = Math.min(m.to, to);
-          if (e <= s && !(m.whole && ci === 0 && text.length === 0)) return [];
+          const s = Math.max(m.from, from);
+          const e = Math.min(m.to, to);
+
+          if (e <= s && !(m.whole && ci === 0 && text.length === 0)) {
+            return [];
+          }
+
           return [
             {
               ...m,
@@ -221,6 +281,7 @@ export function layoutCard(
             },
           ];
         });
+
         lines.push({
           type: "code",
           view: block.view,
@@ -235,11 +296,13 @@ export function layoutCard(
       }
     }
   }
+
   const notes = card.annotations.map((a, i) => ({
     pin: i + 1,
     kind: a.kind,
     note: a.note,
   }));
+
   return { lines, notes, cols, filename: filename || fallbackName };
 }
 
@@ -262,13 +325,19 @@ function pushCaption(lines: Line[], text: string, cols: number, block = -1) {
   const width = Math.floor(cols * 1.35);
   const words = text.split(/\s+/);
   let cur = "";
+
   for (const w of words) {
     if (`${cur} ${w}`.trim().length > width && cur) {
       lines.push({ ...blankLine("caption", "code", block), text: cur });
       cur = w;
-    } else cur = `${cur} ${w}`.trim();
+    } else {
+      cur = `${cur} ${w}`.trim();
+    }
   }
-  if (cur) lines.push({ ...blankLine("caption", "code", block), text: cur });
+
+  if (cur) {
+    lines.push({ ...blankLine("caption", "code", block), text: cur });
+  }
 }
 
 /** Turn a card title into a plausible filename for its window header. */

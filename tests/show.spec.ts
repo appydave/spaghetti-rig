@@ -5,6 +5,7 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
   page,
 }) => {
   const errors = watchErrors(page);
+
   await boot(page);
   await expect(page.locator("#title-1")).toHaveText("SPAGHETTI");
   await press(page, "b");
@@ -14,12 +15,18 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
   await press(page, "Enter", 600);
   await expect(page.locator("#game")).toBeVisible();
   expect((await step(page)).phase).toBe("vs");
+
   const total = await rig<number>(page, "r.director.script.length");
   const seen = new Set<string>();
+
   for (let i = 0; i < total + 5; i++) {
     const s = await step(page);
+
     seen.add(s.phase);
-    if (s.phase === "ending") break;
+    if (s.phase === "ending") {
+      break;
+    }
+
     // Let some steps play their animations, so slams, shatters and boss blows really run.
     await press(
       page,
@@ -29,6 +36,7 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
         : 200,
     );
   }
+
   expect((await step(page)).phase).toBe("ending");
   for (const p of [
     "vs",
@@ -40,8 +48,10 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
     "bossPart",
     "bossDown",
     "result",
-  ])
+  ]) {
     expect(seen).toContain(p);
+  }
+
   await expect(page.locator("#ending .col")).toHaveCount(2);
   await expect(page.locator("#ending")).toContainText("Buried in spaghetti");
   await expect(page.locator("#ending")).toContainText("Shipped");
@@ -55,20 +65,32 @@ for (const mode of ["1", "2"] as const) {
     page,
   }) => {
     const errors = watchErrors(page);
+
     await boot(page);
     await press(page, mode);
     await press(page, "Shift+Digit3", 600);
     expect((await step(page)).tier).toBe(2);
+
     const phases: string[] = [];
+
     for (let i = 0; i < 30; i++) {
       const s = await step(page);
+
       phases.push(s.phase);
-      if (s.phase === "result") break;
+      if (s.phase === "result") {
+        break;
+      }
+
       await press(page, "ArrowRight", 500);
     }
+
     expect(phases.at(-1)).toBe("result");
-    if (mode === "1") expect(phases).not.toContain("tool");
-    else expect(phases).toContain("tool");
+    if (mode === "1") {
+      expect(phases).not.toContain("tool");
+    } else {
+      expect(phases).toContain("tool");
+    }
+
     await expect(page.locator(".lane")).toHaveCount(1);
     expect(errors).toEqual([]);
   });
@@ -81,11 +103,14 @@ test("switching mode mid-game keeps your place", async ({ page }) => {
     page,
     `r.director.go(r.director.script.findIndex(s => s.phase === 'tool'), true)`,
   );
+
   const before = await at(page);
+
   for (const k of ["1", "2", "b", "1", "b"]) {
     await press(page, k, 250);
     expect(await at(page)).toBe(before);
   }
+
   await expect(page.locator(".lane")).toHaveCount(2);
   await expect(page.locator(".divider")).toBeVisible();
 });
@@ -110,11 +135,13 @@ test("the tool card flies in over player 2 only, then fixes the code and heals",
   expect((await step(page)).phase).toBe("tool");
   await expect(page.locator(".lane[data-p='p2'] .tcard")).toHaveCount(1);
   await expect(page.locator(".lane[data-p='p1'] .tcard")).toHaveCount(0);
+
   // The card face shows the real configuration from the content file.
   const cfg = await rig<{ file: string; lines: string[][] }>(
     page,
     `r.game.content.tools[r.game.tiers[0].stops[0].p2.tool].config`,
   );
+
   await expect(page.locator(".tcard .cfg")).toContainText(cfg.file);
   await expect(page.locator(".tcard .cfg")).toContainText(cfg.lines[0]![0]!);
   await press(page, "ArrowRight");
@@ -169,6 +196,7 @@ test("back steps, tier jumps and locked tiers", async ({ page }) => {
   await page.route("**/content/cards.json", async (route) => {
     const res = await route.fetch();
     const json = await res.json();
+
     json.stops = json.stops.filter(
       (s: { tier: string }) => s.tier !== "architecture",
     );
@@ -179,7 +207,9 @@ test("back steps, tier jumps and locked tiers", async ({ page }) => {
   expect((await step(page)).tier).toBe(1);
   await press(page, "ArrowRight", 300);
   await press(page, "ArrowRight", 300);
+
   const here = await at(page);
+
   await press(page, "ArrowLeft", 300);
   expect(await at(page)).toBe(here - 1);
   await press(page, "Shift+Digit6", 300);
@@ -211,34 +241,46 @@ test("mouse shooting scores, autoplay clears the street", async ({ page }) => {
   await press(page, "2");
   await rig(page, "r.start(0)");
   await rig(page, `r.director.go(1, true)`);
+
   let hit = false;
+
   for (let i = 0; i < 60 && !hit; i++) {
     await page.waitForTimeout(100);
+
     const e = await rig<{ x: number; y: number } | null>(
       page,
       "r.worlds.p2.enemyScreen()",
     );
-    if (!e) continue;
+
+    if (!e) {
+      continue;
+    }
+
     await page.mouse.click(((e.x + 1) / 2) * 1600, ((1 - e.y) / 2) * 900);
     hit = (await rig<number>(page, "r.worlds.p2.score")) > 0;
   }
+
   await press(page, "a", 5000);
   expect(await rig<number>(page, "r.worlds.p2.score")).toBeGreaterThan(0);
 });
 
 test("the presenter window follows the game", async ({ page, context }) => {
   await boot(page);
+
   const presenter = await context.newPage();
+
   await presenter.goto("/?presenter");
   await rig(page, "r.start(0)");
   await rig(
     page,
     `r.director.go(r.director.script.findIndex(s => s.phase === 'problem'), false)`,
   );
+
   const card = await rig<{ id: string; say: string }>(
     page,
     "r.game.tiers[0].stops[0].p1",
   );
+
   await expect(presenter.locator("#presenter")).toContainText(card.id);
   await expect(presenter.locator("#presenter .say")).toHaveText(card.say);
   // And can drive it.
@@ -252,6 +294,7 @@ test("a stop added to the content file shows up after a reload, unlocking its ti
   await page.route("**/content/cards.json", async (route) => {
     const res = await route.fetch();
     const json = await res.json();
+
     json.stops = json.stops.filter(
       (s: { tier: string }) => s.tier !== "architecture",
     );

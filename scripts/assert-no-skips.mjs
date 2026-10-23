@@ -23,4 +23,5 @@ if (!counts?.ran || counts.skipped !== 0 || counts.todoOrFlaky !== 0) {
   );
   process.exit(1);
 }
+
 console.log(`${kind}: ${counts.ran} tests ran, 0 skipped`);

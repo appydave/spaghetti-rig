@@ -27,6 +27,7 @@ describe("boss layout", () => {
   for (const n of counts) {
     it(`${n} part(s): none covers the main window, the head or another part`, () => {
       const L = bossLayout(n);
+
       expect(L.parts).toHaveLength(n);
       expect(overlaps(L.head, L.core)).toBe(true); // the head sits on the window's top edge…
       expect(L.head.y - L.head.h / 2).toBeGreaterThan(
@@ -36,7 +37,9 @@ describe("boss layout", () => {
         expect(overlaps(p, L.core, 0.2)).toBe(false);
         expect(overlaps(p, L.head, 0.2)).toBe(false);
         L.parts.forEach((q, j) => {
-          if (i !== j) expect(overlaps(p, q, 0.2)).toBe(false);
+          if (i !== j) {
+            expect(overlaps(p, q, 0.2)).toBe(false);
+          }
         });
         expect(p.h).toBeGreaterThan(1.2);
         expect(Math.abs(p.x) + p.w / 2).toBeLessThanOrEqual(L.width / 2 + 1e-9);

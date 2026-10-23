@@ -4,6 +4,7 @@ import { disposeTree } from "./toon";
 import { nth, present } from "../nth";
 
 let ready: Promise<void> | undefined;
+
 export const initPhysics = () => (ready ??= RAPIER.init());
 
 interface Piece {
@@ -37,9 +38,11 @@ export class Debris {
   constructor(private readonly scene: THREE.Scene) {
     this.world = new RAPIER.World({ x: 0, y: -14, z: 0 });
     this.world.timestep = 1 / 60;
+
     const ground = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.fixed().setTranslation(0, -0.5, 0),
     );
+
     this.world.createCollider(
       RAPIER.ColliderDesc.cuboid(500, 0.5, 2000)
         .setFriction(0.8)
@@ -51,6 +54,7 @@ export class Debris {
       const kerb = this.world.createRigidBody(
         RAPIER.RigidBodyDesc.fixed().setTranslation(side * 6.8, 1, 0),
       );
+
       this.world.createCollider(
         RAPIER.ColliderDesc.cuboid(0.3, 1, 2000).setRestitution(0.3),
         kerb,
@@ -73,11 +77,14 @@ export class Debris {
     offset?: THREE.Vector3,
   ) {
     object.updateMatrixWorld(true);
-    const pos = new THREE.Vector3(),
-      quat = new THREE.Quaternion(),
-      scale = new THREE.Vector3();
+
+    const pos = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+
     object.matrixWorld.decompose(pos, quat, scale);
     this.scene.attach(object);
+
     const body = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(pos.x, pos.y, pos.z)
@@ -90,17 +97,20 @@ export class Debris {
     let desc: RAPIER.ColliderDesc | null = hull
       ? RAPIER.ColliderDesc.convexHull(scaleHull(hull, scale))
       : null;
+
     desc ??= RAPIER.ColliderDesc.cuboid(
       Math.max(0.02, half.x * scale.x),
       Math.max(0.02, half.y * scale.y),
       Math.max(0.02, half.z * scale.z),
     );
-    if (offset)
+    if (offset) {
       desc.setTranslation(
         offset.x * scale.x,
         offset.y * scale.y,
         offset.z * scale.z,
       );
+    }
+
     this.world.createCollider(
       desc.setRestitution(0.42).setFriction(0.7).setDensity(1),
       body,
@@ -113,23 +123,33 @@ export class Debris {
       lastVy: velocity.y,
       base: scale.clone(),
     });
-    while (this.pieces.length > this.max)
+    while (this.pieces.length > this.max) {
       this.remove(nth(this.pieces, 0, "pieces"));
+    }
   }
 
   /** Break a model into its parts: every mesh flies off as its own body with a box collider. */
   breakObject(root: THREE.Object3D, opts: BreakOptions = {}) {
     root.updateMatrixWorld(true);
+
     const meshes: THREE.Mesh[] = [];
+
     root.traverse((o) => {
-      if (o instanceof THREE.Mesh && !o.userData.outline) meshes.push(o);
+      if (o instanceof THREE.Mesh && !o.userData.outline) {
+        meshes.push(o);
+      }
     });
+
     const centre = new THREE.Box3()
       .setFromObject(root)
       .getCenter(new THREE.Vector3());
     const from = opts.from ?? centre.clone().add(new THREE.Vector3(0, -0.5, 1));
+
     for (const m of meshes) {
-      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      if (!m.geometry.boundingBox) {
+        m.geometry.computeBoundingBox();
+      }
+
       const bb = present(m.geometry.boundingBox, "the mesh bounding box");
       const half = bb.getSize(new THREE.Vector3()).multiplyScalar(0.5);
       const at = m.getWorldPosition(new THREE.Vector3());
@@ -140,6 +160,7 @@ export class Debris {
         .add(new THREE.Vector3(0, (opts.up ?? 4) * (0.5 + Math.random()), 0));
       const s = opts.spin ?? 8;
       const offset = bb.getCenter(new THREE.Vector3());
+
       this.add(
         m,
         null,
@@ -154,32 +175,48 @@ export class Debris {
         offset,
       );
     }
+
     disposeTree(root);
   }
 
   step(dt: number) {
-    if (dt <= 0) return;
+    if (dt <= 0) {
+      return;
+    }
+
     this.world.timestep = Math.min(1 / 30, dt);
     this.world.step();
+
     const p = new THREE.Vector3();
     // Iterate a snapshot: remove() splices a piece out of the live list inside the loop.
     const snapshot = this.pieces.slice();
+
     for (const piece of snapshot) {
       piece.age += dt;
-      const t = piece.body.translation(),
-        r = piece.body.rotation(),
-        v = piece.body.linvel();
+
+      const t = piece.body.translation();
+      const r = piece.body.rotation();
+      const v = piece.body.linvel();
+
       piece.object.position.set(t.x, t.y, t.z);
       piece.object.quaternion.set(r.x, r.y, r.z, r.w);
-      if (piece.lastVy < -2.5 && v.y > -0.5 && this.onBounce)
+      if (piece.lastVy < -2.5 && v.y > -0.5 && this.onBounce) {
         this.onBounce(Math.min(1, -piece.lastVy / 10), p.set(t.x, t.y, t.z));
+      }
+
       piece.lastVy = v.y;
+
       const fade = piece.age - piece.life;
-      if (fade > 0)
+
+      if (fade > 0) {
         piece.object.scale
           .copy(piece.base)
           .multiplyScalar(Math.max(0.001, 1 - fade * 1.4));
-      if (fade > 0.75 || t.y < -5) this.remove(piece);
+      }
+
+      if (fade > 0.75 || t.y < -5) {
+        this.remove(piece);
+      }
     }
   }
 
@@ -191,8 +228,12 @@ export class Debris {
 
   clear() {
     const snapshot = this.pieces.slice();
-    for (const p of snapshot) this.remove(p);
+
+    for (const p of snapshot) {
+      this.remove(p);
+    }
   }
+
   dispose() {
     this.clear();
     this.world.free();
@@ -201,5 +242,6 @@ export class Debris {
 
 function scaleHull(h: Float32Array, s: THREE.Vector3) {
   const axes = [s.x, s.y, s.z];
+
   return Float32Array.from(h, (v, i) => v * nth(axes, i % 3, "hull axes"));
 }
