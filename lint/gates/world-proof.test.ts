@@ -83,6 +83,8 @@ type Scenario = {
   mode: Mode;
   seed: number;
   tall?: boolean;
+  /** Flip the window between wide and tall at every third look, so the resize lands mid-step with a window and a boss up. */
+  resize?: boolean;
 };
 
 /** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
@@ -129,8 +131,17 @@ function playStep(run: Run, step: Step, first: boolean): void {
   }
 }
 
+const RESIZE_EVERY = 3;
+
 /** One scenario: play a player through one tier and return a hash per look at the world. */
-function play({ player, tier, mode, seed, tall = false }: Scenario): string[] {
+function play({
+  player,
+  tier,
+  mode,
+  seed,
+  tall = false,
+  resize = false,
+}: Scenario): string[] {
   const sounds: Arg[][] = [];
   const audio: any = {
     play: (name: string, o: { pan?: number; volume?: number }) =>
@@ -144,6 +155,10 @@ function play({ player, tier, mode, seed, tall = false }: Scenario): string[] {
     const w: any = new PlayerWorld(player, game, audio, () => PAN);
     const log: string[] = [];
     const look = (label: string): void => {
+      if (resize && log.length % RESIZE_EVERY === RESIZE_EVERY - 1) {
+        w.setAspect(w.aspect === WIDE ? TALL : WIDE);
+      }
+
       log.push(
         `${label} ${sha(`${sceneOf(w.scene)}#${stateOf(w)}#${JSON.stringify(sounds.splice(0))}`)}`,
       );
@@ -200,6 +215,15 @@ const SCENARIOS: [string, () => string[]][] = game.tiers.flatMap((t) =>
 );
 
 SCENARIOS.push(
+  ...game.tiers.map((t) =>
+    named("resizes mid-play", {
+      player: "p1",
+      tier: t.index,
+      mode: "watch",
+      seed: t.index + 50,
+      resize: true,
+    }),
+  ),
   named("on a tall screen", {
     player: "p2",
     tier: 0,
