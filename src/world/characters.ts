@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { INK, kit, toon, clamp01, lerp } from "./toon";
+import { context2d } from "../dom";
 
 export type Pose = "idle" | "walk" | "hurt" | "down" | "victory" | "aim";
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
@@ -407,7 +408,7 @@ function laptopScreen() {
   const cv = document.createElement("canvas");
   cv.width = 256;
   cv.height = 156;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   g.fillStyle = "#122d40";
   g.fillRect(0, 0, 256, 156);
   g.fillStyle = "#35556b";

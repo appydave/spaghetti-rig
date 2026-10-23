@@ -1,4 +1,5 @@
 import type { AnnotationKind, Card, RowKind, View } from "../content/types";
+import { present } from "../nth";
 
 /** Editor colours (Spaghetti Busters palette). */
 export const SYNTAX = {
@@ -142,7 +143,7 @@ export function wrapPoints(
     const width = start ? cols - indent : cols;
     let cut = start + width;
     for (let i = start + width; i > start + width * 0.5; i--) {
-      if (/[\s,;({[=>]/.test(text[i - 1]!)) {
+      if (/[\s,;({[=>]/.test(text.charAt(i - 1))) {
         cut = i;
         break;
       }
@@ -197,7 +198,7 @@ export function layoutCard(
             from: whole ? 0 : idx,
             to: whole ? Math.max(1, text.length) : idx + a.match.length,
             kind: a.kind,
-            pin: pinOf.get(a)!,
+            pin: present(pinOf.get(a), "the annotation pin"),
             whole,
           };
         });

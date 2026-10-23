@@ -4,6 +4,8 @@ import { CodeWindow, PALETTE } from "./codewindow";
 import { Debris } from "./physics";
 import { geo, INK, kit } from "./toon";
 import { userData } from "./objects";
+import { context2d } from "../dom";
+import { nth } from "../nth";
 
 const BARLOW = "Barlow, Impact, sans-serif",
   SPACE = "Space, Arial, sans-serif";
@@ -64,7 +66,7 @@ export function paintBossPanel(p: {
   const cv = document.createElement("canvas");
   cv.width = W;
   cv.height = H;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   const c = PALETTE.boss;
   g.fillStyle = c.body;
   g.beginPath();
@@ -195,7 +197,7 @@ export class BossModel {
     });
     this.group.add(this.core.group);
     this.parts = partCanvases.map((cv, i) => {
-      const r = L.parts[i]!;
+      const r = nth(L.parts, i, "boss layout parts");
       const w = new CodeWindow(cv, r.w, "boss", {
         maxHeight: r.h,
         depth: 0.34,
