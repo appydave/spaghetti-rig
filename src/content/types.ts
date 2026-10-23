@@ -1,15 +1,34 @@
 /** Shapes of public/content/cards.json. Only the fields the game reads are typed; the rest pass through. */
 
-export type RowKind = 'c' | 'a' | 'd' | 'l';
+export type RowKind = "c" | "a" | "d" | "l";
 export type Row = [RowKind, string];
-export type View = 'code' | 'diff' | 'output';
-export type AnnotationKind = 'problem' | 'fix' | 'note' | 'number';
+export type View = "code" | "diff" | "output";
+export type AnnotationKind = "problem" | "fix" | "note" | "number";
 
-export interface Block { view: View; rows: Row[] }
-export interface Annotation { block: number; row: number; match: string; kind: AnnotationKind; note: string }
-export interface FailureMode { input: string; where: string; result: string }
-export interface Evidence { status: string; source?: string }
-export interface Step { text: string; block: number | null }
+export interface Block {
+  view: View;
+  rows: Row[];
+}
+export interface Annotation {
+  block: number;
+  row: number;
+  match: string;
+  kind: AnnotationKind;
+  note: string;
+}
+export interface FailureMode {
+  input: string;
+  where: string;
+  result: string;
+}
+export interface Evidence {
+  status: string;
+  source?: string;
+}
+export interface Step {
+  text: string;
+  block: number | null;
+}
 
 export interface Card {
   id: string;
@@ -28,9 +47,18 @@ export interface Card {
   answers?: string;
 }
 
-export interface Stop { tier: string; gate: string; p1: Card; p2: Card }
+export interface Stop {
+  tier: string;
+  gate: string;
+  p1: Card;
+  p2: Card;
+}
 
-export interface BossPart { part: string; from: string; beatenBy: string }
+export interface BossPart {
+  part: string;
+  from: string;
+  beatenBy: string;
+}
 export interface Boss {
   id: string | null;
   name: string;
@@ -44,15 +72,40 @@ export interface Boss {
   playable?: boolean;
 }
 
-export interface Tier { n: number; key: string; name: string; gates?: string; idea?: string; boss: Boss }
+export interface Tier {
+  n: number;
+  key: string;
+  name: string;
+  gates?: string;
+  idea?: string;
+  boss: Boss;
+}
 
-export interface ToolConfig { file: string; status?: string; source?: string; lines: [string, string][] }
-export interface Tool { name: string; what?: string; why?: string; how?: string; config?: ToolConfig }
+export interface ToolConfig {
+  file: string;
+  status?: string;
+  source?: string;
+  lines: [string, string][];
+}
+export interface Tool {
+  name: string;
+  what?: string;
+  why?: string;
+  how?: string;
+  config?: ToolConfig;
+}
 
-export interface Ending { id?: string; big: string; sub: string }
+export interface Ending {
+  id?: string;
+  big: string;
+  sub: string;
+}
 
 export interface Content {
-  screens: { title: { big: string; sub: string }; vs: { p1: string; p2: string } };
+  screens: {
+    title: { big: string; sub: string };
+    vs: { p1: string; p2: string };
+  };
   tiers: Tier[];
   tools: Record<string, Tool>;
   stops: Stop[];

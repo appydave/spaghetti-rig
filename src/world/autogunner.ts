@@ -1,8 +1,15 @@
-import * as THREE from 'three';
-import { rng } from './toon';
+import * as THREE from "three";
+import { rng } from "./toon";
 
-export interface Target { id: number; centre: THREE.Vector3; radius: number }
-export interface Shot { at: THREE.Vector3; target: Target }
+export interface Target {
+  id: number;
+  centre: THREE.Vector3;
+  radius: number;
+}
+export interface Shot {
+  at: THREE.Vector3;
+  target: Target;
+}
 
 /**
  * Autoplay's trigger finger, made to look like a person playing: the aim drifts onto a target
@@ -20,7 +27,11 @@ export class AutoGunner {
   /** How quickly the hand closes on the target, per second. */
   private speed: number;
 
-  constructor(seed: number, readonly missChance = 0.22, readonly burstChance = 0.3) {
+  constructor(
+    seed: number,
+    readonly missChance = 0.22,
+    readonly burstChance = 0.3,
+  ) {
     this.r = rng(seed);
     this.wait = 0.3 + this.r() * 0.5;
     this.speed = 5;
@@ -47,7 +58,8 @@ export class AutoGunner {
     const goal = target.centre.clone().add(this.error);
     this.aim!.lerp(goal, 1 - Math.exp(-dt * this.speed));
     // A little tremble, so even a steady aim is never perfectly still.
-    this.aim!.x += (r() - 0.5) * 0.02; this.aim!.y += (r() - 0.5) * 0.02;
+    this.aim!.x += (r() - 0.5) * 0.02;
+    this.aim!.y += (r() - 0.5) * 0.02;
     this.wait -= dt;
     if (this.wait > 0) return null;
     const shot: Shot = { at: this.aim!.clone(), target };

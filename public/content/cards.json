@@ -117,9 +117,7 @@
         "p1": "Nobody will touch it. Every change takes a day and breaks something else.",
         "p2": "Each gate went in and fixed its own mess: spacing by the machine, the big function split, every number named.",
         "say": "Shape is about code you can read. The boss is the file nobody wants to open.",
-        "presenter": [
-          "The tier 2 boss recaps G03, G04, G05 and G07."
-        ]
+        "presenter": ["The tier 2 boss recaps G03, G04, G05 and G07."]
       }
     },
     {
@@ -340,10 +338,7 @@
             "- name: Lint         run: npm run lint",
             "ESLint: spacing, size and the other gates"
           ],
-          [
-            "- name: Test         run: npm test",
-            "every unit test must pass"
-          ]
+          ["- name: Test         run: npm test", "every unit test must pass"]
         ]
       }
     },
@@ -357,18 +352,9 @@
         "status": "real",
         "source": "AppyRig main 1f04ad0 (G01)",
         "lines": [
-          [
-            "\"singleQuote\": true",
-            "strings use 'single' quotes"
-          ],
-          [
-            "\"tabWidth\": 2",
-            "indent by 2 spaces"
-          ],
-          [
-            "\"printWidth\": 100",
-            "wrap lines at 100 characters"
-          ],
+          ["\"singleQuote\": true", "strings use 'single' quotes"],
+          ["\"tabWidth\": 2", "indent by 2 spaces"],
+          ["\"printWidth\": 100", "wrap lines at 100 characters"],
           [
             "\"trailingComma\": \"es5\"",
             "a comma after the last item, so diffs stay one line"
@@ -415,14 +401,8 @@
         "status": "real",
         "source": "AppyRig PR #16, main 6f4bbfb (G03)",
         "lines": [
-          [
-            "curly: ['error', 'all']",
-            "every if/else gets braces"
-          ],
-          [
-            "'no-sequences': 'error'",
-            "no comma-joined expressions"
-          ],
+          ["curly: ['error', 'all']", "every if/else gets braces"],
+          ["'no-sequences': 'error'", "no comma-joined expressions"],
           [
             "{ blankLine: 'always', prev: '*', next: 'return' }",
             "a blank line before every return"
@@ -452,10 +432,7 @@
             "'max-lines-per-function': ['error', { max: 40 }]",
             "a function: 40 lines (off in test files)"
           ],
-          [
-            "'max-params': ['error', { max: 3 }]",
-            "at most 3 parameters"
-          ],
+          ["'max-params': ['error', { max: 3 }]", "at most 3 parameters"],
           [
             "ClassBody[body.length>30]",
             "at most 30 members in a class, interface or object type"
@@ -481,14 +458,8 @@
             "detectObjects: true",
             "numbers inside objects count too, e.g. timeoutMs: 60000"
           ],
-          [
-            "enforceConst: true",
-            "the name must be a const, so it can't drift"
-          ],
-          [
-            "'color-no-hex': true",
-            "no #hex colours in CSS"
-          ],
+          ["enforceConst: true", "the name must be a const, so it can't drift"],
+          ["'color-no-hex': true", "no #hex colours in CSS"],
           [
             "'function-disallowed-list': ['rgb', 'rgba', 'hsl', …]",
             "no rgb()/hsl() colours either"
@@ -609,10 +580,7 @@
             "NOT_SCANNED = ['test/fixtures/', 'server/src/core/vendor/', …]",
             "vendored and recorded files are not counted"
           ],
-          [
-            "npm run folders",
-            "fails on any folder above its baseline"
-          ]
+          ["npm run folders", "fails on any folder above its baseline"]
         ]
       }
     },
@@ -671,10 +639,7 @@
             "npm run knip",
             "Knip twice (normal and --production) against a baseline"
           ],
-          [
-            "name: 'no-circular'",
-            "A imports B imports A is an error"
-          ],
+          ["name: 'no-circular'", "A imports B imports A is an error"],
           [
             "viaOnly: { dependencyTypesNot: ['type-only', 'dynamic-import'] }",
             "type-only and dynamic imports don't count as a loop"
@@ -741,14 +706,8 @@
             "-d module_cohesion,lcom  (lcom off)",
             "the lack-of-cohesion metric is excluded everywhere"
           ],
-          [
-            "exclude: ['**/types.ts']",
-            "a file of types alone is fine"
-          ],
-          [
-            "shared/ not scanned",
-            "it is the wire contract"
-          ],
+          ["exclude: ['**/types.ts']", "a file of types alone is fine"],
+          ["shared/ not scanned", "it is the wire contract"],
           [
             "cohesion-baseline.json",
             "22 files frozen; it may shrink, never grow"
@@ -774,10 +733,7 @@
             "hub_module: { min_fan_in: 8, min_fan_out: 8 }",
             "imported by 8 or more and importing 8 or more"
           ],
-          [
-            "max_complexity: 5",
-            "and with little logic of its own"
-          ],
+          ["max_complexity: 5", "and with little logic of its own"],
           [
             "JS_SPECIFIER → strip '.js' in the scan copy",
             "fixes the .js → .tsx blind spot; source is untouched"
@@ -830,26 +786,11 @@
           {
             "view": "code",
             "rows": [
-              [
-                "c",
-                "\"scripts\": {"
-              ],
-              [
-                "c",
-                "  \"lint\": \"eslint .\","
-              ],
-              [
-                "c",
-                "  \"format:check\": \"prettier --check .\""
-              ],
-              [
-                "c",
-                "}"
-              ],
-              [
-                "c",
-                "# .github/workflows/ci.yml: npm test only"
-              ]
+              ["c", "\"scripts\": {"],
+              ["c", "  \"lint\": \"eslint .\","],
+              ["c", "  \"format:check\": \"prettier --check .\""],
+              ["c", "}"],
+              ["c", "# .github/workflows/ci.yml: npm test only"]
             ]
           }
         ],
@@ -879,26 +820,11 @@
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                ".github/workflows/ci.yml"
-              ],
-              [
-                "c",
-                "      - run: npm test"
-              ],
-              [
-                "a",
-                "      - run: npm run format:check"
-              ],
-              [
-                "a",
-                "      - run: npm run arch:check"
-              ],
-              [
-                "a",
-                "      - run: npm run provenance"
-              ]
+              ["l", ".github/workflows/ci.yml"],
+              ["c", "      - run: npm test"],
+              ["a", "      - run: npm run format:check"],
+              ["a", "      - run: npm run arch:check"],
+              ["a", "      - run: npm run provenance"]
             ]
           }
         ],
@@ -934,22 +860,10 @@
           {
             "view": "code",
             "rows": [
-              [
-                "c",
-                "function load( rig ){"
-              ],
-              [
-                "c",
-                "if(!rig) {return null}"
-              ],
-              [
-                "c",
-                "    const seats=rig.seats .map( s=>s.name )"
-              ],
-              [
-                "c",
-                "  return {name:rig.name,seats}}"
-              ]
+              ["c", "function load( rig ){"],
+              ["c", "if(!rig) {return null}"],
+              ["c", "    const seats=rig.seats .map( s=>s.name )"],
+              ["c", "  return {name:rig.name,seats}}"]
             ]
           }
         ],
@@ -986,34 +900,13 @@
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "server/src/rigs.ts"
-              ],
-              [
-                "d",
-                "function load( rig ){"
-              ],
-              [
-                "d",
-                "if(!rig) {return null}"
-              ],
-              [
-                "a",
-                "function load(rig) {"
-              ],
-              [
-                "a",
-                "  if (!rig) return null;"
-              ],
-              [
-                "d",
-                "    const seats=rig.seats .map( s=>s.name )"
-              ],
-              [
-                "a",
-                "  const seats = rig.seats.map((s) => s.name);"
-              ]
+              ["l", "server/src/rigs.ts"],
+              ["d", "function load( rig ){"],
+              ["d", "if(!rig) {return null}"],
+              ["a", "function load(rig) {"],
+              ["a", "  if (!rig) return null;"],
+              ["d", "    const seats=rig.seats .map( s=>s.name )"],
+              ["a", "  const seats = rig.seats.map((s) => s.name);"]
             ]
           }
         ],
@@ -1049,14 +942,8 @@
           {
             "view": "code",
             "rows": [
-              [
-                "c",
-                "const data: any = await res.json();"
-              ],
-              [
-                "c",
-                "return data.seats.lenght; // typo, no error"
-              ]
+              ["c", "const data: any = await res.json();"],
+              ["c", "return data.seats.lenght; // typo, no error"]
             ]
           }
         ],
@@ -1111,26 +998,11 @@
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/fleet/load.ts"
-              ],
-              [
-                "d",
-                "const data: any = await res.json();"
-              ],
-              [
-                "a",
-                "const data = RigSchema.parse(await res.json());"
-              ],
-              [
-                "d",
-                "return data.seats.lenght;"
-              ],
-              [
-                "a",
-                "return data.seats.length;"
-              ]
+              ["l", "client/src/fleet/load.ts"],
+              ["d", "const data: any = await res.json();"],
+              ["a", "const data = RigSchema.parse(await res.json());"],
+              ["d", "return data.seats.lenght;"],
+              ["a", "return data.seats.length;"]
             ]
           }
         ],
@@ -1189,14 +1061,8 @@
                 "c",
                 "const rig = payload as Rig;    // \"trust me, it's a Rig\""
               ],
-              [
-                "c",
-                "const seat = rig.seats[0] as Seat;"
-              ],
-              [
-                "c",
-                "seat.pod.name;  // seats: [] → seat is undefined → crash"
-              ]
+              ["c", "const seat = rig.seats[0] as Seat;"],
+              ["c", "seat.pod.name;  // seats: [] → seat is undefined → crash"]
             ]
           }
         ],
@@ -1272,51 +1138,24 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "CI · lint"
-              ],
-              [
-                "d",
-                "load.ts:12  consistent-type-assertions: 'as Rig'  ✗ FAIL"
-              ],
-              [
-                "c",
-                "prove the type instead of promising it"
-              ]
+              ["l", "CI · lint"],
+              ["d", "load.ts:12  consistent-type-assertions: 'as Rig'  ✗ FAIL"],
+              ["c", "prove the type instead of promising it"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "src/fleet/load.ts"
-              ],
-              [
-                "d",
-                "const rig = payload as Rig;"
-              ],
+              ["l", "src/fleet/load.ts"],
+              ["d", "const rig = payload as Rig;"],
               [
                 "a",
                 "const rig = RigSchema.parse(payload); // checked where it comes in"
               ],
-              [
-                "d",
-                "const seat = rig.seats[0] as Seat;"
-              ],
-              [
-                "a",
-                "const seat = rig.seats.at(0);  // Seat | undefined"
-              ],
-              [
-                "a",
-                "if (!seat) return showNoSeats();"
-              ],
-              [
-                "c",
-                "casts in the game: 7 → 0  ✓"
-              ]
+              ["d", "const seat = rig.seats[0] as Seat;"],
+              ["a", "const seat = rig.seats.at(0);  // Seat | undefined"],
+              ["a", "if (!seat) return showNoSeats();"],
+              ["c", "casts in the game: 7 → 0  ✓"]
             ]
           }
         ],
@@ -1373,18 +1212,9 @@
           {
             "view": "code",
             "rows": [
-              [
-                "c",
-                "const origin = first(headers.origin);"
-              ],
-              [
-                "c",
-                "if (origin !== undefined) return localUrl(origin, port);"
-              ],
-              [
-                "c",
-                "const host = first(headers.host);"
-              ],
+              ["c", "const origin = first(headers.origin);"],
+              ["c", "if (origin !== undefined) return localUrl(origin, port);"],
+              ["c", "const host = first(headers.host);"],
               [
                 "c",
                 "return host !== undefined && localUrl(`http://${host}`, port);"
@@ -1434,75 +1264,27 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "eslint · G03 spacing, measured on AppyRig"
-              ],
-              [
-                "c",
-                "curly                              1,444"
-              ],
-              [
-                "c",
-                "padding-line-between-statements    1,184"
-              ],
-              [
-                "c",
-                "lines-between-class-members           83"
-              ],
-              [
-                "c",
-                "no-sequences                           1"
-              ],
-              [
-                "d",
-                "total 2,712 findings in 292 files → all fixed in this PR"
-              ]
+              ["l", "eslint · G03 spacing, measured on AppyRig"],
+              ["c", "curly                              1,444"],
+              ["c", "padding-line-between-statements    1,184"],
+              ["c", "lines-between-class-members           83"],
+              ["c", "no-sequences                           1"],
+              ["d", "total 2,712 findings in 292 files → all fixed in this PR"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/app/devProxy.ts"
-              ],
-              [
-                "c",
-                "const origin = first(headers.origin);"
-              ],
-              [
-                "a",
-                ""
-              ],
-              [
-                "d",
-                "if (origin !== undefined) return localUrl(origin, port);"
-              ],
-              [
-                "a",
-                "if (origin !== undefined) {"
-              ],
-              [
-                "a",
-                "  return localUrl(origin, port);"
-              ],
-              [
-                "a",
-                "}"
-              ],
-              [
-                "a",
-                ""
-              ],
-              [
-                "c",
-                "const host = first(headers.host);"
-              ],
-              [
-                "a",
-                ""
-              ],
+              ["l", "client/src/app/devProxy.ts"],
+              ["c", "const origin = first(headers.origin);"],
+              ["a", ""],
+              ["d", "if (origin !== undefined) return localUrl(origin, port);"],
+              ["a", "if (origin !== undefined) {"],
+              ["a", "  return localUrl(origin, port);"],
+              ["a", "}"],
+              ["a", ""],
+              ["c", "const host = first(headers.host);"],
+              ["a", ""],
               [
                 "c",
                 "return host !== undefined && localUrl(`http://${host}`, port);"
@@ -1562,26 +1344,11 @@
                 "c",
                 "function renderRigPage(rig, seats, pods, filter, mode, onPick) {"
               ],
-              [
-                "c",
-                "  // load… sort… group by pod… filter… count…"
-              ],
-              [
-                "c",
-                "  // build the header… the legend… the seat tiles…"
-              ],
-              [
-                "c",
-                "  // handle clicks… keyboard… hover…"
-              ],
-              [
-                "c",
-                "  // …212 more lines"
-              ],
-              [
-                "c",
-                "}"
-              ]
+              ["c", "  // load… sort… group by pod… filter… count…"],
+              ["c", "  // build the header… the legend… the seat tiles…"],
+              ["c", "  // handle clicks… keyboard… hover…"],
+              ["c", "  // …212 more lines"],
+              ["c", "}"]
             ]
           }
         ],
@@ -1618,59 +1385,29 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "eslint · G04 size limits"
-              ],
-              [
-                "c",
-                "file > 300 lines              51 files"
-              ],
-              [
-                "c",
-                "function > 40 lines          224 functions"
-              ],
-              [
-                "c",
-                "more than 3 parameters        51"
-              ],
-              [
-                "d",
-                "all fixed in this PR"
-              ]
+              ["l", "eslint · G04 size limits"],
+              ["c", "file > 300 lines              51 files"],
+              ["c", "function > 40 lines          224 functions"],
+              ["c", "more than 3 parameters        51"],
+              ["d", "all fixed in this PR"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/pages/RigPage.tsx"
-              ],
+              ["l", "client/src/pages/RigPage.tsx"],
               [
                 "d",
                 "function renderRigPage(rig, seats, pods, filter, mode, onPick) {"
               ],
-              [
-                "d",
-                "  // …220 lines"
-              ],
-              [
-                "a",
-                "function RigPage({ rig, view }: RigPageProps) {"
-              ],
-              [
-                "a",
-                "  const groups = groupSeatsByPod(rig, view.filter);"
-              ],
+              ["d", "  // …220 lines"],
+              ["a", "function RigPage({ rig, view }: RigPageProps) {"],
+              ["a", "  const groups = groupSeatsByPod(rig, view.filter);"],
               [
                 "a",
                 "  return <RigLayout header={<RigHeader rig={rig} />} body={<SeatGrid groups={groups} />} />;"
               ],
-              [
-                "a",
-                "}"
-              ]
+              ["a", "}"]
             ]
           }
         ],
@@ -1714,18 +1451,9 @@
           {
             "view": "code",
             "rows": [
-              [
-                "c",
-                "setTimeout(refresh, 86400000);"
-              ],
-              [
-                "c",
-                "if (seats.length > 9) collapse();"
-              ],
-              [
-                "c",
-                "tile.style.color = '#c8841a';"
-              ]
+              ["c", "setTimeout(refresh, 86400000);"],
+              ["c", "if (seats.length > 9) collapse();"],
+              ["c", "tile.style.color = '#c8841a';"]
             ]
           }
         ],
@@ -1769,39 +1497,18 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "eslint · G05 no-magic-numbers (calibrated)"
-              ],
-              [
-                "c",
-                "bare numbers        ~1,144 (before V1 retired)"
-              ],
-              [
-                "d",
-                "all fixed in this PR"
-              ]
+              ["l", "eslint · G05 no-magic-numbers (calibrated)"],
+              ["c", "bare numbers        ~1,144 (before V1 retired)"],
+              ["d", "all fixed in this PR"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/domain/refresh.ts"
-              ],
-              [
-                "a",
-                "const ONE_DAY_MS = 24 * 60 * 60 * 1000;"
-              ],
-              [
-                "d",
-                "setTimeout(refresh, 86400000);"
-              ],
-              [
-                "a",
-                "setTimeout(refresh, ONE_DAY_MS);"
-              ]
+              ["l", "client/src/domain/refresh.ts"],
+              ["a", "const ONE_DAY_MS = 24 * 60 * 60 * 1000;"],
+              ["d", "setTimeout(refresh, 86400000);"],
+              ["a", "setTimeout(refresh, ONE_DAY_MS);"]
             ]
           }
         ],
@@ -1843,22 +1550,10 @@
           {
             "view": "code",
             "rows": [
-              [
-                "l",
-                "client/src/lib/markdown.ts · parseBlocks (before)"
-              ],
-              [
-                "c",
-                "while (i < lines.length) {"
-              ],
-              [
-                "c",
-                "  if (line.trim() === '') { i++; continue; }"
-              ],
-              [
-                "c",
-                "  const fence = FENCE.exec(line);"
-              ],
+              ["l", "client/src/lib/markdown.ts · parseBlocks (before)"],
+              ["c", "while (i < lines.length) {"],
+              ["c", "  if (line.trim() === '') { i++; continue; }"],
+              ["c", "  const fence = FENCE.exec(line);"],
               [
                 "c",
                 "  if (fence) { while (…) { … } blocks.push(…); continue; }"
@@ -1875,14 +1570,8 @@
                 "c",
                 "  if (line.includes('|') && … && …) { … ? … : … ? … : … }"
               ],
-              [
-                "c",
-                "  // …lists, paragraphs: 170 lines in one loop"
-              ],
-              [
-                "c",
-                "}"
-              ]
+              ["c", "  // …lists, paragraphs: 170 lines in one loop"],
+              ["c", "}"]
             ]
           }
         ],
@@ -1929,67 +1618,34 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "eslint · G06 complexity (AppyRig)"
-              ],
-              [
-                "c",
-                "cognitive > 8              158"
-              ],
-              [
-                "c",
-                "cyclomatic > 6             275"
-              ],
-              [
-                "c",
-                "expression > 3              60"
-              ],
-              [
-                "d",
-                "parseBlocks: cognitive 74 · split in PR #24"
-              ]
+              ["l", "eslint · G06 complexity (AppyRig)"],
+              ["c", "cognitive > 8              158"],
+              ["c", "cyclomatic > 6             275"],
+              ["c", "expression > 3              60"],
+              ["d", "parseBlocks: cognitive 74 · split in PR #24"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/lib/markdown.ts"
-              ],
+              ["l", "client/src/lib/markdown.ts"],
               [
                 "d",
                 "function parseBlocks(lines) { /* 170-line loop, one branch per block kind */ }"
               ],
-              [
-                "a",
-                "function parseFence(lines, i): Parsed | null { … }"
-              ],
+              ["a", "function parseFence(lines, i): Parsed | null { … }"],
               [
                 "a",
                 "function parseHeadingBlock(lines, i): Parsed | null { … }"
               ],
-              [
-                "a",
-                "function parseQuote(lines, i): Parsed | null { … }"
-              ],
-              [
-                "a",
-                "// …one parser per kind of block"
-              ],
-              [
-                "a",
-                "function parseBlocks(lines) {"
-              ],
+              ["a", "function parseQuote(lines, i): Parsed | null { … }"],
+              ["a", "// …one parser per kind of block"],
+              ["a", "function parseBlocks(lines) {"],
               [
                 "a",
                 "  while (i < lines.length) { const parsed = parseBlockAt(lines, i); blocks.push(parsed.block); i = parsed.next; }"
               ],
-              [
-                "a",
-                "}"
-              ]
+              ["a", "}"]
             ]
           }
         ],
@@ -2045,14 +1701,8 @@
                 "l",
                 "server/src/hub/collectorIngest.ts · two handlers (before)"
               ],
-              [
-                "c",
-                "socket.on(FLEET_EVENTS.HISTORY, (raw, ack) => {"
-              ],
-              [
-                "c",
-                "  const parsed = SeatHistorySchema.safeParse(raw);"
-              ],
+              ["c", "socket.on(FLEET_EVENTS.HISTORY, (raw, ack) => {"],
+              ["c", "  const parsed = SeatHistorySchema.safeParse(raw);"],
               [
                 "c",
                 "  if (!parsed.success) { reply({ ok: false, failureMode: 'invalid_snapshot', … }); return; }"
@@ -2061,30 +1711,15 @@
                 "c",
                 "  if (parsed.data.machineId !== machineId) { reply({ ok: false, failureMode: 'machine_mismatch', … }); return; }"
               ],
-              [
-                "c",
-                "  opts.store.putHistory(parsed.data);"
-              ],
-              [
-                "c",
-                "});"
-              ],
-              [
-                "c",
-                "socket.on(FLEET_EVENTS.HANDOFFS, (raw, ack) => {"
-              ],
-              [
-                "c",
-                "  const parsed = HandoffBodiesSchema.safeParse(raw);"
-              ],
+              ["c", "  opts.store.putHistory(parsed.data);"],
+              ["c", "});"],
+              ["c", "socket.on(FLEET_EVENTS.HANDOFFS, (raw, ack) => {"],
+              ["c", "  const parsed = HandoffBodiesSchema.safeParse(raw);"],
               [
                 "c",
                 "  // …the same two checks, the same replies, 30 lines again"
               ],
-              [
-                "c",
-                "});"
-              ]
+              ["c", "});"]
             ]
           }
         ],
@@ -2131,30 +1766,12 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "jscpd · G08 five checks (AppyRig)"
-              ],
-              [
-                "c",
-                "exact          36 clones"
-              ],
-              [
-                "c",
-                "renamed vars    7 clones"
-              ],
-              [
-                "c",
-                "renamed + values 5 clones"
-              ],
-              [
-                "c",
-                "similar shape  14 clones"
-              ],
-              [
-                "c",
-                "semantic (AI)  144 clones"
-              ],
+              ["l", "jscpd · G08 five checks (AppyRig)"],
+              ["c", "exact          36 clones"],
+              ["c", "renamed vars    7 clones"],
+              ["c", "renamed + values 5 clones"],
+              ["c", "similar shape  14 clones"],
+              ["c", "semantic (AI)  144 clones"],
               [
                 "d",
                 "collectorIngest.ts: the two handlers are one clone · merged in PR #27"
@@ -2164,10 +1781,7 @@
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "server/src/hub/collectorIngest.ts"
-              ],
+              ["l", "server/src/hub/collectorIngest.ts"],
               [
                 "d",
                 "socket.on(FLEET_EVENTS.HISTORY, (raw, ack) => { /* parse, check machine, reply: 30 lines */ });"
@@ -2242,10 +1856,7 @@
           {
             "view": "code",
             "rows": [
-              [
-                "l",
-                "e2e/ (before): 16 entries in one folder"
-              ],
+              ["l", "e2e/ (before): 16 entries in one folder"],
               [
                 "c",
                 "archive.spec.ts   docs.spec.ts      esc.spec.ts      flow-scroll.spec.ts"
@@ -2301,43 +1912,19 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "npm run folders · G09 (AppyRig)"
-              ],
-              [
-                "c",
-                "folders over the limit          13"
-              ],
-              [
-                "c",
-                "e2e                    16 files > 10"
-              ],
-              [
-                "c",
-                "client/src/kit        61 files > 10"
-              ],
-              [
-                "d",
-                "folders checked: 80 · e2e split in PR #31"
-              ]
+              ["l", "npm run folders · G09 (AppyRig)"],
+              ["c", "folders over the limit          13"],
+              ["c", "e2e                    16 files > 10"],
+              ["c", "client/src/kit        61 files > 10"],
+              ["d", "folders checked: 80 · e2e split in PR #31"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "e2e/"
-              ],
-              [
-                "d",
-                "e2e/graph-menu.spec.ts, e2e/graph-open.spec.ts"
-              ],
-              [
-                "d",
-                "e2e/flow-scroll.spec.ts, e2e/flow-steady.spec.ts"
-              ],
+              ["l", "e2e/"],
+              ["d", "e2e/graph-menu.spec.ts, e2e/graph-open.spec.ts"],
+              ["d", "e2e/flow-scroll.spec.ts, e2e/flow-steady.spec.ts"],
               [
                 "d",
                 "e2e/shell.spec.ts, e2e/shell-narrow.spec.ts, e2e/panel-narrow.spec.ts"
@@ -2404,22 +1991,13 @@
           {
             "view": "code",
             "rows": [
-              [
-                "l",
-                "client/src/pages/flow/clean.test.tsx · imports (before)"
-              ],
+              ["l", "client/src/pages/flow/clean.test.tsx · imports (before)"],
               [
                 "c",
                 "import { fleetMachine, snapshot } from '../../test/fleetFixtures.js';"
               ],
-              [
-                "c",
-                "import { rigPageCtx } from '../page-test-kit.js';"
-              ],
-              [
-                "c",
-                "// 521 imports like these across the repo"
-              ]
+              ["c", "import { rigPageCtx } from '../page-test-kit.js';"],
+              ["c", "// 521 imports like these across the repo"]
             ]
           }
         ],
@@ -2459,39 +2037,24 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "eslint · G10 no-restricted-imports (AppyRig)"
-              ],
-              [
-                "c",
-                "../ imports banned         539"
-              ],
+              ["l", "eslint · G10 no-restricted-imports (AppyRig)"],
+              ["c", "../ imports banned         539"],
               [
                 "d",
                 "Import with a project alias instead of '../': @client/… @server/… @shared/…"
               ],
-              [
-                "d",
-                "after PR #32: 2 left, both baselined"
-              ]
+              ["d", "after PR #32: 2 left, both baselined"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/pages/flow/clean.test.tsx"
-              ],
+              ["l", "client/src/pages/flow/clean.test.tsx"],
               [
                 "d",
                 "import { fleetMachine, snapshot } from '../../test/fleetFixtures.js';"
               ],
-              [
-                "d",
-                "import { rigPageCtx } from '../page-test-kit.js';"
-              ],
+              ["d", "import { rigPageCtx } from '../page-test-kit.js';"],
               [
                 "a",
                 "import { fleetMachine, snapshot } from '@client/test/fleetFixtures.js';"
@@ -2551,30 +2114,12 @@
           {
             "view": "code",
             "rows": [
-              [
-                "l",
-                "client/src/lib/utils.ts (before): imported by no file"
-              ],
-              [
-                "c",
-                "import { clsx, type ClassValue } from 'clsx';"
-              ],
-              [
-                "c",
-                "import { twMerge } from 'tailwind-merge';"
-              ],
-              [
-                "c",
-                "export function cn(...inputs: ClassValue[]): string {"
-              ],
-              [
-                "c",
-                "  return twMerge(clsx(inputs));"
-              ],
-              [
-                "c",
-                "}"
-              ],
+              ["l", "client/src/lib/utils.ts (before): imported by no file"],
+              ["c", "import { clsx, type ClassValue } from 'clsx';"],
+              ["c", "import { twMerge } from 'tailwind-merge';"],
+              ["c", "export function cn(...inputs: ClassValue[]): string {"],
+              ["c", "  return twMerge(clsx(inputs));"],
+              ["c", "}"],
               [
                 "l",
                 "server/src/middleware/validate.ts · client/src/config/env.ts: also imported by no file"
@@ -2625,47 +2170,20 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "knip + no-circular · G11 (AppyRig)"
-              ],
-              [
-                "c",
-                "dead code findings        1,192"
-              ],
-              [
-                "c",
-                "module cycles                 1"
-              ],
-              [
-                "c",
-                "folder cycles               17"
-              ],
-              [
-                "d",
-                "after PR #34: dead code 1,003"
-              ]
+              ["l", "knip + no-circular · G11 (AppyRig)"],
+              ["c", "dead code findings        1,192"],
+              ["c", "module cycles                 1"],
+              ["c", "folder cycles               17"],
+              ["d", "after PR #34: dead code 1,003"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "PR #34"
-              ],
-              [
-                "d",
-                "client/src/lib/utils.ts (+ test)"
-              ],
-              [
-                "d",
-                "server/src/middleware/validate.ts (+ test)"
-              ],
-              [
-                "d",
-                "client/src/config/env.ts (+ test)"
-              ],
+              ["l", "PR #34"],
+              ["d", "client/src/lib/utils.ts (+ test)"],
+              ["d", "server/src/middleware/validate.ts (+ test)"],
+              ["d", "client/src/config/env.ts (+ test)"],
               [
                 "d",
                 "client/package.json: react-hook-form, @hookform/resolvers, html-to-image, clsx, tailwind-merge"
@@ -2725,18 +2243,9 @@
           {
             "view": "code",
             "rows": [
-              [
-                "l",
-                "server/src/hub/store.ts · a leak the judge planted"
-              ],
-              [
-                "c",
-                "import { fleetBadge } from '@client/kit/badges.js';"
-              ],
-              [
-                "c",
-                "import { setupServer } from 'msw/node';"
-              ],
+              ["l", "server/src/hub/store.ts · a leak the judge planted"],
+              ["c", "import { fleetBadge } from '@client/kit/badges.js';"],
+              ["c", "import { setupServer } from 'msw/node';"],
               [
                 "c",
                 "// server code importing client code, and a dev-only package"
@@ -2780,55 +2289,22 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "depcruise · G12 (AppyRig)"
-              ],
-              [
-                "c",
-                "rules                         12"
-              ],
-              [
-                "c",
-                "  layer rules                  9"
-              ],
-              [
-                "c",
-                "  dev-dep, test, deprecated    3"
-              ],
-              [
-                "c",
-                "violations                    0"
-              ],
-              [
-                "d",
-                "each rule proved by a planted example"
-              ]
+              ["l", "depcruise · G12 (AppyRig)"],
+              ["c", "rules                         12"],
+              ["c", "  layer rules                  9"],
+              ["c", "  dev-dep, test, deprecated    3"],
+              ["c", "violations                    0"],
+              ["d", "each rule proved by a planted example"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                ".dependency-cruiser.cjs"
-              ],
-              [
-                "d",
-                "to: { path: '^(server|collector)/' }"
-              ],
-              [
-                "a",
-                "to: { path: '^(server|collector)/', reachable: true }"
-              ],
-              [
-                "a",
-                "name: 'client-lib-is-a-leaf'"
-              ],
-              [
-                "a",
-                "name: 'not-to-dev-dep'"
-              ]
+              ["l", ".dependency-cruiser.cjs"],
+              ["d", "to: { path: '^(server|collector)/' }"],
+              ["a", "to: { path: '^(server|collector)/', reachable: true }"],
+              ["a", "name: 'client-lib-is-a-leaf'"],
+              ["a", "name: 'not-to-dev-dep'"]
             ]
           }
         ],
@@ -2892,10 +2368,7 @@
                 "c",
                 "export const STAGES: Stage[] = [...]  // the handoff flow"
               ],
-              [
-                "c",
-                "export function consoleLines(…)      // the seat console"
-              ],
+              ["c", "export function consoleLines(…)      // the seat console"],
               [
                 "c",
                 "export function buildAccounts(…)      // the accounts screen"
@@ -2950,59 +2423,26 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "archlint scan · G13 (AppyRig)"
-              ],
-              [
-                "c",
-                "files mixing jobs              23"
-              ],
-              [
-                "c",
-                "  client                       20"
-              ],
-              [
-                "c",
-                "  server                        1"
-              ],
-              [
-                "c",
-                "  collector                     2"
-              ],
-              [
-                "d",
-                "after PR #38: 22 · worst: views.ts, 5 groups"
-              ]
+              ["l", "archlint scan · G13 (AppyRig)"],
+              ["c", "files mixing jobs              23"],
+              ["c", "  client                       20"],
+              ["c", "  server                        1"],
+              ["c", "  collector                     2"],
+              ["d", "after PR #38: 22 · worst: views.ts, 5 groups"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "client/src/domain/fleet/health.ts · PR #38"
-              ],
-              [
-                "d",
-                "export function gb(bytes: number): string {"
-              ],
-              [
-                "d",
-                "export function value<T>(r: Reading<T>) {"
-              ],
-              [
-                "d",
-                "export const SWAP_TIGHT = 0.5;"
-              ],
+              ["l", "client/src/domain/fleet/health.ts · PR #38"],
+              ["d", "export function gb(bytes: number): string {"],
+              ["d", "export function value<T>(r: Reading<T>) {"],
+              ["d", "export const SWAP_TIGHT = 0.5;"],
               [
                 "a",
                 "client/src/lib/readings.ts (new): gb, value, with BYTES_PER_GB named"
               ],
-              [
-                "a",
-                "const SWAP_TIGHT = 0.5;  // no longer exported"
-              ]
+              ["a", "const SWAP_TIGHT = 0.5;  // no longer exported"]
             ]
           }
         ],
@@ -3120,55 +2560,25 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "archlint coupling · G14 (AppyRig)"
-              ],
-              [
-                "c",
-                "files over 20 connections     5"
-              ],
-              [
-                "c",
-                "  domain/fleet/model.ts       31"
-              ],
-              [
-                "c",
-                "  domain/fleet/coreCall.ts    24"
-              ],
-              [
-                "c",
-                "  app/registry.ts             22"
-              ],
-              [
-                "c",
-                "hubs                          0"
-              ],
-              [
-                "d",
-                "after PR #40: coreCall.ts 18 · baseline 4"
-              ]
+              ["l", "archlint coupling · G14 (AppyRig)"],
+              ["c", "files over 20 connections     5"],
+              ["c", "  domain/fleet/model.ts       31"],
+              ["c", "  domain/fleet/coreCall.ts    24"],
+              ["c", "  app/registry.ts             22"],
+              ["c", "hubs                          0"],
+              ["d", "after PR #40: coreCall.ts 18 · baseline 4"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "PR #40 · client/src/kit/data/rigReads.ts"
-              ],
+              ["l", "PR #40 · client/src/kit/data/rigReads.ts"],
               [
                 "d",
                 "callVerb<RigFilesOutput>(socket, 'rig.files', { machine, rig })"
               ],
-              [
-                "a",
-                "readRigFiles(socket, { machine, rig })"
-              ],
-              [
-                "a",
-                "readRigFile, readRigWaiting: verb and type written once"
-              ]
+              ["a", "readRigFiles(socket, { machine, rig })"],
+              ["a", "readRigFile, readRigWaiting: verb and type written once"]
             ]
           }
         ],
@@ -3240,10 +2650,7 @@
                 "c",
                 "import { page as wallPage } from '@client/pages/wall/index.js';"
               ],
-              [
-                "d",
-                "// 18 more page imports"
-              ]
+              ["d", "// 18 more page imports"]
             ]
           }
         ],
@@ -3290,39 +2697,18 @@
           {
             "view": "output",
             "rows": [
-              [
-                "l",
-                "archlint sdp_violation · G15 (AppyRig)"
-              ],
-              [
-                "c",
-                "stable → volatile pairs         2"
-              ],
-              [
-                "c",
-                "about/index.tsx → registry.ts   gap 0.41"
-              ],
-              [
-                "c",
-                "usePages.tsx → registry.ts      gap 0.16"
-              ],
-              [
-                "c",
-                "shared / server / collector     0"
-              ],
-              [
-                "d",
-                "registry.ts instability 0.91 · baselined, not fixed"
-              ]
+              ["l", "archlint sdp_violation · G15 (AppyRig)"],
+              ["c", "stable → volatile pairs         2"],
+              ["c", "about/index.tsx → registry.ts   gap 0.41"],
+              ["c", "usePages.tsx → registry.ts      gap 0.16"],
+              ["c", "shared / server / collector     0"],
+              ["d", "registry.ts instability 0.91 · baselined, not fixed"]
             ]
           },
           {
             "view": "diff",
             "rows": [
-              [
-                "l",
-                "lint/gates/coupling.mjs"
-              ],
+              ["l", "lint/gates/coupling.mjs"],
               [
                 "d",
                 "min_fan_total: 5, instability_diff: 0.3   // Omer: finds nothing here"
