@@ -10,6 +10,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import * as THREE from "three";
 import type { Step } from "../../src/show/script";
+import { spyOnTemps } from "./disposal-spy";
 import { makeCanvas } from "./recording-canvas";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
 import { afterAll, describe, expect, it } from "vitest";
@@ -162,7 +163,9 @@ function play({
     const w: any = new PlayerWorld(player, game, audio, () => PAN);
     const log: string[] = [];
     const events: string[] = [];
+    const temps = spyOnTemps(w);
     const look = (label: string): void => {
+      events.push(temps());
       if (resize && log.length % RESIZE_EVERY === RESIZE_EVERY - 1) {
         w.setAspect(
           resize === "flip"
