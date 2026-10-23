@@ -3,6 +3,7 @@ import { Character } from './characters';
 import { layoutCard } from './codelayout';
 import { CodeWindow, paintCard } from './codewindow';
 import { kit } from './toon';
+import type { Player } from '../show/script';
 import type { Card } from '../content/types';
 
 function lights(scene: THREE.Scene) {
@@ -95,12 +96,14 @@ export class TitleShowcase {
   }
 }
 
-/** Street Fighter-style face-off: the two developers square up. */
+/** Street Fighter-style face-off: the two developers square up. One player alone gets a solo intro. */
 export class VsShowcase {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 100);
   readonly p1 = new Character('p1');
   readonly p2 = new Character('p2');
+  /** The one player shown in a single-player tier intro; null for the face-off. */
+  solo: Player | null = null;
   private t = 0;
 
   constructor() {
@@ -120,6 +123,9 @@ export class VsShowcase {
   update(dt: number) {
     this.t += dt;
     const k = Math.min(1, this.t / 0.45), e = 1 - Math.pow(1 - k, 3);
+    if (this.solo) { this.updateSolo(dt, e); return; }
+    for (const c of [this.p1, this.p2]) { c.root.visible = true; (c.root.userData.shadow as THREE.Object3D).visible = true; c.root.scale.setScalar(1.45); }
+    this.p1.root.rotation.y = -Math.PI / 2 - 0.85; this.p2.root.rotation.y = Math.PI / 2 + 0.85;
     this.p1.root.position.x = -2.1 - (1 - e) * 6;
     this.p2.root.position.x = 2.1 + (1 - e) * 6;
     for (const c of [this.p1, this.p2]) (c.root.userData.shadow as THREE.Object3D).position.x = c.root.position.x;
@@ -128,6 +134,20 @@ export class VsShowcase {
     this.p1.aimAt(this.p2.root.position.clone().setY(1.5));
     this.p2.aimAt(this.p1.root.position.clone().setY(1.5));
     this.p1.update(dt); this.p2.update(dt);
+  }
+
+  /** One character, big, on the right; the tier and the boss's name sit on the left in the HUD. */
+  private updateSolo(dt: number, e: number) {
+    const me = this.solo === 'p1' ? this.p1 : this.p2, other = this.solo === 'p1' ? this.p2 : this.p1;
+    other.root.visible = false; (other.root.userData.shadow as THREE.Object3D).visible = false;
+    me.root.visible = true; (me.root.userData.shadow as THREE.Object3D).visible = true;
+    me.root.scale.setScalar(1.75);
+    me.root.position.x = 2.6 + (1 - e) * 7;
+    me.root.rotation.y = Math.PI - 0.6; // towards the camera, glancing left at the words
+    (me.root.userData.shadow as THREE.Object3D).position.x = me.root.position.x;
+    me.pose = this.t > 0.6 ? 'aim' : 'walk';
+    me.aimAt(new THREE.Vector3(-6, 2.2, 3));
+    me.update(dt);
   }
 
   setAspect(aspect: number) {

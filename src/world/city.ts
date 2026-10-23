@@ -45,7 +45,9 @@ class Batch {
 }
 
 /** A street from z=+30 down to z=-length. Both players get the same one (same seed). */
-export function buildCity(length: number, seed: number): THREE.Group {
+/** `plaza`: a stretch of road (z from → to, from > to) with no buildings or trees, for the boss arena. */
+export function buildCity(length: number, seed: number, plaza?: { from: number; to: number }): THREE.Group {
+  const open = (z: number, half = 0) => !!plaza && z + half > plaza.to && z - half < plaza.from;
   const city = new THREE.Group(); city.name = 'mint-city';
   const rand = rng(seed);
   const pick = <T,>(a: T[]) => a[Math.floor(rand() * a.length)]!;
@@ -71,6 +73,7 @@ export function buildCity(length: number, seed: number): THREE.Group {
       const w = 4 + rand() * 4, d = 5 + rand() * 4, h = 4.5 + rand() * rand() * 12;
       if (rand() < 0.13) { z -= 3.5 + rand() * 3; continue; }
       const cx = side * (ROAD_HALF + 3 + d / 2 + rand() * 1.2), cz = z - w / 2;
+      if (open(cz, w / 2)) { z -= w + 0.4; continue; }
       const col = pick(BUILDING);
       bodies.add(cx, h / 2, cz, d, h, w, col);
       roofs.add(cx, h + 0.12, cz, d + 0.35, 0.28, w + 0.35, '#f4f4e8');
@@ -90,6 +93,7 @@ export function buildCity(length: number, seed: number): THREE.Group {
     // Lollipop trees in planters, and lamp posts.
     for (let z = 24 - rand() * 4; z > -length - 20; z -= 7 + rand() * 3) {
       const x = side * (ROAD_HALF + 1.5);
+      if (open(z, 4)) continue;
       planters.add(x, 0.35, z, 1.1, 0.5, 1.1, '#7fae8f');
       trunks.add(x, 1.1, z, 0.12, 1.4, 0.12, '#7a9f83');
       const s = 0.75 + rand() * 0.25;

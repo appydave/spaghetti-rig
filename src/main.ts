@@ -1,7 +1,8 @@
 import { AudioEngine, TRACKS } from './audio/audio';
 import { loadContent, type Game } from './content/load';
 import { Director, type PresenterState } from './show/director';
-import type { Mode, Player } from './show/script';
+import { isSplit, MODES, type Mode, type Player } from './show/script';
+import { gatesText } from './content/gatelabel';
 import { esc } from './ui/card';
 import { initPhysics } from './world/physics';
 import { Stage } from './world/stage';
@@ -40,8 +41,8 @@ async function boot() {
   ]);
   const audio = new AudioEngine();
   const stage = new Stage($('stage') as unknown as HTMLCanvasElement);
-  let mode: Mode = (store.get('mode') as Mode) || 'both';
-  const pan = (p: Player) => (): number => (mode === 'both' ? (p === 'p1' ? -0.5 : 0.5) : 0);
+  let mode: Mode = MODES.find((m) => m.mode === store.get('mode'))?.mode ?? 'both';
+  const pan = (p: Player) => (): number => (isSplit(mode) ? (p === 'p1' ? -0.5 : 0.5) : 0);
   const worlds = { p1: new PlayerWorld('p1', game, audio, pan('p1')), p2: new PlayerWorld('p2', game, audio, pan('p2')) };
   stage.setMode(mode);
   stage.attach(worlds);
@@ -71,7 +72,7 @@ async function boot() {
     mode = m; store.set('mode', m);
     director.setMode(m);
     document.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === m)));
-    $('map-mode').textContent = m === 'both' ? 'BOTH · SIDE BY SIDE' : m === 'p1' ? 'PLAYER 1 · VIBE CODER ONLY' : 'PLAYER 2 · GATED ONLY';
+    $('map-mode').textContent = MODES.find((x) => x.mode === m)!.map;
     audio.play('uiMove');
   }
 
@@ -86,7 +87,7 @@ async function boot() {
         <span class="n">${String(t.n).padStart(2, '0')}</span>
         <img class="${t.playable ? '' : 'boss-shadow'}" src="${art}" alt="" onerror="this.onerror=null;this.src='${fallback}'">
         <h3>${esc(t.name)}</h3>
-        <span class="meta">${esc(t.gates ?? '')} · ${t.stops.length} STOP${t.stops.length === 1 ? '' : 'S'}</span>
+        <span class="meta">${esc(gatesText(t.gates))} · ${t.stops.length} STOP${t.stops.length === 1 ? '' : 'S'}</span>
         <p>${esc(t.idea ?? '')}</p>
         <div class="boss"><span class="label">BOSS</span><b>${esc(t.boss.name)}</b></div>
         ${t.playable && i === selected ? '<span class="primary-button go">ENTER · PLAY ↗</span>' : ''}
@@ -141,7 +142,7 @@ async function boot() {
 
   $('enter').addEventListener('click', () => void enter());
   $('start').addEventListener('click', () => { show('map'); audio.play('uiSelect'); });
-  document.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode as Mode)));
+  document.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.addEventListener('click', () => { setMode(b.dataset.mode as Mode); b.blur(); }));
   document.addEventListener('click', (e) => {
     const a = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
     if (!a) return;
@@ -150,6 +151,9 @@ async function boot() {
     if (act === 'pause') { if (!$('help').hidden) $('help').hidden = true; togglePause(); }
     if (act === 'help') toggleHelp();
     if (act === 'to-map') { director.setPaused(false); show('map'); }
+    if (act === 'auto') { director.toggleAutoplay(); audio.play('uiMove'); }
+    // A clicked button keeps focus; let it go, so Space stays "next" and never presses it again.
+    if (a instanceof HTMLButtonElement) a.blur();
   });
   $('tiers').addEventListener('click', (e) => {
     const li = (e.target as HTMLElement).closest<HTMLElement>('.tier');
@@ -169,9 +173,8 @@ async function boot() {
     }
     if (code === 'KeyM') return toggleMute();
     if (code === 'KeyH' || k === '?') return toggleHelp();
-    if (code === 'Digit1') return setMode('p1');
-    if (code === 'Digit2') return setMode('p2');
-    if (code === 'KeyB') return setMode('both');
+    const pick = MODES.find((m) => m.code === code);
+    if (pick) return setMode(pick.mode);
     if (code === 'Escape') {
       if (!$('help').hidden) { $('help').hidden = true; return; }
       if (screen === 'game') { if (director.paused) director.setPaused(false); show('map'); }
@@ -208,7 +211,7 @@ async function boot() {
   // The presenter window can drive the show too.
   addEventListener('rig-command', (e) => {
     const k = (e as CustomEvent<string>).detail;
-    const map: Record<string, [string, boolean]> = { next: ['ArrowRight', false], back: ['ArrowLeft', false], pause: ['KeyP', false], p1: ['Digit1', false], p2: ['Digit2', false], both: ['KeyB', false], auto: ['KeyA', false] };
+    const map: Record<string, [string, boolean]> = { next: ['ArrowRight', false], back: ['ArrowLeft', false], pause: ['KeyP', false], p1: ['Digit1', false], p2: ['Digit2', false], both: ['KeyB', false], spec: ['KeyS', false], auto: ['KeyA', false] };
     const m = map[k];
     if (m) key(m[0], m[1], '');
   });
@@ -257,7 +260,7 @@ function presenter() {
   });
   root.addEventListener('click', (e) => { const k = (e.target as HTMLElement).dataset.k; if (k) send(k); });
   addEventListener('keydown', (e) => {
-    const k = ({ ArrowRight: 'next', Space: 'next', ArrowLeft: 'back', KeyP: 'pause', Digit1: 'p1', Digit2: 'p2', KeyB: 'both', KeyA: 'auto' } as Record<string, string>)[e.code];
+    const k = ({ ArrowRight: 'next', Space: 'next', PageDown: 'next', ArrowLeft: 'back', PageUp: 'back', KeyP: 'pause', Digit1: 'p1', Digit2: 'p2', KeyB: 'both', KeyS: 'spec', KeyA: 'auto' } as Record<string, string>)[e.code];
     if (k) { e.preventDefault(); send(k); }
   });
 }

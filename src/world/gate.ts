@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gateLabel } from '../content/gatelabel';
 import { ROAD_HALF } from './city';
 import { INK, kit, toon } from './toon';
 
@@ -34,10 +35,21 @@ export class Gate {
     const g = cv.getContext('2d')!;
     g.fillStyle = '#173e35'; g.beginPath(); g.roundRect(0, 0, 1024, 200, 26); g.fill();
     g.strokeStyle = '#f9db48'; g.lineWidth = 10; g.beginPath(); g.roundRect(8, 8, 1008, 184, 20); g.stroke();
+    // A number badge, then the title.
+    const { num, title } = gateLabel(label);
+    let left = 40;
+    if (num) {
+      g.fillStyle = '#f9db48'; g.beginPath(); g.roundRect(28, 22, 190, 156, 22); g.fill();
+      g.fillStyle = '#173e35'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '700 26px Space, Arial, sans-serif'; g.fillText('GATE', 123, 52);
+      g.font = `italic 800 ${num.length > 2 ? 84 : 104}px Barlow, Impact, sans-serif`; g.fillText(num, 123, 118);
+      left = 240;
+    }
     g.fillStyle = '#f9db48'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    let size = 104;
-    do { g.font = `italic 800 ${size}px Barlow, Impact, sans-serif`; size -= 4; } while (g.measureText(label).width > 940 && size > 40);
-    g.fillText(label, 512, 106);
+    const room = 1024 - left - 36;
+    let size = 112;
+    do { g.font = `italic 800 ${size}px Barlow, Impact, sans-serif`; size -= 4; } while (g.measureText(title).width > room && size > 40);
+    g.fillText(title, left + room / 2, 106);
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.1), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, side: THREE.DoubleSide }));
     sign.position.set(0, 6.0, 0.05); this.near.add(sign);

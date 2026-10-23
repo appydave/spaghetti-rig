@@ -268,7 +268,7 @@ export class CodeWindow {
   private t = Math.random() * 10;
   rattle = 0;
 
-  constructor(readonly canvas: HTMLCanvasElement, worldWidth: number, readonly mood: Mood, opts: { maxHeight?: number; depth?: number } = {}) {
+  constructor(readonly canvas: HTMLCanvasElement, worldWidth: number, readonly mood: Mood, opts: { maxHeight?: number; depth?: number; eyes?: boolean } = {}) {
     let w = worldWidth, h = (worldWidth * canvas.height) / canvas.width;
     if (opts.maxHeight && h > opts.maxHeight) { w *= opts.maxHeight / h; h = opts.maxHeight; }
     this.w = w; this.h = h; this.depth = opts.depth ?? Math.max(0.16, w * 0.04);
@@ -282,7 +282,7 @@ export class CodeWindow {
     slab.name = 'code-slab'; slab.castShadow = true; slab.receiveShadow = false;
     this.group.add(slab);
     this.group.name = `code-window-${mood}`;
-    if (mood === 'angry' || mood === 'boss') this.addEyes();
+    if ((mood === 'angry' || mood === 'boss') && opts.eyes !== false) this.addEyes();
   }
 
   private addEyes() {

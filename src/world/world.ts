@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import type { AudioEngine, Sfx } from '../audio/audio';
+import { gateText } from '../content/gatelabel';
 import { toolFor, type Game, type PlayTier } from '../content/load';
 import type { Card, Stop } from '../content/types';
 import { healthAt, partsBroken, type Player, type Step } from '../show/script';
-import { BossModel } from './boss';
+import { AutoGunner } from './autogunner';
+import { BossModel, paintBossPanel } from './boss';
+import { bossLayout, type BossLayout } from './bosslayout';
 import { Character, type Pose } from './characters';
 import { buildCity, SEGMENT } from './city';
 import { layoutCard, longestRow, slugFile, type Layout } from './codelayout';
@@ -12,6 +15,7 @@ import { Effects } from './effects';
 import { Enemy, SCORE, type EnemyKind } from './enemies';
 import { Gate, type GateState } from './gate';
 import { Debris } from './physics';
+import { shortTool } from '../ui/card';
 import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from './toon';
 
 export type CameraMode = 'follow' | 'stop' | 'boss' | 'portrait';
@@ -20,6 +24,8 @@ type Shape = 'wide' | 'tall';
 const stopZ = (k: number) => -(k + 1) * SEGMENT;
 const standZ = (k: number) => stopZ(k) + 4;
 const WALK_SECONDS = 9;
+/** Boss arena: how far down the road the boss stands and how high its main window floats. */
+const BOSS = { y: 6.2 };
 export const walkSeconds = () => WALK_SECONDS;
 
 interface Tween { age: number; dur: number; fn: (k: number) => void; done?: () => void }
@@ -52,6 +58,12 @@ export class PlayerWorld {
   readonly fx: Effects;
   readonly debris: Debris;
   score = 0;
+  /** Trigger pulls, from the mouse or autoplay. */
+  shots = 0;
+  /** Enemies that got past player 1: bugs shipped to production. */
+  shipped = 0;
+  /** An enemy got past: shipped (player 1) or caught by CI (player 2). */
+  onSlip?: (kind: EnemyKind) => void;
   /** Health shown in the HUD (animated). */
   health = 100;
   bossTotal = 0;
@@ -66,6 +78,8 @@ export class PlayerWorld {
   private window: { win: CodeWindow; key: string; reading: boolean } | null = null;
   private debt: { win: CodeWindow; key: string }[] = [];
   private boss: BossModel | null = null;
+  /** Kept after the boss breaks, so the camera holds its shot. */
+  private bossLayout: BossLayout | null = null;
   private pile: THREE.Group | null = null;
   private enemies: Enemy[] = [];
   private temps: { dispose(): void }[] = [];
@@ -78,8 +92,9 @@ export class PlayerWorld {
   private camPos = new THREE.Vector3(3, 3, 8);
   private camLook = new THREE.Vector3(0, 1.5, -6);
   private camMode: CameraMode = 'follow';
-  private autoT = 0;
+  private readonly gunner: AutoGunner;
   private aim: THREE.Vector3 | null = null;
+  private autoTarget = -1;
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
 
@@ -96,6 +111,7 @@ export class PlayerWorld {
     this.scene.add(this.sun, this.sun.target);
     const rim = new THREE.DirectionalLight('#93cfff', 1.1);
     rim.position.set(-30, 20, -40); this.scene.add(rim);
+    this.gunner = new AutoGunner(player === 'p1' ? 11 : 29);
     this.character = new Character(player);
     this.scene.add(this.character.root);
     this.fx = new Effects(this.scene);
@@ -181,7 +197,7 @@ export class PlayerWorld {
     else {
       if (!this.boss || this.boss.remaining < tier.boss.parts.length - s.broken) { this.boss?.dispose(); this.boss = this.makeBoss(tier); }
       for (let i = 0; i < s.broken; i++) this.boss.dropPart(i);
-      this.boss.group.position.set(0, 4.6, s.z - 14);
+      this.boss.group.position.set(0, BOSS.y, s.z - this.bossBack());
     }
     this.bossTotal = tier.hasBoss ? tier.boss.parts.length : 0;
     this.bossLeft = s.boss === 'dead' ? 0 : this.bossTotal - s.broken;
@@ -207,12 +223,14 @@ export class PlayerWorld {
     this.window?.win.dispose(); this.window = null;
     for (const d of this.debt) d.win.dispose();
     this.debt = [];
-    this.boss?.dispose(); this.boss = null;
+    this.boss?.dispose(); this.boss = null; this.bossLayout = null;
     for (const e of this.enemies) disposeTree(e.group);
     this.enemies = [];
     this.debris.clear(); this.fx.clear();
     const length = (tier.stops.length + 1) * SEGMENT + 40;
-    this.city = buildCity(length, 1000 + tier.index * 77);
+    // The boss stands in an open plaza beyond the last stop, so no building can hide any part of it.
+    const arena = standZ(tier.stops.length);
+    this.city = buildCity(length, 1000 + tier.index * 77, tier.hasBoss ? { from: arena + 16, to: arena - 60 } : undefined);
     this.scene.add(this.city);
     this.gates = tier.stops.map((s, k) => { const g = new Gate(s.gate, stopZ(k)); this.scene.add(g.group); return g; });
     this.tier = tier;
@@ -227,7 +245,7 @@ export class PlayerWorld {
     const layout: Layout = layoutCard(card, width, slugFile(card.title));
     const tier = this.tier!;
     if (role === 'problem') {
-      return paintCard(layout, mood, { label: `Problem card ${card.id} · ${stop.gate}`, title: card.title, footer: card.text, badge: `−${Math.round(90 / tier.stops.length)}%` });
+      return paintCard(layout, mood, { label: `Problem card ${card.id} · ${gateText(stop.gate)}`, title: card.title, footer: card.text, badge: `−${Math.round(90 / tier.stops.length)}%` });
     }
     const tool = toolFor(this.game, stop.p2.tool);
     return paintCard(layout, 'fixed', { label: `Fixed by ${tool.name.split('(')[0]!.trim()} · ${card.id}`, title: card.title.replace(/^Tool:\s*/i, '✓ '), footer: card.num, badge: 'HP 100%' });
@@ -241,21 +259,14 @@ export class PlayerWorld {
 
   private makeBoss(tier: PlayTier): BossModel {
     const b = tier.boss;
-    const coreLayout: Layout = {
-      cols: 46, filename: slugFile(b.name, '.pr'), notes: [],
-      lines: b.parts.map((p, i) => ({ type: 'code', view: 'code', diff: 'c', text: `// sin ${i + 1}: ${p.part}`, tokens: [{ text: `// sin ${i + 1}: ${p.part}`, color: '#ffbc79' }], marks: [], cont: false, block: 0, row: i })),
-    };
-    const core = paintCard(coreLayout, 'boss', { label: 'Production incident · tier boss', title: b.name, footer: b.attack });
-    const parts = b.parts.map((p, i) => {
-      const id = p.from.match(/#\d+/)?.[0];
-      const stop = tier.stops.find((s) => s.p1.id === id) ?? tier.stops.find((s) => s.p2.tool === p.beatenBy) ?? tier.stops[i % tier.stops.length]!;
-      const card: Card = { ...stop.p1, annotations: stop.p1.annotations.filter((a) => a.kind === 'problem') };
-      const layout = layoutCard(card, Math.min(40, Math.max(28, longestRow(card))), slugFile(p.part));
-      layout.notes = [];
-      const tool = toolFor(this.game, p.beatenBy);
-      return paintCard(layout, 'boss', { label: `Sin ${i + 1} · beaten by ${tool.name.split('(')[0]!.trim()}`, title: p.part, badge: `${i + 1}` });
-    });
+    const L = bossLayout(b.parts.length);
+    const core = paintBossPanel({ aspect: L.core.w / L.core.h, header: 'Production incident', title: b.name, footer: `${b.parts.length} sins · pushed to main` });
+    const parts = b.parts.map((p, i) => paintBossPanel({
+      aspect: L.parts[i]!.w / L.parts[i]!.h, header: `Sin ${i + 1} of ${b.parts.length}`, title: p.part, badge: `${i + 1}`,
+      footer: `✓ ${bossTool(shortTool(toolFor(this.game, p.beatenBy).name))}`,
+    }));
     const boss = new BossModel(core, parts);
+    this.bossLayout = boss.layout;
     this.scene.add(boss.group);
     return boss;
   }
@@ -617,6 +628,7 @@ export class PlayerWorld {
   private fireAt(point: THREE.Vector3, enemy: Enemy | null, boss: boolean) {
     const from = this.character.muzzleWorld();
     this.character.fire();
+    this.shots++;
     const p1 = this.player === 'p1';
     this.fx.muzzle(from, p1 ? '#ff9ad5' : '#ffdc85');
     this.fx.tracer(from, point, p1 ? '#ff9ad5' : '#fff1a8', p1 ? 0.04 : 0.07);
@@ -661,17 +673,45 @@ export class PlayerWorld {
     this.shake = Math.max(this.shake, 0.25);
   }
 
+  /** Autoplay: a seeded hand that drifts onto the nearest enemy ahead and fires like a person would. */
   private autoShoot(dt: number) {
-    this.autoT -= dt;
-    if (this.autoT > 0) return;
     const me = this.character.root.position;
-    const target = this.enemies.filter((e) => e.group.position.z < me.z - 3 && e.group.position.z > me.z - 30)
-      .sort((a, b) => b.group.position.z - a.group.position.z)[0];
-    if (!target) return;
-    this.autoT = 0.32;
-    const at = target.center().add(new THREE.Vector3((Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2, 0));
-    this.aim = at;
-    this.fireAt(at, target, false);
+    const ahead = (e: Enemy) => e.group.position.z < me.z - 3 && e.group.position.z > me.z - 30;
+    // Stay on the current target while it is still there; otherwise take the nearest one ahead.
+    let target = this.enemies.find((e) => e.seed === this.autoTarget && ahead(e));
+    target ??= this.enemies.filter(ahead).sort((a, b) => b.group.position.z - a.group.position.z)[0];
+    this.autoTarget = target?.seed ?? -1;
+    const rest = me.clone().add(new THREE.Vector3(0, 1.2, -14));
+    const shot = this.gunner.update(dt, target ? { id: target.seed, centre: target.center(), radius: target.radius } : null, rest);
+    this.aim = this.gunner.aim;
+    if (!shot) return;
+    // Where the hand points is where the shot goes: a pulled shot really misses.
+    const dir = shot.at.clone().sub(this.camera.position).normalize();
+    const hit = this.pick(new THREE.Ray(this.camera.position.clone(), dir));
+    this.fireAt(hit?.point ?? shot.at, hit?.enemy ?? null, false);
+  }
+
+  /** An enemy reached the end of its path alive. */
+  private slip(e: Enemy) {
+    // Enemies often slip past right beside the camera; say it a few steps up the road instead.
+    const at = e.center().add(new THREE.Vector3(0, 1.1, 0));
+    at.z = Math.min(at.z, this.character.root.position.z - 6);
+    at.x = THREE.MathUtils.clamp(at.x, -3, 3);
+    if (this.player === 'p1') {
+      this.shipped++;
+      this.fx.text(at, 'BUG SHIPPED', '#ff5d4f', 0.8, 1.2);
+      this.sfx('bounce', 0.5);
+    } else {
+      this.fx.text(at, 'CAUGHT BY CI', '#8ef08a', 0.8, 1.2);
+    }
+    this.onSlip?.(e.kind);
+  }
+
+  /** Autoplay's aim on screen (normalised device coords), for its reticle. */
+  autoAimScreen(): THREE.Vector2 | null {
+    if (!this.autoplay || !this.walk || !this.gunner.aim) return null;
+    const p = this.gunner.aim.clone().project(this.camera);
+    return p.z < 1 ? new THREE.Vector2(p.x, p.y) : null;
   }
 
   // ───────────────────────────── per frame ─────────────────────────────
@@ -700,6 +740,7 @@ export class PlayerWorld {
     this.aspect = aspect;
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    if (this.boss && this.state) this.boss.group.position.z = this.state.z - this.bossBack();
     const shape: Shape = aspect < 1.25 ? 'tall' : 'wide';
     if (shape !== this.shape) {
       this.shape = shape;
@@ -716,6 +757,8 @@ export class PlayerWorld {
       pos = c.clone().add(new THREE.Vector3(1.7, 2.6, 5.4));
       look = c.clone().add(new THREE.Vector3(0.5, 1.7, -9));
       if (this.aspect < 1.25) { pos.add(new THREE.Vector3(-0.4, 0.6, 1.6)); }
+    } else if (this.camMode === 'boss' && this.bossLayout) {
+      ({ pos, look } = this.bossShot(c, fov));
     } else if (this.camMode === 'portrait') {
       // Front three-quarter, character low in frame so the result text sits above them.
       pos = c.clone().add(new THREE.Vector3(2.8, 2.2, -7.2));
@@ -729,7 +772,7 @@ export class PlayerWorld {
         const w = this.window.win, p = this.readingPose(w).pos;
         box.expandByPoint(new THREE.Vector3(0, p.y - w.h / 2, p.z - w.w / 2)).expandByPoint(new THREE.Vector3(0, p.y + w.h / 2, p.z + w.w / 2));
       }
-      if (this.camMode === 'boss') box.expandByPoint(new THREE.Vector3(0, 10, c.z - 20)).expandByPoint(new THREE.Vector3(0, -0.2, c.z - 8));
+      if (this.camMode === 'boss') box.expandByPoint(new THREE.Vector3(0, 12, c.z - 22)).expandByPoint(new THREE.Vector3(0, -0.2, c.z - 8));
       const size = box.getSize(new THREE.Vector3()), centre = box.getCenter(new THREE.Vector3());
       // The HUD takes the top ~20% and the tray and captions the bottom ~24%; fit the box between them.
       const top = 0.18, bottom = 0.21, usableH = 1 - top - bottom, usableW = 0.94;
@@ -753,11 +796,47 @@ export class PlayerWorld {
     this.camera.lookAt(this.camLook);
     // Side-on views look across the street, so the near side's buildings step out of the way.
     const right = this.city?.getObjectByName('city-right');
-    if (right) right.visible = this.camMode === 'follow';
-    for (const g of this.gates) g.near.visible = this.camMode === 'follow';
+    const ahead = this.camMode === 'follow' || this.camMode === 'boss';
+    if (right) right.visible = ahead;
+    for (const g of this.gates) g.near.visible = ahead;
     // Keep the sun's shadow box centred on the action.
     this.sun.position.set(c.x - 14, 30, c.z + 16);
     this.sun.target.position.set(c.x, 0, c.z - 8);
+  }
+
+  /** Where the camera stands, relative to the character, in the boss fight: close behind and to one side. */
+  private bossEye() {
+    const tall = this.aspect < 1.25;
+    return new THREE.Vector3(tall ? 1.7 : 4.3, tall ? 2.95 : 2.0, tall ? 7.4 : 8.0);
+  }
+  /** The boss's band on screen, as fractions from the top: under the HUD, above the character. */
+  private bossBand() { return this.aspect < 1.25 ? { top: 0.245, bottom: 0.615 } : { top: 0.28, bottom: 0.72 }; }
+
+  /** How far beyond the character the boss stands, so that all of it fits its band in this lane. */
+  private bossBack() {
+    const L = this.bossLayout;
+    if (!L) return 20;
+    const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2), band = this.bossBand();
+    const distH = (L.top - L.bottom) / ((band.bottom - band.top) * 2 * t);
+    const distW = (L.width + 0.8) / (0.94 * 2 * t * this.aspect);
+    return Math.max(12, Math.max(distH, distW) - this.bossEye().z);
+  }
+
+  /**
+   * Boss fight: over the character's shoulder. The whole boss (head, main window and every part)
+   * fits the band between the HUD and the character's head; the character stands big in the
+   * foreground, off to one side so they never cover a part.
+   */
+  private bossShot(c: THREE.Vector3, fov: number) {
+    const L = this.bossLayout!;
+    const back = this.bossBack(), t = Math.tan(fov / 2), band = this.bossBand();
+    const pos = c.clone().add(this.bossEye());
+    const centre = new THREE.Vector3(0, BOSS.y + (L.top + L.bottom) / 2, c.z - back);
+    const d = pos.z - centre.z;
+    // Aim below the boss's centre so it sits in its band, not in the middle of the screen.
+    const lower = (0.5 - (band.top + band.bottom) / 2) * 2 * d * t;
+    const look = new THREE.Vector3(pos.x * 0.15, centre.y - lower, centre.z);
+    return { pos, look };
   }
 
   /** Jump the camera to its target at once (after a cut). */
@@ -776,7 +855,7 @@ export class PlayerWorld {
     const me = this.character.root.position;
     for (const e of [...this.enemies]) {
       e.update(dt, this.camera.position);
-      if (e.finished || e.group.position.z > me.z + 4) { disposeTree(e.group); this.enemies.splice(this.enemies.indexOf(e), 1); }
+      if (e.finished || e.group.position.z > me.z + 4) { this.slip(e); disposeTree(e.group); this.enemies.splice(this.enemies.indexOf(e), 1); }
     }
     if (this.autoplay && this.walk) this.autoShoot(dt);
     this.character.aimAt(this.aim);
@@ -797,7 +876,7 @@ export class PlayerWorld {
     }
     this.debt.forEach((d, i) => {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
-      d.win.group.visible = this.camMode !== 'portrait';
+      d.win.group.visible = this.camMode !== 'portrait' && this.camMode !== 'boss';
       d.win.group.position.lerp(this.debtSlot(i), 1 - Math.exp(-dt * 4));
       this.faceCamera(d.win.group);
       d.win.group.rotateZ(Math.sin(this.clock * 3 + i) * 0.08);
@@ -821,6 +900,14 @@ export class PlayerWorld {
     const p = e.center().project(this.camera);
     return new THREE.Vector2(p.x, p.y);
   }
+}
+
+/** A tool name short enough to read on a boss part from the back of the room (the tray shows it in full). */
+function bossTool(name: string) {
+  const words = name.split(/\s+/);
+  let out = words[0]!;
+  for (const w of words.slice(1)) { if ((out + ' ' + w).length > 16) break; out += ' ' + w; }
+  return out;
 }
 
 /** The tool card as a projectile: a small glowing yellow card. */

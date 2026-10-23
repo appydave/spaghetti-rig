@@ -184,5 +184,6 @@ test('a stop added to the content file shows up after a reload, unlocking its ti
   await press(page, 'Shift+Digit6', 600);
   expect((await step(page)).tier).toBe(5);
   await rig(page, `r.director.go(r.director.script.findIndex(s => s.tier === 5 && s.phase === 'problem'), false)`);
-  await expect(page.locator('#hud-stop')).toHaveText('G13 · Brand new gate');
+  await expect(page.locator('#hud-stop .gate-title')).toHaveText('Brand new gate');
+  await expect(page.locator('#hud-stop .gate-badge')).toHaveText('GATE13');
 });

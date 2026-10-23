@@ -1,4 +1,5 @@
 import { hitFor, toolFor, type Game, type PlayTier } from '../content/load';
+import { gatesText, gateText } from '../content/gatelabel';
 import type { Card } from '../content/types';
 
 /**
@@ -19,7 +20,15 @@ export type Phase =
   | 'ending'; // the two endings
 
 export interface Step { phase: Phase; tier: number; stop: number; part: number }
-export type Mode = 'p1' | 'p2' | 'both';
+/** p1 / p2: one player full screen. both: side by side. spec: side by side, you play the specialist and the vibe coder plays itself. */
+export type Mode = 'p1' | 'p2' | 'both' | 'spec';
+export const isSplit = (mode: Mode) => mode === 'both' || mode === 'spec';
+export const MODES: { mode: Mode; key: string; code: string; hud: string; map: string }[] = [
+  { mode: 'p1', key: '1', code: 'Digit1', hud: 'PLAYER 1', map: 'PLAYER 1 · VIBE CODER ONLY' },
+  { mode: 'both', key: 'B', code: 'KeyB', hud: 'BOTH', map: 'BOTH · SIDE BY SIDE' },
+  { mode: 'p2', key: '2', code: 'Digit2', hud: 'PLAYER 2', map: 'PLAYER 2 · GATED ONLY' },
+  { mode: 'spec', key: 'S', code: 'KeyS', hud: 'YOU VS AUTOPILOT', map: 'YOU PLAY THE SPECIALIST · THE VIBE CODER PLAYS ITSELF' },
+];
 export type Player = 'p1' | 'p2';
 
 export function buildScript(game: Game): Step[] {
@@ -108,10 +117,10 @@ export function stepLabel(game: Game, step: Step): string {
   const stop = tier?.stops[step.stop];
   switch (step.phase) {
     case 'vs': return `${t} · VS`;
-    case 'walk': return stop ? `${t} · walking to ${stop.gate}` : `${t} · walking to the boss`;
-    case 'problem': return `${stop?.gate} · problem card`;
-    case 'tool': return `${stop?.gate} · tool card`;
-    case 'fixed': return `${stop?.gate} · fixed`;
+    case 'walk': return stop ? `${t} · walking to ${gateText(stop.gate)}` : `${t} · walking to the boss`;
+    case 'problem': return `${gateText(stop?.gate ?? '')} · problem card`;
+    case 'tool': return `${gateText(stop?.gate ?? '')} · tool card`;
+    case 'fixed': return `${gateText(stop?.gate ?? '')} · fixed`;
     case 'boss': return `${t} · boss: ${tier?.boss.name}`;
     case 'bossPart': return `${t} · boss part ${step.part + 1}: ${tier?.boss.parts[step.part]?.part}`;
     case 'bossDown': return `${t} · boss beaten`;
@@ -138,13 +147,13 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
     return { heading: `${c.id} · ${c.title}`, say: c.say ?? '', presenter: c.presenter ?? [], extra };
   };
   switch (step.phase) {
-    case 'problem': return stop ? fromCard(stop.p1, `${stop.gate}`) : blank(step);
+    case 'problem': return stop ? fromCard(stop.p1, `${gateText(stop.gate)}`) : blank(step);
     case 'tool': case 'fixed':
-      if (stop && mode !== 'p1') return fromCard(stop.p2, stop.gate);
-      return stop ? fromCard(stop.p1, stop.gate) : blank(step);
+      if (stop && mode !== 'p1') return fromCard(stop.p2, gateText(stop.gate));
+      return stop ? fromCard(stop.p1, gateText(stop.gate)) : blank(step);
     case 'walk':
       return stop
-        ? { heading: `Next stop · ${stop.gate}`, say: stop.p1.say ?? '', presenter: [`Coming up: ${stop.p1.title} → ${stop.p2.title}.`], extra: [] }
+        ? { heading: `Next stop · ${gateText(stop.gate)}`, say: stop.p1.say ?? '', presenter: [`Coming up: ${stop.p1.title} → ${stop.p2.title}.`], extra: [] }
         : { heading: `Next · boss · ${tier?.boss.name}`, say: tier?.boss.say ?? '', presenter: tier?.boss.idea ? [tier.boss.idea] : [], extra: [] };
     case 'boss': case 'bossPart': case 'bossDown': {
       const b = tier!.boss;
@@ -154,7 +163,7 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
         extra: [{ label: 'Anatomy · one part per sin', rows: b.parts.map((p) => [p.part, p.from, toolFor(game, p.beatenBy).name]) }],
       };
     }
-    case 'vs': return { heading: `Tier ${tier?.n} · ${tier?.name}`, say: tier?.idea ?? '', presenter: [`Gates ${tier?.gates ?? ''}. ${tier?.stops.length} stop(s), then ${tier?.boss.name}.`], extra: [] };
+    case 'vs': return { heading: `Tier ${tier?.n} · ${tier?.name}`, say: tier?.idea ?? '', presenter: [`${gatesText(tier?.gates)}. ${tier?.stops.length} stop(s), then ${tier?.boss.name}.`], extra: [] };
     case 'result': return { heading: `Tier ${tier?.n} result`, say: tier?.boss.p2 ?? '', presenter: tier?.boss.p1 ? [`P1: ${tier.boss.p1}`] : [], extra: [] };
     case 'ending': return { heading: 'Endings', say: `${game.content.endings.p2.big}: ${game.content.endings.p2.sub}`, presenter: [`P1 · ${game.content.endings.p1.big}: ${game.content.endings.p1.sub}`], extra: [] };
   }

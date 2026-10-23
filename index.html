@@ -40,6 +40,7 @@
         <button type="button" data-mode="p1" role="radio"><kbd>1</kbd>Player 1<small>vibe coder</small></button>
         <button type="button" data-mode="both" role="radio"><kbd>B</kbd>Both<small>side by side</small></button>
         <button type="button" data-mode="p2" role="radio"><kbd>2</kbd>Player 2<small>gated</small></button>
+        <button type="button" data-mode="spec" role="radio"><kbd>S</kbd>You vs autopilot<small>you play P2 · P1 plays itself</small></button>
       </div>
       <div class="menu-actions">
         <button id="start" class="primary-button" type="button">WALK THE GATES <span class="button-arrow">↗</span></button>
@@ -62,7 +63,7 @@
       <div class="header-right"><span class="edition">← → PICK &nbsp;·&nbsp; ENTER START &nbsp;·&nbsp; ESC BACK</span></div>
     </header>
     <ol id="tiers" class="tiers"></ol>
-    <footer class="mission"><span class="mission-tag">MODE</span><span id="map-mode">BOTH · SIDE BY SIDE</span><span class="ast">✳</span><span>1 / 2 / B TO CHANGE</span><span class="ver">LOCKED TIERS OPEN WHEN THEIR STOPS ARE WRITTEN</span></footer>
+    <footer class="mission"><span class="mission-tag">MODE</span><span id="map-mode">BOTH · SIDE BY SIDE</span><span class="ast">✳</span><span>1 / 2 / B / S TO CHANGE</span><span class="ver">LOCKED TIERS OPEN WHEN THEIR STOPS ARE WRITTEN</span></footer>
   </section>
 
   <!-- 4–11. The game. -->
@@ -73,8 +74,8 @@
       <div class="stat wide"><span class="label" id="hud-stop-label">NEXT STOP</span><b id="hud-stop" class="gate-name">—</b></div>
       <div class="spacer"></div>
       <div class="chips">
-        <span class="chip" data-chip="mode"><kbd>1</kbd><kbd>2</kbd><kbd>B</kbd><span id="hud-mode">BOTH</span></span>
-        <span class="chip" data-chip="auto"><kbd>A</kbd><span id="hud-auto">AUTOPLAY OFF</span></span>
+        <span class="chip" data-chip="mode"><kbd>1</kbd><kbd>2</kbd><kbd>B</kbd><kbd>S</kbd><span id="hud-mode">BOTH</span></span>
+        <button class="chip" data-chip="auto" data-action="auto" type="button"><kbd>A</kbd><span id="hud-auto">AUTOPLAY OFF</span></button>
       </div>
       <button class="round" data-action="mute" type="button" aria-label="Sound"><span class="ico-sound"></span></button>
       <button class="round" data-action="pause" type="button" aria-label="Pause"><span class="ico-pause"></span></button>
@@ -105,12 +106,13 @@
       <h2>Walk. Stop. Learn. Shoot.</h2>
       <p>Two developers walk the same road through six tiers. At every gate a <b>problem card</b> — real bad code — slams into both of them. Player 1 is a vibe coder with no tools: every hit sticks. Player 2 plays a <b>tool card</b> that fixes the code and heals to 100%. At the end of each tier, the boss is made of the tier's problems; only the tools can break it.</p>
       <div class="keys">
-        <div><kbd>→</kbd> or <kbd>Space</kbd><span>Next: walk on, play the card, skip a pause</span></div>
-        <div><kbd>←</kbd><span>Back one step</span></div>
+        <div><kbd>→</kbd> <kbd>Space</kbd> <kbd>Page Down</kbd><span>Next: walk on, play the card, skip a pause</span></div>
+        <div><kbd>←</kbd> <kbd>Page Up</kbd><span>Back one step (a presentation clicker works too)</span></div>
         <div><kbd>1</kbd> <kbd>2</kbd> <kbd>B</kbd><span>Player 1 · Player 2 · Both side by side</span></div>
+        <div><kbd>S</kbd><span>You play the specialist, the vibe coder plays itself</span></div>
         <div><kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>6</kbd><span>Jump to a tier</span></div>
-        <div><kbd>A</kbd><span>Autoplay: shoots the street enemies for you</span></div>
-        <div><kbd>Mouse</kbd><span>Aim and click to shoot spaghetti, bugs and AI robots</span></div>
+        <div><kbd>A</kbd><span>Autoplay on / off (or click its button)</span></div>
+        <div><kbd>Mouse</kbd><span>Aim, then click or tap the trackpad to shoot. Keys never shoot.</span></div>
         <div><kbd>N</kbd><span>Speaker notes strip</span></div>
         <div><kbd>M</kbd> <kbd>P</kbd><span>Mute · Pause</span></div>
         <div><kbd>Esc</kbd><span>Close / back to the map</span></div>

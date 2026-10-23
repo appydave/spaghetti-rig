@@ -111,3 +111,22 @@ describe('notes', () => {
     }
   });
 });
+
+describe('missed enemies are debt, not damage', () => {
+  // Recorded from the game before "bugs shipped" existed: health at every step of the show, [player 1, player 2].
+  const baseline: [number, number][] = JSON.parse(readFileSync(new URL('./health.baseline.json', import.meta.url), 'utf8'));
+
+  it('health at every step is unchanged', () => {
+    expect(script.map((s) => [healthAt(game, s, 'p1'), healthAt(game, s, 'p2')])).toEqual(baseline);
+  });
+
+  it('player 1 still drops 100 → 78 → 55 → 33 → 10% across a four-stop tier', () => {
+    const t = game.tiers.find((x) => x.stops.length === 4)!;
+    const seen = script.filter((s) => s.tier === t.index && (s.phase === 'vs' || s.phase === 'problem')).map((s) => Math.round(healthAt(game, s, 'p1')));
+    expect(seen).toEqual([100, 78, 55, 33, 10]);
+  });
+
+  it('health is a function of the step alone: it takes no count of misses', () => {
+    expect(healthAt.length).toBe(3);
+  });
+});

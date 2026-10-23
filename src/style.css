@@ -123,6 +123,12 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 .stat b { font-size: 2.6rem; font-weight: 500; letter-spacing: 0.04em; line-height: 1; }
 .stat .sub { font-size: 0.7rem; letter-spacing: 0.14em; font-weight: 700; }
 .stat.wide b.gate-name { font-family: Barlow, sans-serif; font-style: italic; font-weight: 800; font-size: 2.6rem; letter-spacing: 0; }
+/* Gate number badge + title (top bar, banner). */
+.gate-badge { display: inline-grid; justify-items: center; align-content: center; min-width: 1.6em; padding: 0.08em 0.25em 0.04em; margin-right: 0.3em; background: var(--yellow); border: 0.08em solid var(--ink); border-radius: 0.18em; box-shadow: 0.06em 0.06em 0 var(--ink); line-height: 0.85; font-family: Barlow, sans-serif; font-style: italic; font-weight: 800; vertical-align: middle; color: var(--ink); }
+.gate-badge small { font-family: Space, sans-serif; font-style: normal; font-size: 0.26em; letter-spacing: 0.16em; font-weight: 700; line-height: 1.2; }
+.gate-title { vertical-align: middle; }
+.stat.wide b.gate-name { display: flex; align-items: center; }
+.stat.wide b.gate-name .gate-badge { font-size: 0.85em; }
 .topbar .stat:nth-child(2) { grid-template-columns: auto auto; column-gap: 0.6rem; align-items: end; }
 .topbar .stat:nth-child(2) .label { grid-column: span 2; }
 .spacer { flex: 1; }
@@ -154,9 +160,26 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 .score-box { padding: 0.7rem 1.1rem; background: rgba(244,244,232,.92); border: 0.12rem solid var(--ink); display: grid; }
 .score-box b { font-size: 2.2rem; font-weight: 500; letter-spacing: 0.06em; line-height: 1; }
 .lane.narrow .lane-top { flex-wrap: wrap; gap: 0.8rem; }
-.lane.narrow .score-box { display: none; }
-.lane.narrow .hp { max-width: none; }
-.bossbar { position: absolute; top: 14.5rem; left: 50%; transform: translateX(-50%); width: min(70%, 44rem); display: grid; grid-template-columns: 1fr auto; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; color: var(--boss); letter-spacing: 0.06em; }
+/* Bugs shipped: player 1's debt counter. */
+.shipped-box { padding: 0.7rem 1.1rem; background: #ffe3d8; border: 0.12rem solid var(--ink); border-left: 0.6rem solid var(--danger); display: grid; }
+.shipped-box .label { color: #9c3a26; }
+.shipped-box b { font-size: 2.2rem; font-weight: 500; line-height: 1; color: var(--danger); }
+.shipped-box.bump { animation: bump .45s cubic-bezier(.2,1.8,.4,1); }
+@keyframes bump { 40% { transform: scale(1.18) rotate(-3deg); background: #ffb59c; } }
+/* "Caught by CI": player 2's misses never ship. */
+.pops { position: absolute; inset: 0; pointer-events: none; }
+.ci-pop { position: absolute; top: 30%; transform: translateX(-50%); background: #e5f8dc; border: 0.14rem solid var(--ink); box-shadow: 0.25rem 0.25rem 0 #3f7d5a; padding: 0.5rem 0.9rem; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.1em; color: #2f6a48; white-space: nowrap; animation: ci-pop 1.6s ease-out both; }
+.ci-pop .tick { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; margin-right: 0.5rem; border-radius: 50%; background: #3f7d5a; color: var(--paper); font-size: 1rem; }
+@keyframes ci-pop { 0% { opacity: 0; transform: translate(-50%, 1.5rem) scale(.6); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 75% { opacity: 1; transform: translate(-50%, -1.2rem); } 100% { opacity: 0; transform: translate(-50%, -2.4rem); } }
+.lane.narrow .lane-top { flex-wrap: nowrap; gap: 0.6rem; left: 1.2rem; right: 1.2rem; }
+.lane.narrow .hp { max-width: none; min-width: 0; padding: 0.6rem 0.8rem; }
+.lane.narrow .hp .pct { font-size: 2rem; min-width: 4.6rem; }
+.lane.narrow .who { padding: 0.6rem 0.8rem; }
+.lane.narrow .who b { font-size: 1.8rem; }
+.lane.narrow .score-box, .lane.narrow .shipped-box { padding: 0.6rem 0.8rem; }
+.lane.narrow .score-box b, .lane.narrow .shipped-box b { font-size: 1.8rem; }
+.lane.narrow .score-box .label, .lane.narrow .shipped-box .label { letter-spacing: 0.12em; }
+.bossbar { position: absolute; top: 14.5rem; left: 50%; transform: translateX(-50%); width: min(70%, 44rem); display: grid; grid-template-columns: 1fr auto; gap: 0.3rem; font-size: 1.1rem; font-weight: 700; color: var(--boss); letter-spacing: 0.06em; }
 .bossbar .bar { grid-column: span 2; height: 1.2rem; background: #f3dcd2; border-color: var(--boss); }
 .bossbar .bar i { background: linear-gradient(#e85b2b, #c43c2a); transition: width .5s; }
 .bossbar .name { font-family: Barlow, sans-serif; font-style: italic; font-size: 1.5rem; text-transform: uppercase; }
@@ -187,6 +210,11 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 .reticle::after { top: 50%; left: -0.9rem; right: -0.9rem; height: 0.18rem; margin-top: -0.09rem; }
 .reticle i { position: absolute; left: 50%; top: 50%; width: 0.6rem; height: 0.6rem; margin: -0.3rem; border-radius: 50%; background: var(--yellow); }
 .lane.aiming .reticle { display: block; }
+.reticle.auto { display: block; border-color: var(--danger); border-style: dashed; }
+.reticle.auto::before, .reticle.auto::after { background: var(--danger); }
+.reticle.auto i { background: var(--danger); }
+.lane[data-p='p2'] .reticle.auto { border-color: #2f6a48; }
+.lane[data-p='p2'] .reticle.auto::before, .lane[data-p='p2'] .reticle.auto::after, .lane[data-p='p2'] .reticle.auto i { background: #2f6a48; }
 #game.shooting { cursor: none; }
 
 /* ── The tool card (Magic: The Gathering style) ── */
@@ -226,6 +254,7 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 .banner { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); background: var(--yellow); border-top: 0.2rem solid var(--ink); border-bottom: 0.2rem solid var(--ink); padding: 2.4rem 4% 2.8rem; text-align: center; z-index: 8; animation: banner .45s cubic-bezier(.2,1.4,.4,1); }
 .banner .label { color: var(--ink); display: inline-block; padding-bottom: 0.7rem; border-bottom: 0.1rem solid var(--ink); margin-bottom: 1.2rem; font-size: 0.9rem; }
 .banner .headline { font-family: Barlow, sans-serif; font-style: italic; font-weight: 800; font-size: 6.4rem; line-height: 0.95; color: var(--ink); }
+.banner .headline .gate-badge { font-size: 0.8em; margin-right: 0.25em; box-shadow: 0.08em 0.08em 0 var(--ink); }
 .banner .headline em { display: block; color: var(--boss); font-style: italic; font-size: 1.25em; }
 .banner.out { animation: banner-out .35s ease-in both; }
 @keyframes banner { from { transform: translateY(-50%) scaleY(0); } }
@@ -234,6 +263,20 @@ body.muted .ico-sound { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.
 /* ── VS ── */
 .vs { position: absolute; inset: 0; z-index: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; pointer-events: none; }
 #game .vs { pointer-events: none; }
+#backdrop.solo-bg.p1 { background: linear-gradient(100deg, #fbe4d4 0 52%, #f6c4a8 52%); }
+#backdrop.solo-bg.p2 { background: linear-gradient(100deg, #e9f4ea 0 52%, #cfe8d6 52%); }
+.vs.solo { display: block; }
+.solo-card { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); display: grid; gap: 1.4rem; justify-items: start; max-width: 50%; animation: solo-in .5s cubic-bezier(.2,1.4,.4,1) both; }
+.solo-card .tier-name { font-family: Barlow, sans-serif; font-style: italic; font-size: 9rem; line-height: 0.82; text-transform: uppercase; }
+.solo-card .who b { font-size: 3.6rem; }
+.solo-card .who small { font-size: 1.1rem; letter-spacing: 0.04em; text-transform: none; color: var(--ink); }
+.solo-card.p1 .who { border-left: 0.8rem solid var(--p1); }
+.solo-card.p2 .who { border-left: 0.8rem solid var(--p2); }
+.solo-card .boss-name { display: grid; gap: 0.3rem; background: var(--ink); color: var(--paper); padding: 1rem 1.6rem 1.2rem; box-shadow: 0.4rem 0.4rem 0 var(--boss); }
+.solo-card .boss-name .label { color: var(--yellow); font-size: 1rem; }
+.solo-card .boss-name b { font-family: Barlow, sans-serif; font-style: italic; font-size: 4.6rem; line-height: 0.9; text-transform: uppercase; color: #ffb59c; }
+.solo-card > .label { font-size: 1.1rem; color: var(--ink); }
+@keyframes solo-in { from { transform: translate(-30%, -50%); opacity: 0; } }
 #backdrop.vs-bg { background: linear-gradient(100deg, #f6c4a8 0 49.6%, var(--ink) 49.6% 50.4%, #cfe8d6 50.4%); }
 .vs .side { padding: 0 4% 7rem; display: grid; gap: 0.5rem; }
 .vs .side.p2 { text-align: right; }
@@ -304,3 +347,11 @@ body[data-phase='vs'] .topbar { background: none; }
 body[data-phase='result'] .lane-top, body[data-phase='ending'] .lane-top { display: none; }
 .result .col, .ending .col { gap: 1.4rem; }
 body[data-phase='vs'] .divider { display: none; }
+/* Boss fight: the character stands bottom left, so captions dock bottom right and the boss bar sits above the boss. */
+body[data-phase^='boss'] .caption { left: auto; right: 2rem; transform: none; max-width: min(46%, 40rem); bottom: 9.2rem; text-align: left; animation-name: pop-side; }
+@keyframes pop-side { from { transform: scale(.6); opacity: 0; } }
+body[data-phase^='boss'] .tray { justify-content: flex-end; left: auto; }
+.lane.narrow .bossbar { width: 86%; top: 12.6rem; grid-template-columns: auto 1fr; align-items: center; }
+.lane.narrow .bossbar .name { display: none; }
+.lane.narrow .bossbar .bar { grid-column: 2; grid-row: 1; height: 1rem; }
+.lane.narrow .bossbar .count { grid-column: 1; grid-row: 1; }

@@ -1,4 +1,5 @@
 import { toolFor, type Game, type PlayTier } from '../content/load';
+import { gateLabel } from '../content/gatelabel';
 import type { Stop } from '../content/types';
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -6,8 +7,11 @@ export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 /** Short tool name for tight spots: "Prettier (code formatter)" → "Prettier". */
 export const shortTool = (name: string) => name.split('(')[0]!.split('+')[0]!.trim();
 
-/** The gate code ("G01") from "G01 · Formatting". */
-export const gateCode = (gate: string) => gate.split('·')[0]!.trim();
+/** A gate as a number badge plus its title: "G01 · Formatting" → [1] Formatting. */
+export function gateHtml(gate: string) {
+  const g = gateLabel(gate);
+  return `${g.num ? `<span class="gate-badge"><small>GATE</small>${esc(g.num)}</span>` : ''}<span class="gate-title">${esc(g.title)}</span>`;
+}
 
 /** Tool art, with a generic picture for tools added later. */
 export function toolImg(key: string | undefined) {
@@ -29,7 +33,7 @@ export function toolCardHtml(game: Game, tier: PlayTier, stop: Stop, k: number):
   const cfgHtml = cfg && lines.length ? `<div class="cfg"><div class="file">${esc(cfg.file)}<span>${esc(cfg.status === 'planned' ? 'planned' : 'applied in this PR')}</span></div>${lines.map(([code, means]) => `<div class="ln"><code>${esc(yamlStep(code))}</code><em>${esc(means)}</em></div>`).join('')}</div>` : '';
   return `<article class="tcard" data-tool="${esc(card.tool ?? '')}">
     <span class="hint">→ PLAY CARD</span>
-    <div class="head"><span class="name">${esc(shortTool(tool.name))}</span><span class="cost"><i>${esc(gateCode(stop.gate))}</i><i>T${tier.n}</i></span></div>
+    <div class="head"><span class="name">${esc(shortTool(tool.name))}</span><span class="cost"><i>${esc(gateLabel(stop.gate).num)}</i><i>T${tier.n}</i></span></div>
     <div class="art">${toolImg(card.tool)}</div>
     <div class="type"><span>Tool · Tier ${tier.n} ${esc(tier.name)}</span><small>${esc(card.id)} ANSWERS ${esc(stop.p1.id)}</small></div>
     <div class="rules">
