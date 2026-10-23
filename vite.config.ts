@@ -8,8 +8,8 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 const CHUNK_WARNING_KB = 6000;
 // Coverage floors: see the note at `thresholds`.
 const STATEMENTS_FLOOR = 28.0;
-const BRANCHES_FLOOR = 30.7;
-const FUNCTIONS_FLOOR = 35.0;
+const BRANCHES_FLOOR = 42.4;
+const FUNCTIONS_FLOOR = 45.0;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -41,6 +41,9 @@ export default defineConfig({
       // from the measured 30.78 and 35.06. Statements is lower on purpose: measured 37.21 on 2026-10-23, but naming a number adds a
       // `const X = n` statement in modules no test loads (world.ts, effects.ts), so the percentage falls about 8 points over G05 with no
       // code or test change. 28.0 is where the G05 plan ends; G05's closing PR re-ratchets it to the measured value, never below 28.0.
+      // Since G05 N7h and N7h2 lint/gates/audio-proof.test.ts also runs the whole audio engine (init, every track's instrument voices, the
+      // scheduler, the sound effects) against a recording AudioContext. That is shallow coverage too, and it must not fall either: branches
+      // (42.4) and functions (45.0) are rounded down from the measured 42.41 and 45.08 (statements measured 47.57, floor still 28.0 above).
       // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change, while statements did not move.
       thresholds: {
         statements: STATEMENTS_FLOOR,
