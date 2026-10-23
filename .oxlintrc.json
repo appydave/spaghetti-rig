@@ -13,6 +13,10 @@
     {
       "name": "strict-colors",
       "specifier": "./lint/gates/color-policy.mjs"
+    },
+    {
+      "name": "size",
+      "specifier": "./lint/gates/size-limits.mjs"
     }
   ],
   "options": {
@@ -268,7 +272,6 @@
         "unicorn/no-array-for-each": ["error"],
         "unicorn/no-array-method-this-argument": ["error"],
         "no-sequences": ["error"],
-        "max-params": "off",
         "no-empty": [
           "error",
           {
@@ -498,6 +501,87 @@
       "rules": {
         "no-magic-numbers": "off",
         "strict-colors/no-color-literals": "off"
+      }
+    },
+    {
+      // G04 Size. The file and member limits are Omer's (3a0475f). The function and parameter limits are a STATED DEPARTURE from Omer's (his are
+      // stricter), calibrated on the real code: 41-60-line functions and 4-parameter functions had no design value to split (G04 measure).
+      // Blank lines and comments count, as Omer. Every limit lives on its rule here, and nowhere else.
+      "files": ["**/*"],
+      "rules": {
+        "max-lines": [
+          "error",
+          { "max": 300, "skipBlankLines": false, "skipComments": false }
+        ],
+        "max-lines-per-function": [
+          "error",
+          {
+            "max": 60,
+            "skipBlankLines": false,
+            "skipComments": false,
+            "IIFEs": true
+          }
+        ],
+        "max-params": ["error", { "max": 4 }],
+        "size/max-members": ["error", { "max": 30 }],
+        "size/max-signature-params": ["error", { "max": 4 }]
+      }
+    },
+    {
+      // In tests the function cap skips describe() callbacks (a grouping of it() blocks), so the native rule gives way to size/max-test-function-lines.
+      "files": ["tests/**", "src/**/*.test.ts", "lint/**/*.test.ts"],
+      "rules": {
+        "max-lines-per-function": "off",
+        "size/max-test-function-lines": ["error", { "max": 60 }]
+      }
+    },
+    {
+      // NOT YET ENFORCED: the files still over a limit, by name. G04 splits them one slice at a time, each removing its files here; the last
+      // slice deletes this block. lint/gates/size.test.ts keeps it honest: every name exists and still has a finding.
+      "files": [
+        "lint/gates/audio-proof.test.ts",
+        "lint/gates/color-policy.mjs",
+        "src/audio/audio.ts",
+        "src/audio/tracks.ts",
+        "src/content/load.ts",
+        "src/main.ts",
+        "src/show/director.ts",
+        "src/show/script.ts",
+        "src/world/codelayout.ts",
+        "src/world/codewindow.ts",
+        "src/world/effects.ts",
+        "src/world/gate.ts",
+        "src/world/physics.ts",
+        "src/world/toon.ts",
+        "src/world/world.ts",
+        "tests/show.spec.ts"
+      ],
+      "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
+        "max-params": "off",
+        "size/max-members": "off",
+        "size/max-signature-params": "off",
+        "size/max-test-function-lines": "off"
+      }
+    },
+    {
+      // R7 revised (David, 2026-10-23), applied to size: hand-placed model geometry and materials are asset data, like Omer's GLB files, so these
+      // five files are exempt from the size rules for good. lint/gates/size.test.ts keeps this list at exactly these five.
+      "files": [
+        "src/world/boss.ts",
+        "src/world/characters.ts",
+        "src/world/city.ts",
+        "src/world/enemies.ts",
+        "src/world/showcase.ts"
+      ],
+      "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
+        "max-params": "off",
+        "size/max-members": "off",
+        "size/max-signature-params": "off",
+        "size/max-test-function-lines": "off"
       }
     }
   ]
