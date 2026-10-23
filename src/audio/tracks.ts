@@ -42,11 +42,15 @@ export const TRACK_DEFS: TrackDef[] = parseTrackDefs(rawTracks);
 
 /** One octave of piano keys, a dot where a black key sits: a letter's index is its semitone above C. */
 const NATURAL_KEYS = "C.D.EF.G.A.B";
-const SEMITONES_PER_OCTAVE = 12;
+
+export const SEMITONES_PER_OCTAVE = 12;
+
 const FIFTH_SEMITONES = 7;
 const A4_MIDI = 69;
 const A4_HZ = 440;
-const STEPS_PER_BEAT = 4;
+
+export const STEPS_PER_BEAT = 4;
+
 const SECONDS_PER_MINUTE = 60;
 
 /** "C4" -> 60, "F#5" -> 78, "Bb1" -> 34. Throws on bad input. */
