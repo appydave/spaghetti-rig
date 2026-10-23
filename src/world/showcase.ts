@@ -1,3 +1,4 @@
+// Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
 import { Character } from "./characters";
 import { layoutCard } from "./codelayout";
