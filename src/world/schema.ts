@@ -30,11 +30,18 @@ export const many = <T>(item: Schema<T>): Schema<T[]> => ({
   read: (v, path) => list(v, path).map((x, i) => item.read(x, `${path}[${i}]`)),
 });
 
-/** True when every key the shape declares came back with a value: the one place a value is trusted to have the type its schema names. */
-const isRead = <S extends Shape>(
+/** Throws naming the first declared key that came back without a value: the one place a value is trusted to have the type its schema names. */
+function assertRead<S extends Shape>(
   shape: S,
   v: Record<string, unknown>,
-): v is Read<S> => Object.keys(shape).every((k) => v[k] !== undefined);
+  path: string,
+): asserts v is Read<S> {
+  const missing = Object.keys(shape).find((k) => v[k] === undefined);
+
+  if (missing !== undefined) {
+    throw new Error(`${path}.${missing} is missing`);
+  }
+}
 
 export const object = <S extends Shape>(shape: S): Schema<Read<S>> => ({
   read(v, path) {
@@ -43,9 +50,7 @@ export const object = <S extends Shape>(shape: S): Schema<Read<S>> => ({
       Object.entries(shape).map(([k, s]) => [k, s.read(o[k], `${path}.${k}`)]),
     );
 
-    if (!isRead(shape, out)) {
-      throw new Error(`${path} is missing a field`);
-    }
+    assertRead(shape, out, path);
 
     return out;
   },

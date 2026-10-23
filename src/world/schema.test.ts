@@ -65,7 +65,10 @@ describe("schema object", () => {
         c: empty === "c" ? nothing : number,
       });
 
-      bad(() => shape.read({ a: 1, b: 2, c: 3 }, "g"), /g is missing a field/);
+      bad(
+        () => shape.read({ a: 1, b: 2, c: 3 }, "g"),
+        new RegExp(`^g\\.${empty} is missing$`),
+      );
     },
   );
 });
