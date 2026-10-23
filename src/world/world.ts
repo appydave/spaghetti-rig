@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import type { AudioEngine, Sfx } from "../audio/audio";
-import { gateText } from "../content/gatelabel";
 import {
   FULL_HEALTH,
   TIER_HEALTH_LOSS,
@@ -8,25 +7,25 @@ import {
   type Game,
   type PlayTier,
 } from "../content/load";
-import type { Card, Stop } from "../content/types";
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
 import { healthAt, partsBroken, type Player, type Step } from "../show/script";
 import { AutoGunner } from "./autogunner";
-import { BossModel, paintBossPanel } from "./boss";
-import { bossLayout, type BossLayout } from "./bosslayout";
+import { BossModel } from "./boss";
+import type { BossLayout } from "./bosslayout";
 import { CameraRig, type ShotView } from "./camera-rig";
 import { Character } from "./characters";
 import { buildCity, SEGMENT } from "./city";
-import { layoutCard, longestRow, slugFile, type Layout } from "./codelayout";
-import { CodeWindow, paintCard, type Mood } from "./codewindow";
+import { CodeWindow } from "./codewindow";
 import { Effects } from "./effects";
 import { Enemy, SCORE, type EnemyKind } from "./enemies";
 import { Gate } from "./gate";
+import { makePile } from "./pile";
+import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
 import { Debris } from "./physics";
-import { beforeParen, shortTool } from "../ui/card";
-import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from "./toon";
-import { BOLT, EVENT, PILE, WORLD } from "./palette";
+import { beforeParen } from "../ui/card";
+import { clamp01, disposeTree, ease, lerp, rng } from "./toon";
+import { BOLT, EVENT, WORLD } from "./palette";
 import {
   BOSS,
   Cue,
@@ -75,52 +74,6 @@ const CITY_SEED_BASE = 1000;
 const CITY_SEED_PER_TIER = 77;
 const CITY_CLEAR_BEHIND_ARENA = 16;
 const CITY_CLEAR_AHEAD_OF_ARENA = 60;
-const TALL_CARD_COLS = 44;
-const WIDE_CARD_COLS = 60;
-const MIN_CARD_COLS = 34;
-const TALL_WINDOW_WIDTH = 7.2;
-const WIDE_WINDOW_WIDTH = 7.6;
-const TALL_WINDOW_MAX_HEIGHT = 8.6;
-const WIDE_WINDOW_MAX_HEIGHT = 6.2;
-const PILE_SEED = 42;
-const PILE_STRANDS = 26;
-const PILE_POINTS = 6;
-const PILE_SPREAD = 2.4;
-const PILE_PEAK_POINT = 3;
-const PILE_PEAK_FALLOFF = 4;
-const PILE_CENTRE_Z = -1.2;
-const PILE_Z_BIAS = 0.2;
-const PILE_TUBE_SEGMENTS = 40;
-const PILE_TUBE_RADIUS = 0.09;
-const PILE_TUBE_SIDES = 6;
-const PILE_PALE_EVERY = 3;
-const PILE_OUTLINE = 0.02;
-const MEATBALL_X = 0.2;
-const MEATBALL_Y = 0.75;
-const MEATBALL_Z = -0.9;
-const MEATBALL_RADIUS = 0.7;
-const MEATBALL_FLATTEN = 0.3;
-const MEATBALL_STRETCH = 0.6;
-const GARNISH_Y = 0.95;
-const GARNISH_RADIUS = 0.22;
-const GARNISH_A_X = 0.5;
-const GARNISH_A_Z = -0.6;
-const GARNISH_B_X = -0.2;
-const GARNISH_B_Z = -1.2;
-const GARNISH_C_X = 0.1;
-const GARNISH_C_Z = -0.3;
-const FLAG_POLE_X = -0.6;
-const FLAG_POLE_Y = 1.2;
-const FLAG_POLE_Z = -0.4;
-const FLAG_POLE_RADIUS = 0.03;
-const FLAG_POLE_LENGTH = 1.6;
-const FLAG_X = -0.35;
-const FLAG_Y = 1.8;
-const FLAG_Z = -0.4;
-const FLAG_WIDTH = 0.5;
-const FLAG_HEIGHT = 0.32;
-const FLAG_THICKNESS = 0.02;
-const FLAG_TURN = 0.2;
 const EXIT_WINDOW_SECONDS = 0.7;
 const EXIT_SCALE_DEBT = 0.2;
 const EXIT_SCALE_MUZZLE = 0.02;
@@ -334,7 +287,6 @@ const READING_BOB_HEIGHT = 0.004;
 const DEBT_EASE_RATE = 4;
 const DEBT_WOBBLE_SPEED = 3;
 const DEBT_WOBBLE = 0.08;
-const BOSS_TOOL_MAX_CHARS = 18;
 const BOLT_WIDTH = 256;
 const BOLT_HEIGHT = 340;
 const BOLT_CORNER = 22;
@@ -621,9 +573,11 @@ export class PlayerWorld {
       this.window = null;
       if (wantKey) {
         const stop = nth(tier.stops, s.stop, "stops");
-        const win = this.makeStopWindow(
+        const win = makeStopWindow(
+          { game: this.game, tier },
           stop,
           s.window === "fixed" ? "fixed" : "problem",
+          this.rig.shape,
         );
 
         this.scene.add(win.group);
@@ -649,7 +603,12 @@ export class PlayerWorld {
     for (let k = this.debt.length; k < s.debt; k++) {
       const stop = nth(tier.stops, k, "stops");
       const win = new CodeWindow(
-        this.paint(stop.p1, "angry", "problem", DEBT_WINDOW_COLS, stop),
+        paintStopCard(
+          { game: this.game, tier },
+          stop,
+          "problem",
+          DEBT_WINDOW_COLS,
+        ),
         DEBT_WINDOW_WIDTH,
         "angry",
       );
@@ -668,7 +627,7 @@ export class PlayerWorld {
         this.boss.remaining < tier.boss.parts.length - s.broken
       ) {
         this.boss?.dispose();
-        this.boss = this.makeBoss(tier);
+        this.boss = this.addBoss(tier);
       }
 
       for (let i = 0; i < s.broken; i++) {
@@ -686,7 +645,7 @@ export class PlayerWorld {
     this.bossLeft = s.boss === "dead" ? 0 : this.bossTotal - s.broken;
     // Spaghetti burying player 1.
     if (s.pile && !this.pile) {
-      this.pile = this.makePile();
+      this.pile = makePile();
       this.scene.add(this.pile);
     }
 
@@ -702,6 +661,15 @@ export class PlayerWorld {
     this.health = s.health;
     this.rig.mode = s.camera;
     this.state = s;
+  }
+
+  private addBoss(tier: PlayTier): BossModel {
+    const boss = makeBossModel(this.game, tier);
+
+    this.bossLayout = boss.layout;
+    this.scene.add(boss.group);
+
+    return boss;
   }
 
   private clearAnimations() {
@@ -768,172 +736,6 @@ export class PlayerWorld {
   }
 
   // ───────────────────────────── content → objects ─────────────────────────────
-
-  private cols() {
-    return this.rig.shape === "tall" ? TALL_CARD_COLS : WIDE_CARD_COLS;
-  }
-
-  private paint(
-    card: Card,
-    mood: Mood,
-    role: "problem" | "fixed",
-    cols: number,
-    stop: Stop,
-  ): HTMLCanvasElement {
-    const width = Math.min(cols, Math.max(MIN_CARD_COLS, longestRow(card)));
-    const layout: Layout = layoutCard(card, width, slugFile(card.title));
-    const tier = this.playing;
-
-    if (role === "problem") {
-      return paintCard(layout, mood, {
-        label: `Problem card ${card.id} · ${gateText(stop.gate)}`,
-        title: card.title,
-        footer: card.text,
-        badge: `−${Math.round(TIER_HEALTH_LOSS / tier.stops.length)}%`,
-      });
-    }
-
-    const tool = toolFor(this.game, stop.p2.tool);
-
-    return paintCard(layout, "fixed", {
-      label: `Fixed by ${beforeParen(tool.name)} · ${card.id}`,
-      title: card.title.replace(/^Tool:\s*/i, "✓ "),
-      footer: card.num,
-      badge: "HP 100%",
-    });
-  }
-
-  private makeStopWindow(stop: Stop, kind: "problem" | "fixed") {
-    const card = kind === "problem" ? stop.p1 : stop.p2;
-    const cv = this.paint(
-      card,
-      kind === "problem" ? "angry" : "fixed",
-      kind,
-      this.cols(),
-      stop,
-    );
-
-    return new CodeWindow(
-      cv,
-      this.rig.shape === "tall" ? TALL_WINDOW_WIDTH : WIDE_WINDOW_WIDTH,
-      kind === "problem" ? "angry" : "fixed",
-      {
-        maxHeight:
-          this.rig.shape === "tall"
-            ? TALL_WINDOW_MAX_HEIGHT
-            : WIDE_WINDOW_MAX_HEIGHT,
-      },
-    );
-  }
-
-  private makeBoss(tier: PlayTier): BossModel {
-    const b = tier.boss;
-    const L = bossLayout(b.parts.length);
-    const core = paintBossPanel({
-      aspect: L.core.w / L.core.h,
-      header: "Production incident",
-      title: b.name,
-      footer: `${b.parts.length} sins · pushed to main`,
-    });
-    const parts = b.parts.map((p, i) => {
-      const slot = nth(L.parts, i, "boss layout parts");
-
-      return paintBossPanel({
-        aspect: slot.w / slot.h,
-        header: `Sin ${i + 1} of ${b.parts.length}`,
-        title: p.part,
-        badge: `${i + 1}`,
-        footer: `✓ ${bossTool(shortTool(toolFor(this.game, p.beatenBy).name))}`,
-      });
-    });
-    const boss = new BossModel(core, parts);
-
-    this.bossLayout = boss.layout;
-    this.scene.add(boss.group);
-
-    return boss;
-  }
-
-  private makePile() {
-    const pile = new THREE.Group();
-
-    pile.name = "spaghetti-pile";
-
-    const r = rng(PILE_SEED);
-
-    for (let i = 0; i < PILE_STRANDS; i++) {
-      const pts: THREE.Vector3[] = [];
-
-      for (let k = 0; k < PILE_POINTS; k++) {
-        pts.push(
-          new THREE.Vector3(
-            (r() - RANDOM_CENTRE) * PILE_SPREAD,
-            r() * 1.0 * (1 - Math.abs(k - PILE_PEAK_POINT) / PILE_PEAK_FALLOFF),
-            PILE_CENTRE_Z + (r() - PILE_Z_BIAS) * PILE_SPREAD,
-          ),
-        );
-      }
-
-      const tube = new THREE.Mesh(
-        new THREE.TubeGeometry(
-          new THREE.CatmullRomCurve3(pts),
-          PILE_TUBE_SEGMENTS,
-          PILE_TUBE_RADIUS,
-          PILE_TUBE_SIDES,
-        ),
-        toon(i % PILE_PALE_EVERY ? PILE.strandPale : PILE.strand),
-      );
-
-      tube.castShadow = true;
-      pile.add(tube);
-    }
-
-    const a = kit(PILE_OUTLINE);
-
-    a.ball(
-      pile,
-      PILE.meatball,
-      MEATBALL_X,
-      MEATBALL_Y,
-      MEATBALL_Z,
-      MEATBALL_RADIUS,
-      MEATBALL_FLATTEN,
-      MEATBALL_STRETCH,
-    );
-    for (const [x, z] of [
-      [GARNISH_A_X, GARNISH_A_Z],
-      [GARNISH_B_X, GARNISH_B_Z],
-      [GARNISH_C_X, GARNISH_C_Z],
-    ] as const) {
-      a.ball(pile, PILE.garnish, x, GARNISH_Y, z, GARNISH_RADIUS);
-    }
-
-    // A white flag of surrender poking out.
-    a.cyl(
-      pile,
-      PILE.flagPole,
-      FLAG_POLE_X,
-      FLAG_POLE_Y,
-      FLAG_POLE_Z,
-      FLAG_POLE_RADIUS,
-      FLAG_POLE_LENGTH,
-    );
-
-    const flag = a.box(
-      pile,
-      PILE.flag,
-      FLAG_X,
-      FLAG_Y,
-      FLAG_Z,
-      FLAG_WIDTH,
-      FLAG_HEIGHT,
-      FLAG_THICKNESS,
-    );
-
-    flag.rotation.y = FLAG_TURN;
-
-    return pile;
-  }
 
   // ───────────────────────────── stepping ─────────────────────────────
 
@@ -1275,7 +1077,14 @@ export class PlayerWorld {
     fixed.reading = true;
     fixed.win.group.visible = false;
 
-    const old = this.track(this.makeStopWindow(stop, "problem"));
+    const old = this.track(
+      makeStopWindow(
+        { game: this.game, tier: this.playing },
+        stop,
+        "problem",
+        this.rig.shape,
+      ),
+    );
 
     old.rattle = OLD_CARD_RATTLE;
     this.scene.add(old.group);
@@ -1448,12 +1257,11 @@ export class PlayerWorld {
           const firstStop = nth(this.playing.stops, 0, "stops");
           const blow = this.track(
             new CodeWindow(
-              this.paint(
-                firstStop.p1,
-                "angry",
+              paintStopCard(
+                { game: this.game, tier: this.playing },
+                firstStop,
                 "problem",
                 DEBT_WINDOW_COLS,
-                firstStop,
               ),
               KO_BLOW_WIDTH,
               "angry",
@@ -1576,7 +1384,7 @@ export class PlayerWorld {
       this.reconcile({ ...s, pile: false });
 
       // Spaghetti rains down and buries them.
-      const pile = this.makePile();
+      const pile = makePile();
 
       this.pile = pile;
       this.scene.add(pile);
@@ -2148,23 +1956,6 @@ export class PlayerWorld {
 
     return new THREE.Vector2(p.x, p.y);
   }
-}
-
-/** A tool name short enough to read on a boss part from the back of the room (the tray shows it in full). */
-function bossTool(name: string) {
-  const words = name.split(/\s+/);
-  const [first = "", ...rest] = words;
-  let out = first;
-
-  for (const w of rest) {
-    if (`${out} ${w}`.length > BOSS_TOOL_MAX_CHARS) {
-      break;
-    }
-
-    out += ` ${w}`;
-  }
-
-  return out;
 }
 
 /** The tool card as a projectile: a small glowing yellow card. */
