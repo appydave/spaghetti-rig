@@ -108,9 +108,9 @@ function compare(oldRef, newRef, plant) {
     const runs = Object.keys(old1).length;
 
     if (plant) {
-      const first = Object.keys(new1)[0];
+      const first = Object.keys(new1).find((k) => Array.isArray(new1[k][0]));
 
-      new1[first][0][2] += 0.01;
+      new1[first][0][1] += 0.01;
     }
 
     const repeats = [differences(old1, old2), differences(new1, new2)];
