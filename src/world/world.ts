@@ -9,7 +9,7 @@ import {
 } from "../content/load";
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
-import { healthAt, partsBroken, type Player, type Step } from "../show/script";
+import { healthAt, type Player, type Step } from "../show/script";
 import { BossModel } from "./boss";
 import type { BossLayout } from "./bosslayout";
 import { CameraRig, type ShotView } from "./camera-rig";
@@ -22,6 +22,7 @@ import { Enemy, type EnemyKind } from "./enemies";
 import { Gate } from "./gate";
 import { makePile } from "./pile";
 import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
+import { stateFor } from "./world-state";
 import { Debris } from "./physics";
 import { beforeParen } from "../ui/card";
 import { clamp01, disposeTree, ease, lerp, rng } from "./toon";
@@ -439,100 +440,6 @@ export class PlayerWorld {
 
   // ───────────────────────────── state ─────────────────────────────
 
-  private stateFor(step: Step): State {
-    const tier = nth(this.game.tiers, step.tier, "tiers");
-    const n = tier.stops.length;
-    const p1 = this.player === "p1";
-    const hp = healthAt(this.game, step, this.player);
-    const s: State = {
-      tier: step.tier,
-      z: 0,
-      camera: "follow",
-      window: "none",
-      stop: -1,
-      debt: 0,
-      gates: tier.stops.map(() => "idle"),
-      boss: "none",
-      broken: 0,
-      pose: "idle",
-      pile: false,
-      health: hp,
-    };
-    const passed = (k: number) => {
-      for (let i = 0; i < k; i++) {
-        s.gates[i] = p1 ? "broken" : "open";
-      }
-    };
-
-    switch (step.phase) {
-      case "vs":
-        s.z = 0;
-        s.camera = "portrait";
-        break;
-      case "walk":
-        s.z = step.stop === 0 ? 0 : standZ(step.stop - 1);
-        s.pose = "walk";
-        passed(step.stop);
-        s.debt = p1 ? step.stop : 0;
-        break;
-      case "problem":
-      case "tool":
-      case "fixed": {
-        s.z = standZ(step.stop);
-        s.camera = "stop";
-        s.stop = step.stop;
-        passed(step.stop);
-        s.debt = p1 ? step.stop : 0;
-
-        const fixed = step.phase === "fixed" && !p1;
-
-        s.window = fixed ? "fixed" : "problem";
-        s.gates[step.stop] = fixed ? "open" : "alarm";
-        s.pose = p1 ? "hurt" : fixed ? "idle" : "aim";
-        break;
-      }
-
-      default: {
-        // Boss arena and after.
-        s.z = standZ(n);
-        s.camera = "boss";
-        passed(n);
-        s.debt = p1 ? n : 0;
-        s.boss = "alive";
-        s.broken = p1 ? 0 : partsBroken(step, tier);
-        if (
-          step.phase === "bossDown" ||
-          step.phase === "result" ||
-          step.phase === "ending"
-        ) {
-          s.boss = p1 ? "alive" : "dead";
-        }
-
-        s.pose = p1
-          ? step.phase === "boss"
-            ? "hurt"
-            : "down"
-          : step.phase === "boss" || step.phase === "bossPart"
-            ? "aim"
-            : "victory";
-        s.pile = p1 && step.phase !== "boss" && step.phase !== "bossPart";
-        if (step.phase === "result" || step.phase === "ending") {
-          s.camera = "portrait";
-        }
-
-        if (p1 && (step.phase === "result" || step.phase === "ending")) {
-          s.boss = "none";
-        }
-
-        if (!p1 && (step.phase === "result" || step.phase === "ending")) {
-          s.boss = "dead";
-        }
-      }
-    }
-
-    return s;
-  }
-
   /** Make the world match a state, reusing whatever already matches. */
   private reconcile(s: State) {
     this.clearAnimations();
@@ -728,7 +635,7 @@ export class PlayerWorld {
   /** Jump straight to a step's settled look (back, mode switch, tier jump). */
   settle(step: Step) {
     this.stepRef = step;
-    this.reconcile(this.stateFor(step));
+    this.reconcile(stateFor(this.game, this.player, step));
     if (step.phase === "walk") {
       this.character.pose = "idle";
     }
@@ -746,7 +653,7 @@ export class PlayerWorld {
       this.window = null;
     } // keep it alive for its exit animation
 
-    const s = this.stateFor(step);
+    const s = stateFor(this.game, this.player, step);
 
     switch (step.phase) {
       case "walk":
