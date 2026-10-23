@@ -1395,7 +1395,9 @@ export class PlayerWorld {
       this.cues.splice(this.cues.indexOf(cue), 1);
       cue.fn();
     }
-    for (const t of this.tweens.slice()) {
+    // Iterate a snapshot: finished tweens are spliced out of the live list inside the loop.
+    const tweenSnapshot = this.tweens.slice();
+    for (const t of tweenSnapshot) {
       t.age += dt;
       const k = Math.min(1, t.age / t.dur);
       t.fn(k);
@@ -1406,7 +1408,9 @@ export class PlayerWorld {
     }
     this.shake = Math.max(0, this.shake - dt * 2.5);
     const me = this.character.root.position;
-    for (const e of this.enemies.slice()) {
+    // Iterate a snapshot: enemies that got past are spliced out of the live list inside the loop.
+    const enemySnapshot = this.enemies.slice();
+    for (const e of enemySnapshot) {
       e.update(dt, this.camera.position);
       if (e.finished || e.group.position.z > me.z + 4) {
         this.slip(e);

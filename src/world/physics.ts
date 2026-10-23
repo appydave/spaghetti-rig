@@ -120,8 +120,7 @@ export class Debris {
     root.updateMatrixWorld(true);
     const meshes: THREE.Mesh[] = [];
     root.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh && !m.userData.outline && m.geometry) meshes.push(m);
+      if (o instanceof THREE.Mesh && !o.userData.outline) meshes.push(o);
     });
     const centre = new THREE.Box3()
       .setFromObject(root)
@@ -161,7 +160,9 @@ export class Debris {
     this.world.timestep = Math.min(1 / 30, dt);
     this.world.step();
     const p = new THREE.Vector3();
-    for (const piece of this.pieces.slice()) {
+    // Iterate a snapshot: remove() splices a piece out of the live list inside the loop.
+    const snapshot = this.pieces.slice();
+    for (const piece of snapshot) {
       piece.age += dt;
       const t = piece.body.translation(),
         r = piece.body.rotation(),
@@ -187,7 +188,8 @@ export class Debris {
   }
 
   clear() {
-    for (const p of this.pieces.slice()) this.remove(p);
+    const snapshot = this.pieces.slice();
+    for (const p of snapshot) this.remove(p);
   }
   dispose() {
     this.clear();

@@ -380,21 +380,22 @@ export const TRACK_DEFS: TrackDef[] = [
 // Parsing / compiling
 // ---------------------------------------------------------------------------
 
-const PITCH_CLASS: Record<string, number> = {
-  C: 0,
-  D: 2,
-  E: 4,
-  F: 5,
-  G: 7,
-  A: 9,
-  B: 11,
-};
+const PITCH_CLASS = new Map([
+  ["C", 0],
+  ["D", 2],
+  ["E", 4],
+  ["F", 5],
+  ["G", 7],
+  ["A", 9],
+  ["B", 11],
+]);
 
 /** "C4" -> 60, "F#5" -> 78, "Bb1" -> 34. Throws on bad input. */
 export function parseNote(name: string): number {
   const m = /^([A-G])(#|b)?(-?\d)$/.exec(name.trim());
   if (!m) throw new Error(`Bad note "${name}"`);
-  const pc = PITCH_CLASS[m[1]!]!;
+  const pc = PITCH_CLASS.get(m[1] ?? "");
+  if (pc === undefined) throw new Error(`Bad note "${name}"`);
   const acc = m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0;
   return (Number(m[3]) + 1) * 12 + pc + acc;
 }

@@ -30,11 +30,13 @@ const str = (v: unknown, fallback = ""): string =>
 const strs = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 
+const ROW_KINDS = ["c", "a", "d", "l"] as const;
+
 function rows(v: unknown): Row[] {
   if (!Array.isArray(v)) return [];
   return v.flatMap((r): Row[] => {
     if (!Array.isArray(r) || r.length < 2) return [];
-    const kind = ["c", "a", "d", "l"].includes(r[0]) ? (r[0] as Row[0]) : "c";
+    const kind = ROW_KINDS.find((k) => k === r[0]) ?? "c";
     return [[kind, String(r[1] ?? "")]];
   });
 }
@@ -69,7 +71,6 @@ function card(v: unknown, fallbackTitle: string): Card {
   const c = isObj(v) ? v : {};
   const bs = blocks(c.blocks);
   return {
-    ...(c as Partial<Card>),
     id: str(c.id, "#??"),
     title: str(c.title, fallbackTitle),
     blocks: bs,
@@ -79,6 +80,26 @@ function card(v: unknown, fallbackTitle: string): Card {
     presenter: strs(c.presenter),
     num: typeof c.num === "string" ? c.num : undefined,
     tool: typeof c.tool === "string" ? c.tool : undefined,
+    answers: typeof c.answers === "string" ? c.answers : undefined,
+    showConfig: typeof c.showConfig === "boolean" ? c.showConfig : undefined,
+    failureModes: Array.isArray(c.failureModes)
+      ? c.failureModes
+          .filter((o) => isObj(o))
+          .map((m) => ({
+            input: str(m.input),
+            where: str(m.where),
+            result: str(m.result),
+          }))
+      : undefined,
+    evidence: isObj(c.evidence)
+      ? {
+          status: str(c.evidence.status),
+          source:
+            typeof c.evidence.source === "string"
+              ? c.evidence.source
+              : undefined,
+        }
+      : undefined,
     steps: Array.isArray(c.steps)
       ? c.steps
           .filter((o) => isObj(o))
@@ -102,8 +123,13 @@ function boss(v: unknown, tierName: string): Boss {
         }))
     : [];
   return {
-    ...(b as Partial<Boss>),
     id: typeof b.id === "string" ? b.id : null,
+    idea: typeof b.idea === "string" ? b.idea : undefined,
+    attack: typeof b.attack === "string" ? b.attack : undefined,
+    p1: typeof b.p1 === "string" ? b.p1 : undefined,
+    p2: typeof b.p2 === "string" ? b.p2 : undefined,
+    say: typeof b.say === "string" ? b.say : undefined,
+    playable: typeof b.playable === "boolean" ? b.playable : undefined,
     name: str(b.name, `${tierName} boss`),
     parts,
     presenter: strs(b.presenter),
@@ -140,13 +166,10 @@ export function parseContent(raw: unknown): Game {
               lines: Array.isArray(cfg.lines)
                 ? cfg.lines
                     .filter(Array.isArray)
-                    .map(
-                      (l) =>
-                        [String(l[0] ?? ""), String(l[1] ?? "")] as [
-                          string,
-                          string,
-                        ],
-                    )
+                    .map((l): [string, string] => [
+                      String(l[0] ?? ""),
+                      String(l[1] ?? ""),
+                    ])
                 : [],
             }
           : undefined,

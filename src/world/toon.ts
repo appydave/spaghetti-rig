@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { isDrawable } from "./objects";
 
 export const INK = "#173e35";
 
@@ -240,13 +241,9 @@ export function kit(outline = 0.022) {
 /** Dispose an object's own (non-shared) geometries, materials and textures. */
 export function disposeTree(root: THREE.Object3D) {
   root.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (m.geometry && !m.geometry.userData.shared) m.geometry.dispose();
-    const mats = m.material
-      ? Array.isArray(m.material)
-        ? m.material
-        : [m.material]
-      : [];
+    if (!isDrawable(o)) return;
+    if (!o.geometry.userData.shared) o.geometry.dispose();
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
     for (const mat of mats) {
       if (mat.userData.shared) continue;
       if (typeof mat.userData.refs === "number" && --mat.userData.refs > 0)

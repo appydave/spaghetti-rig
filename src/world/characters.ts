@@ -39,7 +39,7 @@ export class Character {
     if (kind === "p2") buildSpecialist(this);
     else buildVibeCoder(this);
     this.root.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh && !o.userData.outline) o.castShadow = true;
+      if (o instanceof THREE.Mesh && !o.userData.outline) o.castShadow = true;
     });
   }
 

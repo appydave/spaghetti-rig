@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Layout, Line, Mark } from "./codelayout";
 import { Debris } from "./physics";
 import { INK, kit, rng, toon } from "./toon";
+import { meshNamed } from "./objects";
 
 export type Mood = "angry" | "calm" | "fixed" | "boss";
 
@@ -682,7 +683,7 @@ export class CodeWindow {
     debris: Debris,
     from: THREE.Vector3,
     power = 6,
-    grid = [6, 4] as [number, number],
+    grid: [number, number] = [6, 4],
     seed = 7,
   ) {
     this.group.updateMatrixWorld(true);
@@ -784,7 +785,7 @@ export class CodeWindow {
         );
       }
     // The slab itself and the eyes go; eyes tumble as their own pieces.
-    const slab = this.group.getObjectByName("code-slab") as THREE.Mesh;
+    const slab = meshNamed(this.group, "code-slab");
     slab.geometry.dispose();
     slab.removeFromParent();
     if (this.eyes) debris.breakObject(this.eyes, { from, power: power * 0.8 });
@@ -793,9 +794,8 @@ export class CodeWindow {
 
   dispose() {
     this.group.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh && m.geometry && !m.geometry.userData.shared)
-        m.geometry.dispose();
+      if (o instanceof THREE.Mesh && !o.geometry.userData.shared)
+        o.geometry.dispose();
     });
     if (!this.face.userData.refs) {
       this.texture.dispose();

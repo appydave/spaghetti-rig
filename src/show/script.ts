@@ -27,7 +27,8 @@ export interface Step {
 }
 /** p1 / p2: one player full screen. both: side by side. spec: side by side, you play the specialist and the vibe coder plays itself. */
 export type Mode = "p1" | "p2" | "both" | "spec";
-export const isSplit = (mode: Mode) => mode === "both" || mode === "spec";
+export const isSplit = (mode: Mode): mode is "both" | "spec" =>
+  mode === "both" || mode === "spec";
 export const MODES: {
   mode: Mode;
   key: string;

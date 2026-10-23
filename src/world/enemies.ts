@@ -63,7 +63,7 @@ export class Enemy {
     }
     this.group.userData.enemy = this;
     this.group.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh && !o.userData.outline) o.castShadow = true;
+      if (o instanceof THREE.Mesh && !o.userData.outline) o.castShadow = true;
     });
   }
 

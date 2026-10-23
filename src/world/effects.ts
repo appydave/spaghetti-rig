@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { isDrawable, mapOf } from "./objects";
 
 interface Particle {
   pos: THREE.Vector3;
@@ -304,16 +305,17 @@ export class Effects {
     this.sparks.count = n;
     this.sparks.instanceMatrix.needsUpdate = true;
     if (this.sparks.instanceColor) this.sparks.instanceColor.needsUpdate = true;
-    for (const f of this.faders.slice()) {
+    // Iterate a snapshot: finished faders are spliced out of the live list inside the loop.
+    const snapshot = this.faders.slice();
+    for (const f of snapshot) {
       f.age += dt;
       const k = Math.min(1, f.age / f.life);
       f.tick(k, f.obj);
       if (k >= 1) {
         this.faders.splice(this.faders.indexOf(f), 1);
         f.obj.removeFromParent();
-        const m = f.obj as THREE.Mesh;
-        m.geometry?.dispose();
-        const map = (f.mat as THREE.SpriteMaterial).map;
+        if (isDrawable(f.obj)) f.obj.geometry.dispose();
+        const map = mapOf(f.mat);
         if (map && !map.userData.shared) map.dispose();
         f.mat.dispose();
       }

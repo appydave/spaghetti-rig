@@ -16,11 +16,9 @@ export default defineConfig({
       // The floor is the measured coverage on 2026-10-23 rounded down to one decimal: it fails if coverage falls.
       // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change,
       // while statements (the same code) did not move.
-      // Branches 17.6 -> 17.5 at G02: hand fixes (?? and || for ternaries, for-of loops) removed two covered branches
-      // and added two uncovered ones with no code or test removed (17.70% -> 17.58%).
       thresholds: {
         statements: 11.1,
-        branches: 17.5,
+        branches: 17.6,
         functions: 17.5,
       },
     },

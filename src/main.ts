@@ -1,5 +1,6 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
 import { loadContent } from "./content/load";
+import { byId, closestEl } from "./dom";
 import { Director, type PresenterState } from "./show/director";
 import { isSplit, MODES, type Mode, type Player } from "./show/script";
 import { gatesText } from "./content/gatelabel";
@@ -8,8 +9,7 @@ import { initPhysics } from "./world/physics";
 import { Stage } from "./world/stage";
 import { PlayerWorld } from "./world/world";
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
-  document.getElementById(id) as T;
+const $ = (id: string) => byId(id, HTMLElement);
 type Screen = "prelude" | "title" | "map" | "game";
 
 const store = {
@@ -68,7 +68,7 @@ async function boot() {
     document.fonts.load("500 20px Space"),
   ]);
   const audio = new AudioEngine();
-  const stage = new Stage($("stage") as unknown as HTMLCanvasElement);
+  const stage = new Stage(byId("stage", HTMLCanvasElement));
   let mode: Mode =
     MODES.find((m) => m.mode === store.get("mode"))?.mode ?? "both";
   const pan = (p: Player) => (): number =>
@@ -224,12 +224,14 @@ async function boot() {
   });
   for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
     b.addEventListener("click", () => {
-      setMode(b.dataset.mode as Mode);
+      const mode = MODES.find((x) => x.mode === b.dataset.mode);
+      if (!mode) throw new Error(`Unknown mode "${b.dataset.mode}"`);
+      setMode(mode.mode);
       b.blur();
     });
   }
   document.addEventListener("click", (e) => {
-    const a = (e.target as HTMLElement).closest<HTMLElement>("[data-action]");
+    const a = closestEl(e.target, "[data-action]");
     if (!a) return;
     const act = a.dataset.action;
     if (act === "mute") toggleMute();
@@ -250,7 +252,7 @@ async function boot() {
     if (a instanceof HTMLButtonElement) a.blur();
   });
   $("tiers").addEventListener("click", (e) => {
-    const li = (e.target as HTMLElement).closest<HTMLElement>(".tier");
+    const li = closestEl(e.target, ".tier");
     if (!li) return;
     const i = Number(li.dataset.i);
     if (i === selected) start(i);
@@ -354,18 +356,20 @@ async function boot() {
   });
   // The presenter window can drive the show too.
   addEventListener("rig-command", (e) => {
-    const k = (e as CustomEvent<string>).detail;
-    const map: Record<string, [string, boolean]> = {
-      next: ["ArrowRight", false],
-      back: ["ArrowLeft", false],
-      pause: ["KeyP", false],
-      p1: ["Digit1", false],
-      p2: ["Digit2", false],
-      both: ["KeyB", false],
-      spec: ["KeyS", false],
-      auto: ["KeyA", false],
-    };
-    const m = map[k];
+    if (!(e instanceof CustomEvent)) return;
+    const k: unknown = e.detail;
+    if (typeof k !== "string") return;
+    const map = new Map<string, [string, boolean]>([
+      ["next", ["ArrowRight", false]],
+      ["back", ["ArrowLeft", false]],
+      ["pause", ["KeyP", false]],
+      ["p1", ["Digit1", false]],
+      ["p2", ["Digit2", false]],
+      ["both", ["KeyB", false]],
+      ["spec", ["KeyS", false]],
+      ["auto", ["KeyA", false]],
+    ]);
+    const m = map.get(k);
     if (m) key(m[0], m[1], "");
   });
 
@@ -430,25 +434,23 @@ function presenter() {
       <p class="next">Next: ${esc(s.next)}</p>`;
   });
   root.addEventListener("click", (e) => {
-    const k = (e.target as HTMLElement).dataset.k;
+    const k = e.target instanceof HTMLElement ? e.target.dataset.k : undefined;
     if (k) send(k);
   });
   addEventListener("keydown", (e) => {
-    const k = (
-      {
-        ArrowRight: "next",
-        Space: "next",
-        PageDown: "next",
-        ArrowLeft: "back",
-        PageUp: "back",
-        KeyP: "pause",
-        Digit1: "p1",
-        Digit2: "p2",
-        KeyB: "both",
-        KeyS: "spec",
-        KeyA: "auto",
-      } as Record<string, string>
-    )[e.code];
+    const k = new Map([
+      ["ArrowRight", "next"],
+      ["Space", "next"],
+      ["PageDown", "next"],
+      ["ArrowLeft", "back"],
+      ["PageUp", "back"],
+      ["KeyP", "pause"],
+      ["Digit1", "p1"],
+      ["Digit2", "p2"],
+      ["KeyB", "both"],
+      ["KeyS", "spec"],
+      ["KeyA", "auto"],
+    ]).get(e.code);
     if (k) {
       e.preventDefault();
       send(k);

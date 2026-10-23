@@ -236,12 +236,10 @@ export class AudioEngine {
   // ------------------------------------------------------------------ setup
 
   private init(): boolean {
-    const g = globalThis as unknown as {
-      AudioContext?: typeof AudioContext;
-      webkitAudioContext?: typeof AudioContext;
-    };
     const Ctor =
-      typeof AudioContext === "undefined" ? g.webkitAudioContext : AudioContext;
+      typeof AudioContext === "undefined"
+        ? globalThis.webkitAudioContext
+        : AudioContext;
     if (!Ctor) return false;
     let ctx: AudioContext;
     try {
@@ -426,8 +424,7 @@ export class AudioEngine {
     try {
       const now = ctx.currentTime;
       const horizon = now + LOOKAHEAD;
-      for (const deck of this.decks.slice())
-        this.scheduleDeck(deck, now, horizon);
+      for (const deck of this.decks) this.scheduleDeck(deck, now, horizon);
       this.decks = this.decks.filter((d) => {
         if (d.stopAt !== null && now > d.stopAt + 3) {
           this.disposeDeck(d);

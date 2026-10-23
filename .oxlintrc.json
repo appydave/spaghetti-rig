@@ -39,7 +39,7 @@
     "anti-slop/no-unknown-type-aliases": "error",
     "anti-slop/no-unsafe-dictionary-type": "error",
     "anti-slop/no-widen-then-assert": "error",
-    "anti-slop/require-safety-comment-for-type-assertion": "error",
+    "anti-slop/require-safety-comment-for-type-assertion": "off",
     "typescript/prefer-readonly": "off",
     "typescript/await-thenable": "off",
     "typescript/no-misused-promises": "off",
@@ -212,8 +212,7 @@
         "typescript/consistent-type-assertions": [
           "error",
           {
-            "assertionStyle": "as",
-            "objectLiteralTypeAssertions": "allow"
+            "assertionStyle": "never"
           }
         ],
         "typescript/prefer-for-of": ["error"],
@@ -334,7 +333,13 @@
     {
       "files": ["**/*.spec.ts", "tests/**/*.ts", "src/**/*.test.ts"],
       "rules": {
-        "anti-slop/require-safety-comment-for-type-assertion": "off"
+        "typescript/consistent-type-assertions": [
+          "error",
+          {
+            "assertionStyle": "as",
+            "objectLiteralTypeAssertions": "allow"
+          }
+        ]
       }
     },
     {

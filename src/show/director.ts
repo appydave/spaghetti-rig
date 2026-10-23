@@ -1,3 +1,4 @@
+import { byId, closestEl } from "../dom";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "../audio/audio";
 import { toolFor, type Game } from "../content/load";
@@ -20,8 +21,7 @@ import {
   type Step,
 } from "./script";
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
-  document.getElementById(id) as T;
+const $ = (id: string) => byId(id, HTMLElement);
 const PLAYERS: Player[] = ["p1", "p2"];
 const WHO: Record<Player, { n: string; name: string; sub: string }> = {
   p1: { n: "PLAYER 1", name: "Vibe coder", sub: "no tools · ships fast" },
@@ -87,8 +87,7 @@ export class Director {
     addEventListener("pointermove", move);
     addEventListener("pointerdown", (e) => {
       if (!this.active || this.paused || e.button !== 0) return;
-      if ((e.target as HTMLElement).closest?.("button, a, .tcard, .overlay"))
-        return;
+      if (closestEl(e.target, "button, a, .tcard, .overlay")) return;
       this.pointer = { x: e.clientX, y: e.clientY };
       this.aim(true);
     });
@@ -104,7 +103,7 @@ export class Director {
     return this.game.tiers[this.step.tier]!;
   }
   visible(): Player[] {
-    return isSplit(this.mode) ? PLAYERS : [this.mode as Player];
+    return isSplit(this.mode) ? PLAYERS : [this.mode];
   }
   /** In spec mode player 1 is driven by autoplay and the mouse plays player 2 only. */
   private machine(p: Player) {
@@ -440,7 +439,7 @@ export class Director {
   private renderVs() {
     const t = this.tier,
       vs = this.game.content.screens.vs;
-    const solo = isSplit(this.mode) ? null : (this.mode as Player);
+    const solo = isSplit(this.mode) ? null : this.mode;
     this.stage.vs.reset();
     this.stage.vs.solo = solo;
     $("backdrop").className = solo ? `solo-bg ${solo}` : "vs-bg";

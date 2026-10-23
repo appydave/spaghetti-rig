@@ -3,6 +3,7 @@ import { bossLayout, type BossLayout } from "./bosslayout";
 import { CodeWindow, PALETTE } from "./codewindow";
 import { Debris } from "./physics";
 import { geo, INK, kit } from "./toon";
+import { userData } from "./objects";
 
 const BARLOW = "Barlow, Impact, sans-serif",
   SPACE = "Space, Arial, sans-serif";
@@ -390,7 +391,7 @@ export class BossModel {
     this.core.group.rotation.z = (Math.random() - 0.5) * s * 0.05;
     for (const [i, p] of this.parts.entries()) {
       if (!p) continue;
-      const home = p.group.userData.home as THREE.Vector3;
+      const home = userData(p.group, "home", THREE.Vector3);
       p.group.position.y = home.y + Math.sin(t * 2 + i) * 0.06;
       p.group.rotation.z = Math.sin(t * 1.4 + i * 2) * 0.025;
       p.update(dt);
