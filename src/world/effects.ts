@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { isDrawable, mapOf } from "./objects";
 import { context2d } from "../dom";
 import { nth } from "../nth";
+import { FX } from "./palette";
 
 interface Particle {
   pos: THREE.Vector3;
@@ -55,7 +56,7 @@ const HEAL_LIFT_BASE = 2;
 const HEAL_LIFE_BASE = 1.2;
 const HEAL_LIFE_JITTER = 0.6;
 const HEAL_SPARKLE_SIZE = 0.09;
-const HEAL_GREEN_EVERY = 3;
+const HEAL_ACCENT_EVERY = 3;
 const HEAL_SINK = -0.5;
 const HEAL_SPARKLE_SPIN = 4;
 const HEAL_RING_SIZE = 1.6;
@@ -113,7 +114,7 @@ export class Effects {
   private faders: Fader[] = [];
   private readonly dummy = new THREE.Object3D();
   readonly flash = new THREE.PointLight(
-    "#ffdc85",
+    FX.muzzleLight,
     0,
     FLASH_DISTANCE,
     FLASH_DECAY,
@@ -123,7 +124,7 @@ export class Effects {
   constructor(private readonly scene: THREE.Scene) {
     this.sparks = new THREE.InstancedMesh(
       new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }),
+      new THREE.MeshBasicMaterial({ color: FX.spark, toneMapped: false }),
       MAX,
     );
     this.sparks.frustumCulled = false;
@@ -147,9 +148,7 @@ export class Effects {
       up?: number;
     } = {},
   ) {
-    const colors = (opts.colors ?? ["#fff3b0", "#f9db48", "#ffae59"]).map(
-      (c) => new THREE.Color(c),
-    );
+    const colors = (opts.colors ?? FX.burst).map((c) => new THREE.Color(c));
 
     for (let i = 0; i < (opts.n ?? DEFAULT_BURST_COUNT); i++) {
       if (this.particles.length >= MAX) {
@@ -185,14 +184,7 @@ export class Effects {
   confetti(at: THREE.Vector3, n = CONFETTI_COUNT) {
     this.burst(at, {
       n,
-      colors: [
-        "#f9db48",
-        "#aee5a3",
-        "#ff8b69",
-        "#bd9bff",
-        "#8ebebf",
-        "#f4f4e8",
-      ],
+      colors: FX.confetti,
       speed: CONFETTI_SPEED,
       size: CONFETTI_SIZE,
       life: CONFETTI_LIFE,
@@ -229,18 +221,20 @@ export class Effects {
         life: HEAL_LIFE_BASE + Math.random() * HEAL_LIFE_JITTER,
         age: 0,
         size: HEAL_SPARKLE_SIZE,
-        color: new THREE.Color(i % HEAL_GREEN_EVERY ? "#aee5a3" : "#f9db48"),
+        color: new THREE.Color(
+          i % HEAL_ACCENT_EVERY ? FX.healSparkle : FX.healSparkleAccent,
+        ),
         gravity: HEAL_SINK,
         spin: HEAL_SPARKLE_SPIN,
       });
     }
 
-    this.ring(at, "#aee5a3", HEAL_RING_SIZE, HEAL_RING_LIFE, true);
+    this.ring(at, FX.healRing, HEAL_RING_SIZE, HEAL_RING_LIFE, true);
   }
 
   ring(
     at: THREE.Vector3,
-    color = "#f9db48",
+    color = FX.ring,
     size = RING_DEFAULT_SIZE,
     life = RING_DEFAULT_LIFE,
     flat = false,
@@ -287,7 +281,7 @@ export class Effects {
   tracer(
     from: THREE.Vector3,
     to: THREE.Vector3,
-    color = "#fff1a8",
+    color = FX.tracer,
     width = TRACER_DEFAULT_WIDTH,
   ) {
     const len = from.distanceTo(to);
@@ -328,12 +322,12 @@ export class Effects {
   }
 
   /** A thick glowing beam (tool card power shot). */
-  beam(from: THREE.Vector3, to: THREE.Vector3, color = "#aee5a3") {
+  beam(from: THREE.Vector3, to: THREE.Vector3, color = FX.beam) {
     this.tracer(from, to, color, BEAM_WIDTH);
-    this.tracer(from, to, "#ffffff", BEAM_CORE_WIDTH);
+    this.tracer(from, to, FX.beamCore, BEAM_CORE_WIDTH);
   }
 
-  muzzle(at: THREE.Vector3, color = "#ffdc85") {
+  muzzle(at: THREE.Vector3, color = FX.muzzle) {
     this.flash.position.copy(at);
     this.flash.color.set(color);
     this.flash.intensity = MUZZLE_LIGHT_INTENSITY;
@@ -368,7 +362,7 @@ export class Effects {
   text(
     at: THREE.Vector3,
     s: string,
-    color = "#f9db48",
+    color = FX.text,
     size = TEXT_DEFAULT_SIZE,
     life = TEXT_DEFAULT_LIFE,
   ) {
@@ -383,7 +377,7 @@ export class Effects {
     g.textAlign = "center";
     g.textBaseline = "middle";
     g.lineWidth = TEXT_OUTLINE_WIDTH;
-    g.strokeStyle = "#173e35";
+    g.strokeStyle = FX.textOutline;
     g.lineJoin = "round";
     g.strokeText(s, TEXT_CENTRE_X, TEXT_CENTRE_Y);
     g.fillStyle = color;
@@ -532,13 +526,13 @@ function glow() {
     GLOW_CENTRE,
   );
 
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(GLOW_MID_STOP, "rgba(255,255,255,.8)");
-  grad.addColorStop(1, "rgba(255,255,255,0)");
+  grad.addColorStop(0, FX.glowCore);
+  grad.addColorStop(GLOW_MID_STOP, FX.glowMid);
+  grad.addColorStop(1, FX.glowEdge);
   g.fillStyle = grad;
   g.fillRect(0, 0, GLOW_SIZE, GLOW_SIZE);
   // Four-point star flare.
-  g.fillStyle = "rgba(255,255,255,.9)";
+  g.fillStyle = FX.glowStar;
   g.beginPath();
   g.moveTo(GLOW_CENTRE, 0);
   g.lineTo(GLOW_STAR_OUTSET, GLOW_STAR_INSET);

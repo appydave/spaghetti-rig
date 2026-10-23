@@ -25,6 +25,7 @@ import { Gate, type GateState } from "./gate";
 import { Debris } from "./physics";
 import { beforeParen, shortTool } from "../ui/card";
 import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from "./toon";
+import { BOLT, EVENT, PILE, WORLD } from "./palette";
 
 export type CameraMode = "follow" | "stop" | "boss" | "portrait";
 type Shape = "wide" | "tall";
@@ -515,12 +516,16 @@ export class PlayerWorld {
     private readonly audio: AudioEngine,
     private readonly pan: () => number,
   ) {
-    this.scene.background = new THREE.Color("#b8d3c2");
-    this.scene.fog = new THREE.Fog("#c2d9c8", FOG_NEAR, FOG_FAR);
+    this.scene.background = new THREE.Color(WORLD.sky);
+    this.scene.fog = new THREE.Fog(WORLD.fog, FOG_NEAR, FOG_FAR);
     this.scene.add(
-      new THREE.HemisphereLight("#e4f7ff", "#586d55", HEMISPHERE_INTENSITY),
+      new THREE.HemisphereLight(
+        WORLD.hemisphereSky,
+        WORLD.hemisphereGround,
+        HEMISPHERE_INTENSITY,
+      ),
     );
-    this.sun = new THREE.DirectionalLight("#fff0c1", SUN_INTENSITY);
+    this.sun = new THREE.DirectionalLight(WORLD.sun, SUN_INTENSITY);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
@@ -537,7 +542,7 @@ export class PlayerWorld {
     this.sun.shadow.radius = SHADOW_BLUR_RADIUS;
     this.scene.add(this.sun, this.sun.target);
 
-    const rim = new THREE.DirectionalLight("#93cfff", RIM_INTENSITY);
+    const rim = new THREE.DirectionalLight(WORLD.rim, RIM_INTENSITY);
 
     rim.position.set(RIM_X, RIM_Y, RIM_Z);
     this.scene.add(rim);
@@ -958,7 +963,7 @@ export class PlayerWorld {
           PILE_TUBE_RADIUS,
           PILE_TUBE_SIDES,
         ),
-        toon(i % PILE_PALE_EVERY ? "#f3d27a" : "#efc25e"),
+        toon(i % PILE_PALE_EVERY ? PILE.strandPale : PILE.strand),
       );
 
       tube.castShadow = true;
@@ -969,7 +974,7 @@ export class PlayerWorld {
 
     a.ball(
       pile,
-      "#de6a47",
+      PILE.meatball,
       MEATBALL_X,
       MEATBALL_Y,
       MEATBALL_Z,
@@ -982,13 +987,13 @@ export class PlayerWorld {
       [GARNISH_B_X, GARNISH_B_Z],
       [GARNISH_C_X, GARNISH_C_Z],
     ] as const) {
-      a.ball(pile, "#8b4a3a", x, GARNISH_Y, z, GARNISH_RADIUS);
+      a.ball(pile, PILE.garnish, x, GARNISH_Y, z, GARNISH_RADIUS);
     }
 
     // A white flag of surrender poking out.
     a.cyl(
       pile,
-      "#7a6e5e",
+      PILE.flagPole,
       FLAG_POLE_X,
       FLAG_POLE_Y,
       FLAG_POLE_Z,
@@ -998,7 +1003,7 @@ export class PlayerWorld {
 
     const flag = a.box(
       pile,
-      "#fffdf0",
+      PILE.flag,
       FLAG_X,
       FLAG_Y,
       FLAG_Z,
@@ -1117,7 +1122,7 @@ export class PlayerWorld {
       () => {
         if (!p1) {
           this.fx.burst(this.character.muzzleWorld(), {
-            colors: ["#aee5a3", "#f9db48"],
+            colors: EVENT.windowExitBurst,
             n: EXIT_BURST_COUNT,
             speed: EXIT_BURST_SPEED,
           });
@@ -1288,13 +1293,13 @@ export class PlayerWorld {
       const chest = this.character.chestWorld();
 
       this.fx.burst(chest, {
-        colors: ["#ff5d4f", "#ffae59", "#fff3b0"],
+        colors: EVENT.hitBurst,
         n: HIT_BURST_COUNT,
         speed: HIT_BURST_SPEED,
       });
       this.fx.ring(
         chest,
-        "#ff5d4f",
+        EVENT.hitRing,
         HIT_RING_SIZE,
         HIT_RING_LIFE,
         false,
@@ -1303,7 +1308,7 @@ export class PlayerWorld {
       this.fx.text(
         chest.clone().add(new THREE.Vector3(0, HIT_TEXT_RISE, 0)),
         `−${Math.round(TIER_HEALTH_LOSS / this.playing.stops.length)}%`,
-        "#ff8b69",
+        EVENT.hitText,
         1.0,
         HIT_TEXT_LIFE,
       );
@@ -1368,11 +1373,11 @@ export class PlayerWorld {
       const from = this.character.muzzleWorld();
       const to = old.group.position.clone();
 
-      this.fx.muzzle(from, "#aee5a3");
+      this.fx.muzzle(from, EVENT.toolMuzzle);
       this.fx.beam(from, to);
       this.fx.ring(
         to,
-        "#aee5a3",
+        EVENT.toolRing,
         BEAM_RING_SIZE,
         BEAM_RING_LIFE,
         false,
@@ -1445,7 +1450,7 @@ export class PlayerWorld {
           .chestWorld()
           .add(new THREE.Vector3(0, HEAL_TEXT_RISE, 0)),
         "+100% HP",
-        "#aee5a3",
+        EVENT.healText,
         1.0,
         HEAL_TEXT_LIFE,
       );
@@ -1481,7 +1486,7 @@ export class PlayerWorld {
         boss.shake = 1;
         this.fx.burst(home.clone().setY(BOSS_LANDING_DUST_Y), {
           n: BOSS_LANDING_BURST_COUNT,
-          colors: ["#ffae59", "#ff6d21", "#f4f4e8"],
+          colors: EVENT.bossArriveBurst,
           speed: BOSS_LANDING_BURST_SPEED,
         });
       },
@@ -1550,13 +1555,13 @@ export class PlayerWorld {
               this.character.pose = "down";
               this.fx.burst(to, {
                 n: KO_BURST_COUNT,
-                colors: ["#ff5d4f", "#ffae59"],
+                colors: EVENT.bossHitBurst,
                 speed: KO_BURST_SPEED,
               });
               this.fx.text(
                 to.clone().add(new THREE.Vector3(0, KO_TEXT_RISE, 0)),
                 "K.O.",
-                "#ff5d4f",
+                EVENT.koText,
                 KO_TEXT_SIZE,
                 KO_TEXT_LIFE,
               );
@@ -1595,7 +1600,7 @@ export class PlayerWorld {
       const from = this.character.muzzleWorld();
       const to = boss.partWorld(step.part);
 
-      this.fx.muzzle(from, "#f9db48");
+      this.fx.muzzle(from, EVENT.partMuzzle);
       this.sfx("cardPlay");
 
       const card = this.track(toolBolt(tool.name));
@@ -1609,10 +1614,10 @@ export class PlayerWorld {
           this.faceCamera(card.group, true);
         },
         () => {
-          this.fx.beam(from, to, "#f9db48");
+          this.fx.beam(from, to, EVENT.partBeam);
           this.fx.burst(to, {
             n: PART_BURST_COUNT,
-            colors: ["#f9db48", "#aee5a3", "#fff"],
+            colors: EVENT.partBreakBurst,
             speed: PART_BURST_SPEED,
           });
           this.fx.text(
@@ -1621,7 +1626,7 @@ export class PlayerWorld {
               .split(" ")
               .slice(0, PART_TEXT_WORDS)
               .join(" "),
-            "#f9db48",
+            EVENT.partText,
             PART_TEXT_SIZE,
             PART_TEXT_LIFE,
           );
@@ -1661,7 +1666,7 @@ export class PlayerWorld {
           this.shake = PILE_LANDING_SHAKE;
           this.fx.burst(pile.position.clone().setY(PILE_DUST_Y), {
             n: PILE_BURST_COUNT,
-            colors: ["#f3d27a", "#de6a47"],
+            colors: EVENT.bossDownBurst,
             speed: PILE_BURST_SPEED,
           });
         },
@@ -1689,7 +1694,7 @@ export class PlayerWorld {
       const from = this.character.muzzleWorld();
       const to = boss.core.group.getWorldPosition(new THREE.Vector3());
 
-      this.fx.beam(from, to, "#f9db48");
+      this.fx.beam(from, to, EVENT.bossDownBeam);
       boss.core.crack(CORE_CRACK_SEED_FIRST);
       this.sfx("glassCrack");
     });
@@ -1709,7 +1714,7 @@ export class PlayerWorld {
       this.fx.confetti(at, BOSS_CONFETTI_COUNT);
       this.fx.ring(
         at,
-        "#f9db48",
+        EVENT.bossDownRing,
         BOSS_RING_SIZE,
         BOSS_RING_LIFE,
         false,
@@ -1725,7 +1730,7 @@ export class PlayerWorld {
     for (const e of this.enemies) {
       this.fx.burst(e.center(), {
         n: STREET_CLEAR_BURST_COUNT,
-        colors: ["#f4f4e8", "#aee5a3"],
+        colors: EVENT.clearStreetBurst,
         speed: STREET_CLEAR_BURST_SPEED,
       });
       disposeTree(e.group);
@@ -1804,11 +1809,11 @@ export class PlayerWorld {
 
     const p1 = this.player === "p1";
 
-    this.fx.muzzle(from, p1 ? "#ff9ad5" : "#ffdc85");
+    this.fx.muzzle(from, p1 ? EVENT.muzzleP1 : EVENT.muzzleP2);
     this.fx.tracer(
       from,
       point,
-      p1 ? "#ff9ad5" : "#fff1a8",
+      p1 ? EVENT.tracerP1 : EVENT.tracerP2,
       p1 ? TRACER_WIDTH_P1 : TRACER_WIDTH_P2,
     );
     this.sfx(p1 ? "shootP1" : "shoot", SHOT_VOLUME);
@@ -1831,7 +1836,7 @@ export class PlayerWorld {
         {
           n: MISS_BURST_COUNT,
           speed: 2,
-          colors: ["#f4f4e8"],
+          colors: EVENT.shotBurst,
         },
       );
     }
@@ -1861,12 +1866,12 @@ export class PlayerWorld {
     this.sfx("bounce", BOUNCE_VOLUME);
     this.fx.burst(at, {
       n: BOUNCE_BURST_COUNT,
-      colors: ["#ffffff", "#ffae59"],
+      colors: EVENT.bounceBurst,
       speed: BOUNCE_BURST_SPEED,
     });
     this.fx.ring(
       at,
-      "#ffffff",
+      EVENT.bounceRing,
       BOUNCE_RING_SIZE,
       BOUNCE_RING_LIFE,
       false,
@@ -1883,12 +1888,12 @@ export class PlayerWorld {
         ),
       );
 
-    this.fx.tracer(at, back, "#ffffff", BOUNCE_TRACER_WIDTH);
+    this.fx.tracer(at, back, EVENT.bounceTracer, BOUNCE_TRACER_WIDTH);
     if (Math.random() < NO_EFFECT_CHANCE) {
       this.fx.text(
         at.clone().add(new THREE.Vector3(0, 1, 0)),
         "NO EFFECT",
-        "#ffffff",
+        EVENT.noEffectText,
         NO_EFFECT_TEXT_SIZE,
         NO_EFFECT_TEXT_LIFE,
       );
@@ -1906,14 +1911,14 @@ export class PlayerWorld {
       speed: KILL_BURST_SPEED,
       colors:
         e.kind === "spaghetti"
-          ? ["#f3d27a", "#de6a47", "#fff3b0"]
+          ? EVENT.killSpaghettiBurst
           : e.kind === "bug"
-            ? ["#de6a47", "#173e35", "#f9db48"]
-            : ["#e0ebee", "#76e4f9", "#f8c355"],
+            ? EVENT.killBugBurst
+            : EVENT.killRobotBurst,
     });
     this.fx.ring(
       at,
-      "#f9db48",
+      EVENT.killRing,
       KILL_RING_SIZE,
       KILL_RING_LIFE,
       false,
@@ -1922,7 +1927,7 @@ export class PlayerWorld {
     this.fx.text(
       at.clone().add(new THREE.Vector3(0, 1, 0)),
       `+${SCORE[e.kind]}`,
-      "#f9db48",
+      EVENT.killText,
       KILL_TEXT_SIZE,
       1,
     );
@@ -1984,7 +1989,7 @@ export class PlayerWorld {
       this.fx.text(
         at,
         "BUG SHIPPED",
-        "#ff5d4f",
+        EVENT.shippedText,
         KILL_TEXT_SIZE,
         SLIP_TEXT_LIFE,
       );
@@ -1993,7 +1998,7 @@ export class PlayerWorld {
       this.fx.text(
         at,
         "CAUGHT BY CI",
-        "#8ef08a",
+        EVENT.caughtText,
         KILL_TEXT_SIZE,
         SLIP_TEXT_LIFE,
       );
@@ -2428,11 +2433,11 @@ function toolBolt(name: string) {
 
   const g = context2d(cv);
 
-  g.fillStyle = "#f9db48";
+  g.fillStyle = BOLT.card;
   g.beginPath();
   g.roundRect(0, 0, BOLT_WIDTH, BOLT_HEIGHT, BOLT_CORNER);
   g.fill();
-  g.strokeStyle = "#173e35";
+  g.strokeStyle = BOLT.border;
   g.lineWidth = BOLT_BORDER;
   g.beginPath();
   g.roundRect(
@@ -2443,7 +2448,7 @@ function toolBolt(name: string) {
     BOLT_INNER_CORNER,
   );
   g.stroke();
-  g.fillStyle = "#173e35";
+  g.fillStyle = BOLT.text;
   g.font = "italic 800 46px Barlow, Impact, sans-serif";
   g.textAlign = "center";
   for (const [i, w] of beforeParen(name)
@@ -2470,7 +2475,7 @@ function toolBolt(name: string) {
   group.add(mesh);
 
   const light = new THREE.PointLight(
-    "#f9db48",
+    BOLT.light,
     BOLT_LIGHT_INTENSITY,
     BOLT_LIGHT_RANGE,
   );

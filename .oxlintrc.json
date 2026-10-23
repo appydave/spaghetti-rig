@@ -494,11 +494,9 @@
         "src/world/boss.ts",
         "src/world/characters.ts",
         "src/world/city.ts",
-        "src/world/effects.ts",
         "src/world/enemies.ts",
         "src/world/gate.ts",
-        "src/world/showcase.ts",
-        "src/world/world.ts"
+        "src/world/showcase.ts"
       ],
       "rules": {
         "strict-colors/no-color-literals": "error"
