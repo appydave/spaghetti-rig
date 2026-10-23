@@ -146,10 +146,10 @@ function recorder(log: Arg[][], buffers: Float32Array[][]) {
               ? undefined
               : own && key in own
                 ? own[key]
-                : WORLD.has(key)
-                  ? WORLD.get(key)
-                  : store.has(key)
-                    ? store.get(key)
+                : store.has(key)
+                  ? store.get(key)
+                  : WORLD.has(key)
+                    ? WORLD.get(key)
                     : node(`${path}.${key}`);
       },
       set(_t, p, v) {
@@ -206,6 +206,9 @@ function scenario(seed: number, run: (engine: any) => void): [string, number] {
 
   Math.random = seeded(seed);
   vi.stubGlobal("setInterval", () => 0);
+  vi.stubGlobal("setTimeout", (_fn: () => void, ms: number) =>
+    log.push(["setTimeout", ms]),
+  );
   vi.stubGlobal("AudioContext", root);
   try {
     engine.init();
@@ -225,11 +228,84 @@ function scenario(seed: number, run: (engine: any) => void): [string, number] {
   ];
 }
 
+/** How long apart an effect may be played again, and what the engine does when it is too busy: each is tried just either side of its limit. */
+const GAPS: [string, number][] = [
+  ["debrisBounce", 0.04],
+  ["step", 0.07],
+  ["enemyHit", 0.03],
+  ["shoot", 0.035],
+  ["shootP1", 0.035],
+  ["uiMove", 0.03],
+  ["glassCrack", 0.04],
+  ["enemyPop", 0.03],
+  ["damage", 0.08],
+  ["bounce", 0.06],
+  ["heal", 0.02],
+];
+const GAP_MARGIN = 0.0003;
+
+const control = (e: any): void => {
+  const at = (t: number): void => {
+    e.ctx.currentTime = t;
+  };
+
+  e.muted = true;
+  e.muted = false;
+  e.setTheme("walk");
+
+  SFX.forEach((sfx, i) => {
+    at(100 + i * 10);
+    e.play(sfx, { volume: 0.5, pan: 0.2 });
+  });
+
+  GAPS.forEach(([sfx, gap], i) => {
+    const start = 1000 + i * 10;
+
+    for (const t of [
+      start,
+      start + gap - GAP_MARGIN,
+      start + gap + GAP_MARGIN,
+    ]) {
+      at(t);
+      e.activeSfx = 0;
+      e.play(sfx);
+    }
+  });
+
+  [
+    [24.5, "debrisBounce", "slam"],
+    [64.5, "enemyHit", "damage"],
+  ].forEach(([busy, low, normal], i) => {
+    at(2000 + i * 10);
+    e.activeSfx = busy;
+    e.play(low);
+    e.play(normal);
+  });
+
+  const old = e.createDeck(COMPILED_TRACKS[0], 0, 0.03);
+
+  old.stopAt = -2.5;
+  at(1);
+  e.tick();
+  e.tick();
+
+  // A scheduler that is far behind jumps forward; one a hair behind drops the steps it missed.
+  const [late, stalled] = [
+    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+  ];
+
+  e.scheduleDeck(stalled, 1 + COMPILED_TRACKS[0].stepSec * 400, 1000);
+  e.scheduleDeck(e.createDeck(COMPILED_TRACKS[0], 1, 0.03), 1.29, 2);
+  e.scheduleDeck(late, 1.025, 1.3);
+};
+
 const bodies = (e: any): void => {
   const out = e.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
 
   for (const o of [
     { f: 440, dur: 0.1, vol: 0.2 },
+    { f: 440, dur: 0.001, vol: 0.00001 },
     {
       type: "square",
       f: 900,
@@ -258,6 +334,30 @@ const bodies = (e: any): void => {
     e.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
   }
 
+  e.noise(out, 1, { filter: "lowpass", f: 500, dur: 1.99, vol: 0.2 });
+
+  // Notes outside what the score uses: a very short one, a very high one, and a pad held long, to reach the voices' floors and ceilings.
+  const deck = e.createDeck(COMPILED_TRACKS[0], 1, 0.03);
+
+  for (const voice of ["triangle", "sine", "square", "saw", "pluck"]) {
+    e.leadNote(deck, 1, 100, 0.02, 1, voice);
+    e.leadNote(deck, 1, 60, 3, 1, voice);
+  }
+
+  e.bassNote(deck, 1, 40, 0.02, 1);
+  e.bassNote(deck, 1, 40, 4, 1);
+
+  for (const pad of ["warm", "glass", "dark"]) {
+    const [first] = COMPILED_TRACKS;
+    const held = e.createDeck(
+      { ...first, def: { ...first?.def, pad } },
+      1,
+      0.03,
+    );
+
+    e.padChord(held, 1, [60, 64, 67], 5, 1);
+  }
+
   for (const midi of [38, 60, 84]) {
     e.brass(out, 1, midi, 0.8, 0.1);
     e.trombone(out, 1, midi, 0.8, midi > 50);
@@ -272,31 +372,42 @@ afterAll(() => {
   }
 });
 
+const runs: [string, (e: any) => void][] = [
+  ["engine bodies", bodies],
+  ["engine control", control],
+  ...COMPILED_TRACKS.map((track): [string, (e: any) => void] => [
+    `track ${track.def.name}`,
+    (e: any) => {
+      const deck = e.createDeck(track, 1, 0.03);
+
+      e.current = deck;
+      e._theme = track.def.theme;
+      for (let loop = 0; loop < 2; loop++) {
+        for (let idx = 0; idx < track.totalSteps; idx++) {
+          e.scheduleStep(deck, idx, loop, 1 + idx * 0.01);
+        }
+      }
+
+      for (let n = 1; n <= 12; n++) {
+        e.scheduleDeck(deck, 1, 1 + track.stepSec * 200 * n);
+      }
+
+      // A call that needs more steps than the scheduler's guard allows, on a deck that is not the current one (so it cannot rotate).
+      const long = e.createDeck(track, 1, 0.03);
+
+      long.abs = 7;
+      e.scheduleDeck(long, 1, 1 + track.stepSec * 300);
+      e.retire(long, 2, 1);
+      e.retire(deck, 2, 1);
+      e.disposeDeck(deck);
+    },
+  ]),
+];
+
 describe("audio proof harness", () => {
-  it("drives the engine, a deck per track and the instrument voices, the same way twice", () => {
-    const runs: [string, (e: any) => void][] = [
-      ["engine bodies", bodies],
-      ...COMPILED_TRACKS.map((track): [string, (e: any) => void] => [
-        `track ${track.def.name}`,
-        (e: any) => {
-          const deck = e.createDeck(track, 1, 0.03);
-
-          e.current = deck;
-          e._theme = track.def.theme;
-          for (let loop = 0; loop < 2; loop++) {
-            for (let idx = 0; idx < track.totalSteps; idx++) {
-              e.scheduleStep(deck, idx, loop, 1 + idx * 0.01);
-            }
-          }
-
-          e.scheduleDeck(deck, 1, 1 + track.stepSec * track.totalSteps * 2.5);
-          e.retire(deck, 2, 1);
-          e.disposeDeck(deck);
-        },
-      ]),
-    ];
-
-    for (const [what, run] of runs) {
+  it.each(runs)(
+    "%s: played the same way twice, from two seeds",
+    (what, run) => {
       for (let seed = 0; seed < Math.min(SEEDS, 2); seed++) {
         const result = scenario(seed, run);
 
@@ -304,8 +415,8 @@ describe("audio proof harness", () => {
         expect(result[1]).toBeGreaterThan(0);
         all[`${what} seed ${seed}`] = result;
       }
-    }
-  });
+    },
+  );
 
   it("plays every effect, the same way twice, and none of them silent", () => {
     for (const sfx of SFX) {
