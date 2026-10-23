@@ -24,10 +24,133 @@ export type CameraMode = "follow" | "stop" | "boss" | "portrait";
 type Shape = "wide" | "tall";
 
 const stopZ = (k: number) => -(k + 1) * SEGMENT;
-const standZ = (k: number) => stopZ(k) + 4;
+const standZ = (k: number) => stopZ(k) + STAND_PAST_GATE;
 const WALK_SECONDS = 9;
+const STAND_PAST_GATE = 4;
+const BOSS_HEIGHT = 6.2;
+const CAMERA_FOV = 42;
+const CAMERA_NEAR = 0.1;
+const CAMERA_FAR = 400;
+const WIDESCREEN_WIDTH = 16;
+const WIDESCREEN_HEIGHT = 9;
+const FULL_HEALTH = 100;
+const TOTAL_DAMAGE = 90;
+const CAM_START_X = 3;
+const CAM_START_Y = 3;
+const CAM_START_Z = 8;
+const CAM_LOOK_START_Y = 1.5;
+const CAM_LOOK_START_Z = -6;
+const FOG_NEAR = 40;
+const FOG_FAR = 120;
+const HEMISPHERE_INTENSITY = 2.2;
+const SUN_INTENSITY = 2.9;
+const SHADOW_MAP_SIZE = 2048;
+const SHADOW_EXTENT = 28;
+const SHADOW_CAMERA_FAR = 120;
+const SHADOW_BIAS = -0.0004;
+const SHADOW_NORMAL_BIAS = 0.04;
+const SHADOW_BLUR_RADIUS = 3;
+const RIM_INTENSITY = 1.1;
+const RIM_X = -30;
+const RIM_Y = 20;
+const RIM_Z = -40;
+const GUNNER_SEED_P1 = 11;
+const GUNNER_SEED_P2 = 29;
+const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
+const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
+const RATTLE_P1 = 0.5;
+const RATTLE_P2 = 0.3;
+const DEBT_WINDOW_COLS = 30;
+const DEBT_WINDOW_WIDTH = 1.1;
+const CITY_TAIL_LENGTH = 40;
+const CITY_SEED_BASE = 1000;
+const CITY_SEED_PER_TIER = 77;
+const CITY_CLEAR_BEHIND_ARENA = 16;
+const CITY_CLEAR_AHEAD_OF_ARENA = 60;
+const TALL_CARD_COLS = 44;
+const WIDE_CARD_COLS = 60;
+const MIN_CARD_COLS = 34;
+const TALL_WINDOW_WIDTH = 7.2;
+const WIDE_WINDOW_WIDTH = 7.6;
+const TALL_WINDOW_MAX_HEIGHT = 8.6;
+const WIDE_WINDOW_MAX_HEIGHT = 6.2;
+const PILE_SEED = 42;
+const PILE_STRANDS = 26;
+const PILE_POINTS = 6;
+const PILE_SPREAD = 2.4;
+const RANDOM_CENTRE = 0.5;
+const PILE_PEAK_POINT = 3;
+const PILE_PEAK_FALLOFF = 4;
+const PILE_CENTRE_Z = -1.2;
+const PILE_Z_BIAS = 0.2;
+const PILE_TUBE_SEGMENTS = 40;
+const PILE_TUBE_RADIUS = 0.09;
+const PILE_TUBE_SIDES = 6;
+const PILE_PALE_EVERY = 3;
+const PILE_OUTLINE = 0.02;
+const MEATBALL_X = 0.2;
+const MEATBALL_Y = 0.75;
+const MEATBALL_Z = -0.9;
+const MEATBALL_RADIUS = 0.7;
+const MEATBALL_FLATTEN = 0.3;
+const MEATBALL_STRETCH = 0.6;
+const GARNISH_Y = 0.95;
+const GARNISH_RADIUS = 0.22;
+const GARNISH_A_X = 0.5;
+const GARNISH_A_Z = -0.6;
+const GARNISH_B_X = -0.2;
+const GARNISH_B_Z = -1.2;
+const GARNISH_C_X = 0.1;
+const GARNISH_C_Z = -0.3;
+const FLAG_POLE_X = -0.6;
+const FLAG_POLE_Y = 1.2;
+const FLAG_POLE_Z = -0.4;
+const FLAG_POLE_RADIUS = 0.03;
+const FLAG_POLE_LENGTH = 1.6;
+const FLAG_X = -0.35;
+const FLAG_Y = 1.8;
+const FLAG_Z = -0.4;
+const FLAG_WIDTH = 0.5;
+const FLAG_HEIGHT = 0.32;
+const FLAG_THICKNESS = 0.02;
+const FLAG_TURN = 0.2;
+const EXIT_WINDOW_SECONDS = 0.7;
+const EXIT_SCALE_DEBT = 0.2;
+const EXIT_SCALE_MUZZLE = 0.02;
+const EXIT_SPIN_DEBT = 0.3;
+const EXIT_SPIN_MUZZLE = 4;
+const EXIT_BURST_COUNT = 18;
+const EXIT_BURST_SPEED = 3;
+const WALK_SEED_BASE = 500;
+const WALK_SEED_PER_TIER = 31;
+const WALK_SEED_PER_STOP = 7;
+const SPAWNS_MIN = 7;
+const SPAWNS_SPREAD = 3;
+const SPAWN_FIRST_AT = 0.04;
+const SPAWN_SPAN = 0.72;
+const SPAWN_JITTER = 0.05;
+const SPAGHETTI_CHANCE_UP_TO = 0.45;
+const BUG_CHANCE_UP_TO = 0.75;
+const SPAWN_SEED_RANGE = 1e6;
+const WALK_EASED_SHARE = 0.15;
+const WALK_LINEAR_SHARE = 0.85;
+const SPAWN_DISTANCE_AHEAD = 18;
+const SPAWN_DISTANCE_JITTER = 8;
+const COIN_FLIP = 0.5;
+const SPAGHETTI_START_X = 3;
+const SPAGHETTI_END_X = 1.5;
+const SPAGHETTI_TRAVEL_Z = 10;
+const SPAGHETTI_SPEED = 2.2;
+const BUG_LANE_X = 5;
+const BUG_TRAVEL_Z = 4;
+const BUG_SPEED = 3.2;
+const ROBOT_LANE_X = 9;
+const ROBOT_START_BACK = 4;
+const ROBOT_TRAVEL_Z = 2;
+const ROBOT_SPEED = 2.6;
+
 /** Boss arena: how far down the road the boss stands and how high its main window floats. */
-const BOSS = { y: 6.2 };
+const BOSS = { y: BOSS_HEIGHT };
 
 export const walkSeconds = () => WALK_SECONDS;
 
@@ -64,7 +187,12 @@ interface State {
  */
 export class PlayerWorld {
   readonly scene = new THREE.Scene();
-  readonly camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 400);
+  readonly camera = new THREE.PerspectiveCamera(
+    CAMERA_FOV,
+    WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT,
+    CAMERA_NEAR,
+    CAMERA_FAR,
+  );
   readonly character: Character;
   readonly fx: Effects;
   readonly debris: Debris;
@@ -76,11 +204,11 @@ export class PlayerWorld {
   /** An enemy got past: shipped (player 1) or caught by CI (player 2). */
   onSlip?: (kind: EnemyKind) => void;
   /** Health shown in the HUD (animated). */
-  health = 100;
+  health = FULL_HEALTH;
   bossTotal = 0;
   bossLeft = 0;
   autoplay = false;
-  aspect = 16 / 9;
+  aspect = WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT;
   shape: Shape = "wide";
 
   private tier: PlayTier | null = null;
@@ -107,8 +235,16 @@ export class PlayerWorld {
     next: number;
   } | null = null;
   private shake = 0;
-  private readonly camPos = new THREE.Vector3(3, 3, 8);
-  private readonly camLook = new THREE.Vector3(0, 1.5, -6);
+  private readonly camPos = new THREE.Vector3(
+    CAM_START_X,
+    CAM_START_Y,
+    CAM_START_Z,
+  );
+  private readonly camLook = new THREE.Vector3(
+    0,
+    CAM_LOOK_START_Y,
+    CAM_LOOK_START_Z,
+  );
   private camMode: CameraMode = "follow";
   private readonly gunner: AutoGunner;
   private aim: THREE.Vector3 | null = null;
@@ -123,35 +259,43 @@ export class PlayerWorld {
     private readonly pan: () => number,
   ) {
     this.scene.background = new THREE.Color("#b8d3c2");
-    this.scene.fog = new THREE.Fog("#c2d9c8", 40, 120);
-    this.scene.add(new THREE.HemisphereLight("#e4f7ff", "#586d55", 2.2));
-    this.sun = new THREE.DirectionalLight("#fff0c1", 2.9);
+    this.scene.fog = new THREE.Fog("#c2d9c8", FOG_NEAR, FOG_FAR);
+    this.scene.add(
+      new THREE.HemisphereLight("#e4f7ff", "#586d55", HEMISPHERE_INTENSITY),
+    );
+    this.sun = new THREE.DirectionalLight("#fff0c1", SUN_INTENSITY);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
     const sc = this.sun.shadow.camera;
 
-    sc.left = -28;
-    sc.right = 28;
-    sc.top = 28;
-    sc.bottom = -28;
+    sc.left = -SHADOW_EXTENT;
+    sc.right = SHADOW_EXTENT;
+    sc.top = SHADOW_EXTENT;
+    sc.bottom = -SHADOW_EXTENT;
     sc.near = 1;
-    sc.far = 120;
-    this.sun.shadow.bias = -0.0004;
-    this.sun.shadow.normalBias = 0.04;
-    this.sun.shadow.radius = 3;
+    sc.far = SHADOW_CAMERA_FAR;
+    this.sun.shadow.bias = SHADOW_BIAS;
+    this.sun.shadow.normalBias = SHADOW_NORMAL_BIAS;
+    this.sun.shadow.radius = SHADOW_BLUR_RADIUS;
     this.scene.add(this.sun, this.sun.target);
 
-    const rim = new THREE.DirectionalLight("#93cfff", 1.1);
+    const rim = new THREE.DirectionalLight("#93cfff", RIM_INTENSITY);
 
-    rim.position.set(-30, 20, -40);
+    rim.position.set(RIM_X, RIM_Y, RIM_Z);
     this.scene.add(rim);
-    this.gunner = new AutoGunner(player === "p1" ? 11 : 29);
+    this.gunner = new AutoGunner(
+      player === "p1" ? GUNNER_SEED_P1 : GUNNER_SEED_P2,
+    );
     this.character = new Character(player);
     this.scene.add(this.character.root);
     this.fx = new Effects(this.scene);
     this.debris = new Debris(this.scene);
-    this.debris.onBounce = (s) => this.sfx("debrisBounce", 0.3 + s * 0.5);
+    this.debris.onBounce = (s) =>
+      this.sfx(
+        "debrisBounce",
+        DEBRIS_BOUNCE_VOLUME_BASE + s * DEBRIS_BOUNCE_VOLUME_SCALE,
+      );
   }
 
   /** The tier being played. Set when the first step builds it, so a step that needs it before then is a bug. */
@@ -314,7 +458,11 @@ export class PlayerWorld {
     if (this.window) {
       this.window.reading = true;
       this.window.win.rattle =
-        s.window === "problem" ? (this.player === "p1" ? 0.5 : 0.3) : 0;
+        s.window === "problem"
+          ? this.player === "p1"
+            ? RATTLE_P1
+            : RATTLE_P2
+          : 0;
     }
 
     // Tech debt trailing player 1.
@@ -325,8 +473,8 @@ export class PlayerWorld {
     for (let k = this.debt.length; k < s.debt; k++) {
       const stop = nth(tier.stops, k, "stops");
       const win = new CodeWindow(
-        this.paint(stop.p1, "angry", "problem", 30, stop),
-        1.1,
+        this.paint(stop.p1, "angry", "problem", DEBT_WINDOW_COLS, stop),
+        DEBT_WINDOW_WIDTH,
         "angry",
       );
 
@@ -414,14 +562,19 @@ export class PlayerWorld {
     this.debris.clear();
     this.fx.clear();
 
-    const length = (tier.stops.length + 1) * SEGMENT + 40;
+    const length = (tier.stops.length + 1) * SEGMENT + CITY_TAIL_LENGTH;
     // The boss stands in an open plaza beyond the last stop, so no building can hide any part of it.
     const arena = standZ(tier.stops.length);
 
     this.city = buildCity(
       length,
-      1000 + tier.index * 77,
-      tier.hasBoss ? { from: arena + 16, to: arena - 60 } : undefined,
+      CITY_SEED_BASE + tier.index * CITY_SEED_PER_TIER,
+      tier.hasBoss
+        ? {
+            from: arena + CITY_CLEAR_BEHIND_ARENA,
+            to: arena - CITY_CLEAR_AHEAD_OF_ARENA,
+          }
+        : undefined,
     );
     this.scene.add(this.city);
     this.gates = tier.stops.map((s, k) => {
@@ -437,7 +590,7 @@ export class PlayerWorld {
   // ───────────────────────────── content → objects ─────────────────────────────
 
   private cols() {
-    return this.shape === "tall" ? 44 : 60;
+    return this.shape === "tall" ? TALL_CARD_COLS : WIDE_CARD_COLS;
   }
 
   private paint(
@@ -447,7 +600,7 @@ export class PlayerWorld {
     cols: number,
     stop: Stop,
   ): HTMLCanvasElement {
-    const width = Math.min(cols, Math.max(34, longestRow(card)));
+    const width = Math.min(cols, Math.max(MIN_CARD_COLS, longestRow(card)));
     const layout: Layout = layoutCard(card, width, slugFile(card.title));
     const tier = this.playing;
 
@@ -456,7 +609,7 @@ export class PlayerWorld {
         label: `Problem card ${card.id} · ${gateText(stop.gate)}`,
         title: card.title,
         footer: card.text,
-        badge: `−${Math.round(90 / tier.stops.length)}%`,
+        badge: `−${Math.round(TOTAL_DAMAGE / tier.stops.length)}%`,
       });
     }
 
@@ -482,9 +635,14 @@ export class PlayerWorld {
 
     return new CodeWindow(
       cv,
-      this.shape === "tall" ? 7.2 : 7.6,
+      this.shape === "tall" ? TALL_WINDOW_WIDTH : WIDE_WINDOW_WIDTH,
       kind === "problem" ? "angry" : "fixed",
-      { maxHeight: this.shape === "tall" ? 8.6 : 6.2 },
+      {
+        maxHeight:
+          this.shape === "tall"
+            ? TALL_WINDOW_MAX_HEIGHT
+            : WIDE_WINDOW_MAX_HEIGHT,
+      },
     );
   }
 
@@ -521,47 +679,78 @@ export class PlayerWorld {
 
     pile.name = "spaghetti-pile";
 
-    const r = rng(42);
+    const r = rng(PILE_SEED);
 
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < PILE_STRANDS; i++) {
       const pts: THREE.Vector3[] = [];
 
-      for (let k = 0; k < 6; k++) {
+      for (let k = 0; k < PILE_POINTS; k++) {
         pts.push(
           new THREE.Vector3(
-            (r() - 0.5) * 2.4,
-            r() * 1.0 * (1 - Math.abs(k - 3) / 4),
-            -1.2 + (r() - 0.2) * 2.4,
+            (r() - RANDOM_CENTRE) * PILE_SPREAD,
+            r() * 1.0 * (1 - Math.abs(k - PILE_PEAK_POINT) / PILE_PEAK_FALLOFF),
+            PILE_CENTRE_Z + (r() - PILE_Z_BIAS) * PILE_SPREAD,
           ),
         );
       }
 
       const tube = new THREE.Mesh(
-        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.09, 6),
-        toon(i % 3 ? "#f3d27a" : "#efc25e"),
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(pts),
+          PILE_TUBE_SEGMENTS,
+          PILE_TUBE_RADIUS,
+          PILE_TUBE_SIDES,
+        ),
+        toon(i % PILE_PALE_EVERY ? "#f3d27a" : "#efc25e"),
       );
 
       tube.castShadow = true;
       pile.add(tube);
     }
 
-    const a = kit(0.02);
+    const a = kit(PILE_OUTLINE);
 
-    a.ball(pile, "#de6a47", 0.2, 0.75, -0.9, 0.7, 0.3, 0.6);
+    a.ball(
+      pile,
+      "#de6a47",
+      MEATBALL_X,
+      MEATBALL_Y,
+      MEATBALL_Z,
+      MEATBALL_RADIUS,
+      MEATBALL_FLATTEN,
+      MEATBALL_STRETCH,
+    );
     for (const [x, z] of [
-      [0.5, -0.6],
-      [-0.2, -1.2],
-      [0.1, -0.3],
+      [GARNISH_A_X, GARNISH_A_Z],
+      [GARNISH_B_X, GARNISH_B_Z],
+      [GARNISH_C_X, GARNISH_C_Z],
     ] as const) {
-      a.ball(pile, "#8b4a3a", x, 0.95, z, 0.22);
+      a.ball(pile, "#8b4a3a", x, GARNISH_Y, z, GARNISH_RADIUS);
     }
 
     // A white flag of surrender poking out.
-    a.cyl(pile, "#7a6e5e", -0.6, 1.2, -0.4, 0.03, 1.6);
+    a.cyl(
+      pile,
+      "#7a6e5e",
+      FLAG_POLE_X,
+      FLAG_POLE_Y,
+      FLAG_POLE_Z,
+      FLAG_POLE_RADIUS,
+      FLAG_POLE_LENGTH,
+    );
 
-    const flag = a.box(pile, "#fffdf0", -0.35, 1.8, -0.4, 0.5, 0.32, 0.02);
+    const flag = a.box(
+      pile,
+      "#fffdf0",
+      FLAG_X,
+      FLAG_Y,
+      FLAG_Z,
+      FLAG_WIDTH,
+      FLAG_HEIGHT,
+      FLAG_THICKNESS,
+    );
 
-    flag.rotation.y = 0.2;
+    flag.rotation.y = FLAG_TURN;
 
     return pile;
   }
@@ -655,7 +844,7 @@ export class PlayerWorld {
     const p1 = this.player === "p1";
 
     this.tween(
-      0.7,
+      EXIT_WINDOW_SECONDS,
       (k) => {
         const e = ease.inOutCubic(k);
         const to = p1
@@ -663,15 +852,17 @@ export class PlayerWorld {
           : this.character.muzzleWorld();
 
         win.group.position.lerpVectors(from, to, e);
-        win.group.scale.setScalar(lerp(s0, p1 ? 0.2 : 0.02, e));
-        win.group.rotation.z = e * (p1 ? 0.3 : 4);
+        win.group.scale.setScalar(
+          lerp(s0, p1 ? EXIT_SCALE_DEBT : EXIT_SCALE_MUZZLE, e),
+        );
+        win.group.rotation.z = e * (p1 ? EXIT_SPIN_DEBT : EXIT_SPIN_MUZZLE);
       },
       () => {
         if (!p1) {
           this.fx.burst(this.character.muzzleWorld(), {
             colors: ["#aee5a3", "#f9db48"],
-            n: 18,
-            speed: 3,
+            n: EXIT_BURST_COUNT,
+            speed: EXIT_BURST_SPEED,
           });
         }
 
@@ -688,17 +879,26 @@ export class PlayerWorld {
         ? standZ(step.stop)
         : standZ(tier.stops.length);
     const from = this.character.root.position.z;
-    const r = rng(500 + step.tier * 31 + step.stop * 7);
+    const r = rng(
+      WALK_SEED_BASE +
+        step.tier * WALK_SEED_PER_TIER +
+        step.stop * WALK_SEED_PER_STOP,
+    );
     const spawns: { at: number; kind: EnemyKind; seed: number }[] = [];
-    const count = 7 + Math.floor(r() * 3);
+    const count = SPAWNS_MIN + Math.floor(r() * SPAWNS_SPREAD);
 
     for (let i = 0; i < count; i++) {
       const roll = r();
 
       spawns.push({
-        at: 0.04 + (i / count) * 0.72 + r() * 0.05,
-        kind: roll < 0.45 ? "spaghetti" : roll < 0.75 ? "bug" : "robot",
-        seed: Math.floor(r() * 1e6),
+        at: SPAWN_FIRST_AT + (i / count) * SPAWN_SPAN + r() * SPAWN_JITTER,
+        kind:
+          roll < SPAGHETTI_CHANCE_UP_TO
+            ? "spaghetti"
+            : roll < BUG_CHANCE_UP_TO
+              ? "bug"
+              : "robot",
+        seed: Math.floor(r() * SPAWN_SEED_RANGE),
       });
     }
 
@@ -718,7 +918,7 @@ export class PlayerWorld {
     this.character.root.position.z = lerp(
       w.from,
       w.to,
-      ease.inOutCubic(u) * 0.15 + u * 0.85,
+      ease.inOutCubic(u) * WALK_EASED_SHARE + u * WALK_LINEAR_SHARE,
     );
     for (;;) {
       const next = w.spawns[w.next];
@@ -738,24 +938,31 @@ export class PlayerWorld {
 
   private spawn(sp: { kind: EnemyKind; seed: number }) {
     const r = rng(sp.seed);
-    const z0 = this.character.root.position.z - 18 - r() * 8;
-    const side = r() < 0.5 ? -1 : 1;
+    const z0 =
+      this.character.root.position.z -
+      SPAWN_DISTANCE_AHEAD -
+      r() * SPAWN_DISTANCE_JITTER;
+    const side = r() < COIN_FLIP ? -1 : 1;
     let from: THREE.Vector3;
     let to: THREE.Vector3;
     let speed: number;
 
     if (sp.kind === "spaghetti") {
-      from = new THREE.Vector3(side * 3, 0, z0);
-      to = new THREE.Vector3(-side * 1.5, 0, z0 + 10);
-      speed = 2.2;
+      from = new THREE.Vector3(side * SPAGHETTI_START_X, 0, z0);
+      to = new THREE.Vector3(
+        -side * SPAGHETTI_END_X,
+        0,
+        z0 + SPAGHETTI_TRAVEL_Z,
+      );
+      speed = SPAGHETTI_SPEED;
     } else if (sp.kind === "bug") {
-      from = new THREE.Vector3(side * 5, 0, z0);
-      to = new THREE.Vector3(-side * 5, 0, z0 + 4);
-      speed = 3.2;
+      from = new THREE.Vector3(side * BUG_LANE_X, 0, z0);
+      to = new THREE.Vector3(-side * BUG_LANE_X, 0, z0 + BUG_TRAVEL_Z);
+      speed = BUG_SPEED;
     } else {
-      from = new THREE.Vector3(side * 9, 0, z0 - 4);
-      to = new THREE.Vector3(-side * 9, 0, z0 + 2);
-      speed = 2.6;
+      from = new THREE.Vector3(side * ROBOT_LANE_X, 0, z0 - ROBOT_START_BACK);
+      to = new THREE.Vector3(-side * ROBOT_LANE_X, 0, z0 + ROBOT_TRAVEL_Z);
+      speed = ROBOT_SPEED;
     }
 
     const e = new Enemy(sp.kind, sp.seed, from, to, speed);
