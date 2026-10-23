@@ -4,6 +4,7 @@ import { parseContent } from "../content/load";
 import {
   buildScript,
   healthAt,
+  modeInfo,
   nextIndex,
   notesFor,
   tierStart,
@@ -220,5 +221,15 @@ describe("missed enemies are debt, not damage", () => {
 
   it("health is a function of the step alone: it takes no count of misses", () => {
     expect(healthAt.length).toBe(3);
+  });
+});
+
+describe("modeInfo", () => {
+  it("returns the labels for a known mode", () => {
+    expect(modeInfo("spec").hud).toBe("YOU VS AUTOPILOT");
+  });
+
+  it("throws on a mode the list does not know", () => {
+    expect(() => modeInfo(JSON.parse('"nope"'))).toThrow('Unknown mode "nope"');
   });
 });

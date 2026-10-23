@@ -1,4 +1,5 @@
-import { byId, closestEl } from "../dom";
+import { byId, closestEl, queryEl, queryElOrNull } from "../dom";
+import { nth } from "../nth";
 import { parseDirectorMessage } from "./messages";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "../audio/audio";
@@ -11,7 +12,7 @@ import {
   buildScript,
   hiddenIn,
   isSplit,
-  MODES,
+  modeInfo,
   nextIndex,
   notesFor,
   stepLabel,
@@ -98,10 +99,10 @@ export class Director {
   }
 
   get step() {
-    return this.script[this.at]!;
+    return nth(this.script, this.at, "script");
   }
   get tier() {
-    return this.game.tiers[this.step.tier]!;
+    return nth(this.game.tiers, this.step.tier, "tiers");
   }
   visible(): Player[] {
     return isSplit(this.mode) ? PLAYERS : [this.mode];
@@ -281,13 +282,11 @@ export class Director {
       </div>`,
       )
       .join("");
-    document.querySelector<HTMLElement>(".divider")!.hidden = !isSplit(
-      this.mode,
-    );
+    queryEl(document, ".divider").hidden = !isSplit(this.mode);
   }
 
   private lane(p: Player) {
-    return document.querySelector<HTMLElement>(`.lane[data-p='${p}']`);
+    return queryElOrNull(document, `.lane[data-p='${p}']`);
   }
 
   private renderLane(p: Player, animate: boolean) {
@@ -298,20 +297,21 @@ export class Director {
       stop = tier.stops[step.stop];
     el.hidden = step.phase === "vs";
     // Tool card overlay: player 2 only, never player 1.
-    const slot = el.querySelector<HTMLElement>(".card-slot")!;
+    const slot = queryEl(el, ".card-slot");
     const showCard = p === "p2" && step.phase === "tool" && stop;
     const playing = p === "p2" && step.phase === "fixed" && animate && stop;
     if (showCard) {
       slot.innerHTML = toolCardHtml(this.game, tier, stop, step.stop);
       if (animate) {
-        slot.firstElementChild!.classList.add("fly-in");
+        queryEl(slot, ".tcard").classList.add("fly-in");
         this.audio.play("cardFly", { pan: this.pan(p) });
       }
     } else if (playing) {
       if (!slot.querySelector(".tcard"))
         slot.innerHTML = toolCardHtml(this.game, tier, stop, step.stop);
-      slot.querySelector(".tcard")!.classList.remove("fly-in");
-      slot.querySelector(".tcard")!.classList.add("play");
+      const card = queryEl(slot, ".tcard");
+      card.classList.remove("fly-in");
+      card.classList.add("play");
       this.after(0.6, () => {
         slot.innerHTML = "";
       });
@@ -338,7 +338,7 @@ export class Director {
         : ["bossDown", "result"].includes(step.phase)
           ? tier.boss.parts.map((x) => x.beatenBy)
           : [];
-    const tray = el.querySelector<HTMLElement>(".tray")!;
+    const tray = queryEl(el, ".tray");
     tray.hidden = step.phase === "ending" || step.phase === "result";
     tray.innerHTML = tier.stops
       .map((s, i) => {
@@ -378,7 +378,7 @@ export class Director {
       case "boss":
         return { label: "THE BOSS ATTACKS", text: b.attack ?? b.idea ?? "" };
       case "bossPart": {
-        const part = b.parts[step.part]!;
+        const part = nth(b.parts, step.part, "boss parts");
         return p === "p1"
           ? {
               label: "NOTHING WORKS",
@@ -407,7 +407,8 @@ export class Director {
     c: { label: string; text: string } | null,
     delay: number,
   ) {
-    const el = this.lane(p)?.querySelector<HTMLElement>(".caption");
+    const lane = this.lane(p);
+    const el = lane ? queryElOrNull(lane, ".caption") : null;
     if (!el) return;
     el.hidden = true;
     if (!c?.text) return;
@@ -470,9 +471,7 @@ export class Director {
       .slice(this.at + 1)
       .find((s) => s.phase === "vs" || s.phase === "ending");
     const nextLabel =
-      next?.phase === "vs"
-        ? `TIER ${this.game.tiers[next.tier]!.n} · ${this.game.tiers[next.tier]!.name.toUpperCase()}`
-        : "THE ENDING";
+      next?.phase === "vs" ? this.vsLabel(next.tier) : "THE ENDING";
     const col = (p: Player) =>
       p === "p1"
         ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(this.worlds.p1.score).padStart(6, "0")} · ${this.worlds.p1.shipped} BUGS SHIPPED</span></div>`
@@ -503,12 +502,18 @@ export class Director {
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
+  private vsLabel(tierIndex: number) {
+    const tier = nth(this.game.tiers, tierIndex, "tiers");
+    return `TIER ${tier.n} · ${tier.name.toUpperCase()}`;
+  }
+
   renderChips() {
-    $("hud-mode").textContent = MODES.find((m) => m.mode === this.mode)!.hud;
+    $("hud-mode").textContent = modeInfo(this.mode).hud;
     $("hud-auto").textContent = this.autoplay ? "AUTOPLAY ON" : "AUTOPLAY OFF";
-    document
-      .querySelector('[data-chip="auto"]')!
-      .classList.toggle("on", this.autoplay);
+    queryEl(document, '[data-chip="auto"]').classList.toggle(
+      "on",
+      this.autoplay,
+    );
   }
 
   toggleAutoplay() {
@@ -527,7 +532,7 @@ export class Director {
     const el = this.lane(p);
     if (!el) return;
     if (p === "p1") {
-      const box = el.querySelector<HTMLElement>(".shipped-box");
+      const box = queryElOrNull(el, ".shipped-box");
       box?.classList.remove("bump");
       void box?.offsetWidth;
       box?.classList.add("bump");
@@ -537,7 +542,7 @@ export class Director {
     pop.className = "ci-pop";
     pop.innerHTML = '<span class="tick">✓</span>CAUGHT BY CI';
     pop.style.left = `${30 + Math.random() * 40}%`;
-    el.querySelector(".pops")!.append(pop);
+    queryEl(el, ".pops").append(pop);
     setTimeout(() => pop.remove(), 1600);
   }
 
@@ -570,7 +575,7 @@ export class Director {
       next:
         i === this.at
           ? "Back to the map"
-          : stepLabel(this.game, this.script[i]!),
+          : stepLabel(this.game, nth(this.script, i, "script")),
       notes: notesFor(this.game, this.step, this.mode),
       paused: this.paused,
     };
@@ -599,20 +604,20 @@ export class Director {
         !this.paused &&
         !this.machine(l.player);
       el?.classList.toggle("aiming", inside);
-      if (!inside) {
+      if (!inside || !ptr) {
         if (!this.worlds[l.player].autoplay)
           this.worlds[l.player].pointer(null, false);
         continue;
       }
       const ndc = new THREE.Vector2(
-        ((ptr!.x - l.x) / l.w) * 2 - 1,
-        -((ptr!.y - l.y) / l.h) * 2 + 1,
+        ((ptr.x - l.x) / l.w) * 2 - 1,
+        -((ptr.y - l.y) / l.h) * 2 + 1,
       );
       this.worlds[l.player].pointer(ndc, fire);
-      const ret = el?.querySelector<HTMLElement>(".reticle");
+      const ret = el ? queryElOrNull(el, ".reticle") : null;
       if (ret) {
-        ret.style.left = `${ptr!.x - l.x}px`;
-        ret.style.top = `${ptr!.y - l.y}px`;
+        ret.style.left = `${ptr.x - l.x}px`;
+        ret.style.top = `${ptr.y - l.y}px`;
       }
     }
     $("game").classList.toggle("shooting", !!ptr && this.stage.view === "game");
@@ -654,9 +659,9 @@ export class Director {
       if (!el) continue;
       const w = this.worlds[p];
       const h = Math.max(0, Math.min(100, w.health));
-      const hp = el.querySelector<HTMLElement>(".hp")!;
-      hp.querySelector<HTMLElement>(".bar i")!.style.width = `${h}%`;
-      hp.querySelector(".pct")!.textContent = `${Math.round(h)}%`;
+      const hp = queryEl(el, ".hp");
+      queryEl(hp, ".bar i").style.width = `${h}%`;
+      queryEl(hp, ".pct").textContent = `${Math.round(h)}%`;
       hp.classList.toggle("low", h <= 35);
       hp.classList.toggle("mid", h > 35 && h < 70);
       const last = this.lastHealth[p];
@@ -672,14 +677,11 @@ export class Director {
         this.lastHealth[p] = h;
       } else if (Math.abs(h - last) > 0.5 && !hp.classList.contains("flash"))
         this.lastHealth[p] = h;
-      el.querySelector(".score")!.textContent = String(w.score).padStart(
-        6,
-        "0",
-      );
+      queryEl(el, ".score").textContent = String(w.score).padStart(6, "0");
       const shipped = el.querySelector(".shipped");
       if (shipped) shipped.textContent = String(w.shipped);
       // Autoplay's own reticle, where its hand is pointing.
-      const auto = el.querySelector<HTMLElement>(".reticle.auto")!;
+      const auto = queryEl(el, ".reticle.auto");
       const a = w.autoAimScreen();
       const l = this.stage.lanes().find((x) => x.player === p);
       auto.hidden = !a || !l;
@@ -687,16 +689,16 @@ export class Director {
         auto.style.left = `${((a.x + 1) / 2) * l.w}px`;
         auto.style.top = `${((1 - a.y) / 2) * l.h}px`;
       }
-      const bb = el.querySelector<HTMLElement>(".bossbar")!;
+      const bb = queryEl(el, ".bossbar");
       const bossPhase = ["boss", "bossPart", "bossDown"].includes(
         this.step.phase,
       );
       bb.hidden = !bossPhase || w.bossTotal === 0;
       if (!bb.hidden) {
-        bb.querySelector(".name")!.textContent = this.tier.boss.name;
-        bb.querySelector(".count")!.textContent =
+        queryEl(bb, ".name").textContent = this.tier.boss.name;
+        queryEl(bb, ".count").textContent =
           `${w.bossLeft} / ${w.bossTotal} SINS`;
-        bb.querySelector<HTMLElement>(".bar i")!.style.width =
+        queryEl(bb, ".bar i").style.width =
           `${(w.bossLeft / w.bossTotal) * 100}%`;
       }
     }

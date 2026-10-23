@@ -2,18 +2,19 @@ import { toolFor, type Game, type PlayTier } from "../content/load";
 import { gateLabel } from "../content/gatelabel";
 import type { Stop } from "../content/types";
 
+const ESCAPES = new Map([
+  ["&", "&amp;"],
+  ["<", "&lt;"],
+  [">", "&gt;"],
+  ['"', "&quot;"],
+  ["'", "&#39;"],
+]);
 export const esc = (s: string) =>
-  s.replaceAll(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
-  );
+  s.replaceAll(/[&<>"']/g, (c) => ESCAPES.get(c) ?? c);
 
 /** Short tool name for tight spots: "Prettier (code formatter)" → "Prettier". */
 export const shortTool = (name: string) =>
-  name.split("(")[0]!.split("+")[0]!.trim();
+  name.replace(/[(+][\s\S]*$/, "").trim();
 
 /** A gate as a number badge plus its title: "G01 · Formatting" → [1] Formatting. */
 export function gateHtml(gate: string) {

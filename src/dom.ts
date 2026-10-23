@@ -18,3 +18,26 @@ export function closestEl(
   const el = target instanceof Element ? target.closest(selector) : null;
   return el instanceof HTMLElement ? el : null;
 }
+
+/** An element below a root, or null when the selector matches nothing (or something that is not an HTML element). */
+export function queryElOrNull(
+  root: ParentNode,
+  selector: string,
+): HTMLElement | null {
+  const el = root.querySelector(selector);
+  return el instanceof HTMLElement ? el : null;
+}
+
+/** An element below a root that the page is built to contain; throws naming the selector if it is not there. */
+export function queryEl(root: ParentNode, selector: string): HTMLElement {
+  const el = queryElOrNull(root, selector);
+  if (!el) throw new Error(`"${selector}" is not in the page here`);
+  return el;
+}
+
+/** Every HTML element below a root that matches the selector. */
+export function queryAllEl(root: ParentNode, selector: string): HTMLElement[] {
+  return [...root.querySelectorAll(selector)].filter(
+    (el) => el instanceof HTMLElement,
+  );
+}

@@ -1,9 +1,15 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
 import { loadContent } from "./content/load";
-import { byId, closestEl } from "./dom";
+import { byId, closestEl, queryAllEl } from "./dom";
 import { Director } from "./show/director";
 import { parsePresenterState } from "./show/messages";
-import { isSplit, MODES, type Mode, type Player } from "./show/script";
+import {
+  isSplit,
+  MODES,
+  modeInfo,
+  type Mode,
+  type Player,
+} from "./show/script";
 import { gatesText } from "./content/gatelabel";
 import { esc } from "./ui/card";
 import { initPhysics } from "./world/physics";
@@ -95,9 +101,7 @@ async function boot() {
     words[0] ||
     ""
   ).toUpperCase();
-  $("title-2").firstChild!.textContent = (
-    words.length > 1 ? words.at(-1)! : ""
-  ).toUpperCase();
+  $("title-2-word").textContent = (words.slice(1).at(-1) ?? "").toUpperCase();
   $("tagline").textContent = game.content.screens.title.sub;
   document.title = game.content.screens.title.big;
   $("best").textContent = String(best).padStart(6, "0");
@@ -123,10 +127,10 @@ async function boot() {
     mode = m;
     store.set("mode", m);
     director.setMode(m);
-    for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
+    for (const b of queryAllEl(document, "[data-mode]")) {
       b.setAttribute("aria-checked", String(b.dataset.mode === m));
     }
-    $("map-mode").textContent = MODES.find((x) => x.mode === m)!.map;
+    $("map-mode").textContent = modeInfo(m).map;
     audio.play("uiMove");
   }
 
@@ -223,7 +227,7 @@ async function boot() {
     show("map");
     audio.play("uiSelect");
   });
-  for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
+  for (const b of queryAllEl(document, "[data-mode]")) {
     b.addEventListener("click", () => {
       const mode = MODES.find((x) => x.mode === b.dataset.mode);
       if (!mode) throw new Error(`Unknown mode "${b.dataset.mode}"`);

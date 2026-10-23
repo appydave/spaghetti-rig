@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { byId, closestEl } from "./dom";
+import { byId, closestEl, queryAllEl, queryEl, queryElOrNull } from "./dom";
 
 // Node has no DOM, so these stand in for the browser's classes while a test runs.
 class FakeElement extends EventTarget {
@@ -60,5 +60,39 @@ describe("closestEl", () => {
   it("returns null when the match is not an HTML element", () => {
     stubPage(null);
     expect(closestEl(new FakeElement(new FakeElement()), ".x")).toBeNull();
+  });
+});
+
+describe("queryEl, queryElOrNull and queryAllEl", () => {
+  function stubQueries(found: FakeElement | null, all: FakeElement[] = []) {
+    stubPage(null);
+    vi.stubGlobal("document", {
+      querySelector: () => found,
+      querySelectorAll: () => all,
+    });
+  }
+
+  it("queryEl returns the element the page is built to contain", () => {
+    const hp = new FakeHTMLElement();
+    stubQueries(hp);
+    expect(queryEl(document, ".hp")).toBe(hp);
+  });
+
+  it("queryEl throws naming the selector when it is missing or not HTML", () => {
+    stubQueries(null);
+    expect(() => queryEl(document, ".hp")).toThrow('".hp" is not in the page');
+    stubQueries(new FakeElement());
+    expect(() => queryEl(document, ".hp")).toThrow('".hp" is not in the page');
+  });
+
+  it("queryElOrNull returns null instead of throwing", () => {
+    stubQueries(null);
+    expect(queryElOrNull(document, ".hp")).toBeNull();
+  });
+
+  it("queryAllEl keeps only HTML elements", () => {
+    const a = new FakeHTMLElement();
+    stubQueries(null, [a, new FakeElement()]);
+    expect(queryAllEl(document, "[data-mode]")).toEqual([a]);
   });
 });
