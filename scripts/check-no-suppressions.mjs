@@ -10,7 +10,7 @@ const FORMS = [
   "@ts-expect-error",
 ];
 const files = execSync(
-  "git ls-files --cached --others --exclude-standard src tests scripts",
+  "git ls-files --cached --others --exclude-standard src tests scripts lint",
   { encoding: "utf8" },
 )
   .split("\n")
