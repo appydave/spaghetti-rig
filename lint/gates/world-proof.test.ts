@@ -10,21 +10,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import * as THREE from "three";
 import type { Step } from "../../src/show/script";
+import { makeCanvas } from "./recording-canvas";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
 import { afterAll, describe, expect, it } from "vitest";
 
-// The builders paint label textures on a canvas; a canvas that accepts any drawing call is all they need.
-const hole: any = new Proxy(function () {}, {
-  get: (_t, p) => (p === Symbol.toPrimitive ? () => 8 : hole),
-  apply: () => hole,
-  set: () => true,
-});
-
 (globalThis as any).document = {
-  createElement: (tag: string) =>
-    tag === "canvas"
-      ? { width: 300, height: 150, getContext: () => hole, style: {} }
-      : {},
+  createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
 };
 
 const { parseContent } = await import("../../src/content/load");
@@ -44,6 +35,7 @@ const SAMPLES = [0, 5, 20, 45, 69, 130, 189];
 const PAN = 0.25;
 const WIDE = 16 / 9;
 const TALL = 9 / 16;
+const WIDER_TALL = 1.2;
 const POINTER_EVERY = 6;
 const SKIP_FRAMES = 3;
 
@@ -83,8 +75,8 @@ type Scenario = {
   mode: Mode;
   seed: number;
   tall?: boolean;
-  /** Flip the window between wide and tall at every third look, so the resize lands mid-step with a window and a boss up. */
-  resize?: boolean;
+  /** Resize the window at every third look, so it lands mid-step with a window and a boss up: "flip" between wide and tall, "same" between two talls (the boss stands further back the narrower the screen). */
+  resize?: "flip" | "same";
 };
 
 /** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
@@ -99,6 +91,8 @@ function playStep(run: Run, step: Step, first: boolean): void {
 
   if (first || mode === "jump") {
     w.snapCamera();
+    // Looked at straight away: the scenery that follows the camera must already be right, before any frame runs.
+    look(`snap ${step.phase}${step.stop}.${step.part}`);
   }
 
   // A skipping presenter leaves each step after a moment, with its tweens and cues still running.
@@ -140,7 +134,7 @@ function play({
   mode,
   seed,
   tall = false,
-  resize = false,
+  resize,
 }: Scenario): string[] {
   const sounds: Arg[][] = [];
   const audio: any = {
@@ -156,7 +150,15 @@ function play({
     const log: string[] = [];
     const look = (label: string): void => {
       if (resize && log.length % RESIZE_EVERY === RESIZE_EVERY - 1) {
-        w.setAspect(w.aspect === WIDE ? TALL : WIDE);
+        w.setAspect(
+          resize === "flip"
+            ? w.aspect === WIDE
+              ? TALL
+              : WIDE
+            : w.aspect === TALL
+              ? WIDER_TALL
+              : TALL,
+        );
       }
 
       log.push(
@@ -215,14 +217,17 @@ const SCENARIOS: [string, () => string[]][] = game.tiers.flatMap((t) =>
 );
 
 SCENARIOS.push(
-  ...game.tiers.map((t) =>
-    named("resizes mid-play", {
-      player: "p1",
-      tier: t.index,
-      mode: "watch",
-      seed: t.index + 50,
-      resize: true,
-    }),
+  ...game.tiers.flatMap((t) =>
+    (["flip", "same"] as const).map((resize) =>
+      named(`resizes mid-play (${resize})`, {
+        player: "p1",
+        tier: t.index,
+        mode: "watch",
+        seed: t.index + 50,
+        tall: resize === "same",
+        resize,
+      }),
+    ),
   ),
   named("on a tall screen", {
     player: "p2",

@@ -19,7 +19,11 @@ import { join, resolve } from "node:path";
 const REPO = resolve(import.meta.dirname, "..");
 const HARNESS = "lint/gates/world-proof.test.ts";
 /** Both files go into every tree checked, whatever that tree has, so an older tree can be measured too. */
-const HARNESS_FILES = [HARNESS, "lint/gates/world-fingerprint.ts"];
+const HARNESS_FILES = [
+  HARNESS,
+  "lint/gates/world-fingerprint.ts",
+  "lint/gates/recording-canvas.ts",
+];
 const WORKTREE = "WORKTREE";
 const EXIT_DIFFERENT = 1;
 const MAX_LISTED = 20;
