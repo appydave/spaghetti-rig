@@ -276,6 +276,91 @@ const PERC_ATTACK = 0.002;
 const PERC_PAN = 0.35;
 const PERC_NOISE_START = 1.8;
 
+/** The brass note: its filter opens to a multiple of the pitch (never past a ceiling) fast, then settles lower; its gain and tail. */
+const BRASS_OPEN = 1.2;
+const BRASS_PEAK_OPEN = 7;
+const BRASS_PEAK_OPEN_MAX = 8000;
+const BRASS_PEAK_AT = 0.07;
+const BRASS_SETTLE_OPEN = 3;
+const BRASS_SETTLE_OPEN_MAX = 5000;
+const BRASS_SETTLE_AT = 0.35;
+const BRASS_ATTACK = 0.03;
+const BRASS_SUSTAIN = 0.85;
+const BRASS_RELEASE = 0.08;
+const BRASS_TAIL = 0.5;
+/** The sad trombone: a scoop up into the pitch, a droop at the end, a filter swell, and an optional wobble. */
+const TROMBONE_SCOOP = 1.02;
+const TROMBONE_SCOOP_TIME = 0.06;
+const TROMBONE_DROOP_AT = 0.8;
+const TROMBONE_DROOP = 0.96;
+const TROMBONE_CLOSED = 350;
+const TROMBONE_OPEN = 1500;
+const TROMBONE_OPEN_AT = 0.15;
+const TROMBONE_END = 500;
+const TROMBONE_PEAK = 0.2;
+const TROMBONE_ATTACK = 0.04;
+const TROMBONE_HOLD = 0.18;
+const TROMBONE_FALL = 0.06;
+const TROMBONE_WOBBLE_DEPTH = 0.035;
+const TROMBONE_WOBBLE_FULL = 0.6;
+/** An effect with no entry in the life table keeps its output this long. */
+const DEFAULT_LIFE = 0.6;
+/** The player-one shot: its pitch varies by this ratio, and it is a zap, a chirp and a thump (each: pitch, slide, length, level). */
+const SHOOT_P1_PITCH_MIN = 0.93;
+const SHOOT_P1_PITCH_MAX = 1.07;
+const SHOOT_P1_ZAP_F = 2400;
+const SHOOT_P1_ZAP_F2 = 650;
+const SHOOT_P1_ZAP_DUR = 0.14;
+const SHOOT_P1_ZAP_VOL = 0.09;
+const SHOOT_P1_ZAP_LP = 5000;
+const SHOOT_P1_CHIRP_F = 1500;
+const SHOOT_P1_CHIRP_F2 = 3300;
+const SHOOT_P1_CHIRP_DUR = 0.06;
+const SHOOT_P1_CHIRP_VOL = 0.08;
+const SHOOT_P1_THUMP_DELAY = 0.01;
+const SHOOT_P1_THUMP_F = 320;
+const SHOOT_P1_THUMP_F2 = 150;
+const SHOOT_P1_THUMP_DUR = 0.1;
+const SHOOT_P1_THUMP_VOL = 0.05;
+const SHOOT_P1_THUMP_LP = 1300;
+/** A robot breaking: a clunk, then a burst of sparks (each a square blip and a noise zap, a random gap apart), then a rumble. */
+const ROBOT_CLUNK_F = 170;
+const ROBOT_CLUNK_F2 = 55;
+const ROBOT_CLUNK_DUR = 0.22;
+const ROBOT_CLUNK_VOL = 0.4;
+const ROBOT_SPARKS = 6;
+const ROBOT_SPARK_MIN_F = 900;
+const ROBOT_SPARK_MAX_F = 3400;
+const ROBOT_SPARK_SLIDE = 0.96;
+const ROBOT_SPARK_MIN_DUR = 0.05;
+const ROBOT_SPARK_MAX_DUR = 0.13;
+const ROBOT_SPARK_VOL = 0.06;
+const ROBOT_SPARK_LP = 6500;
+const ROBOT_ZAP_RATIO = 1.5;
+const ROBOT_ZAP_Q = 9;
+const ROBOT_ZAP_DUR = 0.07;
+const ROBOT_ZAP_VOL = 0.35;
+const ROBOT_SPARK_MIN_GAP = 0.03;
+const ROBOT_SPARK_MAX_GAP = 0.07;
+const ROBOT_RUMBLE_DELAY = 0.08;
+const ROBOT_RUMBLE_F = 650;
+const ROBOT_RUMBLE_F2 = 180;
+const ROBOT_RUMBLE_DUR = 0.32;
+const ROBOT_RUMBLE_VOL = 0.06;
+/** The bounce: a sine that rises with a wobble that dies away, a short gain envelope, and a high click. */
+const BOUNCE_F = 240;
+const BOUNCE_F_END = 430;
+const BOUNCE_SWEEP = 0.42;
+const BOUNCE_WOBBLE_DEPTH = 150;
+const BOUNCE_WOBBLE_END = 4;
+const BOUNCE_PEAK = 0.28;
+const BOUNCE_ATTACK = 0.01;
+const BOUNCE_DECAY = 0.45;
+const BOUNCE_STOP = 0.47;
+const BOUNCE_CLICK_F = 2300;
+const BOUNCE_CLICK_DUR = 0.05;
+const BOUNCE_CLICK_VOL = 0.12;
+
 interface Deck {
   track: CompiledTrack;
   out: GainNode;
@@ -1474,16 +1559,22 @@ export class AudioEngine {
 
     lp.type = "lowpass";
     lp.Q.value = 1.2;
-    lp.frequency.setValueAtTime(f * 1.2, t);
-    lp.frequency.exponentialRampToValueAtTime(Math.min(f * 7, 8000), t + 0.07);
-    lp.frequency.exponentialRampToValueAtTime(Math.min(f * 3, 5000), t + 0.35);
+    lp.frequency.setValueAtTime(f * BRASS_OPEN, t);
+    lp.frequency.exponentialRampToValueAtTime(
+      Math.min(f * BRASS_PEAK_OPEN, BRASS_PEAK_OPEN_MAX),
+      t + BRASS_PEAK_AT,
+    );
+    lp.frequency.exponentialRampToValueAtTime(
+      Math.min(f * BRASS_SETTLE_OPEN, BRASS_SETTLE_OPEN_MAX),
+      t + BRASS_SETTLE_AT,
+    );
 
     const g = ctx.createGain();
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.03);
-    g.gain.setValueAtTime(vol * 0.85, t + dur);
-    g.gain.setTargetAtTime(0.0001, t + dur, 0.08);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + BRASS_ATTACK);
+    g.gain.setValueAtTime(vol * BRASS_SUSTAIN, t + dur);
+    g.gain.setTargetAtTime(SILENCE, t + dur, BRASS_RELEASE);
     lp.connect(g).connect(dest);
 
     const a = ctx.createOscillator();
@@ -1500,7 +1591,7 @@ export class AudioEngine {
     a.connect(lp);
     b.connect(lp);
 
-    const end = t + dur + 0.5;
+    const end = t + dur + BRASS_TAIL;
 
     a.start(t);
     b.start(t);
@@ -1522,25 +1613,28 @@ export class AudioEngine {
     const o = ctx.createOscillator();
 
     o.type = "sawtooth";
-    o.frequency.setValueAtTime(f * 1.02, t);
-    o.frequency.exponentialRampToValueAtTime(f, t + 0.06);
-    o.frequency.setValueAtTime(f, t + dur * 0.8);
-    o.frequency.exponentialRampToValueAtTime(f * 0.96, t + dur);
+    o.frequency.setValueAtTime(f * TROMBONE_SCOOP, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + TROMBONE_SCOOP_TIME);
+    o.frequency.setValueAtTime(f, t + dur * TROMBONE_DROOP_AT);
+    o.frequency.exponentialRampToValueAtTime(f * TROMBONE_DROOP, t + dur);
 
     const lp = ctx.createBiquadFilter();
 
     lp.type = "lowpass";
     lp.Q.value = 4;
-    lp.frequency.setValueAtTime(350, t);
-    lp.frequency.exponentialRampToValueAtTime(1500, t + 0.15);
-    lp.frequency.exponentialRampToValueAtTime(500, t + dur);
+    lp.frequency.setValueAtTime(TROMBONE_CLOSED, t);
+    lp.frequency.exponentialRampToValueAtTime(
+      TROMBONE_OPEN,
+      t + TROMBONE_OPEN_AT,
+    );
+    lp.frequency.exponentialRampToValueAtTime(TROMBONE_END, t + dur);
 
     const g = ctx.createGain();
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.2, t + 0.04);
-    g.gain.setValueAtTime(0.18, t + dur - 0.06);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(TROMBONE_PEAK, t + TROMBONE_ATTACK);
+    g.gain.setValueAtTime(TROMBONE_HOLD, t + dur - TROMBONE_FALL);
+    g.gain.exponentialRampToValueAtTime(SILENCE, t + dur);
     o.connect(lp).connect(g).connect(dest);
 
     const nodes: AudioNode[] = [o, lp, g];
@@ -1553,22 +1647,25 @@ export class AudioEngine {
       const d = ctx.createGain();
 
       d.gain.setValueAtTime(0, t);
-      d.gain.linearRampToValueAtTime(f * 0.035, t + dur * 0.6);
+      d.gain.linearRampToValueAtTime(
+        f * TROMBONE_WOBBLE_DEPTH,
+        t + dur * TROMBONE_WOBBLE_FULL,
+      );
       lfo.connect(d).connect(o.frequency);
       lfo.start(t);
-      lfo.stop(t + dur + 0.02);
+      lfo.stop(t + dur + STOP_PADDING);
       nodes.push(lfo, d);
     }
 
     o.start(t);
-    o.stop(t + dur + 0.02);
+    o.stop(t + dur + STOP_PADDING);
     this.cleanup(o, nodes);
   }
 
   // ------------------------------------------------------------------ sound effects
 
   private playSfx(sfx: Sfx, t: number, opts: PlayOptions): void {
-    const out = this.sfxOut(opts, SFX_LIFE[sfx] ?? 0.6);
+    const out = this.sfxOut(opts, SFX_LIFE[sfx] ?? DEFAULT_LIFE);
     const layers = RECIPES.get(sfx);
 
     if (layers) {
@@ -1594,30 +1691,30 @@ export class AudioEngine {
 
     switch (sfx) {
       case "shootP1": {
-        const p = rand(0.93, 1.07);
+        const p = rand(SHOOT_P1_PITCH_MIN, SHOOT_P1_PITCH_MAX);
 
         this.tone(out, t, {
           type: "square",
-          f: 2400 * p,
-          f2: 650 * p,
-          dur: 0.14,
-          vol: 0.09,
-          lp: 5000,
+          f: SHOOT_P1_ZAP_F * p,
+          f2: SHOOT_P1_ZAP_F2 * p,
+          dur: SHOOT_P1_ZAP_DUR,
+          vol: SHOOT_P1_ZAP_VOL,
+          lp: SHOOT_P1_ZAP_LP,
         });
         this.tone(out, t, {
           type: "triangle",
-          f: 1500 * p,
-          f2: 3300 * p,
-          dur: 0.06,
-          vol: 0.08,
+          f: SHOOT_P1_CHIRP_F * p,
+          f2: SHOOT_P1_CHIRP_F2 * p,
+          dur: SHOOT_P1_CHIRP_DUR,
+          vol: SHOOT_P1_CHIRP_VOL,
         });
-        this.tone(out, t + 0.01, {
+        this.tone(out, t + SHOOT_P1_THUMP_DELAY, {
           type: "sawtooth",
-          f: 320 * p,
-          f2: 150 * p,
-          dur: 0.1,
-          vol: 0.05,
-          lp: 1300,
+          f: SHOOT_P1_THUMP_F * p,
+          f2: SHOOT_P1_THUMP_F2 * p,
+          dur: SHOOT_P1_THUMP_DUR,
+          vol: SHOOT_P1_THUMP_VOL,
+          lp: SHOOT_P1_THUMP_LP,
         });
         break;
       }
@@ -1625,41 +1722,41 @@ export class AudioEngine {
       case "robotBreak": {
         this.tone(out, t, {
           type: "sine",
-          f: 170,
-          f2: 55,
-          dur: 0.22,
-          vol: 0.4,
+          f: ROBOT_CLUNK_F,
+          f2: ROBOT_CLUNK_F2,
+          dur: ROBOT_CLUNK_DUR,
+          vol: ROBOT_CLUNK_VOL,
         });
 
         let ti = t;
 
-        for (let i = 0; i < 6; i++) {
-          const f = rand(900, 3400);
+        for (let i = 0; i < ROBOT_SPARKS; i++) {
+          const f = rand(ROBOT_SPARK_MIN_F, ROBOT_SPARK_MAX_F);
 
           this.tone(out, ti, {
             type: "square",
             f,
-            f2: f * 0.96,
-            dur: rand(0.05, 0.13),
-            vol: 0.06,
-            lp: 6500,
+            f2: f * ROBOT_SPARK_SLIDE,
+            dur: rand(ROBOT_SPARK_MIN_DUR, ROBOT_SPARK_MAX_DUR),
+            vol: ROBOT_SPARK_VOL,
+            lp: ROBOT_SPARK_LP,
           });
           this.noise(out, ti, {
             filter: "bandpass",
-            f: f * 1.5,
-            q: 9,
-            dur: 0.07,
-            vol: 0.35,
+            f: f * ROBOT_ZAP_RATIO,
+            q: ROBOT_ZAP_Q,
+            dur: ROBOT_ZAP_DUR,
+            vol: ROBOT_ZAP_VOL,
           });
-          ti += rand(0.03, 0.07);
+          ti += rand(ROBOT_SPARK_MIN_GAP, ROBOT_SPARK_MAX_GAP);
         }
 
-        this.tone(out, t + 0.08, {
+        this.tone(out, t + ROBOT_RUMBLE_DELAY, {
           type: "triangle",
-          f: 650,
-          f2: 180,
-          dur: 0.32,
-          vol: 0.06,
+          f: ROBOT_RUMBLE_F,
+          f2: ROBOT_RUMBLE_F2,
+          dur: ROBOT_RUMBLE_DUR,
+          vol: ROBOT_RUMBLE_VOL,
         });
         break;
       }
@@ -1669,8 +1766,11 @@ export class AudioEngine {
         const o = ctx.createOscillator();
 
         o.type = "sine";
-        o.frequency.setValueAtTime(240, t);
-        o.frequency.exponentialRampToValueAtTime(430, t + 0.42);
+        o.frequency.setValueAtTime(BOUNCE_F, t);
+        o.frequency.exponentialRampToValueAtTime(
+          BOUNCE_F_END,
+          t + BOUNCE_SWEEP,
+        );
 
         const lfo = ctx.createOscillator();
 
@@ -1678,22 +1778,30 @@ export class AudioEngine {
 
         const depth = ctx.createGain();
 
-        depth.gain.setValueAtTime(150, t);
-        depth.gain.exponentialRampToValueAtTime(4, t + 0.42);
+        depth.gain.setValueAtTime(BOUNCE_WOBBLE_DEPTH, t);
+        depth.gain.exponentialRampToValueAtTime(
+          BOUNCE_WOBBLE_END,
+          t + BOUNCE_SWEEP,
+        );
         lfo.connect(depth).connect(o.frequency);
 
         const g = ctx.createGain();
 
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.28, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        g.gain.setValueAtTime(SILENCE, t);
+        g.gain.exponentialRampToValueAtTime(BOUNCE_PEAK, t + BOUNCE_ATTACK);
+        g.gain.exponentialRampToValueAtTime(SILENCE, t + BOUNCE_DECAY);
         o.connect(g).connect(out);
         o.start(t);
         lfo.start(t);
-        o.stop(t + 0.47);
-        lfo.stop(t + 0.47);
+        o.stop(t + BOUNCE_STOP);
+        lfo.stop(t + BOUNCE_STOP);
         this.cleanup(o, [o, lfo, depth, g]);
-        this.tone(out, t, { type: "triangle", f: 2300, dur: 0.05, vol: 0.12 });
+        this.tone(out, t, {
+          type: "triangle",
+          f: BOUNCE_CLICK_F,
+          dur: BOUNCE_CLICK_DUR,
+          vol: BOUNCE_CLICK_VOL,
+        });
         break;
       }
     }
