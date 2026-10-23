@@ -469,7 +469,6 @@
         "tests/**",
         "src/**/*.test.ts",
         "lint/**/*.test.ts",
-        "src/audio/audio.ts",
         "src/world/boss.ts",
         "src/world/characters.ts",
         "src/world/city.ts",
