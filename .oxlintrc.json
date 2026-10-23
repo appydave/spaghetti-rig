@@ -439,7 +439,11 @@
       }
     },
     {
-      "files": ["src/content/load.ts", "src/audio/load.ts"],
+      "files": [
+        "src/content/load.ts",
+        "src/audio/load.ts",
+        "src/world/model-load.ts"
+      ],
       "rules": {
         "anti-slop/no-unknown-parameters": "off",
         "anti-slop/no-unsafe-dictionary-type": "off"
