@@ -266,8 +266,14 @@ export async function loadContent(url = "/content/cards.json"): Promise<Game> {
   return parseContent(await res.json());
 }
 
+/** Full health, in percent. */
+export const FULL_HEALTH = 100;
+/** Health a whole tier takes from player 1, so they reach the boss on 10%. */
+export const TIER_HEALTH_LOSS = 90;
+
 /** Damage one problem card does in this tier: 90% spread over its stops, so P1 reaches the boss on 10%. */
-export const hitFor = (tier: PlayTier) => 90 / Math.max(1, tier.stops.length);
+export const hitFor = (tier: PlayTier) =>
+  TIER_HEALTH_LOSS / Math.max(1, tier.stops.length);
 
 export const toolFor = (game: Game, key: string | undefined): Tool =>
   (key && game.content.tools[key]) || {

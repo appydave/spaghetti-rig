@@ -3,6 +3,9 @@ import type { Mode, Player } from "../show/script";
 import type { PlayerWorld } from "./world";
 import { TitleShowcase, VsShowcase } from "./showcase";
 
+/** Dense screens render at most this many pixels per CSS pixel, to keep the frame rate. */
+const MAX_PIXEL_RATIO = 1.75;
+
 export type View = "title" | "vs" | "game" | "none";
 export interface Lane {
   player: Player;
@@ -29,7 +32,9 @@ export class Stage {
       alpha: true,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
+    );
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;

@@ -1,7 +1,7 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
 import { loadContent } from "./content/load";
 import { byId, closestEl, queryAllEl } from "./dom";
-import { Director } from "./show/director";
+import { Director, SCORE_DIGITS, SPLIT_PAN } from "./show/director";
 import { parsePresenterState } from "./show/messages";
 import {
   isSplit,
@@ -17,6 +17,12 @@ import { Stage } from "./world/stage";
 import { PlayerWorld } from "./world/world";
 
 const $ = (id: string) => byId(id, HTMLElement);
+
+/** An error message stays on screen this long. */
+const ERROR_TOAST_MS = 8000;
+const MS_PER_SECOND = 1000;
+/** A slow frame advances the game by at most this many seconds, so a stalled tab does not jump. */
+const MAX_FRAME_SECONDS = 0.05;
 
 type Screen = "prelude" | "title" | "map" | "game";
 
@@ -45,7 +51,7 @@ function showError(message: string, cause?: unknown) {
   el.className = "error";
   el.textContent = `Something broke: ${message}`;
   document.body.append(el);
-  setTimeout(() => el.remove(), 8000);
+  setTimeout(() => el.remove(), ERROR_TOAST_MS);
 }
 
 addEventListener("error", (e) =>
@@ -86,7 +92,7 @@ async function boot() {
   let mode: Mode =
     MODES.find((m) => m.mode === store.get("mode"))?.mode ?? "both";
   const pan = (p: Player) => (): number =>
-    isSplit(mode) ? (p === "p1" ? -0.5 : 0.5) : 0;
+    isSplit(mode) ? (p === "p1" ? -SPLIT_PAN : SPLIT_PAN) : 0;
   const worlds = {
     p1: new PlayerWorld("p1", game, audio, pan("p1")),
     p2: new PlayerWorld("p2", game, audio, pan("p2")),
@@ -114,14 +120,14 @@ async function boot() {
   $("title-2-word").textContent = (words.slice(1).at(-1) ?? "").toUpperCase();
   $("tagline").textContent = game.content.screens.title.sub;
   document.title = game.content.screens.title.big;
-  $("best").textContent = String(best).padStart(6, "0");
+  $("best").textContent = String(best).padStart(SCORE_DIGITS, "0");
   $("track-list").textContent =
     `Soundtrack: ${TRACKS.map((t) => t.name).join(", ")}.`;
   director.onScore = (s) => {
     if (s > best) {
       best = s;
       store.set("best", String(s));
-      $("best").textContent = String(best).padStart(6, "0");
+      $("best").textContent = String(best).padStart(SCORE_DIGITS, "0");
     }
   };
 
@@ -507,7 +513,7 @@ async function boot() {
   let last = performance.now();
 
   function frame(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / MS_PER_SECOND);
 
     last = now;
     director.update(dt);

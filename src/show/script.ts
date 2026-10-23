@@ -1,5 +1,11 @@
 import { nth } from "../nth";
-import { hitFor, toolFor, type Game, type PlayTier } from "../content/load";
+import {
+  FULL_HEALTH,
+  hitFor,
+  toolFor,
+  type Game,
+  type PlayTier,
+} from "../content/load";
 import { gatesText, gateText } from "../content/gatelabel";
 import type { Card } from "../content/types";
 
@@ -139,34 +145,37 @@ export function nextIndex(
 export const tierStart = (script: Step[], tierIndex: number) =>
   script.findIndex((s) => s.phase === "vs" && s.tier === tierIndex);
 
+/** Health is kept to one decimal: values are rounded to this many tenths. */
+const TENTHS = 10;
+
 /** Health in percent for a player at a step (the settled value once the step's action has happened). */
 export function healthAt(game: Game, step: Step, player: Player): number {
   if (step.phase === "ending") {
-    return player === "p1" ? 0 : 100;
+    return player === "p1" ? 0 : FULL_HEALTH;
   }
 
   const tier = game.tiers[step.tier];
 
   if (!tier) {
-    return 100;
+    return FULL_HEALTH;
   }
 
   const hit = hitFor(tier);
   const n = tier.stops.length;
-  const round = (v: number) => Math.max(0, Math.round(v * 10) / 10);
+  const round = (v: number) => Math.max(0, Math.round(v * TENTHS) / TENTHS);
 
   if (player === "p1") {
     switch (step.phase) {
       case "vs":
-        return 100;
+        return FULL_HEALTH;
       case "walk":
-        return round(100 - Math.min(step.stop, n) * hit);
+        return round(FULL_HEALTH - Math.min(step.stop, n) * hit);
       case "problem":
       case "tool":
       case "fixed":
-        return round(100 - (step.stop + 1) * hit);
+        return round(FULL_HEALTH - (step.stop + 1) * hit);
       case "boss":
-        return round(100 - n * hit);
+        return round(FULL_HEALTH - n * hit);
       default:
         return 0; // the boss finishes player 1 with its first blow
     }
@@ -175,17 +184,17 @@ export function healthAt(game: Game, step: Step, player: Player): number {
   switch (step.phase) {
     case "problem":
     case "tool":
-      return round(100 - hit);
+      return round(FULL_HEALTH - hit);
     case "boss":
-      return round(100 - hit);
+      return round(FULL_HEALTH - hit);
     case "bossPart": {
       const parts = Math.max(1, tier.boss.parts.length);
 
-      return round(100 - hit * (1 - (step.part + 1) / parts));
+      return round(FULL_HEALTH - hit * (1 - (step.part + 1) / parts));
     }
 
     default:
-      return 100;
+      return FULL_HEALTH;
   }
 }
 

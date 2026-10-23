@@ -1,6 +1,14 @@
-import { toolFor, type Game, type PlayTier } from "../content/load";
+import {
+  TIER_HEALTH_LOSS,
+  toolFor,
+  type Game,
+  type PlayTier,
+} from "../content/load";
 import { gateLabel } from "../content/gatelabel";
 import type { Stop } from "../content/types";
+
+/** A tool card shows this many lines of the tool's configuration. */
+const CONFIG_LINES_SHOWN = 6;
 
 const ESCAPES = new Map([
   ["&", "&amp;"],
@@ -49,8 +57,8 @@ export function toolCardHtml(
   const card = stop.p2;
   const tool = toolFor(game, card.tool);
   const cfg = tool.config;
-  const lines = cfg?.lines.slice(0, 6) ?? [];
-  const hit = Math.round(90 / tier.stops.length);
+  const lines = cfg?.lines.slice(0, CONFIG_LINES_SHOWN) ?? [];
+  const hit = Math.round(TIER_HEALTH_LOSS / tier.stops.length);
   const cfgHtml =
     cfg && lines.length
       ? `<div class="cfg"><div class="file">${esc(cfg.file)}<span>${esc(cfg.status === "planned" ? "planned" : "applied in this PR")}</span></div>${lines.map(([code, means]) => `<div class="ln"><code>${esc(yamlStep(code))}</code><em>${esc(means)}</em></div>`).join("")}</div>`

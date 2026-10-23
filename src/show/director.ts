@@ -3,7 +3,7 @@ import { nth } from "../nth";
 import { parseDirectorMessage } from "./messages";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "../audio/audio";
-import { toolFor, type Game } from "../content/load";
+import { FULL_HEALTH, toolFor, type Game } from "../content/load";
 import { gateLabel, gatesText } from "../content/gatelabel";
 import { esc, gateHtml, shortTool, toolCardHtml, toolImg } from "../ui/card";
 import type { Stage } from "../world/stage";
@@ -24,6 +24,38 @@ import {
 } from "./script";
 
 const $ = (id: string) => byId(id, HTMLElement);
+
+/** Scores are shown as this many digits, padded with zeros. */
+export const SCORE_DIGITS = 6;
+/** In a split-screen mode each player's sound sits this far left (player 1) or right (player 2), on a -1..1 scale. */
+export const SPLIT_PAN = 0.5;
+
+/** How long a banner stays: the gate banner, and the boss banner. */
+const GATE_BANNER_SECONDS = 1.45;
+const BOSS_BANNER_SECONDS = 2.6;
+/** A banner takes this long to fade out before it is hidden. */
+const BANNER_FADE_SECONDS = 0.35;
+/** How long a lane's caption stays, for the boss and for a problem card. */
+const BOSS_CAPTION_SECONDS = 2.9;
+const PROBLEM_CAPTION_SECONDS = 2.4;
+/** A played tool card stays this long before its slot is cleared. */
+const CARD_PLAY_SECONDS = 0.6;
+/** A lane narrower than this many pixels gets the compact layout. */
+const NARROW_LANE_PX = 1100;
+/** How long the face-off screen stays before the game moves on. */
+const VS_SCREEN_SECONDS = 4.2;
+/** The "caught by CI" pop appears this far from the left (a percentage, plus up to the spread) and stays this long. */
+const CI_POP_LEFT = 30;
+const CI_POP_LEFT_SPREAD = 40;
+const CI_POP_MS = 1600;
+/** The health bar turns "low" at or below this, and "mid" below the second value. */
+const LOW_HEALTH = 35;
+const MID_HEALTH = 70;
+/** A health change bigger than this flashes (or heals) the bar; a drift bigger than the second is tracked quietly. */
+const HEALTH_FLASH_STEP = 5;
+const HEALTH_TRACK_STEP = 0.5;
+const PERCENT = 100;
+
 const PLAYERS: Player[] = ["p1", "p2"];
 const WHO: Record<Player, { n: string; name: string; sub: string }> = {
   p1: { n: "PLAYER 1", name: "Vibe coder", sub: "no tools · ships fast" },
@@ -57,7 +89,10 @@ export class Director {
   private vsT = -1;
   private cues: { at: number; fn: () => void }[] = [];
   private clock = 0;
-  private lastHealth: Record<Player, number> = { p1: 100, p2: 100 };
+  private lastHealth: Record<Player, number> = {
+    p1: FULL_HEALTH,
+    p2: FULL_HEALTH,
+  };
   private readonly channel =
     "BroadcastChannel" in window ? new BroadcastChannel("spaghetti-rig") : null;
   private pointer: { x: number; y: number } | null = null;
@@ -305,7 +340,7 @@ export class Director {
       this.banner(
         `STOP ${step.stop + 1} OF ${tier.stops.length} · TIER ${tier.n} ${tier.name.toUpperCase()}`,
         gateHtml(stop.gate),
-        1.45,
+        GATE_BANNER_SECONDS,
       );
     }
 
@@ -313,7 +348,7 @@ export class Director {
       this.banner(
         "PRODUCTION INCIDENT",
         `Boss fight — <em>${esc(tier.boss.name)}</em> is pushed to main!`,
-        2.6,
+        BOSS_BANNER_SECONDS,
       );
     }
 
@@ -323,7 +358,7 @@ export class Director {
 
     this.audio.setTheme(this.theme(step));
     if (prev && prev.tier !== step.tier) {
-      this.lastHealth = { p1: 100, p2: 100 };
+      this.lastHealth = { p1: FULL_HEALTH, p2: FULL_HEALTH };
     }
 
     this.renderNotes();
@@ -354,7 +389,7 @@ export class Director {
       .lanes()
       .map(
         (l) => `
-      <div class="lane${l.w < 1100 ? " narrow" : ""}" data-p="${l.player}" style="left:${l.x}px;width:${l.w}px">
+      <div class="lane${l.w < NARROW_LANE_PX ? " narrow" : ""}" data-p="${l.player}" style="left:${l.x}px;width:${l.w}px">
         <div class="lane-top">
           <div class="who"><span class="label">${WHO[l.player].n}${this.machine(l.player) ? " · AUTOPILOT" : this.mode === "spec" ? " · YOU" : ""}</span><b>${WHO[l.player].name}</b><small>${WHO[l.player].sub}</small></div>
           <div class="hp"><span class="label">HEALTH</span><div class="bar"><i></i></div><b class="pct">100%</b></div>
@@ -411,7 +446,7 @@ export class Director {
 
       card.classList.remove("fly-in");
       card.classList.add("play");
-      this.after(0.6, () => {
+      this.after(CARD_PLAY_SECONDS, () => {
         slot.innerHTML = "";
       });
     } else {
@@ -424,9 +459,9 @@ export class Director {
       this.captionFor(p),
       animate
         ? step.phase === "boss"
-          ? 2.9
+          ? BOSS_CAPTION_SECONDS
           : step.phase === "problem"
-            ? 2.4
+            ? PROBLEM_CAPTION_SECONDS
             : step.phase === "bossPart"
               ? 1.0
               : 0
@@ -551,7 +586,7 @@ export class Director {
     b.hidden = false;
     this.after(seconds, () => {
       b.classList.add("out");
-      this.after(0.35, () => {
+      this.after(BANNER_FADE_SECONDS, () => {
         b.hidden = true;
       });
     });
@@ -602,8 +637,8 @@ export class Director {
       next?.phase === "vs" ? this.vsLabel(next.tier) : "THE ENDING";
     const col = (p: Player) =>
       p === "p1"
-        ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(this.worlds.p1.score).padStart(6, "0")} · ${this.worlds.p1.shipped} BUGS SHIPPED</span></div>`
-        : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(6, "0")}</span></div>`;
+        ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(this.worlds.p1.score).padStart(SCORE_DIGITS, "0")} · ${this.worlds.p1.shipped} BUGS SHIPPED</span></div>`
+        : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(SCORE_DIGITS, "0")}</span></div>`;
     const el = $("result");
 
     el.style.setProperty("--cols", String(this.visible().length));
@@ -682,9 +717,9 @@ export class Director {
 
     pop.className = "ci-pop";
     pop.innerHTML = '<span class="tick">✓</span>CAUGHT BY CI';
-    pop.style.left = `${30 + Math.random() * 40}%`;
+    pop.style.left = `${CI_POP_LEFT + Math.random() * CI_POP_LEFT_SPREAD}%`;
     queryEl(el, ".pops").append(pop);
-    setTimeout(() => pop.remove(), 1600);
+    setTimeout(() => pop.remove(), CI_POP_MS);
   }
 
   toggleNotes() {
@@ -739,7 +774,7 @@ export class Director {
   }
 
   private pan(p: Player) {
-    return isSplit(this.mode) ? (p === "p1" ? -0.5 : 0.5) : 0;
+    return isSplit(this.mode) ? (p === "p1" ? -SPLIT_PAN : SPLIT_PAN) : 0;
   }
 
   private aim(fire: boolean) {
@@ -795,7 +830,7 @@ export class Director {
 
     if (this.vsT >= 0) {
       this.vsT += dt;
-      if (this.vsT > 4.2) {
+      if (this.vsT > VS_SCREEN_SECONDS) {
         this.vsT = -1;
         this.next();
 
@@ -837,31 +872,37 @@ export class Director {
       }
 
       const w = this.worlds[p];
-      const h = Math.max(0, Math.min(100, w.health));
+      const h = Math.max(0, Math.min(FULL_HEALTH, w.health));
       const hp = queryEl(el, ".hp");
 
       queryEl(hp, ".bar i").style.width = `${h}%`;
       queryEl(hp, ".pct").textContent = `${Math.round(h)}%`;
-      hp.classList.toggle("low", h <= 35);
-      hp.classList.toggle("mid", h > 35 && h < 70);
+      hp.classList.toggle("low", h <= LOW_HEALTH);
+      hp.classList.toggle("mid", h > LOW_HEALTH && h < MID_HEALTH);
 
       const last = this.lastHealth[p];
 
-      if (h < last - 5) {
+      if (h < last - HEALTH_FLASH_STEP) {
         hp.classList.remove("flash", "heal");
         void hp.offsetWidth;
         hp.classList.add("flash");
         this.lastHealth[p] = h;
-      } else if (h > last + 5) {
+      } else if (h > last + HEALTH_FLASH_STEP) {
         hp.classList.remove("flash", "heal");
         void hp.offsetWidth;
         hp.classList.add("heal");
         this.lastHealth[p] = h;
-      } else if (Math.abs(h - last) > 0.5 && !hp.classList.contains("flash")) {
+      } else if (
+        Math.abs(h - last) > HEALTH_TRACK_STEP &&
+        !hp.classList.contains("flash")
+      ) {
         this.lastHealth[p] = h;
       }
 
-      queryEl(el, ".score").textContent = String(w.score).padStart(6, "0");
+      queryEl(el, ".score").textContent = String(w.score).padStart(
+        SCORE_DIGITS,
+        "0",
+      );
 
       const shipped = el.querySelector(".shipped");
 
@@ -891,7 +932,7 @@ export class Director {
         queryEl(bb, ".count").textContent =
           `${w.bossLeft} / ${w.bossTotal} SINS`;
         queryEl(bb, ".bar i").style.width =
-          `${(w.bossLeft / w.bossTotal) * 100}%`;
+          `${(w.bossLeft / w.bossTotal) * PERCENT}%`;
       }
     }
   }
