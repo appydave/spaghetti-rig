@@ -468,7 +468,6 @@
         "src/world/characters.ts",
         "src/world/city.ts",
         "src/world/codewindow.ts",
-        "src/world/effects.ts",
         "src/world/enemies.ts",
         "src/world/gate.ts",
         "src/world/showcase.ts",

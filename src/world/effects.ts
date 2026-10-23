@@ -23,13 +23,101 @@ interface Fader {
 
 const MAX = 900;
 
+const FLASH_DISTANCE = 9;
+const FLASH_DECAY = 2;
+const RGB_COMPONENTS = 3;
+const RANDOM_CENTRE = 0.5;
+const TRACER_MIDPOINT = 0.5;
+const DEFAULT_BURST_COUNT = 24;
+const DEFAULT_BURST_UP = 0.3;
+const DEFAULT_BURST_SPEED = 6;
+const BURST_SPEED_MIN = 0.4;
+const DEFAULT_BURST_LIFE = 0.6;
+const BURST_JITTER_MIN = 0.6;
+const BURST_JITTER_RANGE = 0.8;
+const DEFAULT_BURST_SIZE = 0.08;
+const DEFAULT_BURST_GRAVITY = 9;
+const BURST_SPIN_MAX = 10;
+const CONFETTI_COUNT = 120;
+const CONFETTI_SPEED = 9;
+const CONFETTI_SIZE = 0.12;
+const CONFETTI_LIFE = 2.6;
+const CONFETTI_GRAVITY = 5;
+const CONFETTI_UP = 1.4;
+const HEAL_SPARKLES = 60;
+/** The sparkles spiral up through this many full turns. */
+const HEAL_SPIRAL_TURNS = 4;
+const HEAL_RADIUS = 0.7;
+const HEAL_RISE_PER_SPARKLE = 0.03;
+const HEAL_START_DROP = 0.6;
+const HEAL_SWIRL_SPEED = 0.8;
+const HEAL_LIFT_BASE = 2;
+const HEAL_LIFE_BASE = 1.2;
+const HEAL_LIFE_JITTER = 0.6;
+const HEAL_SPARKLE_SIZE = 0.09;
+const HEAL_GREEN_EVERY = 3;
+const HEAL_SINK = -0.5;
+const HEAL_SPARKLE_SPIN = 4;
+const HEAL_RING_SIZE = 1.6;
+const HEAL_RING_LIFE = 0.9;
+const RING_DEFAULT_SIZE = 1.2;
+const RING_DEFAULT_LIFE = 0.45;
+const RING_OPACITY = 0.9;
+const RING_TUBE_RADIUS = 0.06;
+const RING_TUBE_SEGMENTS = 6;
+const RING_SEGMENTS = 40;
+const RING_START_SCALE = 0.2;
+const TRACER_DEFAULT_WIDTH = 0.06;
+const TRACER_TIP_TAPER = 0.4;
+const TRACER_SEGMENTS = 6;
+const TRACER_LIFE = 0.14;
+const BEAM_WIDTH = 0.22;
+const BEAM_CORE_WIDTH = 0.08;
+const MUZZLE_LIGHT_INTENSITY = 6;
+const MUZZLE_LIGHT_TIME = 0.08;
+const MUZZLE_SPRITE_SCALE = 0.7;
+const MUZZLE_SPRITE_GROWTH = 0.6;
+const MUZZLE_SPRITE_LIFE = 0.09;
+const TEXT_DEFAULT_SIZE = 0.9;
+const TEXT_DEFAULT_LIFE = 1.1;
+const TEXT_CANVAS_WIDTH = 512;
+const TEXT_CANVAS_HEIGHT = 160;
+const TEXT_CENTRE_X = 256;
+const TEXT_CENTRE_Y = 84;
+const TEXT_OUTLINE_WIDTH = 16;
+const TEXT_RENDER_ORDER = 50;
+const TEXT_ASPECT = 3.2;
+const TEXT_RISE = 0.9;
+const TEXT_FADE_START = 0.7;
+const TEXT_FADE_SPAN = 0.3;
+const TEXT_POP_SPEED = 6;
+const TEXT_POP_MIN = 0.6;
+const TEXT_POP_RANGE = 0.4;
+const FLASH_FADE_RATE = 80;
+const PARTICLE_DRAG = 1.2;
+const FLOOR_Y = 0.03;
+const FLOOR_BOUNCE = -0.4;
+const SPARK_TUMBLE_RATIO = 0.7;
+const SPARK_SHRINK_MIN = 0.3;
+const SPARK_SHRINK_RANGE = 0.7;
+const GLOW_SIZE = 128;
+const GLOW_CENTRE = 64;
+const GLOW_MID_STOP = 0.3;
+const GLOW_STAR_INSET = 58;
+const GLOW_STAR_OUTSET = 70;
+
 /** Sparks, rings, tracers, flashes, confetti and floating text. Cheap and pooled. */
 export class Effects {
   private readonly sparks: THREE.InstancedMesh;
   private particles: Particle[] = [];
   private faders: Fader[] = [];
   private readonly dummy = new THREE.Object3D();
-  readonly flash = new THREE.PointLight("#ffdc85", 0, 9, 2);
+  readonly flash = new THREE.PointLight(
+    "#ffdc85",
+    0,
+    FLASH_DISTANCE,
+    FLASH_DECAY,
+  );
   private flashT = 0;
 
   constructor(private readonly scene: THREE.Scene) {
@@ -41,8 +129,8 @@ export class Effects {
     this.sparks.frustumCulled = false;
     this.sparks.count = 0;
     this.sparks.instanceColor = new THREE.InstancedBufferAttribute(
-      new Float32Array(MAX * 3),
-      3,
+      new Float32Array(MAX * RGB_COMPONENTS),
+      RGB_COMPONENTS,
     );
     scene.add(this.sparks, this.flash);
   }
@@ -63,31 +151,38 @@ export class Effects {
       (c) => new THREE.Color(c),
     );
 
-    for (let i = 0; i < (opts.n ?? 24); i++) {
+    for (let i = 0; i < (opts.n ?? DEFAULT_BURST_COUNT); i++) {
       if (this.particles.length >= MAX) {
         this.particles.shift();
       }
 
       const dir = new THREE.Vector3(
-        Math.random() - 0.5,
-        Math.random() - 0.5 + (opts.up ?? 0.3),
-        Math.random() - 0.5,
+        Math.random() - RANDOM_CENTRE,
+        Math.random() - RANDOM_CENTRE + (opts.up ?? DEFAULT_BURST_UP),
+        Math.random() - RANDOM_CENTRE,
       ).normalize();
 
       this.particles.push({
         pos: at.clone(),
-        vel: dir.multiplyScalar((opts.speed ?? 6) * (0.4 + Math.random())),
-        life: (opts.life ?? 0.6) * (0.6 + Math.random() * 0.8),
+        vel: dir.multiplyScalar(
+          (opts.speed ?? DEFAULT_BURST_SPEED) *
+            (BURST_SPEED_MIN + Math.random()),
+        ),
+        life:
+          (opts.life ?? DEFAULT_BURST_LIFE) *
+          (BURST_JITTER_MIN + Math.random() * BURST_JITTER_RANGE),
         age: 0,
-        size: (opts.size ?? 0.08) * (0.6 + Math.random() * 0.8),
+        size:
+          (opts.size ?? DEFAULT_BURST_SIZE) *
+          (BURST_JITTER_MIN + Math.random() * BURST_JITTER_RANGE),
         color: nth(colors, i % colors.length, "spark colours"),
-        gravity: opts.gravity ?? 9,
-        spin: Math.random() * 10,
+        gravity: opts.gravity ?? DEFAULT_BURST_GRAVITY,
+        spin: Math.random() * BURST_SPIN_MAX,
       });
     }
   }
 
-  confetti(at: THREE.Vector3, n = 120) {
+  confetti(at: THREE.Vector3, n = CONFETTI_COUNT) {
     this.burst(at, {
       n,
       colors: [
@@ -98,19 +193,19 @@ export class Effects {
         "#8ebebf",
         "#f4f4e8",
       ],
-      speed: 9,
-      size: 0.12,
-      life: 2.6,
-      gravity: 5,
-      up: 1.4,
+      speed: CONFETTI_SPEED,
+      size: CONFETTI_SIZE,
+      life: CONFETTI_LIFE,
+      gravity: CONFETTI_GRAVITY,
+      up: CONFETTI_UP,
     });
   }
 
   /** Rising green-and-yellow sparkles around a body. */
   heal(at: THREE.Vector3) {
-    for (let i = 0; i < 60; i++) {
-      const a = (i / 60) * Math.PI * 8;
-      const r = 0.7;
+    for (let i = 0; i < HEAL_SPARKLES; i++) {
+      const a = (i / HEAL_SPARKLES) * Math.PI * HEAL_SPIRAL_TURNS * 2;
+      const r = HEAL_RADIUS;
 
       if (this.particles.length >= MAX) {
         this.particles.shift();
@@ -120,42 +215,54 @@ export class Effects {
         pos: at
           .clone()
           .add(
-            new THREE.Vector3(Math.cos(a) * r, i * 0.03 - 0.6, Math.sin(a) * r),
+            new THREE.Vector3(
+              Math.cos(a) * r,
+              i * HEAL_RISE_PER_SPARKLE - HEAL_START_DROP,
+              Math.sin(a) * r,
+            ),
           ),
         vel: new THREE.Vector3(
-          -Math.sin(a) * 0.8,
-          2 + Math.random(),
-          Math.cos(a) * 0.8,
+          -Math.sin(a) * HEAL_SWIRL_SPEED,
+          HEAL_LIFT_BASE + Math.random(),
+          Math.cos(a) * HEAL_SWIRL_SPEED,
         ),
-        life: 1.2 + Math.random() * 0.6,
+        life: HEAL_LIFE_BASE + Math.random() * HEAL_LIFE_JITTER,
         age: 0,
-        size: 0.09,
-        color: new THREE.Color(i % 3 ? "#aee5a3" : "#f9db48"),
-        gravity: -0.5,
-        spin: 4,
+        size: HEAL_SPARKLE_SIZE,
+        color: new THREE.Color(i % HEAL_GREEN_EVERY ? "#aee5a3" : "#f9db48"),
+        gravity: HEAL_SINK,
+        spin: HEAL_SPARKLE_SPIN,
       });
     }
 
-    this.ring(at, "#aee5a3", 1.6, 0.9, true);
+    this.ring(at, "#aee5a3", HEAL_RING_SIZE, HEAL_RING_LIFE, true);
   }
 
   ring(
     at: THREE.Vector3,
     color = "#f9db48",
-    size = 1.2,
-    life = 0.45,
+    size = RING_DEFAULT_SIZE,
+    life = RING_DEFAULT_LIFE,
     flat = false,
     face?: THREE.Vector3,
   ) {
     const mat = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.9,
+      opacity: RING_OPACITY,
       depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false,
     });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 6, 40), mat);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        1,
+        RING_TUBE_RADIUS,
+        RING_TUBE_SEGMENTS,
+        RING_SEGMENTS,
+      ),
+      mat,
+    );
 
     ring.position.copy(at);
     if (flat) {
@@ -171,8 +278,8 @@ export class Effects {
       age: 0,
       life,
       tick: (k, o) => {
-        o.scale.setScalar(0.2 + k * size);
-        mat.opacity = 0.9 * (1 - k);
+        o.scale.setScalar(RING_START_SCALE + k * size);
+        mat.opacity = RING_OPACITY * (1 - k);
       },
     });
   }
@@ -181,7 +288,7 @@ export class Effects {
     from: THREE.Vector3,
     to: THREE.Vector3,
     color = "#fff1a8",
-    width = 0.06,
+    width = TRACER_DEFAULT_WIDTH,
   ) {
     const len = from.distanceTo(to);
     const mat = new THREE.MeshBasicMaterial({
@@ -192,11 +299,18 @@ export class Effects {
       toneMapped: false,
     });
     const beam = new THREE.Mesh(
-      new THREE.CylinderGeometry(width, width * 0.4, len, 6, 1, true),
+      new THREE.CylinderGeometry(
+        width,
+        width * TRACER_TIP_TAPER,
+        len,
+        TRACER_SEGMENTS,
+        1,
+        true,
+      ),
       mat,
     );
 
-    beam.position.copy(from).lerp(to, 0.5);
+    beam.position.copy(from).lerp(to, TRACER_MIDPOINT);
     beam.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
       to.clone().sub(from).normalize(),
@@ -206,7 +320,7 @@ export class Effects {
       obj: beam,
       mat,
       age: 0,
-      life: 0.14,
+      life: TRACER_LIFE,
       tick: (k) => {
         mat.opacity = 1 - k;
       },
@@ -215,15 +329,15 @@ export class Effects {
 
   /** A thick glowing beam (tool card power shot). */
   beam(from: THREE.Vector3, to: THREE.Vector3, color = "#aee5a3") {
-    this.tracer(from, to, color, 0.22);
-    this.tracer(from, to, "#ffffff", 0.08);
+    this.tracer(from, to, color, BEAM_WIDTH);
+    this.tracer(from, to, "#ffffff", BEAM_CORE_WIDTH);
   }
 
   muzzle(at: THREE.Vector3, color = "#ffdc85") {
     this.flash.position.copy(at);
     this.flash.color.set(color);
-    this.flash.intensity = 6;
-    this.flashT = 0.08;
+    this.flash.intensity = MUZZLE_LIGHT_INTENSITY;
+    this.flashT = MUZZLE_LIGHT_TIME;
 
     const mat = new THREE.SpriteMaterial({
       color,
@@ -236,15 +350,15 @@ export class Effects {
     const s = new THREE.Sprite(mat);
 
     s.position.copy(at);
-    s.scale.setScalar(0.7);
+    s.scale.setScalar(MUZZLE_SPRITE_SCALE);
     this.scene.add(s);
     this.faders.push({
       obj: s,
       mat,
       age: 0,
-      life: 0.09,
+      life: MUZZLE_SPRITE_LIFE,
       tick: (k, o) => {
-        o.scale.setScalar(0.7 + k * 0.6);
+        o.scale.setScalar(MUZZLE_SPRITE_SCALE + k * MUZZLE_SPRITE_GROWTH);
         mat.opacity = 1 - k;
       },
     });
@@ -255,25 +369,25 @@ export class Effects {
     at: THREE.Vector3,
     s: string,
     color = "#f9db48",
-    size = 0.9,
-    life = 1.1,
+    size = TEXT_DEFAULT_SIZE,
+    life = TEXT_DEFAULT_LIFE,
   ) {
     const cv = document.createElement("canvas");
 
-    cv.width = 512;
-    cv.height = 160;
+    cv.width = TEXT_CANVAS_WIDTH;
+    cv.height = TEXT_CANVAS_HEIGHT;
 
     const g = context2d(cv);
 
     g.font = "italic 800 120px Barlow, Impact, sans-serif";
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.lineWidth = 16;
+    g.lineWidth = TEXT_OUTLINE_WIDTH;
     g.strokeStyle = "#173e35";
     g.lineJoin = "round";
-    g.strokeText(s, 256, 84);
+    g.strokeText(s, TEXT_CENTRE_X, TEXT_CENTRE_Y);
     g.fillStyle = color;
-    g.fillText(s, 256, 84);
+    g.fillText(s, TEXT_CENTRE_X, TEXT_CENTRE_Y);
 
     const tex = new THREE.CanvasTexture(cv);
 
@@ -287,9 +401,9 @@ export class Effects {
     });
     const sp = new THREE.Sprite(mat);
 
-    sp.renderOrder = 50;
+    sp.renderOrder = TEXT_RENDER_ORDER;
     sp.position.copy(at);
-    sp.scale.set(size * 3.2, size, 1);
+    sp.scale.set(size * TEXT_ASPECT, size, 1);
     this.scene.add(sp);
 
     const y0 = at.y;
@@ -300,12 +414,17 @@ export class Effects {
       age: 0,
       life,
       tick: (k, o) => {
-        o.position.y = y0 + k * 0.9;
-        mat.opacity = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+        o.position.y = y0 + k * TEXT_RISE;
+        mat.opacity =
+          k < TEXT_FADE_START ? 1 : 1 - (k - TEXT_FADE_START) / TEXT_FADE_SPAN;
 
-        const p = Math.min(1, k * 6);
+        const p = Math.min(1, k * TEXT_POP_SPEED);
 
-        o.scale.set(size * 3.2 * (0.6 + p * 0.4), size * (0.6 + p * 0.4), 1);
+        o.scale.set(
+          size * TEXT_ASPECT * (TEXT_POP_MIN + p * TEXT_POP_RANGE),
+          size * (TEXT_POP_MIN + p * TEXT_POP_RANGE),
+          1,
+        );
       },
     });
   }
@@ -313,7 +432,10 @@ export class Effects {
   update(dt: number) {
     this.flashT -= dt;
     if (this.flashT <= 0) {
-      this.flash.intensity = Math.max(0, this.flash.intensity - dt * 80);
+      this.flash.intensity = Math.max(
+        0,
+        this.flash.intensity - dt * FLASH_FADE_RATE,
+      );
     }
 
     let n = 0;
@@ -321,18 +443,24 @@ export class Effects {
     this.particles = this.particles.filter((p) => (p.age += dt) < p.life);
     for (const p of this.particles) {
       p.vel.y -= p.gravity * dt;
-      p.vel.multiplyScalar(1 - dt * 1.2);
+      p.vel.multiplyScalar(1 - dt * PARTICLE_DRAG);
       p.pos.addScaledVector(p.vel, dt);
-      if (p.pos.y < 0.03) {
-        p.pos.y = 0.03;
-        p.vel.y *= -0.4;
+      if (p.pos.y < FLOOR_Y) {
+        p.pos.y = FLOOR_Y;
+        p.vel.y *= FLOOR_BOUNCE;
       }
 
       const k = 1 - p.age / p.life;
 
       this.dummy.position.copy(p.pos);
-      this.dummy.rotation.set(p.age * p.spin, p.age * p.spin * 0.7, 0);
-      this.dummy.scale.setScalar(p.size * (0.3 + k * 0.7));
+      this.dummy.rotation.set(
+        p.age * p.spin,
+        p.age * p.spin * SPARK_TUMBLE_RATIO,
+        0,
+      );
+      this.dummy.scale.setScalar(
+        p.size * (SPARK_SHRINK_MIN + k * SPARK_SHRINK_RANGE),
+      );
       this.dummy.updateMatrix();
       this.sparks.setMatrixAt(n, this.dummy.matrix);
       this.sparks.setColorAt(n, p.color);
@@ -392,27 +520,34 @@ function glow() {
 
   const cv = document.createElement("canvas");
 
-  cv.width = cv.height = 128;
+  cv.width = cv.height = GLOW_SIZE;
 
   const g = context2d(cv);
-  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  const grad = g.createRadialGradient(
+    GLOW_CENTRE,
+    GLOW_CENTRE,
+    0,
+    GLOW_CENTRE,
+    GLOW_CENTRE,
+    GLOW_CENTRE,
+  );
 
   grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.3, "rgba(255,255,255,.8)");
+  grad.addColorStop(GLOW_MID_STOP, "rgba(255,255,255,.8)");
   grad.addColorStop(1, "rgba(255,255,255,0)");
   g.fillStyle = grad;
-  g.fillRect(0, 0, 128, 128);
+  g.fillRect(0, 0, GLOW_SIZE, GLOW_SIZE);
   // Four-point star flare.
   g.fillStyle = "rgba(255,255,255,.9)";
   g.beginPath();
-  g.moveTo(64, 0);
-  g.lineTo(70, 58);
-  g.lineTo(128, 64);
-  g.lineTo(70, 70);
-  g.lineTo(64, 128);
-  g.lineTo(58, 70);
-  g.lineTo(0, 64);
-  g.lineTo(58, 58);
+  g.moveTo(GLOW_CENTRE, 0);
+  g.lineTo(GLOW_STAR_OUTSET, GLOW_STAR_INSET);
+  g.lineTo(GLOW_SIZE, GLOW_CENTRE);
+  g.lineTo(GLOW_STAR_OUTSET, GLOW_STAR_OUTSET);
+  g.lineTo(GLOW_CENTRE, GLOW_SIZE);
+  g.lineTo(GLOW_STAR_INSET, GLOW_STAR_OUTSET);
+  g.lineTo(0, GLOW_CENTRE);
+  g.lineTo(GLOW_STAR_INSET, GLOW_STAR_INSET);
   g.closePath();
   g.fill();
   glowTex = new THREE.CanvasTexture(cv);
