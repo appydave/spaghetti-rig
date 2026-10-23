@@ -223,7 +223,7 @@ export const BOLT = {
   light: "#f9db48",
 };
 
-/** The checkpoint gate's parts, by role. */
+/** The checkpoint gate: its parts, the sign painted on it, and the status light on top (by state). */
 export const GATE = {
   post: "#f4f4e8",
   foot: "#7fae8f",
@@ -232,4 +232,14 @@ export const GATE = {
   boomStripe: "#de6a47",
   boomStripeGap: "#f4f4e8",
   check: "#aee5a3",
+  signBoard: "#173e35",
+  signBorder: "#f9db48",
+  signBadge: "#f9db48",
+  signBadgeText: "#173e35",
+  signTitle: "#f9db48",
+  lightStart: "#de6a47",
+  lightOpen: "#8ef08a",
+  lightIdle: "#ffd96a",
+  lightAlarmOn: "#ff5d4f",
+  lightAlarmOff: "#7c2f33",
 };

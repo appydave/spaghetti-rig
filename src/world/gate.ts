@@ -11,6 +11,46 @@ import gateJson from "./gate.json";
 /** Where every part of the gate sits and how big it is: gate.json, checked on the way in. */
 const MODEL = GATE_SCHEMA.read(gateJson, "gate");
 
+const OUTLINE = 0.025;
+const SIGN_ANISOTROPY = 8;
+/** The sign is painted on a canvas this big: a board with a border, an optional number badge, and the title. */
+const SIGN_WIDTH = 1024;
+const SIGN_HEIGHT = 200;
+const SIGN_CORNER = 26;
+const SIGN_BORDER_INSET = 8;
+const SIGN_BORDER_WIDTH = SIGN_WIDTH - SIGN_BORDER_INSET * 2;
+const SIGN_BORDER_HEIGHT = SIGN_HEIGHT - SIGN_BORDER_INSET * 2;
+const SIGN_BORDER_CORNER = 20;
+const SIGN_BORDER_LINE = 10;
+/** The number badge: its place and size, the word "GATE" above the number, and the number's size for short and long numbers. */
+const BADGE_X = 28;
+const BADGE_Y = 22;
+const BADGE_WIDTH = 190;
+const BADGE_HEIGHT = 156;
+const BADGE_CORNER = 22;
+const BADGE_CENTRE_X = 123;
+const BADGE_WORD_Y = 52;
+const BADGE_NUMBER_Y = 118;
+const BADGE_WORD_SIZE = 26;
+const BADGE_NUMBER_SIZE = 104;
+const BADGE_LONG_NUMBER_SIZE = 84;
+/** The title starts here with a badge (40 without one), keeps this margin on the right, and shrinks by 4 until it fits. */
+const TITLE_LEFT_WITH_BADGE = 240;
+const TITLE_LEFT = 40;
+const TITLE_RIGHT_MARGIN = 36;
+const TITLE_FIRST_SIZE = 112;
+const TITLE_SIZE_STEP = 4;
+const TITLE_MIN_SIZE = 40;
+const TITLE_BASELINE_Y = 106;
+/** The boom swings up to open (a little short of straight up), drops to broken, and eases towards its angle at this rate. */
+const BOOM_OPEN_SHORT = 0.05;
+const BOOM_BROKEN_ANGLE = -0.5;
+const BOOM_BROKEN_TILT = 0.35;
+const BOOM_EASE_RATE = 6;
+/** In the alarm state the light blinks at this rate; the check mark turns at this speed. */
+const ALARM_BLINK_RATE = 10;
+const CHECK_SPIN_SPEED = 2;
+
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
 /** A checkpoint arch over the road: pillars, a sign with the gate's name, a boom barrier and a status light. */
@@ -21,7 +61,7 @@ export class Gate {
   readonly near = new THREE.Group();
   private readonly light: THREE.Mesh;
   private readonly lightMat = new THREE.MeshBasicMaterial({
-    color: "#de6a47",
+    color: GATE.lightStart,
     toneMapped: false,
   });
   private readonly check: THREE.Mesh;
@@ -30,7 +70,7 @@ export class Gate {
   private t = 0;
 
   constructor(label: string, z: number) {
-    const a = kit(0.025);
+    const a = kit(OUTLINE);
 
     this.group.position.z = z;
 
@@ -73,58 +113,64 @@ export class Gate {
     // The sign, readable from both directions.
     const cv = document.createElement("canvas");
 
-    cv.width = 1024;
-    cv.height = 200;
+    cv.width = SIGN_WIDTH;
+    cv.height = SIGN_HEIGHT;
 
     const g = context2d(cv);
 
-    g.fillStyle = "#173e35";
+    g.fillStyle = GATE.signBoard;
     g.beginPath();
-    g.roundRect(0, 0, 1024, 200, 26);
+    g.roundRect(0, 0, SIGN_WIDTH, SIGN_HEIGHT, SIGN_CORNER);
     g.fill();
-    g.strokeStyle = "#f9db48";
-    g.lineWidth = 10;
+    g.strokeStyle = GATE.signBorder;
+    g.lineWidth = SIGN_BORDER_LINE;
     g.beginPath();
-    g.roundRect(8, 8, 1008, 184, 20);
+    g.roundRect(
+      SIGN_BORDER_INSET,
+      SIGN_BORDER_INSET,
+      SIGN_BORDER_WIDTH,
+      SIGN_BORDER_HEIGHT,
+      SIGN_BORDER_CORNER,
+    );
     g.stroke();
 
     // A number badge, then the title.
     const { num, title } = gateLabel(label);
-    let left = 40;
+    let left = TITLE_LEFT;
 
     if (num) {
-      g.fillStyle = "#f9db48";
+      g.fillStyle = GATE.signBadge;
       g.beginPath();
-      g.roundRect(28, 22, 190, 156, 22);
+      g.roundRect(BADGE_X, BADGE_Y, BADGE_WIDTH, BADGE_HEIGHT, BADGE_CORNER);
       g.fill();
-      g.fillStyle = "#173e35";
+      g.fillStyle = GATE.signBadgeText;
       g.textAlign = "center";
       g.textBaseline = "middle";
-      g.font = "700 26px Space, Arial, sans-serif";
-      g.fillText("GATE", 123, 52);
-      g.font = `italic 800 ${num.length > 2 ? 84 : 104}px Barlow, Impact, sans-serif`;
-      g.fillText(num, 123, 118);
-      left = 240;
+      g.font = `700 ${BADGE_WORD_SIZE}px Space, Arial, sans-serif`;
+      g.fillText("GATE", BADGE_CENTRE_X, BADGE_WORD_Y);
+      g.font = `italic 800 ${num.length > 2 ? BADGE_LONG_NUMBER_SIZE : BADGE_NUMBER_SIZE}px Barlow, Impact, sans-serif`;
+      g.fillText(num, BADGE_CENTRE_X, BADGE_NUMBER_Y);
+      left = TITLE_LEFT_WITH_BADGE;
     }
 
-    g.fillStyle = "#f9db48";
+    g.fillStyle = GATE.signTitle;
     g.textAlign = "center";
     g.textBaseline = "middle";
 
-    const room = 1024 - left - 36;
-    let size = 112;
+    const room = SIGN_WIDTH - left - TITLE_RIGHT_MARGIN;
+    let size = TITLE_FIRST_SIZE;
 
     do {
       g.font = `italic 800 ${size}px Barlow, Impact, sans-serif`;
-      size -= 4;
-    } while (g.measureText(title).width > room && size > 40);
+      size -= TITLE_SIZE_STEP;
+    } while (g.measureText(title).width > room && size > TITLE_MIN_SIZE);
 
-    g.fillText(title, left + room / 2, 106);
+    g.fillText(title, left + room / 2, TITLE_BASELINE_Y);
 
     const tex = new THREE.CanvasTexture(cv);
 
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 8;
+    tex.anisotropy = SIGN_ANISOTROPY;
 
     const sign = new THREE.Mesh(
       new THREE.PlaneGeometry(MODEL.sign.width, MODEL.sign.height),
@@ -211,28 +257,30 @@ export class Gate {
 
     const target =
       this.state === "open"
-        ? Math.PI / 2 - 0.05
+        ? Math.PI / 2 - BOOM_OPEN_SHORT
         : this.state === "broken"
-          ? -0.5
+          ? BOOM_BROKEN_ANGLE
           : 0;
 
-    this.boomAngle += (target - this.boomAngle) * (1 - Math.exp(-dt * 6));
+    this.boomAngle +=
+      (target - this.boomAngle) * (1 - Math.exp(-dt * BOOM_EASE_RATE));
     this.boom.rotation.z = this.boomAngle;
-    this.boom.rotation.x = this.state === "broken" ? 0.35 : 0;
+    this.boom.rotation.x = this.state === "broken" ? BOOM_BROKEN_TILT : 0;
 
-    const on = this.state === "alarm" ? Math.sin(this.t * 10) > 0 : true;
+    const on =
+      this.state === "alarm" ? Math.sin(this.t * ALARM_BLINK_RATE) > 0 : true;
 
     this.lightMat.color.set(
       this.state === "open"
-        ? "#8ef08a"
+        ? GATE.lightOpen
         : this.state === "idle"
-          ? "#ffd96a"
+          ? GATE.lightIdle
           : on
-            ? "#ff5d4f"
-            : "#7c2f33",
+            ? GATE.lightAlarmOn
+            : GATE.lightAlarmOff,
     );
     this.check.visible = this.state === "open";
-    this.check.rotation.y += dt * 2;
+    this.check.rotation.y += dt * CHECK_SPIN_SPEED;
   }
 
   dispose() {
