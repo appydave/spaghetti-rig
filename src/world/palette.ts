@@ -222,3 +222,14 @@ export const BOLT = {
   text: "#173e35",
   light: "#f9db48",
 };
+
+/** The checkpoint gate's parts, by role. */
+export const GATE = {
+  post: "#f4f4e8",
+  foot: "#7fae8f",
+  beam: "#f9db48",
+  ink: INK,
+  boomStripe: "#de6a47",
+  boomStripeGap: "#f4f4e8",
+  check: "#aee5a3",
+};

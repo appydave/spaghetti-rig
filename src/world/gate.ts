@@ -1,9 +1,15 @@
 import * as THREE from "three";
 import { gateLabel } from "../content/gatelabel";
 import { ROAD_HALF } from "./city";
-import { INK, kit } from "./toon";
+import { kit } from "./toon";
 import { isDrawable, mapOf } from "./objects";
 import { context2d } from "../dom";
+import { GATE } from "./palette";
+import { GATE_SCHEMA } from "./gate-model";
+import gateJson from "./gate.json";
+
+/** Where every part of the gate sits and how big it is: gate.json, checked on the way in. */
+const MODEL = GATE_SCHEMA.read(gateJson, "gate");
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
@@ -28,21 +34,41 @@ export class Gate {
 
     this.group.position.z = z;
 
-    const x = ROAD_HALF + 0.5;
+    const x = ROAD_HALF + MODEL.pillar.margin;
 
     this.group.add(this.near);
     for (const s of [-1, 1]) {
       const g = s > 0 ? this.near : this.group;
 
-      a.soft(g, "#f4f4e8", s * x, 2.4, 0, 0.6, 4.8, 0.6);
-      for (const y of [0.8, 1.8, 2.8, 3.8]) {
-        a.box(g, INK, s * x, y, 0, 0.64, 0.18, 0.64, false);
+      for (const part of MODEL.pillar.parts) {
+        for (const at of part.at) {
+          a[part.shape](
+            g,
+            GATE[part.colour],
+            s * x + at.x,
+            at.y,
+            at.z,
+            part.size.x,
+            part.size.y,
+            part.size.z,
+            part.outlined,
+          );
+        }
       }
-
-      a.soft(g, "#7fae8f", s * x, 0.2, 0, 0.9, 0.4, 0.9);
     }
 
-    a.soft(this.near, "#f9db48", 0, 5.0, 0, x * 2 + 1.0, 0.7, 0.7);
+    const beam = MODEL.beam;
+
+    a.soft(
+      this.near,
+      GATE[beam.colour],
+      0,
+      beam.at.y,
+      0,
+      x * 2 + beam.overhang,
+      beam.size.y,
+      beam.size.z,
+    );
 
     // The sign, readable from both directions.
     const cv = document.createElement("canvas");
@@ -101,7 +127,7 @@ export class Gate {
     tex.anisotropy = 8;
 
     const sign = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.6, 1.1),
+      new THREE.PlaneGeometry(MODEL.sign.width, MODEL.sign.height),
       new THREE.MeshBasicMaterial({
         map: tex,
         toneMapped: false,
@@ -109,38 +135,73 @@ export class Gate {
       }),
     );
 
-    sign.position.set(0, 6.0, 0.05);
+    sign.position.set(0, MODEL.sign.at.y, MODEL.sign.at.z);
     this.near.add(sign);
-    a.box(this.near, INK, -2, 5.45, 0, 0.08, 0.5, 0.08, false);
-    a.box(this.near, INK, 2, 5.45, 0, 0.08, 0.5, 0.08, false);
+
+    const posts = MODEL.signPosts;
+
+    for (const at of posts.at) {
+      a.box(
+        this.near,
+        GATE[posts.colour],
+        at.x,
+        at.y,
+        at.z,
+        posts.size.x,
+        posts.size.y,
+        posts.size.z,
+        posts.outlined,
+      );
+    }
+
     // Status light on top.
+    const light = MODEL.light;
+
     this.light = new THREE.Mesh(
-      new THREE.SphereGeometry(0.32, 16, 12),
+      new THREE.SphereGeometry(
+        light.radius,
+        light.widthSegments,
+        light.heightSegments,
+      ),
       this.lightMat,
     );
-    this.light.position.set(0, 7.0, 0);
+    this.light.position.set(0, light.at.y, 0);
     this.near.add(this.light);
+
+    const check = MODEL.check;
+
     this.check = new THREE.Mesh(
-      new THREE.TorusGeometry(0.42, 0.06, 8, 24),
-      new THREE.MeshBasicMaterial({ color: "#aee5a3", toneMapped: false }),
+      new THREE.TorusGeometry(
+        check.radius,
+        check.tube,
+        check.radialSegments,
+        check.tubularSegments,
+      ),
+      new THREE.MeshBasicMaterial({
+        color: GATE[check.colour],
+        toneMapped: false,
+      }),
     );
     this.check.position.copy(this.light.position);
     this.check.visible = false;
     this.near.add(this.check);
     // Boom barrier hinged at the left pillar.
-    this.boom.position.set(-x + 0.3, 1.25, 0);
+
+    const boom = MODEL.boom;
+
+    this.boom.position.set(-x + boom.hinge.inset, boom.hinge.y, 0);
     this.group.add(this.boom);
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < boom.count; i++) {
       a.box(
         this.boom,
-        i % 2 ? "#de6a47" : "#f4f4e8",
-        0.5 + i * 0.95,
+        GATE[boom.colours[i % boom.colours.length] ?? "boomStripeGap"],
+        boom.start + i * boom.length,
         0,
         0,
-        0.95,
-        0.22,
-        0.18,
-        i === 0,
+        boom.length,
+        boom.size.y,
+        boom.size.z,
+        i === 0 ? boom.outlinedFirst : boom.outlinedRest,
       );
     }
   }
