@@ -14,6 +14,8 @@
  *      perc  't' soft tick, 'T' accented tick, 's' shaker, '.' rest
  */
 
+import { nth } from "../nth";
+
 export type Theme =
   "title" | "walk" | "stop" | "boss" | "victory" | "defeat" | "silent";
 export type MusicTheme = Exclude<Theme, "silent">;
@@ -486,7 +488,7 @@ export function compileTrack(def: TrackDef): CompiledTrack {
   const totalSteps = bars * stepsPerBar;
   const steps: StepEvents[] = Array.from({ length: totalSteps }, () => ({}));
   const at = (i: number): StepEvents =>
-    steps[((i % totalSteps) + totalSteps) % totalSteps]!;
+    nth(steps, ((i % totalSteps) + totalSteps) % totalSteps, "steps");
 
   // Harmony
   const chordAt: (Chord | undefined)[] = Array.from<Chord | undefined>({

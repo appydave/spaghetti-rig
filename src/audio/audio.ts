@@ -17,6 +17,7 @@ import {
   type Theme,
   type LeadVoice,
 } from "./tracks";
+import { nth, present } from "../nth";
 
 export type { Theme } from "./tracks";
 
@@ -103,7 +104,7 @@ interface Deck {
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 const pick = <T>(arr: readonly T[]): T =>
-  arr[Math.floor(Math.random() * arr.length)]!;
+  nth(arr, Math.floor(Math.random() * arr.length), "pick list");
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
 
@@ -164,7 +165,7 @@ export class AudioEngine {
   async unlock(): Promise<void> {
     try {
       if (!this.ctx && !this.init()) return;
-      const ctx = this.ctx!;
+      const ctx = this.audioContext;
       if (!this.current && this._theme !== "silent") this.applyTheme();
       if (!this._paused && ctx.state !== "running") await ctx.resume();
     } catch {
@@ -231,6 +232,17 @@ export class AudioEngine {
     } catch {
       /* ignore */
     }
+  }
+
+  /** The audio context. Methods that play sound run after init() has made it; one that runs earlier is a bug. */
+  private get audioContext(): AudioContext {
+    return present(this.ctx, "the audio context");
+  }
+  private get musicBusNode(): GainNode {
+    return present(this.musicBus, "the music bus");
+  }
+  private get sfxBusNode(): GainNode {
+    return present(this.sfxBus, "the sfx bus");
   }
 
   // ------------------------------------------------------------------ setup
@@ -345,7 +357,7 @@ export class AudioEngine {
 
   /** Stop scheduling a deck at `at` and fade it out over `fade`. */
   private retire(d: Deck, at: number, fade: number): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     d.stopAt = at + fade;
     const g = d.out.gain;
     const from = Math.max(at, ctx.currentTime);
@@ -359,11 +371,11 @@ export class AudioEngine {
     start: number,
     fadeIn: number,
   ): Deck {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, Math.max(ctx.currentTime, start - 0.05));
     out.gain.linearRampToValueAtTime(1, start + fadeIn);
-    out.connect(this.musicBus!);
+    out.connect(this.musicBusNode);
 
     // Ping-pong dotted-8th delay for width.
     const delayIn = ctx.createGain();
@@ -536,7 +548,7 @@ export class AudioEngine {
     vel: number,
     voice: LeadVoice,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const pluck = voice === "pluck";
     const dur = pluck ? Math.min(len, 0.3) : Math.max(0.08, len * 0.92);
@@ -645,7 +657,7 @@ export class AudioEngine {
     len: number,
     level: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const kind = deck.track.def.pad;
     const end = t + len + 0.9;
     const nodes: AudioNode[] = [];
@@ -705,7 +717,7 @@ export class AudioEngine {
     len: number,
     level: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const dur = Math.max(0.08, Math.min(len * 0.85, 1.6));
     const g = ctx.createGain();
@@ -742,7 +754,7 @@ export class AudioEngine {
     vol: number,
     pan: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const o = ctx.createOscillator();
     o.type = "triangle";
     o.frequency.value = midiToFreq(midi);
@@ -767,7 +779,7 @@ export class AudioEngine {
     pan: number,
     decay: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const o = ctx.createOscillator();
     o.type = "sine";
@@ -802,7 +814,7 @@ export class AudioEngine {
     level: number,
     dark: boolean,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const g = ctx.createGain();
     const vol = 0.06 * level;
     g.gain.setValueAtTime(0.0001, t);
@@ -835,7 +847,7 @@ export class AudioEngine {
     kind: "t" | "T" | "s",
     level: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     if (!this.noiseBuf) return;
     const src = ctx.createBufferSource();
     src.buffer = this.noiseBuf;
@@ -860,12 +872,12 @@ export class AudioEngine {
   // ------------------------------------------------------------------ sfx helpers
 
   private sfxOut(opts: PlayOptions, life: number): GainNode {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const g = ctx.createGain();
     g.gain.value = clamp(opts.volume ?? 1, 0, 1);
     const p = ctx.createStereoPanner();
     p.pan.value = clamp(opts.pan ?? 0, -1, 1);
-    g.connect(p).connect(this.sfxBus!);
+    g.connect(p).connect(this.sfxBusNode);
     this.activeSfx++;
     setTimeout(
       () => {
@@ -883,7 +895,7 @@ export class AudioEngine {
   }
 
   private tone(dest: AudioNode, t: number, o: ToneOpts): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const osc = ctx.createOscillator();
     osc.type = o.type ?? "sine";
     osc.frequency.setValueAtTime(o.f, t);
@@ -913,7 +925,7 @@ export class AudioEngine {
   }
 
   private noise(dest: AudioNode, t: number, o: NoiseOpts): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     if (!this.noiseBuf) return;
     const src = ctx.createBufferSource();
     src.buffer = this.noiseBuf;
@@ -943,7 +955,7 @@ export class AudioEngine {
     dur: number,
     vol: number,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
@@ -983,7 +995,7 @@ export class AudioEngine {
     dur: number,
     wobble: boolean,
   ): void {
-    const ctx = this.ctx!;
+    const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const o = ctx.createOscillator();
     o.type = "sawtooth";
@@ -1439,7 +1451,7 @@ export class AudioEngine {
         break;
       }
       case "bounce": {
-        const ctx = this.ctx!;
+        const ctx = this.audioContext;
         const o = ctx.createOscillator();
         o.type = "sine";
         o.frequency.setValueAtTime(240, t);

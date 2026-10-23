@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { isDrawable, mapOf } from "./objects";
+import { context2d } from "../dom";
+import { nth } from "../nth";
 
 interface Particle {
   pos: THREE.Vector3;
@@ -73,7 +75,7 @@ export class Effects {
         life: (opts.life ?? 0.6) * (0.6 + Math.random() * 0.8),
         age: 0,
         size: (opts.size ?? 0.08) * (0.6 + Math.random() * 0.8),
-        color: colors[i % colors.length]!,
+        color: nth(colors, i % colors.length, "spark colours"),
         gravity: opts.gravity ?? 9,
         spin: Math.random() * 10,
       });
@@ -241,7 +243,7 @@ export class Effects {
     const cv = document.createElement("canvas");
     cv.width = 512;
     cv.height = 160;
-    const g = cv.getContext("2d")!;
+    const g = context2d(cv);
     g.font = "italic 800 120px Barlow, Impact, sans-serif";
     g.textAlign = "center";
     g.textBaseline = "middle";
@@ -337,7 +339,7 @@ function glow() {
   if (glowTex) return glowTex;
   const cv = document.createElement("canvas");
   cv.width = cv.height = 128;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   grad.addColorStop(0, "rgba(255,255,255,1)");
   grad.addColorStop(0.3, "rgba(255,255,255,.8)");
