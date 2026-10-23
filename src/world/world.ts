@@ -1,7 +1,13 @@
 import * as THREE from "three";
 import type { AudioEngine, Sfx } from "../audio/audio";
 import { gateText } from "../content/gatelabel";
-import { toolFor, type Game, type PlayTier } from "../content/load";
+import {
+  FULL_HEALTH,
+  TIER_HEALTH_LOSS,
+  toolFor,
+  type Game,
+  type PlayTier,
+} from "../content/load";
 import type { Card, Stop } from "../content/types";
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
@@ -33,8 +39,8 @@ const CAMERA_NEAR = 0.1;
 const CAMERA_FAR = 400;
 const WIDESCREEN_WIDTH = 16;
 const WIDESCREEN_HEIGHT = 9;
-const FULL_HEALTH = 100;
-const TOTAL_DAMAGE = 90;
+/** The picture shape a player lane starts with, before the real window size is known. */
+const WIDESCREEN = WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT;
 const CAM_START_X = 3;
 const CAM_START_Y = 3;
 const CAM_START_Z = 8;
@@ -189,7 +195,7 @@ export class PlayerWorld {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(
     CAMERA_FOV,
-    WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT,
+    WIDESCREEN,
     CAMERA_NEAR,
     CAMERA_FAR,
   );
@@ -208,7 +214,7 @@ export class PlayerWorld {
   bossTotal = 0;
   bossLeft = 0;
   autoplay = false;
-  aspect = WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT;
+  aspect = WIDESCREEN;
   shape: Shape = "wide";
 
   private tier: PlayTier | null = null;
@@ -609,7 +615,7 @@ export class PlayerWorld {
         label: `Problem card ${card.id} · ${gateText(stop.gate)}`,
         title: card.title,
         footer: card.text,
-        badge: `−${Math.round(TOTAL_DAMAGE / tier.stops.length)}%`,
+        badge: `−${Math.round(TIER_HEALTH_LOSS / tier.stops.length)}%`,
       });
     }
 
