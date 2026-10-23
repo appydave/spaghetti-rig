@@ -77,6 +77,8 @@ export function sceneOf(root: THREE.Object3D): string {
         o.type,
         o.name,
         o.visible,
+        o.castShadow,
+        o.receiveShadow,
         nums(o.matrixWorld.elements),
         positionsOf(o.geometry?.attributes?.position),
         m ? [m.color?.getHexString(), m.opacity, m.visible].join("/") : "",
