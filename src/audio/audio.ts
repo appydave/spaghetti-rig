@@ -168,6 +168,114 @@ const SFX_LIFE: Partial<Record<Sfx, number>> = {
   shatter: SHATTER_LIFE,
 };
 
+/** The lead voice: its peak, how fast it speaks, how long a note holds and rings, and how it settles. */
+const LEAD_LEVEL = 0.16;
+const LEAD_ATTACK = 0.008;
+const LEAD_SAW_ATTACK = 0.012;
+const LEAD_MIN_LEN = 0.08;
+const LEAD_HOLD = 0.92;
+const LEAD_PLUCK_MAX_LEN = 0.3;
+const LEAD_TAIL = 0.2;
+const LEAD_PLUCK_TAIL = 0.25;
+const LEAD_PLUCK_FALL = 0.2;
+const LEAD_SUSTAIN = 0.7;
+const LEAD_SUSTAIN_TIME = 0.12;
+const LEAD_RELEASE = 0.05;
+/** The lead's filter opens to a multiple of the note's pitch (never past a ceiling) and closes to another over a sweep. */
+const LEAD_Q = 0.8;
+const LEAD_SAW_OPEN = 6;
+const LEAD_PLUCK_OPEN = 8;
+const LEAD_OPEN = 5;
+const LEAD_OPEN_MAX = 9000;
+const LEAD_PLUCK_CLOSE = 1.5;
+const LEAD_CLOSE = 2.5;
+const LEAD_CLOSE_MAX = 6000;
+const LEAD_PLUCK_SWEEP = 0.25;
+const LEAD_SWEEP = 0.4;
+/** Each lead voice is a main oscillator and a second one beside it: its level and, in cents, how far it is detuned. */
+const LEAD_TRIANGLE_OCTAVE = 0.12;
+const LEAD_SINE_CHORUS = 0.3;
+const LEAD_SINE_CHORUS_DETUNE = 7;
+const LEAD_SQUARE_LEVEL = 0.55;
+const LEAD_SQUARE_SUB = 0.6;
+const LEAD_SQUARE_SUB_DETUNE = 6;
+const LEAD_SAW_LEVEL = 0.5;
+const LEAD_SAW_DETUNE = 8;
+const LEAD_BUZZ = 0.25;
+/** A long lead note gets a vibrato: its rate, the shortest note that has one, and when it starts and is fully in. */
+const LEAD_VIBRATO_RATE = 5.4;
+const LEAD_VIBRATO_MIN_LEN = 0.32;
+const LEAD_VIBRATO_DELAY = 0.18;
+const LEAD_VIBRATO_FULL = 0.45;
+const LEAD_VIBRATO_DEPTH = 0.006;
+/** The pad chord: the tail it rings for, the filter's Q, how far apart the two sides sit, and each note's level. */
+const PAD_TAIL = 0.9;
+const PAD_Q = 0.5;
+const PAD_SPREAD = 0.6;
+const PAD_GLASS_LEVEL = 0.05;
+const PAD_LEVEL = 0.04;
+const PAD_RELEASE = 0.22;
+/** A glass pad opens at once and settles to a fraction of its level; the others sweep their filter up and back. */
+const PAD_GLASS_CUTOFF = 3200;
+const PAD_GLASS_RISE = 0.02;
+const PAD_GLASS_SETTLE_TIME = 0.9;
+const PAD_GLASS_SETTLE = 0.45;
+const PAD_DARK_START = 450;
+const PAD_START = 700;
+const PAD_DARK_PEAK = 800;
+const PAD_PEAK = 1500;
+const PAD_PEAK_AT = 0.5;
+const PAD_PEAK_MAX = 1.2;
+const PAD_DARK_END = 600;
+const PAD_END = 1000;
+const PAD_RISE = 0.25;
+/** The pad's oscillators are detuned in cents by side, plus a small random wander. */
+const PAD_GLASS_DETUNE = 5;
+const PAD_DETUNE = 9;
+const PAD_WANDER = 2;
+/** The bass: how long a note is held (between a floor and a ceiling), its peak, and how it settles. */
+const BASS_MIN_LEN = 0.08;
+const BASS_HOLD = 0.85;
+const BASS_MAX_LEN = 1.6;
+const BASS_LEVEL = 0.24;
+const BASS_ATTACK = 0.006;
+const BASS_SUSTAIN = 0.6;
+const BASS_SUSTAIN_TIME = 0.15;
+const BASS_RELEASE = 0.04;
+const BASS_CUTOFF = 700;
+const BASS_TAIL = 0.25;
+/** The arpeggio pluck: how fast it speaks, how long it decays and when its oscillator stops. */
+const PLUCK_ATTACK = 0.004;
+const PLUCK_DECAY = 0.24;
+const PLUCK_STOP = 0.26;
+/** The bell: a second partial a bit over three times the pitch (not an exact harmonic), loud at first and fading fast. */
+const BELL_PARTIAL = 3.01;
+const BELL_PARTIAL_LEVEL = 0.25;
+const BELL_PARTIAL_FLOOR = 0.01;
+const BELL_PARTIAL_FALL = 0.15;
+const BELL_ATTACK = 0.004;
+/** The comp stab: its level, how fast it speaks and dies, where its filter sits, and when it stops. */
+const COMP_LEVEL = 0.06;
+const COMP_ATTACK = 0.005;
+const COMP_DECAY = 0.16;
+const COMP_DARK_CUTOFF = 1400;
+const COMP_CUTOFF = 2600;
+const COMP_STOP = 0.18;
+/** The percussion: a hat (t), an accented hat (T) and a snare (s), each with its filter, level and length; the noise start wanders. */
+const PERC_SNARE_CUTOFF = 8500;
+const PERC_CUTOFF = 7000;
+const PERC_SNARE_Q = 1.2;
+const PERC_Q = 0.7;
+const PERC_ACCENT_LEVEL = 0.07;
+const PERC_SNARE_LEVEL = 0.04;
+const PERC_LEVEL = 0.04;
+const PERC_SNARE_DUR = 0.09;
+const PERC_DUR = 0.035;
+const PERC_SNARE_ATTACK = 0.03;
+const PERC_ATTACK = 0.002;
+const PERC_PAN = 0.35;
+const PERC_NOISE_START = 1.8;
+
 interface Deck {
   track: CompiledTrack;
   out: GainNode;
@@ -803,22 +911,27 @@ export class AudioEngine {
     const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const pluck = voice === "pluck";
-    const dur = pluck ? Math.min(len, 0.3) : Math.max(0.08, len * 0.92);
-    const end = t + dur + (pluck ? 0.25 : 0.2);
+    const dur = pluck
+      ? Math.min(len, LEAD_PLUCK_MAX_LEN)
+      : Math.max(LEAD_MIN_LEN, len * LEAD_HOLD);
+    const end = t + dur + (pluck ? LEAD_PLUCK_TAIL : LEAD_TAIL);
     const g = ctx.createGain();
-    const peak = 0.16 * vel;
+    const peak = LEAD_LEVEL * vel;
 
-    g.gain.setValueAtTime(0.0001, t);
+    g.gain.setValueAtTime(SILENCE, t);
     g.gain.exponentialRampToValueAtTime(
       peak,
-      t + (voice === "saw" ? 0.012 : 0.008),
+      t + (voice === "saw" ? LEAD_SAW_ATTACK : LEAD_ATTACK),
     );
     if (pluck) {
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.2);
+      g.gain.exponentialRampToValueAtTime(SILENCE, t + dur + LEAD_PLUCK_FALL);
     } else {
-      g.gain.exponentialRampToValueAtTime(peak * 0.7, t + 0.12);
-      g.gain.setValueAtTime(peak * 0.7, t + dur);
-      g.gain.setTargetAtTime(0.0001, t + dur, 0.05);
+      g.gain.exponentialRampToValueAtTime(
+        peak * LEAD_SUSTAIN,
+        t + LEAD_SUSTAIN_TIME,
+      );
+      g.gain.setValueAtTime(peak * LEAD_SUSTAIN, t + dur);
+      g.gain.setTargetAtTime(SILENCE, t + dur, LEAD_RELEASE);
     }
 
     const nodes: AudioNode[] = [g];
@@ -856,14 +969,19 @@ export class AudioEngine {
       const lp = ctx.createBiquadFilter();
 
       lp.type = "lowpass";
-      lp.Q.value = pluck ? 2 : 0.8;
+      lp.Q.value = pluck ? 2 : LEAD_Q;
 
-      const hi = voice === "saw" ? f * 6 : pluck ? f * 8 : f * 5;
+      const hi =
+        voice === "saw"
+          ? f * LEAD_SAW_OPEN
+          : pluck
+            ? f * LEAD_PLUCK_OPEN
+            : f * LEAD_OPEN;
 
-      lp.frequency.setValueAtTime(Math.min(hi, 9000), t);
+      lp.frequency.setValueAtTime(Math.min(hi, LEAD_OPEN_MAX), t);
       lp.frequency.exponentialRampToValueAtTime(
-        Math.min(f * (pluck ? 1.5 : 2.5), 6000),
-        t + (pluck ? 0.25 : 0.4),
+        Math.min(f * (pluck ? LEAD_PLUCK_CLOSE : LEAD_CLOSE), LEAD_CLOSE_MAX),
+        t + (pluck ? LEAD_PLUCK_SWEEP : LEAD_SWEEP),
       );
       lp.connect(g);
       nodes.push(lp);
@@ -875,36 +993,39 @@ export class AudioEngine {
     switch (voice) {
       case "triangle":
         main = osc("triangle", f, 1);
-        osc("sine", f * 2, 0.12);
+        osc("sine", f * 2, LEAD_TRIANGLE_OCTAVE);
         break;
       case "sine":
         main = osc("sine", f, 1);
-        osc("triangle", f, 0.3, 7);
+        osc("triangle", f, LEAD_SINE_CHORUS, LEAD_SINE_CHORUS_DETUNE);
         break;
       case "square":
-        main = osc("square", f, 0.55);
-        osc("triangle", f, 0.6, -6);
+        main = osc("square", f, LEAD_SQUARE_LEVEL);
+        osc("triangle", f, LEAD_SQUARE_SUB, -LEAD_SQUARE_SUB_DETUNE);
         break;
       case "saw":
-        main = osc("sawtooth", f, 0.5, -8);
-        osc("sawtooth", f, 0.5, 8);
+        main = osc("sawtooth", f, LEAD_SAW_LEVEL, -LEAD_SAW_DETUNE);
+        osc("sawtooth", f, LEAD_SAW_LEVEL, LEAD_SAW_DETUNE);
         break;
       default:
         main = osc("triangle", f, 1);
-        osc("square", f, 0.25);
+        osc("square", f, LEAD_BUZZ);
         break;
     }
 
-    if (!pluck && dur > 0.32) {
+    if (!pluck && dur > LEAD_VIBRATO_MIN_LEN) {
       const lfo = ctx.createOscillator();
 
-      lfo.frequency.value = 5.4;
+      lfo.frequency.value = LEAD_VIBRATO_RATE;
 
       const depth = ctx.createGain();
 
       depth.gain.setValueAtTime(0, t);
-      depth.gain.linearRampToValueAtTime(0, t + 0.18);
-      depth.gain.linearRampToValueAtTime(f * 0.006, t + 0.45);
+      depth.gain.linearRampToValueAtTime(0, t + LEAD_VIBRATO_DELAY);
+      depth.gain.linearRampToValueAtTime(
+        f * LEAD_VIBRATO_DEPTH,
+        t + LEAD_VIBRATO_FULL,
+      );
       lfo.connect(depth);
       for (const s of srcs) {
         depth.connect(s.frequency);
@@ -933,7 +1054,7 @@ export class AudioEngine {
   ): void {
     const ctx = this.audioContext;
     const kind = deck.track.def.pad;
-    const end = t + len + 0.9;
+    const end = t + len + PAD_TAIL;
     const nodes: AudioNode[] = [];
     let first: OscillatorNode | null = null;
 
@@ -941,37 +1062,46 @@ export class AudioEngine {
       const lp = ctx.createBiquadFilter();
 
       lp.type = "lowpass";
-      lp.Q.value = 0.5;
+      lp.Q.value = PAD_Q;
 
       const g = ctx.createGain();
       const pan = ctx.createStereoPanner();
 
-      pan.pan.value = side * 0.6;
+      pan.pan.value = side * PAD_SPREAD;
 
-      const per = (kind === "glass" ? 0.05 : 0.04) * level;
+      const per = (kind === "glass" ? PAD_GLASS_LEVEL : PAD_LEVEL) * level;
       const vol = per * notes.length;
 
       if (kind === "glass") {
-        lp.frequency.value = 3200;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(vol * 0.45, t + 0.9);
+        lp.frequency.value = PAD_GLASS_CUTOFF;
+        g.gain.setValueAtTime(SILENCE, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + PAD_GLASS_RISE);
+        g.gain.exponentialRampToValueAtTime(
+          vol * PAD_GLASS_SETTLE,
+          t + PAD_GLASS_SETTLE_TIME,
+        );
       } else {
-        lp.frequency.setValueAtTime(kind === "dark" ? 450 : 700, t);
-        lp.frequency.linearRampToValueAtTime(
-          kind === "dark" ? 800 : 1500,
-          t + Math.min(len * 0.5, 1.2),
+        lp.frequency.setValueAtTime(
+          kind === "dark" ? PAD_DARK_START : PAD_START,
+          t,
         );
         lp.frequency.linearRampToValueAtTime(
-          kind === "dark" ? 600 : 1000,
+          kind === "dark" ? PAD_DARK_PEAK : PAD_PEAK,
+          t + Math.min(len * PAD_PEAK_AT, PAD_PEAK_MAX),
+        );
+        lp.frequency.linearRampToValueAtTime(
+          kind === "dark" ? PAD_DARK_END : PAD_END,
           t + len,
         );
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.linearRampToValueAtTime(vol, t + 0.25);
+        g.gain.setValueAtTime(SILENCE, t);
+        g.gain.linearRampToValueAtTime(vol, t + PAD_RISE);
       }
 
-      g.gain.setValueAtTime(kind === "glass" ? vol * 0.45 : vol, t + len);
-      g.gain.setTargetAtTime(0.0001, t + len, 0.22);
+      g.gain.setValueAtTime(
+        kind === "glass" ? vol * PAD_GLASS_SETTLE : vol,
+        t + len,
+      );
+      g.gain.setTargetAtTime(SILENCE, t + len, PAD_RELEASE);
       lp.connect(g).connect(pan).connect(deck.out);
       nodes.push(lp, g, pan);
       for (const n of notes) {
@@ -979,7 +1109,9 @@ export class AudioEngine {
 
         o.type = kind === "glass" ? "triangle" : "sawtooth";
         o.frequency.value = midiToFreq(n);
-        o.detune.value = side * (kind === "glass" ? 5 : 9) + rand(-2, 2);
+        o.detune.value =
+          side * (kind === "glass" ? PAD_GLASS_DETUNE : PAD_DETUNE) +
+          rand(-PAD_WANDER, PAD_WANDER);
 
         const og = ctx.createGain();
 
@@ -1006,20 +1138,23 @@ export class AudioEngine {
   ): void {
     const ctx = this.audioContext;
     const f = midiToFreq(midi);
-    const dur = Math.max(0.08, Math.min(len * 0.85, 1.6));
+    const dur = Math.max(BASS_MIN_LEN, Math.min(len * BASS_HOLD, BASS_MAX_LEN));
     const g = ctx.createGain();
-    const peak = 0.24 * level;
+    const peak = BASS_LEVEL * level;
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
-    g.gain.exponentialRampToValueAtTime(peak * 0.6, t + 0.15);
-    g.gain.setValueAtTime(peak * 0.6, t + dur);
-    g.gain.setTargetAtTime(0.0001, t + dur, 0.04);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + BASS_ATTACK);
+    g.gain.exponentialRampToValueAtTime(
+      peak * BASS_SUSTAIN,
+      t + BASS_SUSTAIN_TIME,
+    );
+    g.gain.setValueAtTime(peak * BASS_SUSTAIN, t + dur);
+    g.gain.setTargetAtTime(SILENCE, t + dur, BASS_RELEASE);
 
     const lp = ctx.createBiquadFilter();
 
     lp.type = "lowpass";
-    lp.frequency.value = 700;
+    lp.frequency.value = BASS_CUTOFF;
 
     const o1 = ctx.createOscillator();
 
@@ -1034,7 +1169,7 @@ export class AudioEngine {
     o2.connect(lp);
     lp.connect(g).connect(deck.out);
 
-    const end = t + dur + 0.25;
+    const end = t + dur + BASS_TAIL;
 
     o1.start(t);
     o2.start(t);
@@ -1058,9 +1193,9 @@ export class AudioEngine {
 
     const g = ctx.createGain();
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + PLUCK_ATTACK);
+    g.gain.exponentialRampToValueAtTime(SILENCE, t + PLUCK_DECAY);
 
     const p = ctx.createStereoPanner();
 
@@ -1068,7 +1203,7 @@ export class AudioEngine {
     o.connect(g).connect(p).connect(deck.out);
     g.connect(deck.delayIn);
     o.start(t);
-    o.stop(t + 0.26);
+    o.stop(t + PLUCK_STOP);
     this.cleanup(o, [o, g, p]);
   }
 
@@ -1090,18 +1225,21 @@ export class AudioEngine {
     const o2 = ctx.createOscillator();
 
     o2.type = "sine";
-    o2.frequency.value = f * 3.01;
+    o2.frequency.value = f * BELL_PARTIAL;
 
     const g2 = ctx.createGain();
 
-    g2.gain.setValueAtTime(0.25, t);
-    g2.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+    g2.gain.setValueAtTime(BELL_PARTIAL_LEVEL, t);
+    g2.gain.exponentialRampToValueAtTime(
+      BELL_PARTIAL_FLOOR,
+      t + BELL_PARTIAL_FALL,
+    );
 
     const g = ctx.createGain();
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + BELL_ATTACK);
+    g.gain.exponentialRampToValueAtTime(SILENCE, t + decay);
 
     const p = ctx.createStereoPanner();
 
@@ -1112,8 +1250,8 @@ export class AudioEngine {
     g.connect(deck.delayIn);
     o.start(t);
     o2.start(t);
-    o.stop(t + decay + 0.02);
-    o2.stop(t + decay + 0.02);
+    o.stop(t + decay + STOP_PADDING);
+    o2.stop(t + decay + STOP_PADDING);
     this.cleanup(o, [o, o2, g2, g, p]);
   }
 
@@ -1126,16 +1264,16 @@ export class AudioEngine {
   ): void {
     const ctx = this.audioContext;
     const g = ctx.createGain();
-    const vol = 0.06 * level;
+    const vol = COMP_LEVEL * level;
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + COMP_ATTACK);
+    g.gain.exponentialRampToValueAtTime(SILENCE, t + COMP_DECAY);
 
     const lp = ctx.createBiquadFilter();
 
     lp.type = "lowpass";
-    lp.frequency.value = dark ? 1400 : 2600;
+    lp.frequency.value = dark ? COMP_DARK_CUTOFF : COMP_CUTOFF;
     lp.connect(g).connect(deck.out);
 
     const nodes: AudioNode[] = [g, lp];
@@ -1145,14 +1283,14 @@ export class AudioEngine {
       const o = ctx.createOscillator();
 
       o.type = dark ? "square" : "triangle";
-      o.frequency.value = midiToFreq(n + (dark ? 0 : 12));
+      o.frequency.value = midiToFreq(n + (dark ? 0 : SEMITONES_PER_OCTAVE));
 
       const og = ctx.createGain();
 
       og.gain.value = 1 / notes.length;
       o.connect(og).connect(lp);
       o.start(t);
-      o.stop(t + 0.18);
+      o.stop(t + COMP_STOP);
       nodes.push(o, og);
       first ??= o;
     }
@@ -1181,23 +1319,31 @@ export class AudioEngine {
     const f = ctx.createBiquadFilter();
 
     f.type = kind === "s" ? "bandpass" : "highpass";
-    f.frequency.value = kind === "s" ? 8500 : 7000;
-    f.Q.value = kind === "s" ? 1.2 : 0.7;
+    f.frequency.value = kind === "s" ? PERC_SNARE_CUTOFF : PERC_CUTOFF;
+    f.Q.value = kind === "s" ? PERC_SNARE_Q : PERC_Q;
 
     const g = ctx.createGain();
-    const vol = (kind === "T" ? 0.07 : kind === "s" ? 0.04 : 0.04) * level;
-    const dur = kind === "s" ? 0.09 : 0.035;
+    const vol =
+      (kind === "T"
+        ? PERC_ACCENT_LEVEL
+        : kind === "s"
+          ? PERC_SNARE_LEVEL
+          : PERC_LEVEL) * level;
+    const dur = kind === "s" ? PERC_SNARE_DUR : PERC_DUR;
 
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + (kind === "s" ? 0.03 : 0.002));
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    g.gain.setValueAtTime(SILENCE, t);
+    g.gain.exponentialRampToValueAtTime(
+      vol,
+      t + (kind === "s" ? PERC_SNARE_ATTACK : PERC_ATTACK),
+    );
+    g.gain.exponentialRampToValueAtTime(SILENCE, t + dur);
 
     const p = ctx.createStereoPanner();
 
-    p.pan.value = rand(-0.35, 0.35);
+    p.pan.value = rand(-PERC_PAN, PERC_PAN);
     src.connect(f).connect(g).connect(p).connect(deck.out);
-    src.start(t, rand(0, 1.8));
-    src.stop(t + dur + 0.02);
+    src.start(t, rand(0, PERC_NOISE_START));
+    src.stop(t + dur + STOP_PADDING);
     this.cleanup(src, [src, f, g, p]);
   }
 
