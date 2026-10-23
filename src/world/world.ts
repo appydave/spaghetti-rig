@@ -325,6 +325,86 @@ const TALL_READING_NUDGE = 0.6;
 const WIDE_READING_RAISE = 0.5;
 const WIDE_READING_MIN_Y = 2.3;
 const WIDE_READING_GAP = 0.8;
+const TALL_ASPECT_BELOW = 1.25;
+const FOLLOW_X = 1.7;
+const FOLLOW_Y = 2.6;
+const FOLLOW_Z = 5.4;
+const FOLLOW_LOOK_X = 0.5;
+const FOLLOW_LOOK_Y = 1.7;
+const FOLLOW_LOOK_Z = -9;
+const TALL_NUDGE_X = -0.4;
+const TALL_NUDGE_Y = 0.6;
+const TALL_NUDGE_Z = 1.6;
+const PORTRAIT_X = 2.8;
+const PORTRAIT_Y = 2.2;
+const PORTRAIT_Z = -7.2;
+const PORTRAIT_LOOK_Y = 2.3;
+const PILE_NUDGE_X = 0.5;
+const PILE_NUDGE_Y = 1.5;
+const PILE_LOOK_Y = 0.6;
+const SHOT_BOX_HALF_WIDTH = 0.6;
+const SHOT_BOX_WAIST_Y = 1.1;
+const SHOT_BOX_BACK = 0.9;
+const SHOT_BOX_TOP = 2.5;
+const SHOT_BOSS_TOP = 12;
+const SHOT_BOSS_BEHIND = 22;
+const SHOT_BOSS_FLOOR = -0.2;
+const SHOT_BOSS_NEAR = 8;
+const USABLE_WIDTH_FRACTION = 0.94;
+const SHOT_MARGIN = 0.6;
+const SCREEN_MIDDLE = 0.5;
+const SHOT_SIDE_RATIO = 0.985;
+const SHOT_RISE_RATIO = 0.05;
+const SHOT_DEPTH_RATIO = 0.17;
+const CAMERA_FOLLOW_RATE = 3.2;
+const SHAKE_SCALE = 0.12;
+const SUN_OFFSET_X = 14;
+const SUN_HEIGHT = 30;
+const SUN_OFFSET_Z = 16;
+const SUN_TARGET_AHEAD = 8;
+const BOSS_EYE_X_TALL = 1.7;
+const BOSS_EYE_X_WIDE = 4.3;
+const BOSS_EYE_Y_TALL = 2.95;
+const BOSS_EYE_Y_WIDE = 2.0;
+const BOSS_EYE_Z_TALL = 7.4;
+const BOSS_EYE_Z_WIDE = 8.0;
+const BAND_TOP_TALL = 0.245;
+const BAND_BOTTOM_TALL = 0.615;
+const BAND_TOP_WIDE = 0.28;
+const BAND_BOTTOM_WIDE = 0.72;
+const BOSS_BACK_DEFAULT = 20;
+const BOSS_FIT_MARGIN = 0.8;
+const BOSS_BACK_MIN = 12;
+const BOSS_LOOK_SWAY = 0.15;
+const SNAP_SECONDS = 1e3;
+const SHAKE_DECAY = 2.5;
+const SLIP_PAST_CHARACTER = 4;
+const STEP_RATE = 4.2;
+const STEP_VOLUME = 0.25;
+const READING_EASE_RATE = 6;
+const READING_BOB_SPEED = 1.6;
+const READING_BOB_HEIGHT = 0.004;
+const DEBT_EASE_RATE = 4;
+const DEBT_WOBBLE_SPEED = 3;
+const DEBT_WOBBLE = 0.08;
+const BOSS_TOOL_MAX_CHARS = 18;
+const BOLT_WIDTH = 256;
+const BOLT_HEIGHT = 340;
+const BOLT_CORNER = 22;
+const BOLT_BORDER = 12;
+const BOLT_INSET = 8;
+/** The card's inner frame sits BOLT_INSET in from each edge, so it is this much smaller than the card. */
+const BOLT_INNER_WIDTH = BOLT_WIDTH - BOLT_INSET * 2;
+const BOLT_INNER_HEIGHT = BOLT_HEIGHT - BOLT_INSET * 2;
+/** The words are centred on the card. */
+const BOLT_TEXT_X = BOLT_WIDTH / 2;
+const BOLT_INNER_CORNER = 16;
+const BOLT_TEXT_LINES = 3;
+const BOLT_TEXT_TOP = 130;
+const BOLT_TEXT_LINE = 52;
+const BOLT_PLANE_HEIGHT = 1.33;
+const BOLT_LIGHT_INTENSITY = 4;
+const BOLT_LIGHT_RANGE = 6;
 
 /** Boss arena: how far down the road the boss stands and how high its main window floats. */
 const BOSS = { y: BOSS_HEIGHT };
@@ -1991,7 +2071,7 @@ export class PlayerWorld {
       this.boss.group.position.z = this.state.z - this.bossBack();
     }
 
-    const shape: Shape = aspect < 1.25 ? "tall" : "wide";
+    const shape: Shape = aspect < TALL_ASPECT_BELOW ? "tall" : "wide";
 
     if (shape !== this.shape) {
       this.shape = shape;
@@ -2012,27 +2092,35 @@ export class PlayerWorld {
     const fov = THREE.MathUtils.degToRad(this.camera.fov);
 
     if (this.camMode === "follow") {
-      pos = c.clone().add(new THREE.Vector3(1.7, 2.6, 5.4));
-      look = c.clone().add(new THREE.Vector3(0.5, 1.7, -9));
-      if (this.aspect < 1.25) {
-        pos.add(new THREE.Vector3(-0.4, 0.6, 1.6));
+      pos = c.clone().add(new THREE.Vector3(FOLLOW_X, FOLLOW_Y, FOLLOW_Z));
+      look = c
+        .clone()
+        .add(new THREE.Vector3(FOLLOW_LOOK_X, FOLLOW_LOOK_Y, FOLLOW_LOOK_Z));
+      if (this.aspect < TALL_ASPECT_BELOW) {
+        pos.add(new THREE.Vector3(TALL_NUDGE_X, TALL_NUDGE_Y, TALL_NUDGE_Z));
       }
     } else if (this.camMode === "boss" && this.bossLayout) {
       ({ pos, look } = this.bossShot(c, fov));
     } else if (this.camMode === "portrait") {
       // Front three-quarter, character low in frame so the result text sits above them.
-      pos = c.clone().add(new THREE.Vector3(2.8, 2.2, -7.2));
-      look = c.clone().add(new THREE.Vector3(0, 2.3, 0));
+      pos = c
+        .clone()
+        .add(new THREE.Vector3(PORTRAIT_X, PORTRAIT_Y, PORTRAIT_Z));
+      look = c.clone().add(new THREE.Vector3(0, PORTRAIT_LOOK_Y, 0));
       if (this.player === "p1" && this.pile) {
-        pos.add(new THREE.Vector3(0.5, 1.5, 0));
-        look.y = 0.6;
+        pos.add(new THREE.Vector3(PILE_NUDGE_X, PILE_NUDGE_Y, 0));
+        look.y = PILE_LOOK_Y;
       }
     } else {
       // Side-on, like Spaghetti Busters: frame the character and the window (or boss), leaving room for the HUD.
       // Legs may sit behind the tray; the box starts at the waist.
       const box = new THREE.Box3(
-        new THREE.Vector3(-0.6, this.camMode === "stop" ? 1.1 : 0, c.z - 0.9),
-        new THREE.Vector3(0.6, 2.5, c.z + 1.0),
+        new THREE.Vector3(
+          -SHOT_BOX_HALF_WIDTH,
+          this.camMode === "stop" ? SHOT_BOX_WAIST_Y : 0,
+          c.z - SHOT_BOX_BACK,
+        ),
+        new THREE.Vector3(SHOT_BOX_HALF_WIDTH, SHOT_BOX_TOP, c.z + 1.0),
       );
 
       if (this.camMode === "stop" && this.window) {
@@ -2046,8 +2134,12 @@ export class PlayerWorld {
 
       if (this.camMode === "boss") {
         box
-          .expandByPoint(new THREE.Vector3(0, 12, c.z - 22))
-          .expandByPoint(new THREE.Vector3(0, -0.2, c.z - 8));
+          .expandByPoint(
+            new THREE.Vector3(0, SHOT_BOSS_TOP, c.z - SHOT_BOSS_BEHIND),
+          )
+          .expandByPoint(
+            new THREE.Vector3(0, SHOT_BOSS_FLOOR, c.z - SHOT_BOSS_NEAR),
+          );
       }
 
       const size = box.getSize(new THREE.Vector3());
@@ -2056,35 +2148,35 @@ export class PlayerWorld {
       const top = 0.18;
       const bottom = 0.21;
       const usableH = 1 - top - bottom;
-      const usableW = 0.94;
+      const usableW = USABLE_WIDTH_FRACTION;
       const t = Math.tan(fov / 2);
       const distH = size.y / usableH / 2 / t;
       const distW = size.z / usableW / 2 / t / this.aspect;
-      const d = Math.max(distH, distW) + 0.6;
+      const d = Math.max(distH, distW) + SHOT_MARGIN;
       const visibleH = 2 * d * t;
-      const lift = (bottom + usableH / 2 - 0.5) * visibleH;
+      const lift = (bottom + usableH / 2 - SCREEN_MIDDLE) * visibleH;
 
       look = new THREE.Vector3(0, centre.y - lift, centre.z);
       pos = new THREE.Vector3(
-        d * 0.985,
-        centre.y - lift + d * 0.05,
-        centre.z + d * 0.17,
+        d * SHOT_SIDE_RATIO,
+        centre.y - lift + d * SHOT_RISE_RATIO,
+        centre.z + d * SHOT_DEPTH_RATIO,
       );
     }
 
-    const k = 1 - Math.exp(-dt * 3.2);
+    const k = 1 - Math.exp(-dt * CAMERA_FOLLOW_RATE);
 
     this.camPos.lerp(pos, k);
     this.camLook.lerp(look, k);
     this.camera.position.copy(this.camPos);
     if (this.shake > 0) {
-      const s = this.shake * 0.12;
+      const s = this.shake * SHAKE_SCALE;
 
       this.camera.position.add(
         new THREE.Vector3(
-          (Math.random() - 0.5) * s,
-          (Math.random() - 0.5) * s,
-          (Math.random() - 0.5) * s,
+          (Math.random() - RANDOM_CENTRE) * s,
+          (Math.random() - RANDOM_CENTRE) * s,
+          (Math.random() - RANDOM_CENTRE) * s,
         ),
       );
     }
@@ -2104,26 +2196,26 @@ export class PlayerWorld {
     }
 
     // Keep the sun's shadow box centred on the action.
-    this.sun.position.set(c.x - 14, 30, c.z + 16);
-    this.sun.target.position.set(c.x, 0, c.z - 8);
+    this.sun.position.set(c.x - SUN_OFFSET_X, SUN_HEIGHT, c.z + SUN_OFFSET_Z);
+    this.sun.target.position.set(c.x, 0, c.z - SUN_TARGET_AHEAD);
   }
 
   /** Where the camera stands, relative to the character, in the boss fight: close behind and to one side. */
   private bossEye() {
-    const tall = this.aspect < 1.25;
+    const tall = this.aspect < TALL_ASPECT_BELOW;
 
     return new THREE.Vector3(
-      tall ? 1.7 : 4.3,
-      tall ? 2.95 : 2.0,
-      tall ? 7.4 : 8.0,
+      tall ? BOSS_EYE_X_TALL : BOSS_EYE_X_WIDE,
+      tall ? BOSS_EYE_Y_TALL : BOSS_EYE_Y_WIDE,
+      tall ? BOSS_EYE_Z_TALL : BOSS_EYE_Z_WIDE,
     );
   }
 
   /** The boss's band on screen, as fractions from the top: under the HUD, above the character. */
   private bossBand() {
-    return this.aspect < 1.25
-      ? { top: 0.245, bottom: 0.615 }
-      : { top: 0.28, bottom: 0.72 };
+    return this.aspect < TALL_ASPECT_BELOW
+      ? { top: BAND_TOP_TALL, bottom: BAND_BOTTOM_TALL }
+      : { top: BAND_TOP_WIDE, bottom: BAND_BOTTOM_WIDE };
   }
 
   /** How far beyond the character the boss stands, so that all of it fits its band in this lane. */
@@ -2131,15 +2223,17 @@ export class PlayerWorld {
     const L = this.bossLayout;
 
     if (!L) {
-      return 20;
+      return BOSS_BACK_DEFAULT;
     }
 
     const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
     const band = this.bossBand();
     const distH = (L.top - L.bottom) / ((band.bottom - band.top) * 2 * t);
-    const distW = (L.width + 0.8) / (0.94 * 2 * t * this.aspect);
+    const distW =
+      (L.width + BOSS_FIT_MARGIN) /
+      (USABLE_WIDTH_FRACTION * 2 * t * this.aspect);
 
-    return Math.max(12, Math.max(distH, distW) - this.bossEye().z);
+    return Math.max(BOSS_BACK_MIN, Math.max(distH, distW) - this.bossEye().z);
   }
 
   /**
@@ -2160,15 +2254,19 @@ export class PlayerWorld {
     );
     const d = pos.z - centre.z;
     // Aim below the boss's centre so it sits in its band, not in the middle of the screen.
-    const lower = (0.5 - (band.top + band.bottom) / 2) * 2 * d * t;
-    const look = new THREE.Vector3(pos.x * 0.15, centre.y - lower, centre.z);
+    const lower = (SCREEN_MIDDLE - (band.top + band.bottom) / 2) * 2 * d * t;
+    const look = new THREE.Vector3(
+      pos.x * BOSS_LOOK_SWAY,
+      centre.y - lower,
+      centre.z,
+    );
 
     return { pos, look };
   }
 
   /** Jump the camera to its target at once (after a cut). */
   snapCamera() {
-    this.updateCamera(1e3);
+    this.updateCamera(SNAP_SECONDS);
   }
 
   update(dt: number) {
@@ -2193,7 +2291,7 @@ export class PlayerWorld {
       }
     }
 
-    this.shake = Math.max(0, this.shake - dt * 2.5);
+    this.shake = Math.max(0, this.shake - dt * SHAKE_DECAY);
 
     const me = this.character.root.position;
     // Iterate a snapshot: enemies that got past are spliced out of the live list inside the loop.
@@ -2201,7 +2299,7 @@ export class PlayerWorld {
 
     for (const e of enemySnapshot) {
       e.update(dt, this.camera.position);
-      if (e.finished || e.group.position.z > me.z + 4) {
+      if (e.finished || e.group.position.z > me.z + SLIP_PAST_CHARACTER) {
         this.slip(e);
         disposeTree(e.group);
         this.enemies.splice(this.enemies.indexOf(e), 1);
@@ -2215,9 +2313,10 @@ export class PlayerWorld {
     this.character.aimAt(this.aim);
     if (
       this.walk &&
-      Math.floor(this.clock * 4.2) !== Math.floor((this.clock - dt) * 4.2)
+      Math.floor(this.clock * STEP_RATE) !==
+        Math.floor((this.clock - dt) * STEP_RATE)
     ) {
-      this.sfx("step", 0.25);
+      this.sfx("step", STEP_VOLUME);
     }
 
     this.character.update(dt);
@@ -2232,12 +2331,17 @@ export class PlayerWorld {
       if (w.reading) {
         const t = this.readingPose(w.win);
 
-        w.win.group.position.lerp(t.pos, 1 - Math.exp(-dt * 6));
+        w.win.group.position.lerp(t.pos, 1 - Math.exp(-dt * READING_EASE_RATE));
         w.win.group.scale.setScalar(
-          lerp(w.win.group.scale.x, t.scale, 1 - Math.exp(-dt * 6)),
+          lerp(
+            w.win.group.scale.x,
+            t.scale,
+            1 - Math.exp(-dt * READING_EASE_RATE),
+          ),
         );
         this.faceCamera(w.win.group);
-        w.win.group.position.y += Math.sin(this.clock * 1.6) * 0.004;
+        w.win.group.position.y +=
+          Math.sin(this.clock * READING_BOB_SPEED) * READING_BOB_HEIGHT;
       }
 
       w.win.update(dt);
@@ -2247,9 +2351,14 @@ export class PlayerWorld {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
       d.win.group.visible =
         this.camMode !== "portrait" && this.camMode !== "boss";
-      d.win.group.position.lerp(this.debtSlot(i), 1 - Math.exp(-dt * 4));
+      d.win.group.position.lerp(
+        this.debtSlot(i),
+        1 - Math.exp(-dt * DEBT_EASE_RATE),
+      );
       this.faceCamera(d.win.group);
-      d.win.group.rotateZ(Math.sin(this.clock * 3 + i) * 0.08);
+      d.win.group.rotateZ(
+        Math.sin(this.clock * DEBT_WOBBLE_SPEED + i) * DEBT_WOBBLE,
+      );
       d.win.update(dt);
     }
 
@@ -2299,7 +2408,7 @@ function bossTool(name: string) {
   let out = first;
 
   for (const w of rest) {
-    if (`${out} ${w}`.length > 18) {
+    if (`${out} ${w}`.length > BOSS_TOOL_MAX_CHARS) {
       break;
     }
 
@@ -2314,25 +2423,34 @@ function toolBolt(name: string) {
   const group = new THREE.Group();
   const cv = document.createElement("canvas");
 
-  cv.width = 256;
-  cv.height = 340;
+  cv.width = BOLT_WIDTH;
+  cv.height = BOLT_HEIGHT;
 
   const g = context2d(cv);
 
   g.fillStyle = "#f9db48";
   g.beginPath();
-  g.roundRect(0, 0, 256, 340, 22);
+  g.roundRect(0, 0, BOLT_WIDTH, BOLT_HEIGHT, BOLT_CORNER);
   g.fill();
   g.strokeStyle = "#173e35";
-  g.lineWidth = 12;
+  g.lineWidth = BOLT_BORDER;
   g.beginPath();
-  g.roundRect(8, 8, 240, 324, 16);
+  g.roundRect(
+    BOLT_INSET,
+    BOLT_INSET,
+    BOLT_INNER_WIDTH,
+    BOLT_INNER_HEIGHT,
+    BOLT_INNER_CORNER,
+  );
   g.stroke();
   g.fillStyle = "#173e35";
   g.font = "italic 800 46px Barlow, Impact, sans-serif";
   g.textAlign = "center";
-  for (const [i, w] of beforeParen(name).split(" ").slice(0, 3).entries()) {
-    g.fillText(w, 128, 130 + i * 52);
+  for (const [i, w] of beforeParen(name)
+    .split(" ")
+    .slice(0, BOLT_TEXT_LINES)
+    .entries()) {
+    g.fillText(w, BOLT_TEXT_X, BOLT_TEXT_TOP + i * BOLT_TEXT_LINE);
   }
 
   const tex = new THREE.CanvasTexture(cv);
@@ -2344,11 +2462,18 @@ function toolBolt(name: string) {
     toneMapped: false,
     side: THREE.DoubleSide,
   });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.33), mat);
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.0, BOLT_PLANE_HEIGHT),
+    mat,
+  );
 
   group.add(mesh);
 
-  const light = new THREE.PointLight("#f9db48", 4, 6);
+  const light = new THREE.PointLight(
+    "#f9db48",
+    BOLT_LIGHT_INTENSITY,
+    BOLT_LIGHT_RANGE,
+  );
 
   group.add(light);
 
