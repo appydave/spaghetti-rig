@@ -15,26 +15,37 @@ import { healthAt, partsBroken, type Player, type Step } from "../show/script";
 import { AutoGunner } from "./autogunner";
 import { BossModel, paintBossPanel } from "./boss";
 import { bossLayout, type BossLayout } from "./bosslayout";
-import { Character, type Pose } from "./characters";
+import { Character } from "./characters";
 import { buildCity, SEGMENT } from "./city";
 import { layoutCard, longestRow, slugFile, type Layout } from "./codelayout";
 import { CodeWindow, paintCard, type Mood } from "./codewindow";
 import { Effects } from "./effects";
 import { Enemy, SCORE, type EnemyKind } from "./enemies";
-import { Gate, type GateState } from "./gate";
+import { Gate } from "./gate";
 import { Debris } from "./physics";
 import { beforeParen, shortTool } from "../ui/card";
 import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from "./toon";
 import { BOLT, EVENT, PILE, WORLD } from "./palette";
+import {
+  BOSS,
+  CameraMode,
+  Cue,
+  DEBT_WINDOW_COLS,
+  KILL_TEXT_SIZE,
+  RANDOM_CENTRE,
+  SCREEN_MIDDLE,
+  Shape,
+  State,
+  TALL_ASPECT_BELOW,
+  Tween,
+  USABLE_WIDTH_FRACTION,
+  standZ,
+  stopZ,
+} from "./world-shared";
 
-export type CameraMode = "follow" | "stop" | "boss" | "portrait";
-type Shape = "wide" | "tall";
+export { walkSeconds } from "./world-shared";
+export type { CameraMode } from "./world-shared";
 
-const stopZ = (k: number) => -(k + 1) * SEGMENT;
-const standZ = (k: number) => stopZ(k) + STAND_PAST_GATE;
-const WALK_SECONDS = 9;
-const STAND_PAST_GATE = 4;
-const BOSS_HEIGHT = 6.2;
 const CAMERA_FOV = 42;
 const CAMERA_NEAR = 0.1;
 const CAMERA_FAR = 400;
@@ -67,7 +78,6 @@ const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
 const RATTLE_P1 = 0.5;
 const RATTLE_P2 = 0.3;
-const DEBT_WINDOW_COLS = 30;
 const DEBT_WINDOW_WIDTH = 1.1;
 const CITY_TAIL_LENGTH = 40;
 const CITY_SEED_BASE = 1000;
@@ -85,7 +95,6 @@ const PILE_SEED = 42;
 const PILE_STRANDS = 26;
 const PILE_POINTS = 6;
 const PILE_SPREAD = 2.4;
-const RANDOM_CENTRE = 0.5;
 const PILE_PEAK_POINT = 3;
 const PILE_PEAK_FALLOFF = 4;
 const PILE_CENTRE_Z = -1.2;
@@ -298,7 +307,6 @@ const KILL_BURST_COUNT = 30;
 const KILL_BURST_SPEED = 8;
 const KILL_RING_SIZE = 1.4;
 const KILL_RING_LIFE = 0.35;
-const KILL_TEXT_SIZE = 0.8;
 const KILL_DEBRIS_ORIGIN_LERP = 0.7;
 const KILL_DEBRIS_POWER = 6;
 const KILL_DEBRIS_UP = 5;
@@ -326,7 +334,6 @@ const TALL_READING_NUDGE = 0.6;
 const WIDE_READING_RAISE = 0.5;
 const WIDE_READING_MIN_Y = 2.3;
 const WIDE_READING_GAP = 0.8;
-const TALL_ASPECT_BELOW = 1.25;
 const FOLLOW_X = 1.7;
 const FOLLOW_Y = 2.6;
 const FOLLOW_Z = 5.4;
@@ -351,9 +358,7 @@ const SHOT_BOSS_TOP = 12;
 const SHOT_BOSS_BEHIND = 22;
 const SHOT_BOSS_FLOOR = -0.2;
 const SHOT_BOSS_NEAR = 8;
-const USABLE_WIDTH_FRACTION = 0.94;
 const SHOT_MARGIN = 0.6;
-const SCREEN_MIDDLE = 0.5;
 const SHOT_SIDE_RATIO = 0.985;
 const SHOT_RISE_RATIO = 0.05;
 const SHOT_DEPTH_RATIO = 0.17;
@@ -406,38 +411,6 @@ const BOLT_TEXT_LINE = 52;
 const BOLT_PLANE_HEIGHT = 1.33;
 const BOLT_LIGHT_INTENSITY = 4;
 const BOLT_LIGHT_RANGE = 6;
-
-/** Boss arena: how far down the road the boss stands and how high its main window floats. */
-const BOSS = { y: BOSS_HEIGHT };
-
-export const walkSeconds = () => WALK_SECONDS;
-
-interface Tween {
-  age: number;
-  dur: number;
-  fn: (k: number) => void;
-  done?: () => void;
-}
-interface Cue {
-  at: number;
-  fn: () => void;
-}
-
-/** What a player's world looks like once a step has fully happened. */
-interface State {
-  tier: number;
-  z: number;
-  camera: CameraMode;
-  window: "none" | "problem" | "fixed";
-  stop: number;
-  debt: number;
-  gates: GateState[];
-  boss: "none" | "alive" | "dead";
-  broken: number;
-  pose: Pose;
-  pile: boolean;
-  health: number;
-}
 
 /**
  * One player's world: street, gates, character, enemies, the stop's code window and the boss.
