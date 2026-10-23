@@ -37,4 +37,35 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm run test:coverage -- --reporter=default --reporter=json --outputFile=vitest-report.json
+      - run: node scripts/assert-no-skips.mjs vitest vitest-report.json
+
+  e2e:
+    name: E2E tests (shard ${{ matrix.shard }}/2)
+    # macOS, not Linux: the game needs a GPU (Metal); Linux runners render WebGL in software at under 1 fps.
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --reporter=list,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report.json
+      - run: node scripts/assert-no-skips.mjs playwright playwright-report.json
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-shard-${{ matrix.shard }}
+          path: |
+            test-results/
+            playwright-report.json
+          retention-days: 7
