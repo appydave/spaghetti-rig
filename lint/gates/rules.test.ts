@@ -1,6 +1,6 @@
 // Proves the magic-number and colour rules (Omer 104c7cc) are wired: every form fails a planted violation and passes its twin.
 // Probes run in a sandbox that mirrors the repo (the real .oxlintrc.json, node_modules and the plugin files), so the rules'
-// path logic (tests, the palette module, the not-yet-enforced lists) is exercised as in the repo.
+// path logic (tests, the palette module, the asset-data exemption) is exercised as in the repo.
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -32,40 +32,50 @@ const MAX_OUTPUT = 1 << 28;
 
 type RuleSetting = string | readonly (string | object)[];
 type Override = {
+  files?: string[];
   excludeFiles?: string[];
   rules?: Record<string, RuleSetting>;
 };
 
-const config: { overrides: Override[] } = JSON.parse(
-  readFileSync(join(REPO, ".oxlintrc.json"), "utf8"),
-);
+/** The repo's lint config, read as JSON: its comments (whole lines starting with //) are dropped first. */
+const readConfig = (): { overrides: Override[] } =>
+  JSON.parse(
+    readFileSync(join(REPO, ".oxlintrc.json"), "utf8").replace(
+      /^\s*\/\/.*$/gm,
+      "",
+    ),
+  );
+const config = readConfig();
 
-/** The files a rule is not yet enforced on: the work queue that shrinks until the gate closes. */
-const notYetEnforced = (rule: string): string[] =>
-  (
-    config.overrides.find((o) => rule in (o.rules ?? {}))?.excludeFiles ?? []
-  ).filter((f) => !f.includes(GLOB));
-
-const listed = (name: string, rule: string, source: string): Probe[] => {
-  const path = notYetEnforced(rule)[0];
-
-  return path ? [[name, path, source, []]] : [];
-};
+/** The five model files that are asset data (hand-placed geometry and materials), exempt from both rules for good: R7 revised. */
+const EXEMPT = [
+  "src/world/boss.ts",
+  "src/world/characters.ts",
+  "src/world/city.ts",
+  "src/world/enemies.ts",
+  "src/world/showcase.ts",
+];
+const BAD_SOURCE =
+  'export const n = Math.max(7, 1);\nexport const c = "#ffffff";\n';
+const EXEMPTION = (o: Override): boolean =>
+  (o.files ?? []).some((f) => EXEMPT.includes(f));
 
 const PROBES: readonly Probe[] = [
   ...NUMBER_PROBES,
   ...COLOUR_PROBES,
   ...PLANTED,
-  ...listed(
-    "number: a file on the not-yet-enforced list is skipped",
-    "no-magic-numbers",
-    "export const x = 7;\n",
-  ),
-  ...listed(
-    "colour: a file on the not-yet-enforced list is skipped",
-    "strict-colors/no-color-literals",
-    'export const c = "#ffffff";\nexport const d = new Color("#ffffff");\n',
-  ),
+  [
+    "a new file with a magic number and a hex colour fails both rules",
+    "src/world/new-file.ts",
+    BAD_SOURCE,
+    [NUMBER, COLOUR],
+  ],
+  ...EXEMPT.map((path): Probe => [
+    `the exemption covers ${path}`,
+    path,
+    BAD_SOURCE,
+    [],
+  ]),
 ];
 
 let dir = "";
@@ -123,74 +133,68 @@ describe("magic numbers and colours gate", () => {
     expect(PROBES.filter((p) => p[3].length === 0).length).toBeGreaterThan(0);
   });
 
-  it("every file on a not-yet-enforced list still has a finding, so a list only names files that need it", () => {
+  it("the not-yet-enforced lists are gone: neither rule excludes a file by name", () => {
+    for (const rule of [
+      "no-magic-numbers",
+      "strict-colors/no-color-literals",
+    ]) {
+      const named = config.overrides
+        .filter((o) => !EXEMPTION(o) && rule in (o.rules ?? {}))
+        .flatMap((o) => o.excludeFiles ?? [])
+        .filter((f) => !f.includes(GLOB));
+
+      expect(named, rule).toEqual([]);
+    }
+  });
+
+  it("the exemption names exactly the five asset files, each of which exists", () => {
+    const exemptions = config.overrides.filter(EXEMPTION);
+
+    expect(exemptions).toHaveLength(1);
+    expect([...(exemptions[0]?.files ?? [])].sort()).toEqual(
+      [...EXEMPT].sort(),
+    );
+    expect(EXEMPT.filter((f) => !existsSync(join(REPO, f)))).toEqual([]);
+  });
+
+  it("each exempt file still has a finding with the exemption lifted, so it only names files that need it", () => {
     const guardDir = mkdtempSync(join(tmpdir(), "rules-guard-"));
 
     try {
-      const guard: { overrides: Override[] } = JSON.parse(
-        readFileSync(join(REPO, ".oxlintrc.json"), "utf8"),
-      );
-      const rules: [string, string][] = [
-        ["no-magic-numbers", NUMBER],
-        ["strict-colors/no-color-literals", COLOUR],
-      ];
+      const guard = readConfig();
 
-      // The same config with only the file names taken off the lists (the tests globs stay).
-      for (const o of guard.overrides) {
-        if (rules.some(([rule]) => rule in (o.rules ?? {}))) {
-          o.excludeFiles = (o.excludeFiles ?? []).filter((f) =>
-            f.includes(GLOB),
-          );
-        }
-      }
-
+      guard.overrides = guard.overrides.filter((o) => !EXEMPTION(o));
       writeFileSync(join(guardDir, ".oxlintrc.json"), JSON.stringify(guard));
       symlinkSync(join(REPO, "node_modules"), join(guardDir, "node_modules"));
       cpSync(join(REPO, "lint/gates"), join(guardDir, "lint/gates"), {
         recursive: true,
       });
 
-      const listed = new Set(rules.flatMap(([rule]) => notYetEnforced(rule)));
-
-      for (const f of listed) {
+      for (const f of EXEMPT) {
         mkdirSync(dirname(join(guardDir, f)), { recursive: true });
         cpSync(join(REPO, f), join(guardDir, f));
       }
 
       const run = spawnSync(
         OXLINT,
-        ["-c", ".oxlintrc.json", "-f", "json", ...listed],
+        ["-c", ".oxlintrc.json", "-f", "json", ...EXEMPT],
         { cwd: guardDir, encoding: "utf8", maxBuffer: MAX_OUTPUT },
       );
       const parsed = JSON.parse(run.stdout) as {
         diagnostics: { code: string; filename: string }[];
       };
+      const hit = new Set(
+        parsed.diagnostics
+          .filter((d) => [NUMBER, COLOUR].includes(d.code))
+          .map((d) => d.filename),
+      );
 
-      for (const [rule, code] of rules) {
-        const hit = new Set(
-          parsed.diagnostics
-            .filter((d) => d.code === code)
-            .map((d) => d.filename),
-        );
-
-        expect(
-          notYetEnforced(rule).filter((f) => !hit.has(f)),
-          `${rule}: listed but clean`,
-        ).toEqual([]);
-      }
+      expect(
+        EXEMPT.filter((f) => !hit.has(f)),
+        "exempt but clean",
+      ).toEqual([]);
     } finally {
       rmSync(guardDir, { recursive: true, force: true });
-    }
-  });
-
-  it("the not-yet-enforced lists only name files that exist", () => {
-    for (const rule of [
-      "no-magic-numbers",
-      "strict-colors/no-color-literals",
-    ]) {
-      expect(
-        notYetEnforced(rule).filter((f) => !existsSync(join(REPO, f))),
-      ).toEqual([]);
     }
   });
 
