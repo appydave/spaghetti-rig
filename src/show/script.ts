@@ -87,7 +87,7 @@ export function buildScript(game: Game): Step[] {
     }
     s("result", t.index);
   }
-  if (playable.length) s("ending", playable[playable.length - 1]!.index);
+  if (playable.length) s("ending", playable.at(-1)!.index);
   return steps;
 }
 

@@ -110,7 +110,7 @@ function splitBy(
 function merge(tokens: Token[]): Token[] {
   const out: Token[] = [];
   for (const t of tokens) {
-    const prev = out[out.length - 1];
+    const prev = out.at(-1);
     if (prev && prev.color === t.color) prev.text += t.text;
     else out.push({ ...t });
   }
@@ -260,10 +260,10 @@ function pushCaption(lines: Line[], text: string, cols: number, block = -1) {
   const words = text.split(/\s+/);
   let cur = "";
   for (const w of words) {
-    if ((cur + " " + w).trim().length > width && cur) {
+    if (`${cur} ${w}`.trim().length > width && cur) {
       lines.push({ ...blankLine("caption", "code", block), text: cur });
       cur = w;
-    } else cur = (cur + " " + w).trim();
+    } else cur = `${cur} ${w}`.trim();
   }
   if (cur) lines.push({ ...blankLine("caption", "code", block), text: cur });
 }
@@ -274,8 +274,8 @@ export function slugFile(title: string, ext = ".ts") {
     title
       .toLowerCase()
       .replace(/^tool:\s*/, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/^-|-$/g, "")
       .slice(0, 28) + ext
   );
 }

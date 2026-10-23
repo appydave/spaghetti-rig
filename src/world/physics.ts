@@ -28,8 +28,8 @@ export interface BreakOptions {
  * paving, settle, then sink away. Old pieces are recycled once there are too many.
  */
 export class Debris {
-  private world: RAPIER.World;
-  private pieces: Piece[] = [];
+  private readonly world: RAPIER.World;
+  private readonly pieces: Piece[] = [];
   onBounce?: (strength: number, at: THREE.Vector3) => void;
   private readonly max = 220;
 

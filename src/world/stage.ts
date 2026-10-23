@@ -20,7 +20,7 @@ export class Stage {
   readonly title = new TitleShowcase();
   readonly vs = new VsShowcase();
   private worlds: Record<Player, PlayerWorld> | null = null;
-  private size = new THREE.Vector2();
+  private readonly size = new THREE.Vector2();
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({

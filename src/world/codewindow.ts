@@ -176,7 +176,7 @@ export function paintCard(
   g.textBaseline = "middle";
   const fname =
     layout.filename.length > layout.cols - 8
-      ? "…" + layout.filename.slice(-(layout.cols - 9))
+      ? `…${layout.filename.slice(-(layout.cols - 9))}`
       : layout.filename;
   g.fillText(fname, 46 + 3 * 34 + 8, HEADER / 2 + 5);
 

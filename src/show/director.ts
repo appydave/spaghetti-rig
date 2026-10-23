@@ -410,7 +410,7 @@ export class Director {
     const el = this.lane(p)?.querySelector<HTMLElement>(".caption");
     if (!el) return;
     el.hidden = true;
-    if (!c || !c.text) return;
+    if (!c?.text) return;
     const show = () => {
       el.innerHTML = `<span class="label">${esc(c.label)}</span>${esc(c.text)}`;
       el.hidden = false;
@@ -479,11 +479,14 @@ export class Director {
         : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(6, "0")}</span></div>`;
     const el = $("result");
     el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML =
-      this.visible().map(col).join("") +
-      `<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
-    if (this.mode !== "p1") this.audio.play("win");
-    else this.audio.play("lose");
+    el.innerHTML = `${this.visible()
+      .map(col)
+      .join("")}<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
+    if (this.mode === "p1") {
+      this.audio.play("lose");
+    } else {
+      this.audio.play("win");
+    }
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
@@ -491,13 +494,12 @@ export class Director {
     const e = this.game.content.endings;
     const el = $("ending");
     el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML =
-      this.visible()
-        .map(
-          (p) =>
-            `<div class="col ${p}"><span class="label">${p === "p1" ? "PLAYER 1 · VIBE-CODED" : "PLAYER 2 · GATED"}</span><div class="stamp">${esc(e[p].big)}</div><p>${esc(e[p].sub)}</p></div>`,
-        )
-        .join("") + `<div class="next">→ BACK TO THE MAP</div>`;
+    el.innerHTML = `${this.visible()
+      .map(
+        (p) =>
+          `<div class="col ${p}"><span class="label">${p === "p1" ? "PLAYER 1 · VIBE-CODED" : "PLAYER 2 · GATED"}</span><div class="stamp">${esc(e[p].big)}</div><p>${esc(e[p].sub)}</p></div>`,
+      )
+      .join("")}<div class="next">→ BACK TO THE MAP</div>`;
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
@@ -566,9 +568,9 @@ export class Director {
       mode: this.mode,
       phase: this.step.phase,
       next:
-        i !== this.at
-          ? stepLabel(this.game, this.script[i]!)
-          : "Back to the map",
+        i === this.at
+          ? "Back to the map"
+          : stepLabel(this.game, this.script[i]!),
       notes: notesFor(this.game, this.step, this.mode),
       paused: this.paused,
     };

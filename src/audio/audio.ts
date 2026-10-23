@@ -139,13 +139,13 @@ export class AudioEngine {
 
   private decks: Deck[] = [];
   private current: Deck | null = null;
-  private rotation = new Map<Theme, number>();
+  private readonly rotation = new Map<Theme, number>();
   private _theme: Theme = "silent";
   private _muted = false;
   private _paused = false;
   private _trackName = "";
-  private listeners: ((name: string) => void)[] = [];
-  private lastPlayed = new Map<Sfx, number>();
+  private readonly listeners: ((name: string) => void)[] = [];
+  private readonly lastPlayed = new Map<Sfx, number>();
   private activeSfx = 0;
 
   // ------------------------------------------------------------------ public API
@@ -241,7 +241,7 @@ export class AudioEngine {
       webkitAudioContext?: typeof AudioContext;
     };
     const Ctor =
-      typeof AudioContext !== "undefined" ? AudioContext : g.webkitAudioContext;
+      typeof AudioContext === "undefined" ? g.webkitAudioContext : AudioContext;
     if (!Ctor) return false;
     let ctx: AudioContext;
     try {
@@ -422,7 +422,7 @@ export class AudioEngine {
 
   private tick(): void {
     const ctx = this.ctx;
-    if (!ctx || ctx.state !== "running") return;
+    if (ctx?.state !== "running") return;
     try {
       const now = ctx.currentTime;
       const horizon = now + LOOKAHEAD;

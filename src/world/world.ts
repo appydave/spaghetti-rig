@@ -104,8 +104,8 @@ export class PlayerWorld {
     next: number;
   } | null = null;
   private shake = 0;
-  private camPos = new THREE.Vector3(3, 3, 8);
-  private camLook = new THREE.Vector3(0, 1.5, -6);
+  private readonly camPos = new THREE.Vector3(3, 3, 8);
+  private readonly camLook = new THREE.Vector3(0, 1.5, -6);
   private camMode: CameraMode = "follow";
   private readonly gunner: AutoGunner;
   private aim: THREE.Vector3 | null = null;
@@ -1479,8 +1479,8 @@ function bossTool(name: string) {
   const words = name.split(/\s+/);
   let out = words[0]!;
   for (const w of words.slice(1)) {
-    if ((out + " " + w).length > 18) break;
-    out += " " + w;
+    if (`${out} ${w}`.length > 18) break;
+    out += ` ${w}`;
   }
   return out;
 }

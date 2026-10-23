@@ -17,12 +17,7 @@ const counts = {
   },
 }[kind];
 
-if (
-  !counts ||
-  !counts.ran ||
-  counts.skipped !== 0 ||
-  counts.todoOrFlaky !== 0
-) {
+if (!counts?.ran || counts.skipped !== 0 || counts.todoOrFlaky !== 0) {
   console.error(
     `${kind}: expected tests to run with 0 skipped and 0 todo/flaky, got ${JSON.stringify(counts)}`,
   );
