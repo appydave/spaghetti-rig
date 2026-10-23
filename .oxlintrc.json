@@ -463,7 +463,6 @@
         "tests/**",
         "src/**/*.test.ts",
         "lint/**/*.test.ts",
-        "scripts/assert-no-skips.mjs",
         "src/audio/audio.ts",
         "src/audio/tracks.ts",
         "src/content/load.ts",

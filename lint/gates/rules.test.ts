@@ -27,6 +27,8 @@ import {
 const REPO = resolve(import.meta.dirname, "../..");
 const OXLINT = join(REPO, "node_modules/.bin/oxlint");
 const GLOB = "*";
+/** oxlint prints one JSON diagnostic per finding; the listed files have thousands, more than the default 1 MB pipe buffer. */
+const MAX_OUTPUT = 1 << 28;
 
 type RuleSetting = string | readonly (string | object)[];
 type Override = {
@@ -119,6 +121,66 @@ describe("magic numbers and colours gate", () => {
 
     expect([NUMBER, COLOUR].filter((c) => !failing.has(c))).toEqual([]);
     expect(PROBES.filter((p) => p[3].length === 0).length).toBeGreaterThan(0);
+  });
+
+  it("every file on a not-yet-enforced list still has a finding, so a list only names files that need it", () => {
+    const guardDir = mkdtempSync(join(tmpdir(), "rules-guard-"));
+
+    try {
+      const guard: { overrides: Override[] } = JSON.parse(
+        readFileSync(join(REPO, ".oxlintrc.json"), "utf8"),
+      );
+      const rules: [string, string][] = [
+        ["no-magic-numbers", NUMBER],
+        ["strict-colors/no-color-literals", COLOUR],
+      ];
+
+      // The same config with only the file names taken off the lists (the tests globs stay).
+      for (const o of guard.overrides) {
+        if (rules.some(([rule]) => rule in (o.rules ?? {}))) {
+          o.excludeFiles = (o.excludeFiles ?? []).filter((f) =>
+            f.includes(GLOB),
+          );
+        }
+      }
+
+      writeFileSync(join(guardDir, ".oxlintrc.json"), JSON.stringify(guard));
+      symlinkSync(join(REPO, "node_modules"), join(guardDir, "node_modules"));
+      cpSync(join(REPO, "lint/gates"), join(guardDir, "lint/gates"), {
+        recursive: true,
+      });
+
+      const listed = new Set(rules.flatMap(([rule]) => notYetEnforced(rule)));
+
+      for (const f of listed) {
+        mkdirSync(dirname(join(guardDir, f)), { recursive: true });
+        cpSync(join(REPO, f), join(guardDir, f));
+      }
+
+      const run = spawnSync(
+        OXLINT,
+        ["-c", ".oxlintrc.json", "-f", "json", ...listed],
+        { cwd: guardDir, encoding: "utf8", maxBuffer: MAX_OUTPUT },
+      );
+      const parsed = JSON.parse(run.stdout) as {
+        diagnostics: { code: string; filename: string }[];
+      };
+
+      for (const [rule, code] of rules) {
+        const hit = new Set(
+          parsed.diagnostics
+            .filter((d) => d.code === code)
+            .map((d) => d.filename),
+        );
+
+        expect(
+          notYetEnforced(rule).filter((f) => !hit.has(f)),
+          `${rule}: listed but clean`,
+        ).toEqual([]);
+      }
+    } finally {
+      rmSync(guardDir, { recursive: true, force: true });
+    }
   });
 
   it("the not-yet-enforced lists only name files that exist", () => {
