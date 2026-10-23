@@ -3,10 +3,14 @@ import { expect, type Page } from "@playwright/test";
 /** Collect anything that would mean the show broke on stage. */
 export function watchErrors(page: Page) {
   const errors: string[] = [];
+
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(`console: ${m.text()}`);
+    if (m.type() === "error") {
+      errors.push(`console: ${m.text()}`);
+    }
   });
+
   return errors;
 }
 

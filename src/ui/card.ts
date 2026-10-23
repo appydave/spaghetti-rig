@@ -9,6 +9,7 @@ const ESCAPES = new Map([
   ['"', "&quot;"],
   ["'", "&#39;"],
 ]);
+
 export const esc = (s: string) =>
   s.replaceAll(/[&<>"']/g, (c) => ESCAPES.get(c) ?? c);
 
@@ -22,6 +23,7 @@ export const shortTool = (name: string) =>
 /** A gate as a number badge plus its title: "G01 · Formatting" → [1] Formatting. */
 export function gateHtml(gate: string) {
   const g = gateLabel(gate);
+
   return `${g.num ? `<span class="gate-badge"><small>GATE</small>${esc(g.num)}</span>` : ""}<span class="gate-title">${esc(g.title)}</span>`;
 }
 
@@ -53,6 +55,7 @@ export function toolCardHtml(
     cfg && lines.length
       ? `<div class="cfg"><div class="file">${esc(cfg.file)}<span>${esc(cfg.status === "planned" ? "planned" : "applied in this PR")}</span></div>${lines.map(([code, means]) => `<div class="ln"><code>${esc(yamlStep(code))}</code><em>${esc(means)}</em></div>`).join("")}</div>`
       : "";
+
   return `<article class="tcard" data-tool="${esc(card.tool ?? "")}">
     <span class="hint">→ PLAY CARD</span>
     <div class="head"><span class="name">${esc(shortTool(tool.name))}</span><span class="cost"><i>${esc(gateLabel(stop.gate).num)}</i><i>T${tier.n}</i></span></div>

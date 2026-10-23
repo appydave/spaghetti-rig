@@ -3,8 +3,8 @@ import { boot, press, rig, step, watchErrors } from "./helpers";
 
 // Input here is real: page.mouse and page.keyboard only. __rig is used to read state, never to drive it.
 
-const W = 1600,
-  H = 900;
+const W = 1600;
+const H = 900;
 const shots = (page: Page) =>
   rig<{ p1: number; p2: number }>(
     page,
@@ -36,14 +36,19 @@ for (const [key, lanes] of [
     page,
   }) => {
     const errors = watchErrors(page);
+
     await boot(page);
     await walk(page, key);
     for (const [p, x] of Object.entries(lanes) as ["p1" | "p2", number][]) {
       const before = await shots(page);
+
       await tap(page, x, H * 0.45);
+
       const after = await shots(page);
+
       expect(after[p]).toBe(before[p] + 1);
     }
+
     expect(errors).toEqual([]);
   });
 }
@@ -53,17 +58,25 @@ test("a real click on an enemy kills it and the score goes up", async ({
 }) => {
   await boot(page);
   await walk(page, "2");
+
   let score = 0;
+
   for (let i = 0; i < 80 && score === 0; i++) {
     await page.waitForTimeout(80);
+
     const e = await rig<{ x: number; y: number } | null>(
       page,
       "r.worlds.p2.enemyScreen()",
     );
-    if (!e || Math.abs(e.x) > 0.95 || Math.abs(e.y) > 0.6) continue;
+
+    if (!e || Math.abs(e.x) > 0.95 || Math.abs(e.y) > 0.6) {
+      continue;
+    }
+
     await tap(page, ((e.x + 1) / 2) * W, ((1 - e.y) / 2) * H);
     score = await rig<number>(page, "r.worlds.p2.score");
   }
+
   expect(score).toBeGreaterThan(0);
 });
 
@@ -72,8 +85,10 @@ test("Space moves the show on and never fires; Page Down and Page Up step forwar
 }) => {
   await boot(page);
   await walk(page, "b");
+
   const before = await shots(page);
   const at = await rig<number>(page, "r.director.at");
+
   await press(page, "Space", 300);
   expect(await rig<number>(page, "r.director.at")).toBe(at + 1);
   expect(await shots(page)).toEqual(before);
@@ -91,7 +106,9 @@ test("Space after clicking the autoplay button still means next, not the button"
   await walk(page, "2");
   await page.click('[data-chip="auto"]');
   await expect(page.locator("#hud-auto")).toHaveText("AUTOPLAY ON");
+
   const at = await rig<number>(page, "r.director.at");
+
   await press(page, "Space", 300);
   expect(await rig<number>(page, "r.director.at")).toBe(at + 1);
   await expect(page.locator("#hud-auto")).toHaveText("AUTOPLAY ON");
@@ -103,7 +120,9 @@ test("autoplay in B: both players fire during the same walk, each with their own
   await boot(page);
   await walk(page, "b");
   await press(page, "a");
+
   const before = await shots(page);
+
   // Wait for the shots, not for a fixed time: autoplay fires on the game clock, so a slow runner fires fewer in the same wall-clock span.
   await expect
     .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
@@ -119,30 +138,40 @@ test("mode S: player 1 plays itself, real clicks fire for player 2 only", async 
   page,
 }) => {
   const errors = watchErrors(page);
+
   await boot(page);
   await walk(page, "s");
   await expect(page.locator(".lane")).toHaveCount(2);
   await expect(page.locator("#hud-mode")).toHaveText("YOU VS AUTOPILOT");
+
   const before = await shots(page);
+
   // Nobody touched the mouse: wait until player 1's autopilot has fired as many shots as autoplay in B needs to show an autopilot
   // is running (more than 2), so an autopilot on player 2 would have fired too. Then player 2 must still be at its old count.
   await expect
     .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
     .toBeGreaterThan(before.p1 + 2);
+
   const mid = await shots(page);
+
   expect(mid.p2).toBe(before.p2);
   await tap(page, (W * 3) / 4, H * 0.45);
   expect((await shots(page)).p2).toBe(mid.p2 + 1);
+
   // A press over player 1's lane does not fire for anyone but player 1's autopilot.
   const p2 = (await shots(page)).p2;
+
   await tap(page, W / 4, H * 0.45);
   expect((await shots(page)).p2).toBe(p2);
+
   // Switching in and out keeps your place.
   const at = await rig<number>(page, "r.director.at");
+
   for (const k of ["b", "s", "2", "s"]) {
     await press(page, k, 200);
     expect(await rig<number>(page, "r.director.at")).toBe(at);
   }
+
   expect(errors).toEqual([]);
 });
 

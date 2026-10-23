@@ -53,11 +53,19 @@ export class Stage {
 
   /** Lane rectangles in CSS pixels, left to right. */
   lanes(): Lane[] {
-    const w = this.size.x,
-      h = this.size.y;
-    if (this.mode === "p1") return [{ player: "p1", x: 0, y: 0, w, h }];
-    if (this.mode === "p2") return [{ player: "p2", x: 0, y: 0, w, h }];
+    const w = this.size.x;
+    const h = this.size.y;
+
+    if (this.mode === "p1") {
+      return [{ player: "p1", x: 0, y: 0, w, h }];
+    }
+
+    if (this.mode === "p2") {
+      return [{ player: "p2", x: 0, y: 0, w, h }];
+    }
+
     const half = Math.floor(w / 2);
+
     return [
       { player: "p1", x: 0, y: 0, w: half, h },
       { player: "p2", x: half, y: 0, w: w - half, h },
@@ -66,10 +74,16 @@ export class Stage {
 
   layout() {
     const aspect = this.size.x / Math.max(1, this.size.y);
+
     this.title.setAspect(aspect);
     this.vs.setAspect(aspect);
-    if (!this.worlds) return;
-    for (const l of this.lanes()) this.worlds[l.player].setAspect(l.w / l.h);
+    if (!this.worlds) {
+      return;
+    }
+
+    for (const l of this.lanes()) {
+      this.worlds[l.player].setAspect(l.w / l.h);
+    }
   }
 
   setMode(mode: Mode) {
@@ -83,26 +97,36 @@ export class Stage {
 
   render(dt: number) {
     const r = this.renderer;
+
     r.setScissorTest(false);
     r.clear();
     if (this.view === "title") {
       this.title.update(dt);
       r.render(this.title.scene, this.title.camera);
+
       return;
     }
+
     if (this.view === "vs") {
       this.vs.update(dt);
       r.render(this.vs.scene, this.vs.camera);
+
       return;
     }
-    if (this.view !== "game" || !this.worlds) return;
+
+    if (this.view !== "game" || !this.worlds) {
+      return;
+    }
+
     const h = this.size.y;
+
     r.setScissorTest(true);
     for (const l of this.lanes()) {
       r.setViewport(l.x, h - l.y - l.h, l.w, l.h);
       r.setScissor(l.x, h - l.y - l.h, l.w, l.h);
       r.render(this.worlds[l.player].scene, this.worlds[l.player].camera);
     }
+
     r.setScissorTest(false);
     r.setViewport(0, 0, this.size.x, h);
   }

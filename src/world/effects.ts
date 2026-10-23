@@ -62,13 +62,18 @@ export class Effects {
     const colors = (opts.colors ?? ["#fff3b0", "#f9db48", "#ffae59"]).map(
       (c) => new THREE.Color(c),
     );
+
     for (let i = 0; i < (opts.n ?? 24); i++) {
-      if (this.particles.length >= MAX) this.particles.shift();
+      if (this.particles.length >= MAX) {
+        this.particles.shift();
+      }
+
       const dir = new THREE.Vector3(
         Math.random() - 0.5,
         Math.random() - 0.5 + (opts.up ?? 0.3),
         Math.random() - 0.5,
       ).normalize();
+
       this.particles.push({
         pos: at.clone(),
         vel: dir.multiplyScalar((opts.speed ?? 6) * (0.4 + Math.random())),
@@ -104,9 +109,13 @@ export class Effects {
   /** Rising green-and-yellow sparkles around a body. */
   heal(at: THREE.Vector3) {
     for (let i = 0; i < 60; i++) {
-      const a = (i / 60) * Math.PI * 8,
-        r = 0.7;
-      if (this.particles.length >= MAX) this.particles.shift();
+      const a = (i / 60) * Math.PI * 8;
+      const r = 0.7;
+
+      if (this.particles.length >= MAX) {
+        this.particles.shift();
+      }
+
       this.particles.push({
         pos: at
           .clone()
@@ -126,6 +135,7 @@ export class Effects {
         spin: 4,
       });
     }
+
     this.ring(at, "#aee5a3", 1.6, 0.9, true);
   }
 
@@ -146,9 +156,14 @@ export class Effects {
       toneMapped: false,
     });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 6, 40), mat);
+
     ring.position.copy(at);
-    if (flat) ring.rotation.x = Math.PI / 2;
-    else if (face) ring.lookAt(face);
+    if (flat) {
+      ring.rotation.x = Math.PI / 2;
+    } else if (face) {
+      ring.lookAt(face);
+    }
+
     this.scene.add(ring);
     this.faders.push({
       obj: ring,
@@ -180,6 +195,7 @@ export class Effects {
       new THREE.CylinderGeometry(width, width * 0.4, len, 6, 1, true),
       mat,
     );
+
     beam.position.copy(from).lerp(to, 0.5);
     beam.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
@@ -208,6 +224,7 @@ export class Effects {
     this.flash.color.set(color);
     this.flash.intensity = 6;
     this.flashT = 0.08;
+
     const mat = new THREE.SpriteMaterial({
       color,
       transparent: true,
@@ -217,6 +234,7 @@ export class Effects {
       map: glow(),
     });
     const s = new THREE.Sprite(mat);
+
     s.position.copy(at);
     s.scale.setScalar(0.7);
     this.scene.add(s);
@@ -241,9 +259,12 @@ export class Effects {
     life = 1.1,
   ) {
     const cv = document.createElement("canvas");
+
     cv.width = 512;
     cv.height = 160;
+
     const g = context2d(cv);
+
     g.font = "italic 800 120px Barlow, Impact, sans-serif";
     g.textAlign = "center";
     g.textBaseline = "middle";
@@ -253,8 +274,11 @@ export class Effects {
     g.strokeText(s, 256, 84);
     g.fillStyle = color;
     g.fillText(s, 256, 84);
+
     const tex = new THREE.CanvasTexture(cv);
+
     tex.colorSpace = THREE.SRGBColorSpace;
+
     const mat = new THREE.SpriteMaterial({
       map: tex,
       transparent: true,
@@ -262,11 +286,14 @@ export class Effects {
       toneMapped: false,
     });
     const sp = new THREE.Sprite(mat);
+
     sp.renderOrder = 50;
     sp.position.copy(at);
     sp.scale.set(size * 3.2, size, 1);
     this.scene.add(sp);
+
     const y0 = at.y;
+
     this.faders.push({
       obj: sp,
       mat,
@@ -275,7 +302,9 @@ export class Effects {
       tick: (k, o) => {
         o.position.y = y0 + k * 0.9;
         mat.opacity = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+
         const p = Math.min(1, k * 6);
+
         o.scale.set(size * 3.2 * (0.6 + p * 0.4), size * (0.6 + p * 0.4), 1);
       },
     });
@@ -283,9 +312,12 @@ export class Effects {
 
   update(dt: number) {
     this.flashT -= dt;
-    if (this.flashT <= 0)
+    if (this.flashT <= 0) {
       this.flash.intensity = Math.max(0, this.flash.intensity - dt * 80);
+    }
+
     let n = 0;
+
     this.particles = this.particles.filter((p) => (p.age += dt) < p.life);
     for (const p of this.particles) {
       p.vel.y -= p.gravity * dt;
@@ -295,7 +327,9 @@ export class Effects {
         p.pos.y = 0.03;
         p.vel.y *= -0.4;
       }
+
       const k = 1 - p.age / p.life;
+
       this.dummy.position.copy(p.pos);
       this.dummy.rotation.set(p.age * p.spin, p.age * p.spin * 0.7, 0);
       this.dummy.scale.setScalar(p.size * (0.3 + k * 0.7));
@@ -304,21 +338,35 @@ export class Effects {
       this.sparks.setColorAt(n, p.color);
       n++;
     }
+
     this.sparks.count = n;
     this.sparks.instanceMatrix.needsUpdate = true;
-    if (this.sparks.instanceColor) this.sparks.instanceColor.needsUpdate = true;
+    if (this.sparks.instanceColor) {
+      this.sparks.instanceColor.needsUpdate = true;
+    }
+
     // Iterate a snapshot: finished faders are spliced out of the live list inside the loop.
     const snapshot = this.faders.slice();
+
     for (const f of snapshot) {
       f.age += dt;
+
       const k = Math.min(1, f.age / f.life);
+
       f.tick(k, f.obj);
       if (k >= 1) {
         this.faders.splice(this.faders.indexOf(f), 1);
         f.obj.removeFromParent();
-        if (isDrawable(f.obj)) f.obj.geometry.dispose();
+        if (isDrawable(f.obj)) {
+          f.obj.geometry.dispose();
+        }
+
         const map = mapOf(f.mat);
-        if (map && !map.userData.shared) map.dispose();
+
+        if (map && !map.userData.shared) {
+          map.dispose();
+        }
+
         f.mat.dispose();
       }
     }
@@ -330,17 +378,25 @@ export class Effects {
       f.obj.removeFromParent();
       f.mat.dispose();
     }
+
     this.faders = [];
   }
 }
 
 let glowTex: THREE.CanvasTexture | undefined;
+
 function glow() {
-  if (glowTex) return glowTex;
+  if (glowTex) {
+    return glowTex;
+  }
+
   const cv = document.createElement("canvas");
+
   cv.width = cv.height = 128;
+
   const g = context2d(cv);
   const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+
   grad.addColorStop(0, "rgba(255,255,255,1)");
   grad.addColorStop(0.3, "rgba(255,255,255,.8)");
   grad.addColorStop(1, "rgba(255,255,255,0)");
@@ -361,5 +417,6 @@ function glow() {
   g.fill();
   glowTex = new THREE.CanvasTexture(cv);
   glowTex.userData.shared = true;
+
   return glowTex;
 }

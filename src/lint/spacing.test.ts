@@ -276,9 +276,8 @@ const probePath = (i: number): string => join(dir, `probe-${i}.ts`);
 
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), "spacing-probes-"));
-  const files = [
-    ...PROBES.map((p, i) => ({ path: probePath(i), source: p[1] })),
-  ];
+
+  const files = PROBES.map((p, i) => ({ path: probePath(i), source: p[1] }));
 
   PLANTED.forEach((comment, i) => {
     files.push({
@@ -328,6 +327,7 @@ describe("readable spacing gate", () => {
         join(scanDir, "src/planted.ts"),
         silenced(PLANTED[0] ?? ""),
       );
+
       const scan = spawnSync(
         "node",
         [join(REPO, "scripts/check-no-suppressions.mjs")],

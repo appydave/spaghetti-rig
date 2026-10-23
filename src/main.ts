@@ -17,6 +17,7 @@ import { Stage } from "./world/stage";
 import { PlayerWorld } from "./world/world";
 
 const $ = (id: string) => byId(id, HTMLElement);
+
 type Screen = "prelude" | "title" | "map" | "game";
 
 const store = {
@@ -38,12 +39,15 @@ const store = {
 
 function showError(message: string, cause?: unknown) {
   console.error(cause ?? message);
+
   const el = document.createElement("div");
+
   el.className = "error";
   el.textContent = `Something broke: ${message}`;
   document.body.append(el);
   setTimeout(() => el.remove(), 8000);
 }
+
 addEventListener("error", (e) =>
   showError(e.error instanceof Error ? e.error.message : e.message, e.error),
 );
@@ -54,8 +58,9 @@ addEventListener("unhandledrejection", (e) =>
   ),
 );
 
-if (new URLSearchParams(location.search).has("presenter")) presenter();
-else {
+if (new URLSearchParams(location.search).has("presenter")) {
+  presenter();
+} else {
   try {
     await boot();
   } catch (err) {
@@ -65,8 +70,10 @@ else {
 
 async function boot() {
   const backdrop = document.createElement("div");
+
   backdrop.id = "backdrop";
   document.body.prepend(backdrop);
+
   const [game] = await Promise.all([
     loadContent(),
     initPhysics(),
@@ -84,8 +91,10 @@ async function boot() {
     p1: new PlayerWorld("p1", game, audio, pan("p1")),
     p2: new PlayerWorld("p2", game, audio, pan("p2")),
   };
+
   stage.setMode(mode);
   stage.attach(worlds);
+
   const director = new Director(game, stage, worlds, audio, mode);
   let screen: Screen = "prelude";
   let selected = Math.max(
@@ -96,6 +105,7 @@ async function boot() {
 
   // Words from the content file.
   const words = game.content.screens.title.big.trim().split(/\s+/);
+
   $("title-1").textContent = (
     words.slice(0, -1).join(" ") ||
     words[0] ||
@@ -114,10 +124,12 @@ async function boot() {
       $("best").textContent = String(best).padStart(6, "0");
     }
   };
+
   director.onExit = () => show("map");
 
   audio.onTrackChange((name) => {
     const s = name ? `♫ ${name}` : "♫ —";
+
     $("now-playing").textContent = s;
     $("title-track").textContent =
       `${s} · ${audio.muted ? "SOUND OFF" : "SOUND ON"}`;
@@ -130,12 +142,14 @@ async function boot() {
     for (const b of queryAllEl(document, "[data-mode]")) {
       b.setAttribute("aria-checked", String(b.dataset.mode === m));
     }
+
     $("map-mode").textContent = modeInfo(m).map;
     audio.play("uiMove");
   }
 
   function renderMap() {
     const list = $("tiers");
+
     list.style.setProperty("--n", String(game.tiers.length));
     list.innerHTML = game.tiers
       .map((t, i) => {
@@ -145,6 +159,7 @@ async function boot() {
         const fallback = t.playable
           ? "/assets/tiers/generic.svg"
           : "/assets/bosses/generic.svg";
+
         return `<li class="tier${t.playable ? "" : " locked"}${i === selected ? " sel" : ""}" data-i="${i}">
         ${t.playable ? "" : '<span class="lock">LOCKED</span>'}
         <span class="n">${String(t.n).padStart(2, "0")}</span>
@@ -171,32 +186,43 @@ async function boot() {
       audio.setTheme("title");
       backdrop.className = "menu";
     }
+
     if (s === "map") {
       stage.view = "none";
       renderMap();
       audio.setTheme("title");
       backdrop.className = "menu";
     }
+
     if (s !== "game") {
       $("notes").hidden = true;
       document.body.dataset.phase = s;
     }
-    if (s === "game") backdrop.className = "";
+
+    if (s === "game") {
+      backdrop.className = "";
+    }
   }
 
   function start(tierIndex: number) {
     const t = game.tiers[tierIndex];
+
     if (!t?.playable) {
       audio.play("bounce");
+
       return;
     }
+
     audio.play("uiSelect");
     show("game");
     director.startTier(tierIndex);
   }
 
   function togglePause() {
-    if (screen !== "game") return;
+    if (screen !== "game") {
+      return;
+    }
+
     director.setPaused(!director.paused);
   }
 
@@ -210,9 +236,11 @@ async function boot() {
 
   function toggleHelp() {
     const h = $("help");
+
     h.hidden = !h.hidden;
-    if (!h.hidden && screen === "game" && !director.paused)
+    if (!h.hidden && screen === "game" && !director.paused) {
       director.setPaused(true);
+    }
   }
 
   async function enter() {
@@ -230,38 +258,68 @@ async function boot() {
   for (const b of queryAllEl(document, "[data-mode]")) {
     b.addEventListener("click", () => {
       const mode = MODES.find((x) => x.mode === b.dataset.mode);
-      if (!mode) throw new Error(`Unknown mode "${b.dataset.mode}"`);
+
+      if (!mode) {
+        throw new Error(`Unknown mode "${b.dataset.mode}"`);
+      }
+
       setMode(mode.mode);
       b.blur();
     });
   }
+
   document.addEventListener("click", (e) => {
     const a = closestEl(e.target, "[data-action]");
-    if (!a) return;
+
+    if (!a) {
+      return;
+    }
+
     const act = a.dataset.action;
-    if (act === "mute") toggleMute();
+
+    if (act === "mute") {
+      toggleMute();
+    }
+
     if (act === "pause") {
-      if (!$("help").hidden) $("help").hidden = true;
+      if (!$("help").hidden) {
+        $("help").hidden = true;
+      }
+
       togglePause();
     }
-    if (act === "help") toggleHelp();
+
+    if (act === "help") {
+      toggleHelp();
+    }
+
     if (act === "to-map") {
       director.setPaused(false);
       show("map");
     }
+
     if (act === "auto") {
       director.toggleAutoplay();
       audio.play("uiMove");
     }
+
     // A clicked button keeps focus; let it go, so Space stays "next" and never presses it again.
-    if (a instanceof HTMLButtonElement) a.blur();
+    if (a instanceof HTMLButtonElement) {
+      a.blur();
+    }
   });
   $("tiers").addEventListener("click", (e) => {
     const li = closestEl(e.target, ".tier");
-    if (!li) return;
+
+    if (!li) {
+      return;
+    }
+
     const i = Number(li.dataset.i);
-    if (i === selected) start(i);
-    else {
+
+    if (i === selected) {
+      start(i);
+    } else {
       selected = i;
       renderMap();
       audio.play("uiMove");
@@ -271,41 +329,70 @@ async function boot() {
   /** Every key, so the whole show runs from the keyboard. */
   function key(code: string, shift: boolean, k: string) {
     if (screen === "prelude") {
-      if (["Enter", "Space", "ArrowRight"].includes(code)) void enter();
+      if (["Enter", "Space", "ArrowRight"].includes(code)) {
+        void enter();
+      }
+
       return;
     }
+
     const digit = /^Digit([1-9])$/.exec(code)?.[1];
+
     if (shift && digit) {
-      const n = Number(digit),
-        t = game.tiers.find((x) => x.n === n) ?? game.tiers[n - 1];
+      const n = Number(digit);
+      const t = game.tiers.find((x) => x.n === n) ?? game.tiers[n - 1];
+
       if (t) {
         selected = t.index;
         start(t.index);
       }
+
       return;
     }
-    if (code === "KeyM") return toggleMute();
-    if (code === "KeyH" || k === "?") return toggleHelp();
+
+    if (code === "KeyM") {
+      return toggleMute();
+    }
+
+    if (code === "KeyH" || k === "?") {
+      return toggleHelp();
+    }
+
     const pick = MODES.find((m) => m.code === code);
-    if (pick) return setMode(pick.mode);
+
+    if (pick) {
+      return setMode(pick.mode);
+    }
+
     if (code === "Escape") {
       if (!$("help").hidden) {
         $("help").hidden = true;
+
         return;
       }
+
       if (screen === "game") {
-        if (director.paused) director.setPaused(false);
+        if (director.paused) {
+          director.setPaused(false);
+        }
+
         show("map");
-      } else if (screen === "map") show("title");
+      } else if (screen === "map") {
+        show("title");
+      }
+
       return;
     }
+
     if (screen === "title") {
       if (["Enter", "Space", "ArrowRight"].includes(code)) {
         show("map");
         audio.play("uiSelect");
       }
+
       return;
     }
+
     if (screen === "map") {
       if (code === "ArrowRight" || code === "ArrowLeft") {
         selected =
@@ -314,36 +401,59 @@ async function boot() {
         renderMap();
         audio.play("uiMove");
       }
-      if (code === "Enter" || code === "Space") start(selected);
+
+      if (code === "Enter" || code === "Space") {
+        start(selected);
+      }
+
       return;
     }
+
     // In the game.
-    if (code === "KeyP") return togglePause();
+    if (code === "KeyP") {
+      return togglePause();
+    }
+
     if (code === "KeyN") {
       director.toggleNotes();
+
       return;
     }
+
     if (code === "KeyA") {
       director.toggleAutoplay();
       audio.play("uiMove");
+
       return;
     }
+
     if (director.paused) {
-      if (code === "Space" || code === "ArrowRight") togglePause();
+      if (code === "Space" || code === "ArrowRight") {
+        togglePause();
+      }
+
       return;
     }
+
     if (
       code === "ArrowRight" ||
       code === "Space" ||
       code === "PageDown" ||
       code === "Enter"
-    )
+    ) {
       director.next();
-    if (code === "ArrowLeft" || code === "PageUp") director.back();
+    }
+
+    if (code === "ArrowLeft" || code === "PageUp") {
+      director.back();
+    }
   }
 
   addEventListener("keydown", (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) {
+      return;
+    }
+
     if (
       [
         "Space",
@@ -354,16 +464,28 @@ async function boot() {
         "PageDown",
         "PageUp",
       ].includes(e.code)
-    )
+    ) {
       e.preventDefault();
-    if (e.repeat && !["ArrowRight", "ArrowLeft"].includes(e.code)) return;
+    }
+
+    if (e.repeat && !["ArrowRight", "ArrowLeft"].includes(e.code)) {
+      return;
+    }
+
     key(e.code, e.shiftKey, e.key);
   });
   // The presenter window can drive the show too.
   addEventListener("rig-command", (e) => {
-    if (!(e instanceof CustomEvent)) return;
+    if (!(e instanceof CustomEvent)) {
+      return;
+    }
+
     const k: unknown = e.detail;
-    if (typeof k !== "string") return;
+
+    if (typeof k !== "string") {
+      return;
+    }
+
     const map = new Map<string, [string, boolean]>([
       ["next", ["ArrowRight", false]],
       ["back", ["ArrowLeft", false]],
@@ -375,18 +497,24 @@ async function boot() {
       ["auto", ["KeyA", false]],
     ]);
     const m = map.get(k);
-    if (m) key(m[0], m[1], "");
+
+    if (m) {
+      key(m[0], m[1], "");
+    }
   });
 
   // Frame loop.
   let last = performance.now();
+
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000);
+
     last = now;
     director.update(dt);
     stage.render(director.paused && screen === "game" ? 0 : dt);
     requestAnimationFrame(frame);
   }
+
   requestAnimationFrame(frame);
   stage.canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
@@ -411,6 +539,7 @@ async function boot() {
       },
     });
   }
+
   show("prelude");
   $("enter").focus();
 }
@@ -418,17 +547,26 @@ async function boot() {
 /** ?presenter: a second window that follows the game and shows the notes for the current card. */
 function presenter() {
   document.body.classList.add("presenter-mode");
+
   const root = $("presenter");
+
   root.hidden = false;
   root.innerHTML =
     '<p class="status">Waiting for the game window… open the game in another window or tab.</p>';
+
   const ch = new BroadcastChannel("spaghetti-rig");
   const send = (key: string) => ch.postMessage({ type: "cmd", key });
+
   ch.postMessage({ type: "hello" });
   ch.addEventListener("message", (e) => {
     const s = parsePresenterState(e.data);
-    if (!s) return;
+
+    if (!s) {
+      return;
+    }
+
     const n = s.notes;
+
     root.innerHTML = `
       <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? " · PAUSED" : ""}</span><br><b>${esc(n.heading)}</b></div>
         <div class="ctl"><button data-k="back">← Back</button><button data-k="next">Next →</button><button data-k="pause">Pause</button></div></div>
@@ -440,7 +578,10 @@ function presenter() {
   });
   root.addEventListener("click", (e) => {
     const k = e.target instanceof HTMLElement ? e.target.dataset.k : undefined;
-    if (k) send(k);
+
+    if (k) {
+      send(k);
+    }
   });
   addEventListener("keydown", (e) => {
     const k = new Map([
@@ -456,6 +597,7 @@ function presenter() {
       ["KeyS", "spec"],
       ["KeyA", "auto"],
     ]).get(e.code);
+
     if (k) {
       e.preventDefault();
       send(k);

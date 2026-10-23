@@ -13,11 +13,14 @@ class FakeElement extends EventTarget {
   constructor(private readonly match: FakeElement | null = null) {
     super();
   }
+
   closest() {
     return this.match;
   }
 }
+
 class FakeHTMLElement extends FakeElement {}
+
 class FakeCanvas extends FakeHTMLElement {}
 
 function stubPage(found: FakeElement | null) {
@@ -32,6 +35,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe("byId", () => {
   it("returns the element when it has the asked-for type", () => {
     const canvas = new FakeCanvas();
+
     stubPage(canvas);
     expect(byId("stage", HTMLCanvasElement)).toBe(canvas);
   });
@@ -54,7 +58,9 @@ describe("byId", () => {
 describe("closestEl", () => {
   it("returns the matching ancestor", () => {
     stubPage(null);
+
     const hit = new FakeHTMLElement();
+
     expect(closestEl(new FakeElement(hit), ".x")).toBe(hit);
   });
 
@@ -81,6 +87,7 @@ describe("queryEl, queryElOrNull and queryAllEl", () => {
 
   it("queryEl returns the element the page is built to contain", () => {
     const hp = new FakeHTMLElement();
+
     stubQueries(hp);
     expect(queryEl(document, ".hp")).toBe(hp);
   });
@@ -99,6 +106,7 @@ describe("queryEl, queryElOrNull and queryAllEl", () => {
 
   it("queryAllEl keeps only HTML elements", () => {
     const a = new FakeHTMLElement();
+
     stubQueries(null, [a, new FakeElement()]);
     expect(queryAllEl(document, "[data-mode]")).toEqual([a]);
   });
@@ -107,6 +115,7 @@ describe("queryEl, queryElOrNull and queryAllEl", () => {
 describe("context2d", () => {
   it("returns the 2D context the canvas gives", () => {
     const ctx = Object.create(null);
+
     expect(context2d({ getContext: () => ctx })).toBe(ctx);
   });
 

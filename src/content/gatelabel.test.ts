@@ -42,11 +42,16 @@ describe("gate labels", () => {
         "utf8",
       ),
     );
+
     for (const s of raw.stops) {
       const g = gateLabel(s.gate);
+
       expect(g.num).not.toBe("");
       expect(`${g.num} ${g.title} ${gateText(s.gate)}`).not.toMatch(/G\d/);
     }
-    for (const t of raw.tiers) expect(gatesText(t.gates)).not.toMatch(/G\d/);
+
+    for (const t of raw.tiers) {
+      expect(gatesText(t.gates)).not.toMatch(/G\d/);
+    }
   });
 });

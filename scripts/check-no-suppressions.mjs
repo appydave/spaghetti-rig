@@ -24,16 +24,24 @@ if (files.length === 0) {
   console.error("check-no-suppressions: scanned 0 files");
   process.exit(1);
 }
+
 const hits = [];
+
 for (const file of files) {
   const lines = readFileSync(file, "utf8").split("\n");
+
   for (const [i, line] of lines.entries()) {
     const form = FORMS.find((f) => line.includes(f));
-    if (form) hits.push(`${file}:${i + 1}: ${form}`);
+
+    if (form) {
+      hits.push(`${file}:${i + 1}: ${form}`);
+    }
   }
 }
+
 if (hits.length > 0) {
   console.error(`Suppression comments are not allowed:\n${hits.join("\n")}`);
   process.exit(1);
 }
+
 console.log(`check-no-suppressions: ${files.length} files, none suppressed`);

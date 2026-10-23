@@ -25,22 +25,33 @@ export class Gate {
 
   constructor(label: string, z: number) {
     const a = kit(0.025);
+
     this.group.position.z = z;
+
     const x = ROAD_HALF + 0.5;
+
     this.group.add(this.near);
     for (const s of [-1, 1]) {
       const g = s > 0 ? this.near : this.group;
+
       a.soft(g, "#f4f4e8", s * x, 2.4, 0, 0.6, 4.8, 0.6);
-      for (const y of [0.8, 1.8, 2.8, 3.8])
+      for (const y of [0.8, 1.8, 2.8, 3.8]) {
         a.box(g, INK, s * x, y, 0, 0.64, 0.18, 0.64, false);
+      }
+
       a.soft(g, "#7fae8f", s * x, 0.2, 0, 0.9, 0.4, 0.9);
     }
+
     a.soft(this.near, "#f9db48", 0, 5.0, 0, x * 2 + 1.0, 0.7, 0.7);
+
     // The sign, readable from both directions.
     const cv = document.createElement("canvas");
+
     cv.width = 1024;
     cv.height = 200;
+
     const g = context2d(cv);
+
     g.fillStyle = "#173e35";
     g.beginPath();
     g.roundRect(0, 0, 1024, 200, 26);
@@ -50,9 +61,11 @@ export class Gate {
     g.beginPath();
     g.roundRect(8, 8, 1008, 184, 20);
     g.stroke();
+
     // A number badge, then the title.
     const { num, title } = gateLabel(label);
     let left = 40;
+
     if (num) {
       g.fillStyle = "#f9db48";
       g.beginPath();
@@ -67,19 +80,26 @@ export class Gate {
       g.fillText(num, 123, 118);
       left = 240;
     }
+
     g.fillStyle = "#f9db48";
     g.textAlign = "center";
     g.textBaseline = "middle";
+
     const room = 1024 - left - 36;
     let size = 112;
+
     do {
       g.font = `italic 800 ${size}px Barlow, Impact, sans-serif`;
       size -= 4;
     } while (g.measureText(title).width > room && size > 40);
+
     g.fillText(title, left + room / 2, 106);
+
     const tex = new THREE.CanvasTexture(cv);
+
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 8;
+
     const sign = new THREE.Mesh(
       new THREE.PlaneGeometry(5.6, 1.1),
       new THREE.MeshBasicMaterial({
@@ -88,6 +108,7 @@ export class Gate {
         side: THREE.DoubleSide,
       }),
     );
+
     sign.position.set(0, 6.0, 0.05);
     this.near.add(sign);
     a.box(this.near, INK, -2, 5.45, 0, 0.08, 0.5, 0.08, false);
@@ -109,7 +130,7 @@ export class Gate {
     // Boom barrier hinged at the left pillar.
     this.boom.position.set(-x + 0.3, 1.25, 0);
     this.group.add(this.boom);
-    for (let i = 0; i < 7; i++)
+    for (let i = 0; i < 7; i++) {
       a.box(
         this.boom,
         i % 2 ? "#de6a47" : "#f4f4e8",
@@ -121,20 +142,25 @@ export class Gate {
         0.18,
         i === 0,
       );
+    }
   }
 
   update(dt: number) {
     this.t += dt;
+
     const target =
       this.state === "open"
         ? Math.PI / 2 - 0.05
         : this.state === "broken"
           ? -0.5
           : 0;
+
     this.boomAngle += (target - this.boomAngle) * (1 - Math.exp(-dt * 6));
     this.boom.rotation.z = this.boomAngle;
     this.boom.rotation.x = this.state === "broken" ? 0.35 : 0;
+
     const on = this.state === "alarm" ? Math.sin(this.t * 10) > 0 : true;
+
     this.lightMat.color.set(
       this.state === "open"
         ? "#8ef08a"
@@ -150,9 +176,16 @@ export class Gate {
 
   dispose() {
     this.group.traverse((o) => {
-      if (!isDrawable(o)) return;
-      if (!o.geometry.userData.shared) o.geometry.dispose();
+      if (!isDrawable(o)) {
+        return;
+      }
+
+      if (!o.geometry.userData.shared) {
+        o.geometry.dispose();
+      }
+
       const mat = o.material;
+
       if (!Array.isArray(mat) && !mat.userData.shared) {
         mapOf(mat)?.dispose();
         mat.dispose();

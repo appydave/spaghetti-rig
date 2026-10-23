@@ -4,9 +4,11 @@ export function byId<T extends HTMLElement>(
   type: new (...args: never[]) => T,
 ): T {
   const el = document.getElementById(id);
+
   if (!(el instanceof type)) {
     throw new Error(`#${id} is not ${el ? `a ${type.name}` : "in the page"}`);
   }
+
   return el;
 }
 
@@ -16,6 +18,7 @@ export function closestEl(
   selector: string,
 ): HTMLElement | null {
   const el = target instanceof Element ? target.closest(selector) : null;
+
   return el instanceof HTMLElement ? el : null;
 }
 
@@ -25,13 +28,18 @@ export function queryElOrNull(
   selector: string,
 ): HTMLElement | null {
   const el = root.querySelector(selector);
+
   return el instanceof HTMLElement ? el : null;
 }
 
 /** An element below a root that the page is built to contain; throws naming the selector if it is not there. */
 export function queryEl(root: ParentNode, selector: string): HTMLElement {
   const el = queryElOrNull(root, selector);
-  if (!el) throw new Error(`"${selector}" is not in the page here`);
+
+  if (!el) {
+    throw new Error(`"${selector}" is not in the page here`);
+  }
+
   return el;
 }
 
@@ -47,6 +55,10 @@ export function context2d(
   canvas: Pick<HTMLCanvasElement, "getContext">,
 ): CanvasRenderingContext2D {
   const g = canvas.getContext("2d");
-  if (!g) throw new Error("This browser cannot draw to a 2D canvas");
+
+  if (!g) {
+    throw new Error("This browser cannot draw to a 2D canvas");
+  }
+
   return g;
 }

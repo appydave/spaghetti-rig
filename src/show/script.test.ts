@@ -27,24 +27,31 @@ describe("content", () => {
 
   it("locks a tier with no stops and keeps its boss name", () => {
     const bare = structuredClone(raw);
+
     bare.stops = bare.stops.filter(
       (s: { tier: string }) => s.tier !== "architecture",
     );
+
     const locked = parseContent(bare).tiers.filter((t) => !t.playable);
+
     expect(locked.map((t) => t.key)).toEqual(["architecture"]);
-    for (const t of locked) expect(t.boss.name).toBeTruthy();
+    for (const t of locked) {
+      expect(t.boss.name).toBeTruthy();
+    }
   });
 
   it("every stop has a problem card and a tool card with code", () => {
-    for (const t of game.tiers)
+    for (const t of game.tiers) {
       for (const s of t.stops) {
         expect(s.p1.blocks.length).toBeGreaterThan(0);
         expect(s.p2.blocks.length).toBeGreaterThan(0);
       }
+    }
   });
 
   it("a new stop or tier in the file shows up with no code change", () => {
     const extra = structuredClone(raw);
+
     extra.stops = extra.stops.filter(
       (s: { tier: string }) => s.tier !== "architecture",
     );
@@ -53,8 +60,10 @@ describe("content", () => {
       tier: "architecture",
       gate: "G13 · New gate",
     });
+
     const g = parseContent(extra);
     const arch = g.tiers.find((t) => t.key === "architecture")!;
+
     expect(arch.playable).toBe(true);
     expect(
       buildScript(g).some(
@@ -73,7 +82,9 @@ describe("content", () => {
       tier: "seventh",
       gate: "G99 · Later",
     });
+
     const g2 = parseContent(extra);
+
     expect(g2.tiers.at(-1)!.playable).toBe(true);
     expect(
       buildScript(g2).filter((s) => s.tier === 6 && s.phase === "walk"),
@@ -93,6 +104,7 @@ describe("content", () => {
         },
       ],
     });
+
     expect(g.tiers[0]!.playable).toBe(true);
     expect(g.tiers[0]!.stops[0]!.p1.annotations).toHaveLength(0);
     expect(buildScript(g).length).toBeGreaterThan(3);
@@ -107,13 +119,15 @@ describe("script", () => {
   });
 
   it("every playable tier has a VS screen to jump to", () => {
-    for (const t of game.tiers.filter((x) => x.playable))
+    for (const t of game.tiers.filter((x) => x.playable)) {
       expect(tierStart(script, t.index)).toBeGreaterThanOrEqual(0);
+    }
   });
 
   it("player 1 mode skips the tool card steps", () => {
     const at = script.findIndex((s) => s.phase === "problem");
     const next = script[nextIndex(script, at, 1, "p1")]!;
+
     expect(next.phase).toBe("walk");
     expect(script[nextIndex(script, at, 1, "both")]!.phase).toBe("tool");
   });
@@ -150,6 +164,7 @@ describe("health", () => {
       expect(healthAt(game, at("problem", k), "p2")).toBe(77.5);
       expect(healthAt(game, at("fixed", k), "p2")).toBe(100);
     }
+
     expect(healthAt(game, at("bossDown"), "p2")).toBe(100);
   });
 
@@ -158,6 +173,7 @@ describe("health", () => {
     const p = script
       .filter((s) => s.tier === three.index && s.phase === "problem")
       .map((s) => healthAt(game, s, "p1"));
+
     expect(p).toEqual([70, 40, 10]);
   });
 
@@ -172,9 +188,11 @@ describe("notes", () => {
   it("every step has notes, and card steps carry the line to say", () => {
     for (const s of script) {
       const n = notesFor(game, s, "both");
+
       expect(n.heading).toBeTruthy();
-      if (s.phase === "problem" || s.phase === "tool")
+      if (s.phase === "problem" || s.phase === "tool") {
         expect(n.say).toBeTruthy();
+      }
     }
   });
 });
@@ -188,16 +206,20 @@ describe("missed enemies are debt, not damage", () => {
   it("health at every step is unchanged", () => {
     // The baseline is tiers 1–5 and then the ending. Tier 6 came later, between them, and follows the same rule.
     const tiers1to5 = baseline.slice(0, -1);
+
     expect(
       script
         .slice(0, tiers1to5.length)
         .map((s) => [healthAt(game, s, "p1"), healthAt(game, s, "p2")]),
     ).toEqual(tiers1to5);
+
     const end = script.at(-1)!;
+
     expect(end.phase).toBe("ending");
     expect([healthAt(game, end, "p1"), healthAt(game, end, "p2")]).toEqual(
       baseline.at(-1),
     );
+
     const t6 = game.tiers.find((t) => t.key === "architecture")!;
     const seen = script
       .filter(
@@ -205,6 +227,7 @@ describe("missed enemies are debt, not damage", () => {
           s.tier === t6.index && (s.phase === "vs" || s.phase === "problem"),
       )
       .map((s) => Math.round(healthAt(game, s, "p1")));
+
     expect(seen).toEqual([100, 70, 40, 10]);
   });
 
@@ -216,6 +239,7 @@ describe("missed enemies are debt, not damage", () => {
           s.tier === t.index && (s.phase === "vs" || s.phase === "problem"),
       )
       .map((s) => Math.round(healthAt(game, s, "p1")));
+
     expect(seen).toEqual([100, 78, 55, 33, 10]);
   });
 

@@ -70,9 +70,14 @@ export const MODES: {
 /** The label set for a mode; throws on a mode the list does not know. */
 export function modeInfo(mode: Mode) {
   const info = MODES.find((m) => m.mode === mode);
-  if (!info) throw new Error(`Unknown mode "${mode}"`);
+
+  if (!info) {
+    throw new Error(`Unknown mode "${mode}"`);
+  }
+
   return info;
 }
+
 export type Player = "p1" | "p2";
 
 export function buildScript(game: Game): Step[] {
@@ -80,6 +85,7 @@ export function buildScript(game: Game): Step[] {
   const s = (phase: Phase, tier: number, stop = -1, part = -1) =>
     steps.push({ phase, tier, stop, part });
   const playable = game.tiers.filter((t) => t.playable);
+
   for (const t of playable) {
     s("vs", t.index);
     for (const k of t.stops.keys()) {
@@ -88,18 +94,26 @@ export function buildScript(game: Game): Step[] {
       s("tool", t.index, k);
       s("fixed", t.index, k);
     }
+
     if (t.hasBoss) {
       s("walk", t.index, t.stops.length); // walk to the boss arena
       s("boss", t.index);
       for (const i of t.boss.parts.keys()) {
         s("bossPart", t.index, -1, i);
       }
+
       s("bossDown", t.index);
     }
+
     s("result", t.index);
   }
+
   const lastPlayable = playable.at(-1);
-  if (lastPlayable) s("ending", lastPlayable.index);
+
+  if (lastPlayable) {
+    s("ending", lastPlayable.index);
+  }
+
   return steps;
 }
 
@@ -114,8 +128,11 @@ export function nextIndex(
   mode: Mode,
 ): number {
   let i = at + dir;
-  for (let step = script[i]; step && hiddenIn(step, mode); step = script[i])
+
+  for (let step = script[i]; step && hiddenIn(step, mode); step = script[i]) {
     i += dir;
+  }
+
   return i < 0 || i >= script.length ? at : i;
 }
 
@@ -124,12 +141,20 @@ export const tierStart = (script: Step[], tierIndex: number) =>
 
 /** Health in percent for a player at a step (the settled value once the step's action has happened). */
 export function healthAt(game: Game, step: Step, player: Player): number {
-  if (step.phase === "ending") return player === "p1" ? 0 : 100;
+  if (step.phase === "ending") {
+    return player === "p1" ? 0 : 100;
+  }
+
   const tier = game.tiers[step.tier];
-  if (!tier) return 100;
-  const hit = hitFor(tier),
-    n = tier.stops.length;
+
+  if (!tier) {
+    return 100;
+  }
+
+  const hit = hitFor(tier);
+  const n = tier.stops.length;
   const round = (v: number) => Math.max(0, Math.round(v * 10) / 10);
+
   if (player === "p1") {
     switch (step.phase) {
       case "vs":
@@ -146,6 +171,7 @@ export function healthAt(game: Game, step: Step, player: Player): number {
         return 0; // the boss finishes player 1 with its first blow
     }
   }
+
   switch (step.phase) {
     case "problem":
     case "tool":
@@ -154,8 +180,10 @@ export function healthAt(game: Game, step: Step, player: Player): number {
       return round(100 - hit);
     case "bossPart": {
       const parts = Math.max(1, tier.boss.parts.length);
+
       return round(100 - hit * (1 - (step.part + 1) / parts));
     }
+
     default:
       return 100;
   }
@@ -164,7 +192,11 @@ export function healthAt(game: Game, step: Step, player: Player): number {
 /** Tool keys player 2 holds at this step, in the order they were earned (for the card tray and boss weapons). */
 export function toolsEarned(game: Game, step: Step): string[] {
   const tier = game.tiers[step.tier];
-  if (!tier || step.phase === "vs") return [];
+
+  if (!tier || step.phase === "vs") {
+    return [];
+  }
+
   const done =
     step.phase === "walk"
       ? step.stop
@@ -173,6 +205,7 @@ export function toolsEarned(game: Game, step: Step): string[] {
         : step.phase === "fixed"
           ? step.stop + 1
           : tier.stops.length;
+
   return tier.stops
     .slice(0, done)
     .map((s) => s.p2.tool ?? "")
@@ -181,13 +214,18 @@ export function toolsEarned(game: Game, step: Step): string[] {
 
 /** Which boss parts are already knocked off (player 2's side). */
 export function partsBroken(step: Step, tier: PlayTier): number {
-  if (step.phase === "bossPart") return step.part + 1;
+  if (step.phase === "bossPart") {
+    return step.part + 1;
+  }
+
   if (
     step.phase === "bossDown" ||
     step.phase === "result" ||
     step.phase === "ending"
-  )
+  ) {
     return tier.boss.parts.length;
+  }
+
   return 0;
 }
 
@@ -195,6 +233,7 @@ export function stepLabel(game: Game, step: Step): string {
   const tier = game.tiers[step.tier];
   const t = tier ? `Tier ${tier.n} · ${tier.name}` : "";
   const stop = tier?.stops[step.stop];
+
   switch (step.phase) {
     case "vs":
       return `${t} · VS`;
@@ -234,14 +273,18 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
   const stop = tier?.stops[step.stop];
   const fromCard = (c: Card): Notes => {
     const extra: Notes["extra"] = [];
-    if (c.failureModes?.length)
+
+    if (c.failureModes?.length) {
       extra.push({
         label: "Ways it can run",
         rows: c.failureModes.map((f) => [f.input, f.where, f.result]),
       });
+    }
+
     if (c.tool) {
       const tool = toolFor(game, c.tool);
-      if (tool.what || tool.why)
+
+      if (tool.what || tool.why) {
         extra.push({
           label: `The tool · ${tool.name}`,
           rows: [
@@ -250,17 +293,23 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
             ["How", tool.how ?? ""],
           ].filter((r) => r[1]),
         });
-      if (tool.config?.lines.length)
+      }
+
+      if (tool.config?.lines.length) {
         extra.push({
           label: `Config · ${tool.config.file}`,
           rows: tool.config.lines.map(([a, b]) => [a, b]),
         });
+      }
     }
-    if (c.evidence)
+
+    if (c.evidence) {
       extra.push({
         label: "Evidence",
         rows: [[c.evidence.status, c.evidence.source ?? "placeholder code"]],
       });
+    }
+
     return {
       heading: `${c.id} · ${c.title}`,
       say: c.say ?? "",
@@ -268,12 +317,16 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
       extra,
     };
   };
+
   switch (step.phase) {
     case "problem":
       return stop ? fromCard(stop.p1) : blank(step);
     case "tool":
     case "fixed":
-      if (stop && mode !== "p1") return fromCard(stop.p2);
+      if (stop && mode !== "p1") {
+        return fromCard(stop.p2);
+      }
+
       return stop ? fromCard(stop.p1) : blank(step);
     case "walk":
       return stop
@@ -293,6 +346,7 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
     case "bossPart":
     case "bossDown": {
       const b = nth(game.tiers, step.tier, "tiers").boss;
+
       return {
         heading: `${b.id ?? ""} · Boss · ${b.name}`,
         say: b.say ?? "",
@@ -314,6 +368,7 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
         ],
       };
     }
+
     case "vs":
       return {
         heading: `Tier ${tier?.n} · ${tier?.name}`,
