@@ -1,6 +1,7 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import { disposeTree } from "./toon";
+import { nth, present } from "../nth";
 
 let ready: Promise<void> | undefined;
 export const initPhysics = () => (ready ??= RAPIER.init());
@@ -112,7 +113,8 @@ export class Debris {
       lastVy: velocity.y,
       base: scale.clone(),
     });
-    while (this.pieces.length > this.max) this.remove(this.pieces[0]!);
+    while (this.pieces.length > this.max)
+      this.remove(nth(this.pieces, 0, "pieces"));
   }
 
   /** Break a model into its parts: every mesh flies off as its own body with a box collider. */
@@ -128,7 +130,7 @@ export class Debris {
     const from = opts.from ?? centre.clone().add(new THREE.Vector3(0, -0.5, 1));
     for (const m of meshes) {
       if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
-      const bb = m.geometry.boundingBox!;
+      const bb = present(m.geometry.boundingBox, "the mesh bounding box");
       const half = bb.getSize(new THREE.Vector3()).multiplyScalar(0.5);
       const at = m.getWorldPosition(new THREE.Vector3());
       const dir = at.clone().sub(from).normalize();
@@ -198,11 +200,6 @@ export class Debris {
 }
 
 function scaleHull(h: Float32Array, s: THREE.Vector3) {
-  const out = new Float32Array(h.length);
-  for (let i = 0; i < h.length; i += 3) {
-    out[i] = h[i]! * s.x;
-    out[i + 1] = h[i + 1]! * s.y;
-    out[i + 2] = h[i + 2]! * s.z;
-  }
-  return out;
+  const axes = [s.x, s.y, s.z];
+  return Float32Array.from(h, (v, i) => v * nth(axes, i % 3, "hull axes"));
 }

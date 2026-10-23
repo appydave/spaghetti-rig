@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { INK, kit, toon } from "./toon";
+import { context2d } from "../dom";
+import { nth, present } from "../nth";
 
 export type EnemyKind = "spaghetti" | "bug" | "robot";
 export const SCORE: Record<EnemyKind, number> = {
@@ -229,16 +231,20 @@ export class Enemy {
     this.label = {
       canvas,
       tex,
-      name: ROBOT_NAMES[this.seed % ROBOT_NAMES.length]!,
+      name: nth(ROBOT_NAMES, this.seed % ROBOT_NAMES.length, "robot names"),
       state: "",
     };
   }
 
+  private part(name: string): THREE.Object3D {
+    return present(this.parts[name], `the robot part "${name}"`);
+  }
+
   private drawLabel(state: string) {
-    const l = this.label!;
+    const l = present(this.label, "the robot label");
     if (l.state === state) return;
     l.state = state;
-    const g = l.canvas.getContext("2d")!;
+    const g = context2d(l.canvas);
     g.clearRect(0, 0, 512, 128);
     g.fillStyle = "#173849";
     g.beginPath();
@@ -276,12 +282,12 @@ export class Enemy {
     if (this.kind === "spaghetti") {
       const hop = Math.abs(Math.sin(t * 5));
       this.group.position.y = hop * 0.6;
-      this.parts.body!.scale.set(
+      this.part("body").scale.set(
         1 + (1 - hop) * 0.15,
         1 - (1 - hop) * 0.15,
         1 + (1 - hop) * 0.15,
       );
-      this.parts.body!.rotation.y = Math.sin(t * 2) * 0.4;
+      this.part("body").rotation.y = Math.sin(t * 2) * 0.4;
     } else if (this.kind === "bug") {
       for (const [k, leg] of Object.entries(this.parts))
         if (k.startsWith("leg"))
@@ -290,16 +296,22 @@ export class Enemy {
     } else {
       const walking = !pause && travelled < total;
       for (const side of [-1, 1]) {
-        this.parts[`leg${side}`]!.rotation.x = walking
+        this.part(`leg${side}`).rotation.x = walking
           ? Math.sin(t * 9 + side * 1.6) * 0.6
           : 0;
-        this.parts[`arm${side}`]!.rotation.x = walking
+        this.part(`arm${side}`).rotation.x = walking
           ? -Math.sin(t * 9 + side * 1.6) * 0.6
           : -0.9 + Math.sin(t * 12) * 0.3;
       }
-      this.parts.head!.rotation.z = pause ? Math.sin(t * 5) * 0.15 : 0;
+      this.part("head").rotation.z = pause ? Math.sin(t * 5) * 0.15 : 0;
       this.drawLabel(
-        pause ? ROBOT_STATES[Math.floor(t) % ROBOT_STATES.length]! : "ARMORED",
+        pause
+          ? nth(
+              ROBOT_STATES,
+              Math.floor(t) % ROBOT_STATES.length,
+              "robot states",
+            )
+          : "ARMORED",
       );
     }
     // Face the player.
