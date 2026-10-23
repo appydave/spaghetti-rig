@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+test-results
+playwright-report
+package-lock.json
+# Verbatim record of the prompts the game was built from: not code, never reworded.
+docs/origin
+# Binary and vector art, fonts and music ship as authored.
+public/assets
