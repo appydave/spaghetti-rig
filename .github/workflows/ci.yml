@@ -93,7 +93,7 @@ jobs:
       - run: npm install --global pnpm@10.33.0
       - run: npm ci
       - run: npx playwright install chromium
-      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --repeat-each=20 -g "autoplay in B|mode S: player 1 plays itself" --reporter=list,json
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2 --repeat-each=20 -g "autoplay in B|player 1 plays itself" --reporter=list,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report.json
       - run: node scripts/assert-no-skips.mjs playwright playwright-report.json
