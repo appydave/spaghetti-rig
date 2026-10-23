@@ -1,53 +1,99 @@
 # Spaghetti Rig
 
-**Walk the gates. Shoot to learn.** A 3D rail shooter for the stage: two developers walk the same road through six tiers. At every gate a piece of real bad code slams into both of them. Player 1, a vibe coder with no tools, keeps every hit and is finished off by the boss. Player 2, a code quality specialist, plays a tool card that fixes the code and heals to 100%, then breaks the boss with the tools earned on the way.
+**Walk the gates. Shoot to learn.** A 3D rail shooter for the stage that shows, in one sitting, why code quality gates matter.
 
-A companion to Omer Gilad's [Spaghetti Busters](https://spaghetti-busters.vercel.app), made to look like it came from the same studio.
+![The Friday PR, tier 1's boss, in side-by-side mode: the vibe coder on the left, the quality specialist on the right](docs/images/boss-fight.jpg)
+
+Two developers walk the same road through six tiers. At every gate a piece of real bad code slams into both of them. Player 1, a vibe coder with no tools, keeps every hit and is finished off by the boss. Player 2, a code quality specialist, plays a tool card that fixes the code and heals to 100%, then breaks the boss with the tools earned on the way.
+
+Every card is real: the bad code, the fix and the tool config come from Omer Gilad's quality-gate ladder (gates G00a to G15) as it was run on a real app, AppyRig. The game is a companion to Omer's [Spaghetti Busters](https://spaghetti-busters.vercel.app), made to look like it came from the same studio. It runs on one laptop, offline: fonts, art, music and physics all ship in the repo.
+
+**Status:** finished and frozen for the Spaghetti rig run · all six tiers playable · True at `860ff4d` (2026-10-23)
+
+## The story in three releases
+
+The game was built by AI from one prompt, played by a human, then refactored from David's notes. Each step is a release:
+
+| Release | What it is |
+|---|---|
+| [v1 – The build](https://github.com/appydave/spaghetti-rig/releases/tag/v1-build) | One prompt, one build: the whole game, made playable over the network and fixed after a first Chrome play-through |
+| [v2 – The refactor](https://github.com/appydave/spaghetti-rig/releases/tag/v2-refactor) | Eight fixes from a human play-through: real clicks fire, a boss you can read, gate badges, human-like autoplay, a "you vs autopilot" mode, missed enemies become bugs shipped |
+| [v2.1 – Architecture](https://github.com/appydave/spaghetti-rig/releases/tag/v2.1-architecture) | Tier 6 unlocked with cards from the last three gates; the frozen version the Spaghetti rig runs against |
+
+Next, the game's own code goes up the same ladder. The **Spaghetti** rig, built on AppyRig, will run the gates against this repo, one pull request per gate. That's why the game has no CI or linter yet: adding them is the first gates' job.
 
 ## Run it
+
+Needs Node 20.19 or later (Vite 7).
 
 ```sh
 npm install
 npm run dev        # http://localhost:5173
 ```
 
-Everything is local (fonts, art, music, physics). No network needed after `npm install`.
+Click to play, pick a mode with `1`, `2`, `B` or `S`, and press `Enter` on the tier map. The dev server listens on the network, so another machine can open it by its Bonjour (`.local`) or Tailscale (`.ts.net`) name or by IP.
 
-## Keys (the whole show runs from the keyboard)
+## Play it
+
+![The walk: both players shooting spaghetti, bugs and AI robots on the road to a gate](docs/images/the-walk.jpg)
+
+| Mode | Key | Who plays |
+|---|---|---|
+| Player 1 | `1` | The vibe coder alone, full screen |
+| Player 2 | `2` | The specialist alone, full screen |
+| Both | `B` | Side by side |
+| You vs autopilot | `S` | Side by side: you play the specialist with the mouse, the vibe coder plays itself |
+
+The whole show runs from the keyboard, so a presentation clicker works:
 
 | Key | Does |
 |---|---|
-| `→` / `Space` / `Page Down` | Next: walk on, play the card, skip a pause. Keys never shoot, so a presentation clicker is safe. |
+| `→` / `Space` / `Page Down` | Next: walk on, play the card, skip a pause. Keys never shoot. |
 | `←` / `Page Up` | Back one step |
-| `1` / `2` / `B` | Player 1 / Player 2 / both side by side (keeps your place) |
-| `S` | Side by side: you play the specialist (player 2), the vibe coder plays itself (keeps your place) |
 | `Shift+1` … `Shift+6` | Jump to a tier |
-| `A` | Autoplay on / off (or click its button in the top bar). It aims, misses and fires in bursts like a person; each player has their own hand. |
+| `A` | Autoplay on / off (or click its button in the top bar). It aims, misses and fires in bursts like a person. |
 | `M` / `P` | Mute / pause |
 | `N` | Speaker notes strip |
 | `H` | How to play |
 | `Esc` | Close / back to the map |
-| Mouse / trackpad | Aim, then click, press or tap to shoot spaghetti, bugs and AI robots |
+| Mouse / trackpad | Aim, then click or tap to shoot |
 
-**Presenter view:** open `http://localhost:5173/?presenter` in a second window. It follows the game, shows the card's `say` line, presenter notes, the tool's config and evidence, and its arrow keys and buttons drive the game too.
+Switching mode keeps your place. An enemy that gets past player 1 adds to **bugs shipped**; one that gets past player 2 is **caught by CI**. Missing never costs health.
+
+**Presenter view:** open `http://localhost:5173/?presenter` in a second window. It follows the game, shows the card's `say` line, presenter notes and the tool's config, and its keys and buttons drive the game too.
 
 ## Content
 
-All words and code come from `public/content/cards.json` (copied once from `spaghetti-rig-inputs`). Add a stop or a tier and reload: it appears with no code change. Tiers with no stops are locked on the map and show their boss. Tool card pictures are `public/assets/tools/<tool key>.svg`; a tool without one uses `generic.svg`.
+All words and code come from [`public/content/cards.json`](public/content/cards.json). It's version 13 of the cards written during the AppyRig run, each one drawn from a real pull request (the run's own repo is private). Add a stop or a tier and reload: it appears with no code change. A tier with no stops is locked on the map and shows its boss. Tool card pictures are `public/assets/tools/<tool key>.svg`; a tool without one uses `generic.svg`. Art credits are in [`public/assets/ASSETS.md`](public/assets/ASSETS.md).
 
 ## Tests
 
 ```sh
-npm test           # Vitest: content parsing, the show script, health maths (unchanged since iteration 1), gate labels, boss layout, autoplay's aim and timing
-npm run test:e2e   # Playwright: full keyboard playthrough, real mouse presses in every mode, Space/Page Down/Page Up, autoplay, mode S, bugs shipped, tier intros, gate badges
+npm test           # Vitest: content, the show script, health maths, gate labels, boss layout, autoplay
+npm run test:e2e   # Playwright: full playthrough, real mouse and keyboard input in every mode
 ```
+
+## How it was made
+
+The prompts, rulings, spec and build record are in [`docs/origin/`](docs/origin/):
+
+- [`1-human-prompts.md`](docs/origin/1-human-prompts.md): what David asked for
+- [`2-ai-spec.md`](docs/origin/2-ai-spec.md): the brief the builder ran from
+- [`3-build-record.md`](docs/origin/3-build-record.md): what each session did, with times and commits
+- [`4-refactor-prompt.md`](docs/origin/4-refactor-prompt.md): iteration 2's eight fixes
+
+Screenshots proving each iteration 2 fix with real input are in [`docs/proof/`](docs/proof/).
 
 ## Project
 
-- `src/content/`: loads and normalises `cards.json`.
-- `src/show/script.ts`: the show as a flat list of steps. Health, tools earned and notes are pure functions of the step, so back, jumps and mode switches always land in the same place.
-- `src/show/director.ts`: runs the steps, keeps both players in lockstep, HUD, cards, banners, presenter sync.
-- Missed enemies are debt, not damage: one that gets past player 1 adds to **bugs shipped**; one that gets past player 2 is **caught by CI**. Health never changes for a miss.
-- `src/world/`: three.js. `world.ts` is one player's street (two are rendered side by side with the scissor), `codewindow.ts` paints editor windows and shatters them into Rapier physics pieces, `characters.ts`, `enemies.ts`, `boss.ts`, `city.ts`, `gate.ts`, `effects.ts`, `showcase.ts` (title hero and VS).
+- `src/content/`: loads and normalises `cards.json`; gate labels.
+- `src/show/`: the show as a flat list of steps (`script.ts`) and the director that runs them, keeps both players in lockstep and drives the HUD and presenter window.
+- `src/world/`: three.js. One street per player, editor windows that shatter into Rapier physics pieces, the characters, enemies, gates, the boss and autoplay's aim.
 - `src/audio/`: Web Audio synth music (9 original tracks) and every sound effect.
-- `public/assets/`: original SVG art (see `ASSETS.md`). Fonts: Barlow Condensed and Space Grotesk under the SIL Open Font Licence (`public/fonts/`).
+- `public/`: the content file, original SVG art and the fonts (Barlow Condensed and Space Grotesk, SIL Open Font Licence).
+
+Built with Vite, TypeScript, three.js and Rapier.
+
+## Licence
+
+There is no licence file yet, so all rights are reserved by default. The two fonts in `public/fonts/` are under the SIL Open Font Licence.
