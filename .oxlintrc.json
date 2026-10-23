@@ -439,7 +439,7 @@
       }
     },
     {
-      "files": ["src/content/load.ts"],
+      "files": ["src/content/load.ts", "src/audio/load.ts"],
       "rules": {
         "anti-slop/no-unknown-parameters": "off",
         "anti-slop/no-unsafe-dictionary-type": "off"
@@ -464,7 +464,6 @@
         "src/**/*.test.ts",
         "lint/**/*.test.ts",
         "src/audio/audio.ts",
-        "src/audio/tracks.ts",
         "src/world/boss.ts",
         "src/world/characters.ts",
         "src/world/city.ts",
