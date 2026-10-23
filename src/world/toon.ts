@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { isDrawable } from "./objects";
+import { INK } from "./palette";
 
-export const INK = "#173e35";
+export { INK } from "./palette";
 
 const TONE_SHADOW = 96;
 const TONE_DIM = 150;

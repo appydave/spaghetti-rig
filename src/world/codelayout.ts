@@ -1,7 +1,9 @@
 import type { AnnotationKind, Card, RowKind, View } from "../content/types";
 import { present } from "../nth";
+import { LINE, SYNTAX } from "./palette";
 
-/** Editor colours (Spaghetti Busters palette). */
+export { SYNTAX } from "./palette";
+
 /** A break in a long line is searched for backwards only as far as this share of the wrap width. */
 const WRAP_SEARCH_SHARE = 0.5;
 /** Code is never wrapped narrower than this many columns, and a wrapped line indents at most this many. */
@@ -13,17 +15,6 @@ const CAPTION_COLUMNS_FACTOR = 1.35;
 const MAX_FILE_STEM = 28;
 /** The narrowest wrap width longestRow reports. */
 const MIN_ROW_WIDTH = 10;
-
-export const SYNTAX = {
-  text: "#d6e2f0",
-  keyword: "#bd9bff",
-  string: "#b7e994",
-  number: "#ffbc79",
-  comment: "#6889a6",
-  punct: "#7da6c6",
-  type: "#8fd3ff",
-  fn: "#ffe08a",
-};
 
 export interface Token {
   text: string;
@@ -65,7 +56,7 @@ const KEYWORDS = new Set(
 /** Tiny tokenizer: enough to colour TypeScript, JSON, YAML and shell like an editor would. */
 export function tokenize(src: string, view: View, diff: RowKind): Token[] {
   if (diff === "l") {
-    return [{ text: src, color: "#9fc3d6" }];
+    return [{ text: src, color: LINE.labelLine }];
   }
 
   if (view === "output") {
@@ -77,11 +68,11 @@ export function tokenize(src: string, view: View, diff: RowKind): Token[] {
         /^\d/.test(m)
           ? SYNTAX.number
           : m === "✓" || m === "PASS"
-            ? "#aee5a3"
+            ? LINE.outputOk
             : m === "→"
               ? SYNTAX.punct
-              : "#ff9b8a",
-      diff === "d" ? "#f3b2a4" : SYNTAX.text,
+              : LINE.outputFail,
+      diff === "d" ? LINE.outputRemoved : SYNTAX.text,
     );
   }
 
