@@ -1,7 +1,7 @@
 {
-  "version": 12,
+  "version": 13,
   "about": "Card data for the Spaghetti Rig game. IDs are global and never reused; a new card takes the next free number. 'evidence.status' is 'example' until the card is refilled from the game's own rebuild (commit, file, diff, number), then 'real'.",
-  "nextId": "#42",
+  "nextId": "#49",
   "annotationKinds": {
     "problem": "Something wrong in the code. Shown as an editor-style red squiggle in plain code, a red strike in a diff.",
     "fix": "What the gate changed. Shown as a green box in a diff.",
@@ -273,14 +273,24 @@
       "gates": "G13–G15",
       "idea": "Modules that hang together and don't lean on everything.",
       "boss": {
-        "id": null,
+        "id": "#48",
         "name": "The god module",
-        "idea": "Final boss: the module everything depends on. (idea only)",
+        "idea": "The module everything depends on, and that depends on everything.",
         "parts": [
           {
-            "part": "cables to everything",
-            "from": "coupling hubs",
+            "part": "a body of five jobs",
+            "from": "#42 the file that does five jobs",
             "beatenBy": "archlint"
+          },
+          {
+            "part": "cables to everything",
+            "from": "#44 the door everyone uses",
+            "beatenBy": "coupling"
+          },
+          {
+            "part": "a core that leans on the fast edges",
+            "from": "#46 the page registry",
+            "beatenBy": "stability"
           }
         ],
         "visual": {
@@ -293,7 +303,17 @@
             "P1 is buried"
           ],
           "status": "structure only; style waits until the game is built"
-        }
+        },
+        "attack": "One module that does five jobs, is imported by twenty files and imports twenty more, and sits at the root of the pages it loads.",
+        "p1": "Every change goes through it. Touch it and a dozen screens break, and nobody can say which.",
+        "p2": "Mixed files split, coupling capped, hubs blocked and stable code stopped from importing volatile code. All in CI.",
+        "say": "Architecture is about what leans on what. The boss is the file that everything leans on.",
+        "presenter": [
+          "The tier 6 boss recaps G13 to G15. The real AppyRig god module is the page registry (client/src/app/registry.ts): it imports 20 pages, is imported by 2, and shows up in both the coupling and the stability baselines.",
+          "It is deliberately not fixed inside any gate. It is the first target of the V1/V2 untangle.",
+          "On AppyRig: 23 → 22 mixed files, coreCall.ts 24 → 18 connections, 5 → 4 over-coupled files, and 2 stability pairs recorded, none fixed."
+        ],
+        "playable": true
       }
     }
   ],
@@ -699,6 +719,101 @@
           [
             "name: 'no-deprecated-core'",
             "no deprecated Node modules (an error, not a warning)"
+          ]
+        ]
+      }
+    },
+    "archlint": {
+      "name": "archlint (architecture linter): module cohesion",
+      "what": "A scanner that groups a file's exports by what they use. A file with five or more exports in more than two unrelated groups is a mixed file.",
+      "why": "A file that does five jobs is touched by every change to any of them. Agents add to whichever file is already big, so it only grows.",
+      "how": "lint/gates/cohesion.mjs runs archlint on the production code and ratchets a per-file baseline. A new mixed file fails; fixing one lowers the baseline. The LCOM metric is switched off everywhere. shared/ is not scanned: it is the wire contract, and every schema-and-type pair would count as two unrelated groups.",
+      "config": {
+        "file": "lint/gates/cohesion.mjs + cohesion-baseline.json",
+        "status": "real",
+        "source": "AppyRig PR #37 (G13 check), #38 (G13 fix)",
+        "lines": [
+          [
+            "module_cohesion: { min_exports: 5, max_components: 2 }",
+            "5 or more exports in more than 2 groups fails"
+          ],
+          [
+            "-d module_cohesion,lcom  (lcom off)",
+            "the lack-of-cohesion metric is excluded everywhere"
+          ],
+          [
+            "exclude: ['**/types.ts']",
+            "a file of types alone is fine"
+          ],
+          [
+            "shared/ not scanned",
+            "it is the wire contract"
+          ],
+          [
+            "cohesion-baseline.json",
+            "22 files frozen; it may shrink, never grow"
+          ]
+        ]
+      }
+    },
+    "coupling": {
+      "name": "archlint coupling + hub rules",
+      "what": "Two rules on the import graph. Coupling counts the files a file touches. A hub is a file that many files import and that imports many, with little logic of its own.",
+      "why": "A file connected to everything makes every change risky. Agents wire new code through whichever file already touches the most.",
+      "how": "lint/gates/coupling.mjs runs archlint's high_coupling and hub_module rules and ratchets a baseline. The scan works on a throwaway copy where .js is stripped from import paths, because archlint follows './x.js' to x.ts but not to x.tsx. Without that, the React files vanish from the graph.",
+      "config": {
+        "file": "lint/gates/coupling.mjs + coupling-baseline.json",
+        "status": "real",
+        "source": "AppyRig PR #39 (G14 check), #40 (G14 fix)",
+        "lines": [
+          [
+            "high_coupling: { max_cbo: 20 }",
+            "a file touching more than 20 others fails (Omer uses 30)"
+          ],
+          [
+            "hub_module: { min_fan_in: 8, min_fan_out: 8 }",
+            "imported by 8 or more and importing 8 or more"
+          ],
+          [
+            "max_complexity: 5",
+            "and with little logic of its own"
+          ],
+          [
+            "JS_SPECIFIER → strip '.js' in the scan copy",
+            "fixes the .js → .tsx blind spot; source is untouched"
+          ],
+          [
+            "coupling-baseline.json",
+            "4 files frozen; it may shrink, never grow"
+          ]
+        ]
+      }
+    },
+    "stability": {
+      "name": "archlint stability (stable code must not import volatile code)",
+      "what": "A rule on the Stable Dependencies Principle. Instability is imports divided by imports plus importers. A file must not import one that is more unstable.",
+      "why": "Core code that depends on fast-changing code breaks whenever that code changes. An import that works is enough for an agent to add one.",
+      "how": "The same archlint run and baseline as coupling, with the sdp_violation rule added. Findings are keyed 'a.ts -> b.ts'. A new rule records its first findings with --adopt=stability, which refuses a section already on main.",
+      "config": {
+        "file": "lint/gates/coupling.mjs + coupling-baseline.json",
+        "status": "real",
+        "source": "AppyRig PR #41 (G15)",
+        "lines": [
+          [
+            "sdp_violation: { min_fan_total: 2 }",
+            "only files with at least 2 imports plus importers count (Omer uses 5)"
+          ],
+          [
+            "instability_diff: 0.1",
+            "the imported file must be more than 0.1 less stable to fail (Omer uses 0.3)"
+          ],
+          [
+            "stability: { 'a.ts -> b.ts': 1 }",
+            "a baseline section: the file and the less stable file it imports"
+          ],
+          [
+            "--adopt=stability",
+            "how a new rule records first findings; refuses an existing section"
           ]
         ]
       }
@@ -2753,6 +2868,501 @@
           "source": "AppyRig PR #35"
         },
         "answers": "#39"
+      }
+    },
+    {
+      "tier": "architecture",
+      "gate": "G13 · Module cohesion",
+      "p1": {
+        "id": "#42",
+        "title": "The file that does five jobs",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/domain/fleet/views.ts · 1,404 lines, 5 unrelated groups"
+              ],
+              [
+                "c",
+                "export function buildRigMap(…)       // the rig map: who talks to whom"
+              ],
+              [
+                "c",
+                "export const STAGES: Stage[] = [...]  // the handoff flow"
+              ],
+              [
+                "c",
+                "export function consoleLines(…)      // the seat console"
+              ],
+              [
+                "c",
+                "export function buildAccounts(…)      // the accounts screen"
+              ],
+              [
+                "c",
+                "export interface Endpoint { … }       // plus types and helpers for all of them"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "5 unrelated groups",
+            "kind": "problem",
+            "note": "Map, flow, console and accounts share one file. A change to any of them opens all of it."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "STAGES",
+            "kind": "note",
+            "note": "A constant for one screen, sitting next to a builder for another."
+          },
+          {
+            "block": 0,
+            "row": 4,
+            "match": "buildAccounts",
+            "kind": "note",
+            "note": "Nothing in this function needs the rig map. It lives here because the file was already big."
+          }
+        ],
+        "text": "One file holds the code for four screens. Every change touches it, and every agent adds to it because it is already there.",
+        "say": "A big file is where the next line goes. Make it hard to be a big file.",
+        "presenter": [
+          "Real AppyRig file, the worst one the new check found: client/src/domain/fleet/views.ts, 5 unrelated groups in 1,404 lines. The lines shown are picked from its real export list (buildRigMap, STAGES, consoleLines, buildAccounts and the types around them).",
+          "The check counts groups of exports that never use each other. The file was frozen on a baseline in PR #37. It is on the cleanup list after G15, not fixed inside the gate."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/domain/fleet/views.ts on main after PR #37 (cohesion baseline: 23 files)"
+        }
+      },
+      "p2": {
+        "id": "#43",
+        "title": "Tool: module cohesion",
+        "tool": "archlint",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "archlint scan · G13 (AppyRig)"
+              ],
+              [
+                "c",
+                "files mixing jobs              23"
+              ],
+              [
+                "c",
+                "  client                       20"
+              ],
+              [
+                "c",
+                "  server                        1"
+              ],
+              [
+                "c",
+                "  collector                     2"
+              ],
+              [
+                "d",
+                "after PR #38: 22 · worst: views.ts, 5 groups"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "client/src/domain/fleet/health.ts · PR #38"
+              ],
+              [
+                "d",
+                "export function gb(bytes: number): string {"
+              ],
+              [
+                "d",
+                "export function value<T>(r: Reading<T>) {"
+              ],
+              [
+                "d",
+                "export const SWAP_TIGHT = 0.5;"
+              ],
+              [
+                "a",
+                "client/src/lib/readings.ts (new): gb, value, with BYTES_PER_GB named"
+              ],
+              [
+                "a",
+                "const SWAP_TIGHT = 0.5;  // no longer exported"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "files mixing jobs              23",
+            "kind": "number",
+            "note": "Counted and frozen. A new mixed file fails CI."
+          },
+          {
+            "block": 1,
+            "row": 1,
+            "match": "export function gb(bytes: number): string {",
+            "kind": "fix",
+            "note": "Bytes-to-words moved to its own tested home."
+          },
+          {
+            "block": 1,
+            "row": 5,
+            "match": "no longer exported",
+            "kind": "fix",
+            "note": "Nothing else used it, so it stops being public. Six groups became one."
+          }
+        ],
+        "text": "The tool groups a file's exports by what they use. Five or more exports in more than two unrelated groups is a mixed file.",
+        "num": "Game: every mixed file split in this PR → 0 (AppyRig: 23 baselined, slice 23 → 22)",
+        "say": "If a file does two jobs, it will soon do five.",
+        "presenter": [
+          "AppyRig's numbers: 23 files baselined, health.ts split in PR #38 (six groups to one), 8 files, +66 / −30. Knip findings 1,003 → 999 on the way, and four lint suppressions gone.",
+          "Kept honest: shared/ is not scanned. It is the wire contract, and every schema-and-type pair would count as two unrelated groups. Seven function-carrying files in shared/ are on the cleanup list.",
+          "The tool is archlint, run through a wrapper that ratchets a per-file baseline. It only ever shrinks."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #37 and #38"
+        },
+        "answers": "#42"
+      }
+    },
+    {
+      "tier": "architecture",
+      "gate": "G14 · Coupling + hubs",
+      "p1": {
+        "id": "#44",
+        "title": "The door everyone uses",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/kit/RigFiles.tsx · one of 23 files importing coreCall.ts"
+              ],
+              [
+                "c",
+                "import { callVerb } from '@client/domain/fleet/coreCall.js';"
+              ],
+              [
+                "c",
+                "void callVerb<RigFilesOutput>(socket, 'rig.files', { machine: machineId, rig })"
+              ],
+              [
+                "c",
+                "void callVerb<RigWaitingOutput>(socket, 'rig.waiting', { machine: machineId, rig })"
+              ],
+              [
+                "d",
+                "// the verb name and its result type are typed by hand, in every caller"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 0,
+            "match": "23 files importing coreCall.ts",
+            "kind": "problem",
+            "note": "Every page wires straight into the transport file. It is connected to 24 files."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "'rig.files'",
+            "kind": "problem",
+            "note": "A typo in the verb name still compiles."
+          },
+          {
+            "block": 0,
+            "row": 3,
+            "match": "'rig.waiting'",
+            "kind": "note",
+            "note": "The same verb and type, written out again in the next file."
+          }
+        ],
+        "text": "One transport file, and every page and widget calls it with the verb's name spelled out. It ends up connected to everything.",
+        "say": "If everything touches one file, nothing can change it safely.",
+        "presenter": [
+          "Real AppyRig file: client/src/domain/fleet/coreCall.ts, 24 connections (23 importers, 1 import) before PR #40. The lines are from RigFiles.tsx and WaitingOnDavid.tsx as they were before the fix.",
+          "The tool also counts hubs (imported by 8 or more and importing 8 or more). AppyRig has none today."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/domain/fleet/coreCall.ts before PR #40 (coupling baseline: 5 files)"
+        }
+      },
+      "p2": {
+        "id": "#45",
+        "title": "Tool: coupling and hubs",
+        "tool": "coupling",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "archlint coupling · G14 (AppyRig)"
+              ],
+              [
+                "c",
+                "files over 20 connections     5"
+              ],
+              [
+                "c",
+                "  domain/fleet/model.ts       31"
+              ],
+              [
+                "c",
+                "  domain/fleet/coreCall.ts    24"
+              ],
+              [
+                "c",
+                "  app/registry.ts             22"
+              ],
+              [
+                "c",
+                "hubs                          0"
+              ],
+              [
+                "d",
+                "after PR #40: coreCall.ts 18 · baseline 4"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "PR #40 · client/src/kit/data/rigReads.ts"
+              ],
+              [
+                "d",
+                "callVerb<RigFilesOutput>(socket, 'rig.files', { machine, rig })"
+              ],
+              [
+                "a",
+                "readRigFiles(socket, { machine, rig })"
+              ],
+              [
+                "a",
+                "readRigFile, readRigWaiting: verb and type written once"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "files over 20 connections     5",
+            "kind": "number",
+            "note": "Counted and frozen. A sixth fails CI."
+          },
+          {
+            "block": 0,
+            "row": 5,
+            "match": "hubs                          0",
+            "kind": "number",
+            "note": "No file is a hub at Omer's limits today."
+          },
+          {
+            "block": 1,
+            "row": 2,
+            "match": "readRigFiles(socket, { machine, rig })",
+            "kind": "fix",
+            "note": "The caller says what it wants. The verb name lives in one place."
+          }
+        ],
+        "text": "Coupling counts the files a file touches. A hub is a file that is imported by many and imports many, with little logic of its own.",
+        "num": "Game: every over-coupled file fixed in this PR → 0 (AppyRig: 5 baselined, slice 5 → 4)",
+        "say": "Give callers something better to depend on than the pipe.",
+        "presenter": [
+          "AppyRig's numbers: coreCall.ts 24 → 18 connections, 11 files, +94 / −28, same verb and input on every call. Eight callers moved to three typed read functions.",
+          "Moved, not removed: coreCall.ts's connections were all incoming, so nothing could leave it. The judge allowed it because the new layer is counted and is not a barrel.",
+          "The limit is 20, not Omer's 30: at 30 only one file shows. The page registry (22) stays on the baseline for the V1/V2 untangle."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PRs #39 and #40"
+        },
+        "answers": "#44"
+      }
+    },
+    {
+      "tier": "architecture",
+      "gate": "G15 · Stability",
+      "p1": {
+        "id": "#46",
+        "title": "The page registry",
+        "blocks": [
+          {
+            "view": "code",
+            "rows": [
+              [
+                "l",
+                "client/src/pages/about/index.tsx · a page importing the file that imports it"
+              ],
+              [
+                "c",
+                "import { NAV_GROUPS, navLabel } from '@client/app/registry.js';"
+              ],
+              [
+                "l",
+                "client/src/app/registry.ts · imports 20 pages, imported by 2"
+              ],
+              [
+                "c",
+                "import { page as aboutPage } from '@client/pages/about/index.js';"
+              ],
+              [
+                "c",
+                "import { page as wallPage } from '@client/pages/wall/index.js';"
+              ],
+              [
+                "d",
+                "// 18 more page imports"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "@client/app/registry.js",
+            "kind": "problem",
+            "note": "A stable page reaches into the one file that changes whenever any page does."
+          },
+          {
+            "block": 0,
+            "row": 2,
+            "match": "imports 20 pages, imported by 2",
+            "kind": "number",
+            "note": "Instability 0.91. It moves with every page."
+          },
+          {
+            "block": 0,
+            "row": 3,
+            "match": "@client/pages/about/index.js",
+            "kind": "note",
+            "note": "And the registry imports the page back."
+          }
+        ],
+        "text": "The registry knows every page, so it changes whenever a page does. Pages that import it inherit that.",
+        "say": "Code that rarely changes must not lean on code that always does.",
+        "presenter": [
+          "Real AppyRig file: client/src/app/registry.ts, instability 0.91 (it imports 20 pages and is imported by 2). The two pairs the check finds: pages/about/index.tsx → registry.ts (gap 0.41) and app/usePages.tsx → registry.ts (gap 0.16).",
+          "Both findings are one fault seen twice. It is recorded as the first target of the V1/V2 untangle, not fixed inside a gate."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig client/src/app/registry.ts on main after PR #41 (stability baseline: 2 pairs)"
+        }
+      },
+      "p2": {
+        "id": "#47",
+        "title": "Tool: stability",
+        "tool": "stability",
+        "showConfig": true,
+        "blocks": [
+          {
+            "view": "output",
+            "rows": [
+              [
+                "l",
+                "archlint sdp_violation · G15 (AppyRig)"
+              ],
+              [
+                "c",
+                "stable → volatile pairs         2"
+              ],
+              [
+                "c",
+                "about/index.tsx → registry.ts   gap 0.41"
+              ],
+              [
+                "c",
+                "usePages.tsx → registry.ts      gap 0.16"
+              ],
+              [
+                "c",
+                "shared / server / collector     0"
+              ],
+              [
+                "d",
+                "registry.ts instability 0.91 · baselined, not fixed"
+              ]
+            ]
+          },
+          {
+            "view": "diff",
+            "rows": [
+              [
+                "l",
+                "lint/gates/coupling.mjs"
+              ],
+              [
+                "d",
+                "min_fan_total: 5, instability_diff: 0.3   // Omer: finds nothing here"
+              ],
+              [
+                "a",
+                "min_fan_total: 2, instability_diff: 0.1   // finds the registry"
+              ]
+            ]
+          }
+        ],
+        "annotations": [
+          {
+            "block": 0,
+            "row": 1,
+            "match": "stable → volatile pairs         2",
+            "kind": "number",
+            "note": "Both are the registry, seen from two files."
+          },
+          {
+            "block": 1,
+            "row": 2,
+            "match": "min_fan_total: 2, instability_diff: 0.1",
+            "kind": "fix",
+            "note": "The strictest setting whose findings are worth fixing. One step lower only adds noise."
+          }
+        ],
+        "text": "Instability is imports divided by imports plus importers. A file must not import one that is more unstable than it is.",
+        "num": "Game: every stable file that imports a volatile one fixed in this PR → 0 (AppyRig: 2 pairs baselined, none fixed)",
+        "say": "Depend on things that change less than you do.",
+        "presenter": [
+          "AppyRig's numbers: 2 pairs, both on the page registry. shared/, the server and the collector have none. No part 2: the registry is never fixed inside a gate.",
+          "Omer's 5 / 0.3 finds nothing here, because about/index has fewer than five edges. 2 / 0.1 was read off the judge's own sweep: one step lower adds 5 page-to-kit pairs 0.05–0.09 apart, which is noise.",
+          "The gate also gained --adopt: the one way a new rule records its first findings in an existing baseline. It refuses a section already on main."
+        ],
+        "evidence": {
+          "status": "real",
+          "source": "AppyRig PR #41"
+        },
+        "answers": "#46"
       }
     }
   ],

@@ -8,7 +8,7 @@ test('the whole show runs from the keyboard alone, side by side, with no errors'
   await press(page, 'b');
   await press(page, 'Enter', 400);
   await expect(page.locator('#map')).toBeVisible();
-  await expect(page.locator('.tier.locked')).toHaveCount(1);
+  await expect(page.locator('.tier.locked')).toHaveCount(0);
   await press(page, 'Enter', 600);
   await expect(page.locator('#game')).toBeVisible();
   expect((await step(page)).phase).toBe('vs');
@@ -108,6 +108,13 @@ test('player 1 reaches the boss on 10% and the boss finishes them; player 2 wins
 });
 
 test('back steps, tier jumps and locked tiers', async ({ page }) => {
+  // A tier with no stops in the content file is locked: take tier 6's stops away to see it.
+  await page.route('**/content/cards.json', async (route) => {
+    const res = await route.fetch();
+    const json = await res.json();
+    json.stops = json.stops.filter((s: { tier: string }) => s.tier !== 'architecture');
+    await route.fulfill({ response: res, json });
+  });
   await boot(page);
   await press(page, 'Shift+Digit2', 500);
   expect((await step(page)).tier).toBe(1);
@@ -175,6 +182,7 @@ test('a stop added to the content file shows up after a reload, unlocking its ti
   await page.route('**/content/cards.json', async (route) => {
     const res = await route.fetch();
     const json = await res.json();
+    json.stops = json.stops.filter((s: { tier: string }) => s.tier !== 'architecture');
     json.stops.push({ ...json.stops[1], tier: 'architecture', gate: 'G13 · Brand new gate' });
     await route.fulfill({ response: res, json });
   });

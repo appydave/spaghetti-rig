@@ -8,9 +8,15 @@ const game = parseContent(raw);
 const script = buildScript(game);
 
 describe('content', () => {
-  it('locks tiers with no stops and keeps their boss name', () => {
-    const locked = game.tiers.filter((t) => !t.playable);
-    expect(locked.length).toBeGreaterThan(0);
+  it('every tier in the content file has stops, so none is locked', () => {
+    expect(game.tiers.filter((t) => !t.playable)).toEqual([]);
+  });
+
+  it('locks a tier with no stops and keeps its boss name', () => {
+    const bare = structuredClone(raw);
+    bare.stops = bare.stops.filter((s: { tier: string }) => s.tier !== 'architecture');
+    const locked = parseContent(bare).tiers.filter((t) => !t.playable);
+    expect(locked.map((t) => t.key)).toEqual(['architecture']);
     for (const t of locked) expect(t.boss.name).toBeTruthy();
   });
 
@@ -23,6 +29,7 @@ describe('content', () => {
 
   it('a new stop or tier in the file shows up with no code change', () => {
     const extra = structuredClone(raw);
+    extra.stops = extra.stops.filter((s: { tier: string }) => s.tier !== 'architecture');
     extra.stops.push({ ...structuredClone(raw.stops[0]), tier: 'architecture', gate: 'G13 · New gate' });
     const g = parseContent(extra);
     const arch = g.tiers.find((t) => t.key === 'architecture')!;
@@ -117,7 +124,15 @@ describe('missed enemies are debt, not damage', () => {
   const baseline: [number, number][] = JSON.parse(readFileSync(new URL('./health.baseline.json', import.meta.url), 'utf8'));
 
   it('health at every step is unchanged', () => {
-    expect(script.map((s) => [healthAt(game, s, 'p1'), healthAt(game, s, 'p2')])).toEqual(baseline);
+    // The baseline is tiers 1–5 and then the ending. Tier 6 came later, between them, and follows the same rule.
+    const tiers1to5 = baseline.slice(0, -1);
+    expect(script.slice(0, tiers1to5.length).map((s) => [healthAt(game, s, 'p1'), healthAt(game, s, 'p2')])).toEqual(tiers1to5);
+    const end = script.at(-1)!;
+    expect(end.phase).toBe('ending');
+    expect([healthAt(game, end, 'p1'), healthAt(game, end, 'p2')]).toEqual(baseline.at(-1));
+    const t6 = game.tiers.find((t) => t.key === 'architecture')!;
+    const seen = script.filter((s) => s.tier === t6.index && (s.phase === 'vs' || s.phase === 'problem')).map((s) => Math.round(healthAt(game, s, 'p1')));
+    expect(seen).toEqual([100, 70, 40, 10]);
   });
 
   it('player 1 still drops 100 → 78 → 55 → 33 → 10% across a four-stop tier', () => {

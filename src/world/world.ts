@@ -906,7 +906,7 @@ export class PlayerWorld {
 function bossTool(name: string) {
   const words = name.split(/\s+/);
   let out = words[0]!;
-  for (const w of words.slice(1)) { if ((out + ' ' + w).length > 16) break; out += ' ' + w; }
+  for (const w of words.slice(1)) { if ((out + ' ' + w).length > 18) break; out += ' ' + w; }
   return out;
 }
 
