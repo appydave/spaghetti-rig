@@ -17,6 +17,7 @@ const nums = (a: ArrayLike<number>) => Array.from(a, (n) => num(n)).join(",");
 
 /** Components per vertex position. */
 const XYZ = 3;
+const MATRIX_SIZE = 16;
 
 type Positions = THREE.BufferAttribute | THREE.InterleavedBufferAttribute;
 
@@ -63,6 +64,22 @@ function paintedOn(
     : "";
 }
 
+/** An instanced mesh (the sparks): how many instances are live, and where and in what colour each one is. */
+function instancesOf(o: any): string {
+  if (!o.isInstancedMesh) {
+    return "";
+  }
+
+  const m: number[] = Array.from(
+    o.instanceMatrix.array.slice(0, o.count * MATRIX_SIZE),
+  );
+  const c: number[] = o.instanceColor
+    ? Array.from(o.instanceColor.array.slice(0, o.count * XYZ))
+    : [];
+
+  return `${o.count}:${nums(m)}:${nums(c)}`;
+}
+
 /** Every node of the scene: its place in the graph, transform, visibility, material and light. */
 export function sceneOf(root: THREE.Object3D): string {
   root.updateMatrixWorld(true);
@@ -83,6 +100,7 @@ export function sceneOf(root: THREE.Object3D): string {
         positionsOf(o.geometry?.attributes?.position),
         m ? [m.color?.getHexString(), m.opacity, m.visible].join("/") : "",
         paintedOn(m?.map?.image),
+        instancesOf(o),
         o.isLight ? [o.color.getHexString(), o.intensity].join("/") : "",
       ].join("|"),
     );
