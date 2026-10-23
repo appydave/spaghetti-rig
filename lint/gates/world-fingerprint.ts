@@ -113,6 +113,8 @@ export function sceneOf(root: THREE.Object3D): string {
 export function stateOf(w: any): string {
   // The clock, the tweens and the cues have no public reading: they live on the world's timeline when it has one, else on the world.
   const t = w.timeline ?? w;
+  // The street's objects (the gates, the stop window, the debt, the boss, the pile) live on the world's street when it has one, else on the world.
+  const st = w.street ?? w;
   const v = (p: THREE.Vector3 | null | undefined) =>
     p ? nums(p.toArray()) : "-";
 
@@ -137,13 +139,13 @@ export function stateOf(w: any): string {
     v(w.rig?.look ?? w.camLook),
     w.state,
     w.walk ? [w.walk.from, w.walk.to, num(w.walk.u), w.walk.next] : null,
-    w.gates.map((g: any) => g.state),
+    st.gates.map((g: any) => g.state),
     t.tweens.length,
     t.cues.length,
-    w.window ? [w.window.key, w.window.reading] : null,
-    w.debt.map((d: any) => d.key),
-    w.boss ? "boss" : null,
-    w.pile ? "pile" : null,
+    st.window ? [st.window.key, st.window.reading] : null,
+    st.debt.map((d: any) => d.key),
+    st.boss ? "boss" : null,
+    st.pile ? "pile" : null,
     w.character.pose,
     nums(w.character.root.position.toArray()),
     w.fx.pool?.length ?? "",
