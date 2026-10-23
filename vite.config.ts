@@ -14,11 +14,13 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts"],
       // The floor is the measured coverage on 2026-10-23 rounded down to one decimal: it fails if coverage falls.
+      // Lines was re-measured after Prettier (G01) split one-line statements across lines: 12.38% before, 10.55% after,
+      // same code and same tests; statements, branches and functions did not move.
       thresholds: {
         statements: 11.1,
         branches: 17.6,
         functions: 17.5,
-        lines: 12.3,
+        lines: 10.5,
       },
     },
   },
