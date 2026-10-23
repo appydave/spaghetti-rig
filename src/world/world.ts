@@ -10,15 +10,15 @@ import {
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
 import { healthAt, partsBroken, type Player, type Step } from "../show/script";
-import { AutoGunner } from "./autogunner";
 import { BossModel } from "./boss";
 import type { BossLayout } from "./bosslayout";
 import { CameraRig, type ShotView } from "./camera-rig";
 import { Character } from "./characters";
+import { Combat } from "./combat";
 import { buildCity, SEGMENT } from "./city";
 import { CodeWindow } from "./codewindow";
 import { Effects } from "./effects";
-import { Enemy, SCORE, type EnemyKind } from "./enemies";
+import { Enemy, type EnemyKind } from "./enemies";
 import { Gate } from "./gate";
 import { makePile } from "./pile";
 import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
@@ -30,8 +30,6 @@ import {
   BOSS,
   Cue,
   DEBT_WINDOW_COLS,
-  KILL_TEXT_SIZE,
-  RANDOM_CENTRE,
   State,
   Tween,
   standZ,
@@ -62,8 +60,6 @@ const RIM_INTENSITY = 1.1;
 const RIM_X = -30;
 const RIM_Y = 20;
 const RIM_Z = -40;
-const GUNNER_SEED_P1 = 11;
-const GUNNER_SEED_P2 = 29;
 const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
 const RATTLE_P1 = 0.5;
@@ -218,53 +214,7 @@ const BOSS_CONFETTI_COUNT = 200;
 const BOSS_RING_SIZE = 6;
 const BOSS_RING_LIFE = 0.8;
 const WIN_SOUND_DELAY = 1.6;
-const STREET_CLEAR_BURST_COUNT = 10;
-const STREET_CLEAR_BURST_SPEED = 3;
 
-const POINTER_FALLBACK_DISTANCE = 30;
-const ENEMY_HIT_PADDING = 1.15;
-const TRACER_WIDTH_P1 = 0.04;
-const TRACER_WIDTH_P2 = 0.07;
-const SHOT_VOLUME = 0.7;
-const ENEMY_HIT_VOLUME = 0.6;
-const ENEMY_HIT_BURST_COUNT = 12;
-const ENEMY_HIT_BURST_SPEED = 5;
-const GROUND_SPLASH_BELOW = 0.3;
-const GROUND_SPLASH_Y = 0.05;
-const MISS_BURST_COUNT = 5;
-const BOSS_AIM_SPREAD_X = 3;
-const BOSS_AIM_FRONT_Z = 0.6;
-const BOUNCE_VOLUME = 0.8;
-const BOUNCE_BURST_COUNT = 14;
-const BOUNCE_BURST_SPEED = 6;
-const BOUNCE_RING_SIZE = 0.8;
-const BOUNCE_RING_LIFE = 0.25;
-const BOUNCE_RISE_BASE = 3;
-const BOUNCE_AWAY_BASE = 4;
-const BOUNCE_AWAY_JITTER = 3;
-const BOUNCE_TRACER_WIDTH = 0.03;
-const NO_EFFECT_CHANCE = 0.6;
-const NO_EFFECT_TEXT_SIZE = 0.7;
-const NO_EFFECT_TEXT_LIFE = 0.9;
-const ROBOT_KILL_BURST_COUNT = 50;
-const KILL_BURST_COUNT = 30;
-const KILL_BURST_SPEED = 8;
-const KILL_RING_SIZE = 1.4;
-const KILL_RING_LIFE = 0.35;
-const KILL_DEBRIS_ORIGIN_LERP = 0.7;
-const KILL_DEBRIS_POWER = 6;
-const KILL_DEBRIS_UP = 5;
-const KILL_DEBRIS_LIFE = 3.5;
-const KILL_SHAKE = 0.25;
-const AUTO_RANGE_NEAR = 3;
-const AUTO_RANGE_FAR = 30;
-const AUTO_REST_Y = 1.2;
-const AUTO_REST_Z = -14;
-const SLIP_TEXT_RISE = 1.1;
-const SLIP_TEXT_AHEAD = 6;
-const SLIP_TEXT_MAX_X = 3;
-const SLIP_TEXT_LIFE = 1.2;
-const SLIP_VOLUME = 0.5;
 const DEBT_SLOT_X = -1.1;
 const DEBT_SLOT_SPACING_X = 0.7;
 const DEBT_SLOT_Y = 2.8;
@@ -278,7 +228,6 @@ const SUN_HEIGHT = 30;
 const SUN_OFFSET_Z = 16;
 const SUN_TARGET_AHEAD = 8;
 const SHAKE_DECAY = 2.5;
-const SLIP_PAST_CHARACTER = 4;
 const STEP_RATE = 4.2;
 const STEP_VOLUME = 0.25;
 const READING_EASE_RATE = 6;
@@ -320,13 +269,6 @@ export class PlayerWorld {
   readonly character: Character;
   readonly fx: Effects;
   readonly debris: Debris;
-  score = 0;
-  /** Trigger pulls, from the mouse or autoplay. */
-  shots = 0;
-  /** Enemies that got past player 1: bugs shipped to production. */
-  shipped = 0;
-  /** An enemy got past: shipped (player 1) or caught by CI (player 2). */
-  onSlip?: (kind: EnemyKind) => void;
   /** Health shown in the HUD (animated). */
   health = FULL_HEALTH;
   bossTotal = 0;
@@ -343,7 +285,6 @@ export class PlayerWorld {
   /** Kept after the boss breaks, so the camera holds its shot. */
   private bossLayout: BossLayout | null = null;
   private pile: THREE.Group | null = null;
-  private enemies: Enemy[] = [];
   private temps: { dispose(): void }[] = [];
   private tweens: Tween[] = [];
   private cues: Cue[] = [];
@@ -358,9 +299,7 @@ export class PlayerWorld {
   } | null = null;
   private shake = 0;
   private readonly rig = new CameraRig(this.camera);
-  private readonly gunner: AutoGunner;
-  private aim: THREE.Vector3 | null = null;
-  private autoTarget = -1;
+  readonly combat: Combat;
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
 
@@ -412,9 +351,6 @@ export class PlayerWorld {
 
     rim.position.set(RIM_X, RIM_Y, RIM_Z);
     this.scene.add(rim);
-    this.gunner = new AutoGunner(
-      player === "p1" ? GUNNER_SEED_P1 : GUNNER_SEED_P2,
-    );
     this.character = new Character(player);
     this.scene.add(this.character.root);
     this.fx = new Effects(this.scene);
@@ -424,6 +360,55 @@ export class PlayerWorld {
         "debrisBounce",
         DEBRIS_BOUNCE_VOLUME_BASE + s * DEBRIS_BOUNCE_VOLUME_SCALE,
       );
+    this.combat = new Combat({
+      player,
+      camera: this.camera,
+      character: this.character,
+      fx: this.fx,
+      debris: this.debris,
+      sfx: (name, volume) => this.sfx(name, volume),
+      shake: (atLeast) => {
+        this.shake = Math.max(this.shake, atLeast);
+      },
+      boss: () => this.boss,
+      autoplay: () => this.autoplay,
+      walking: () => this.walk !== null,
+    });
+  }
+
+  get score() {
+    return this.combat.score;
+  }
+
+  get shots() {
+    return this.combat.shots;
+  }
+
+  get shipped() {
+    return this.combat.shipped;
+  }
+
+  get onSlip() {
+    return this.combat.onSlip;
+  }
+
+  set onSlip(f: ((kind: EnemyKind) => void) | undefined) {
+    this.combat.onSlip = f;
+  }
+
+  /** Aim at a point on screen (normalised device coords); fire if asked. Returns true when something was hit. */
+  pointer(ndc: THREE.Vector2 | null, fire: boolean): boolean {
+    return this.combat.pointer(ndc, fire);
+  }
+
+  /** Autoplay's aim on screen (normalised device coords), for its reticle. */
+  autoAimScreen(): THREE.Vector2 | null {
+    return this.combat.autoAimScreen();
+  }
+
+  /** For tests: screen-space centre of the first enemy, if any. */
+  enemyScreen(): THREE.Vector2 | null {
+    return this.combat.enemyScreen();
   }
 
   /** The tier being played. Set when the first step builds it, so a step that needs it before then is a bug. */
@@ -702,11 +687,7 @@ export class PlayerWorld {
     this.boss?.dispose();
     this.boss = null;
     this.bossLayout = null;
-    for (const e of this.enemies) {
-      disposeTree(e.group);
-    }
-
-    this.enemies = [];
+    this.combat.clear();
     this.debris.clear();
     this.fx.clear();
 
@@ -949,7 +930,7 @@ export class PlayerWorld {
 
     const e = new Enemy(sp.kind, sp.seed, from, to, speed);
 
-    this.enemies.push(e);
+    this.combat.enemies.push(e);
     this.scene.add(e.group);
   }
 
@@ -961,7 +942,7 @@ export class PlayerWorld {
         : FULL_HEALTH;
 
     this.reconcile(s);
-    this.clearStreet();
+    this.combat.clearStreet();
 
     const w = this.shownWindow;
 
@@ -1201,7 +1182,7 @@ export class PlayerWorld {
   }
 
   private enterBoss(s: State) {
-    this.clearStreet();
+    this.combat.clearStreet();
 
     const boss = this.bossModel;
     const home = boss.group.position.clone();
@@ -1232,7 +1213,7 @@ export class PlayerWorld {
         BOSS_BOUNCE_SHOT_B,
         BOSS_BOUNCE_SHOT_C,
       ]) {
-        this.after(t, () => this.shootBoss());
+        this.after(t, () => this.combat.shootBoss());
       }
     }
 
@@ -1249,8 +1230,8 @@ export class PlayerWorld {
             ? healthAt(this.game, { ...step, phase: "boss" }, "p1")
             : 0,
       });
-      this.after(PART_SHOT_A_DELAY, () => this.shootBoss());
-      this.after(PART_SHOT_B_DELAY, () => this.shootBoss());
+      this.after(PART_SHOT_A_DELAY, () => this.combat.shootBoss());
+      this.after(PART_SHOT_B_DELAY, () => this.combat.shootBoss());
       if (step.part === 0) {
         // The boss finishes player 1 with one blow.
         this.after(KO_BLOW_DELAY, () => {
@@ -1457,299 +1438,6 @@ export class PlayerWorld {
     this.after(WIN_SOUND_DELAY, () => this.sfx("win"));
   }
 
-  /** Tidy the street when a stop begins: remaining enemies poof away. */
-  private clearStreet() {
-    for (const e of this.enemies) {
-      this.fx.burst(e.center(), {
-        n: STREET_CLEAR_BURST_COUNT,
-        colors: EVENT.clearStreetBurst,
-        speed: STREET_CLEAR_BURST_SPEED,
-      });
-      disposeTree(e.group);
-    }
-
-    this.enemies = [];
-  }
-
-  // ───────────────────────────── shooting ─────────────────────────────
-
-  /** Aim at a point on screen (normalised device coords); fire if asked. Returns true when something was hit. */
-  pointer(ndc: THREE.Vector2 | null, fire: boolean): boolean {
-    if (!ndc) {
-      this.aim = null;
-
-      return false;
-    }
-
-    const ray = new THREE.Raycaster();
-
-    ray.setFromCamera(ndc, this.camera);
-
-    const hit = this.pick(ray.ray);
-    const point =
-      hit?.point ?? ray.ray.at(POINTER_FALLBACK_DISTANCE, new THREE.Vector3());
-
-    this.aim = point;
-    if (fire) {
-      this.fireAt(point, hit?.enemy ?? null, hit?.boss ?? false);
-    }
-
-    return !!hit;
-  }
-
-  private pick(
-    ray: THREE.Ray,
-  ): { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null {
-    let best: { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null =
-      null;
-    let bestD = Infinity;
-    const c = new THREE.Vector3();
-
-    for (const e of this.enemies) {
-      e.center(c);
-
-      const sphere = new THREE.Sphere(c, e.radius * ENEMY_HIT_PADDING);
-      const p = ray.intersectSphere(sphere, new THREE.Vector3());
-
-      if (p) {
-        const d = p.distanceTo(ray.origin);
-
-        if (d < bestD) {
-          bestD = d;
-          best = { point: p, enemy: e };
-        }
-      }
-    }
-
-    if (this.boss && !best) {
-      const box = new THREE.Box3().setFromObject(this.boss.core.group);
-      const p = ray.intersectBox(box, new THREE.Vector3());
-
-      if (p) {
-        best = { point: p, boss: true };
-      }
-    }
-
-    return best;
-  }
-
-  private fireAt(point: THREE.Vector3, enemy: Enemy | null, boss: boolean) {
-    const from = this.character.muzzleWorld();
-
-    this.character.fire();
-    this.shots++;
-
-    const p1 = this.player === "p1";
-
-    this.fx.muzzle(from, p1 ? EVENT.muzzleP1 : EVENT.muzzleP2);
-    this.fx.tracer(
-      from,
-      point,
-      p1 ? EVENT.tracerP1 : EVENT.tracerP2,
-      p1 ? TRACER_WIDTH_P1 : TRACER_WIDTH_P2,
-    );
-    this.sfx(p1 ? "shootP1" : "shoot", SHOT_VOLUME);
-    if (enemy) {
-      this.sfx("enemyHit", ENEMY_HIT_VOLUME);
-      this.fx.burst(point, {
-        n: ENEMY_HIT_BURST_COUNT,
-        speed: ENEMY_HIT_BURST_SPEED,
-      });
-      if (enemy.hit()) {
-        this.kill(enemy, from);
-      }
-    } else if (boss) {
-      if (p1 || this.boss) {
-        this.bounce(point);
-      }
-    } else {
-      this.fx.burst(
-        point.y < GROUND_SPLASH_BELOW ? point.setY(GROUND_SPLASH_Y) : point,
-        {
-          n: MISS_BURST_COUNT,
-          speed: 2,
-          colors: EVENT.shotBurst,
-        },
-      );
-    }
-  }
-
-  private shootBoss() {
-    if (!this.boss) {
-      return;
-    }
-
-    const to = this.boss.core.group
-      .getWorldPosition(new THREE.Vector3())
-      .add(
-        new THREE.Vector3(
-          (Math.random() - RANDOM_CENTRE) * BOSS_AIM_SPREAD_X,
-          (Math.random() - RANDOM_CENTRE) * 2,
-          BOSS_AIM_FRONT_Z,
-        ),
-      );
-
-    this.character.aimAt(to);
-    this.fireAt(to, null, true);
-  }
-
-  /** A useless shot bounces off with a plink. */
-  private bounce(at: THREE.Vector3) {
-    this.sfx("bounce", BOUNCE_VOLUME);
-    this.fx.burst(at, {
-      n: BOUNCE_BURST_COUNT,
-      colors: EVENT.bounceBurst,
-      speed: BOUNCE_BURST_SPEED,
-    });
-    this.fx.ring(
-      at,
-      EVENT.bounceRing,
-      BOUNCE_RING_SIZE,
-      BOUNCE_RING_LIFE,
-      false,
-      this.camera.position,
-    );
-
-    const back = at
-      .clone()
-      .add(
-        new THREE.Vector3(
-          Math.random() * 2,
-          BOUNCE_RISE_BASE + Math.random() * 2,
-          BOUNCE_AWAY_BASE + Math.random() * BOUNCE_AWAY_JITTER,
-        ),
-      );
-
-    this.fx.tracer(at, back, EVENT.bounceTracer, BOUNCE_TRACER_WIDTH);
-    if (Math.random() < NO_EFFECT_CHANCE) {
-      this.fx.text(
-        at.clone().add(new THREE.Vector3(0, 1, 0)),
-        "NO EFFECT",
-        EVENT.noEffectText,
-        NO_EFFECT_TEXT_SIZE,
-        NO_EFFECT_TEXT_LIFE,
-      );
-    }
-  }
-
-  private kill(e: Enemy, from: THREE.Vector3) {
-    const at = e.center();
-
-    this.enemies.splice(this.enemies.indexOf(e), 1);
-    this.score += SCORE[e.kind];
-    this.sfx(e.kind === "robot" ? "robotBreak" : "enemyPop");
-    this.fx.burst(at, {
-      n: e.kind === "robot" ? ROBOT_KILL_BURST_COUNT : KILL_BURST_COUNT,
-      speed: KILL_BURST_SPEED,
-      colors:
-        e.kind === "spaghetti"
-          ? EVENT.killSpaghettiBurst
-          : e.kind === "bug"
-            ? EVENT.killBugBurst
-            : EVENT.killRobotBurst,
-    });
-    this.fx.ring(
-      at,
-      EVENT.killRing,
-      KILL_RING_SIZE,
-      KILL_RING_LIFE,
-      false,
-      this.camera.position,
-    );
-    this.fx.text(
-      at.clone().add(new THREE.Vector3(0, 1, 0)),
-      `+${SCORE[e.kind]}`,
-      EVENT.killText,
-      KILL_TEXT_SIZE,
-      1,
-    );
-    this.debris.breakObject(e.group, {
-      from: from.clone().lerp(at, KILL_DEBRIS_ORIGIN_LERP),
-      power: KILL_DEBRIS_POWER,
-      up: KILL_DEBRIS_UP,
-      life: KILL_DEBRIS_LIFE,
-    });
-    this.shake = Math.max(this.shake, KILL_SHAKE);
-  }
-
-  /** Autoplay: a seeded hand that drifts onto the nearest enemy ahead and fires like a person would. */
-  private autoShoot(dt: number) {
-    const me = this.character.root.position;
-    const ahead = (e: Enemy) =>
-      e.group.position.z < me.z - AUTO_RANGE_NEAR &&
-      e.group.position.z > me.z - AUTO_RANGE_FAR;
-    // Stay on the current target while it is still there; otherwise take the nearest one ahead.
-    let target = this.enemies.find(
-      (e) => e.seed === this.autoTarget && ahead(e),
-    );
-
-    target ??= this.enemies
-      .filter(ahead)
-      .sort((a, b) => b.group.position.z - a.group.position.z)[0];
-    this.autoTarget = target?.seed ?? -1;
-
-    const rest = me.clone().add(new THREE.Vector3(0, AUTO_REST_Y, AUTO_REST_Z));
-    const shot = this.gunner.update(
-      dt,
-      target
-        ? { id: target.seed, centre: target.center(), radius: target.radius }
-        : null,
-      rest,
-    );
-
-    this.aim = this.gunner.aim;
-    if (!shot) {
-      return;
-    }
-
-    // Where the hand points is where the shot goes: a pulled shot really misses.
-    const dir = shot.at.clone().sub(this.camera.position).normalize();
-    const hit = this.pick(new THREE.Ray(this.camera.position.clone(), dir));
-
-    this.fireAt(hit?.point ?? shot.at, hit?.enemy ?? null, false);
-  }
-
-  /** An enemy reached the end of its path alive. */
-  private slip(e: Enemy) {
-    // Enemies often slip past right beside the camera; say it a few steps up the road instead.
-    const at = e.center().add(new THREE.Vector3(0, SLIP_TEXT_RISE, 0));
-
-    at.z = Math.min(at.z, this.character.root.position.z - SLIP_TEXT_AHEAD);
-    at.x = THREE.MathUtils.clamp(at.x, -SLIP_TEXT_MAX_X, SLIP_TEXT_MAX_X);
-    if (this.player === "p1") {
-      this.shipped++;
-      this.fx.text(
-        at,
-        "BUG SHIPPED",
-        EVENT.shippedText,
-        KILL_TEXT_SIZE,
-        SLIP_TEXT_LIFE,
-      );
-      this.sfx("bounce", SLIP_VOLUME);
-    } else {
-      this.fx.text(
-        at,
-        "CAUGHT BY CI",
-        EVENT.caughtText,
-        KILL_TEXT_SIZE,
-        SLIP_TEXT_LIFE,
-      );
-    }
-
-    this.onSlip?.(e.kind);
-  }
-
-  /** Autoplay's aim on screen (normalised device coords), for its reticle. */
-  autoAimScreen(): THREE.Vector2 | null {
-    if (!this.autoplay || !this.walk || !this.gunner.aim) {
-      return null;
-    }
-
-    const p = this.gunner.aim.clone().project(this.camera);
-
-    return p.z < 1 ? new THREE.Vector2(p.x, p.y) : null;
-  }
-
   // ───────────────────────────── per frame ─────────────────────────────
 
   private debtSlot(i: number) {
@@ -1850,24 +1538,12 @@ export class PlayerWorld {
 
     this.shake = Math.max(0, this.shake - dt * SHAKE_DECAY);
 
-    const me = this.character.root.position;
-    // Iterate a snapshot: enemies that got past are spliced out of the live list inside the loop.
-    const enemySnapshot = this.enemies.slice();
-
-    for (const e of enemySnapshot) {
-      e.update(dt, this.camera.position);
-      if (e.finished || e.group.position.z > me.z + SLIP_PAST_CHARACTER) {
-        this.slip(e);
-        disposeTree(e.group);
-        this.enemies.splice(this.enemies.indexOf(e), 1);
-      }
-    }
-
+    this.combat.stepEnemies(dt);
     if (this.autoplay && this.walk) {
-      this.autoShoot(dt);
+      this.combat.autoShoot(dt);
     }
 
-    this.character.aimAt(this.aim);
+    this.character.aimAt(this.combat.aim);
     if (
       this.walk &&
       Math.floor(this.clock * STEP_RATE) !==
@@ -1937,24 +1613,11 @@ export class PlayerWorld {
   }
 
   get enemyCount() {
-    return this.enemies.length;
+    return this.combat.enemies.length;
   }
 
   get debrisCount() {
     return this.debris.count;
-  }
-
-  /** For tests: screen-space centre of the first enemy, if any. */
-  enemyScreen(): THREE.Vector2 | null {
-    const e = this.enemies[0];
-
-    if (!e) {
-      return null;
-    }
-
-    const p = e.center().project(this.camera);
-
-    return new THREE.Vector2(p.x, p.y);
   }
 }
 
