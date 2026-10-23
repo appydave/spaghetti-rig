@@ -12,6 +12,7 @@ import * as THREE from "three";
 import type { Step } from "../../src/show/script";
 import { spyOnTemps } from "./disposal-spy";
 import { makeCanvas } from "./recording-canvas";
+import { scenarioList, type Mode, type Scenario } from "./world-scenarios";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -41,7 +42,6 @@ const POINTER_EVERY = 6;
 const POINTER_LEAVES_EVERY = 4;
 const SKIP_FRAMES = 3;
 
-type Mode = "watch" | "autoplay" | "pointer" | "jump" | "skip";
 type Arg = number | string | boolean | null;
 
 const game = parseContent(
@@ -76,15 +76,6 @@ type Run = {
   look: (label: string) => void;
   /** What the world told its caller since the last look: the enemies that slipped, what the pointer returned. */
   events: string[];
-};
-type Scenario = {
-  player: "p1" | "p2";
-  tier: number;
-  mode: Mode;
-  seed: number;
-  tall?: boolean;
-  /** Resize the window at every third look, so it lands mid-step with a window and a boss up: "flip" between wide and tall, "same" between two talls (the boss stands further back the narrower the screen). */
-  resize?: "flip" | "same";
 };
 
 /** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
@@ -196,66 +187,7 @@ function play({
   }
 }
 
-const named = (what: string, s: Scenario): [string, () => string[]] => [
-  `${s.player} ${what}, tier ${s.tier}`,
-  () => play(s),
-];
-const SCENARIOS: [string, () => string[]][] = game.tiers.flatMap((t) =>
-  (["p1", "p2"] as const).flatMap((player): [string, () => string[]][] => [
-    named("watches", { player, tier: t.index, mode: "watch", seed: t.index }),
-    ...(t.index <= 1
-      ? [
-          named("on autoplay", {
-            player,
-            tier: t.index,
-            mode: "autoplay",
-            seed: t.index + 10,
-          }),
-          named("clicks with the pointer", {
-            player,
-            tier: t.index,
-            mode: "pointer",
-            seed: t.index + 20,
-          }),
-          named("jumps about", {
-            player,
-            tier: t.index,
-            mode: "jump",
-            seed: t.index + 30,
-          }),
-          named("skips through", {
-            player,
-            tier: t.index,
-            mode: "skip",
-            seed: t.index + 40,
-          }),
-        ]
-      : []),
-  ]),
-);
-
-SCENARIOS.push(
-  ...game.tiers.flatMap((t) =>
-    (["flip", "same"] as const).map((resize) =>
-      named(`resizes mid-play (${resize})`, {
-        player: "p1",
-        tier: t.index,
-        mode: "watch",
-        seed: t.index + 50,
-        tall: resize === "same",
-        resize,
-      }),
-    ),
-  ),
-  named("on a tall screen", {
-    player: "p2",
-    tier: 0,
-    mode: "watch",
-    seed: 7,
-    tall: true,
-  }),
-);
-
+const SCENARIOS = scenarioList(game.tiers, play);
 const all: Record<string, string[]> = {};
 
 describe("the fingerprint sees a vertex edited in place", () => {

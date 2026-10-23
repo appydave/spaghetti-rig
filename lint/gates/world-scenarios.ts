@@ -1,0 +1,104 @@
+// The scenarios the world harness plays (G04 H1k-a): a player, a tier and how the world is played. Moved out of world-proof.test.ts as it
+// was, so the harness can grow without that file passing 300 lines.
+export type Mode = "watch" | "autoplay" | "pointer" | "jump" | "skip";
+export type Scenario = {
+  player: "p1" | "p2";
+  tier: number;
+  mode: Mode;
+  seed: number;
+  tall?: boolean;
+  /** Resize the window at every third look, so it lands mid-step with a window and a boss up: "flip" between wide and tall, "same" between two talls (the boss stands further back the narrower the screen). */
+  resize?: "flip" | "same";
+};
+
+export type Named = [string, () => string[]];
+type Namer = (what: string, s: Scenario) => Named;
+
+/** Each way of playing gets its own run of seeds, so no two scenarios share a random stream. */
+const AUTOPLAY_SEEDS = 10;
+const POINTER_SEEDS = 20;
+const JUMP_SEEDS = 30;
+const SKIP_SEEDS = 40;
+const RESIZE_SEEDS = 50;
+/** The slower ways of playing are run on the tiers up to this one. */
+const LAST_FULL_TIER = 1;
+const TALL_SEED = 7;
+
+/** One player's scenarios on one tier. */
+function onTier(named: Namer, player: "p1" | "p2", tier: number): Named[] {
+  const base = { player, tier };
+  const watch = named("watches", { ...base, mode: "watch", seed: tier });
+
+  if (tier > LAST_FULL_TIER) {
+    return [watch];
+  }
+
+  return [
+    watch,
+    named("on autoplay", {
+      ...base,
+      mode: "autoplay",
+      seed: tier + AUTOPLAY_SEEDS,
+    }),
+    named("clicks with the pointer", {
+      ...base,
+      mode: "pointer",
+      seed: tier + POINTER_SEEDS,
+    }),
+    named("jumps about", {
+      ...base,
+      mode: "jump",
+      seed: tier + JUMP_SEEDS,
+    }),
+    named("skips through", {
+      ...base,
+      mode: "skip",
+      seed: tier + SKIP_SEEDS,
+    }),
+  ];
+}
+
+/** The resizing scenarios and the one on a tall screen. */
+function onScreens(named: Namer, tiers: { index: number }[]): Named[] {
+  return [
+    ...tiers.flatMap((t) =>
+      (["flip", "same"] as const).map((resize) =>
+        named(`resizes mid-play (${resize})`, {
+          player: "p1",
+          tier: t.index,
+          mode: "watch",
+          seed: t.index + RESIZE_SEEDS,
+          tall: resize === "same",
+          resize,
+        }),
+      ),
+    ),
+    named("on a tall screen", {
+      player: "p2",
+      tier: 0,
+      mode: "watch",
+      seed: TALL_SEED,
+      tall: true,
+    }),
+  ];
+}
+
+/** Every scenario, each named and ready to run with the given play function. */
+export function scenarioList(
+  tiers: { index: number }[],
+  play: (s: Scenario) => string[],
+): Named[] {
+  const named: Namer = (what, s) => [
+    `${s.player} ${what}, tier ${s.tier}`,
+    () => play(s),
+  ];
+
+  return [
+    ...tiers.flatMap((t) =>
+      (["p1", "p2"] as const).flatMap((player) =>
+        onTier(named, player, t.index),
+      ),
+    ),
+    ...onScreens(named, tiers),
+  ];
+}
