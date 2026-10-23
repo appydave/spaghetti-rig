@@ -1,0 +1,365 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "unicorn"],
+  "jsPlugins": [
+    {
+      "name": "anti-slop",
+      "specifier": "oxlint-plugin-anti-slop"
+    }
+  ],
+  "options": {
+    "typeAware": true,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "playwright-report/**",
+    "test-results/**",
+    "**/*.d.ts"
+  ],
+  "rules": {
+    "anti-slop/cognitive-complexity": "off",
+    "anti-slop/cyclomatic-complexity": "off",
+    "anti-slop/max-lines": "off",
+    "anti-slop/max-lines-per-function": "off",
+    "anti-slop/no-chained-type-assertions": "error",
+    "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-reflect-apply": "error",
+    "anti-slop/no-reflect-get": "error",
+    "anti-slop/no-runtime-typeof": "off",
+    "anti-slop/no-shape-in-symbol-names": "off",
+    "anti-slop/no-unknown-parameters": "error",
+    "anti-slop/no-unknown-returns": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-unsafe-dictionary-type": "error",
+    "anti-slop/no-widen-then-assert": "error",
+    "anti-slop/require-safety-comment-for-type-assertion": "off",
+    "typescript/prefer-readonly": "off",
+    "typescript/await-thenable": "off",
+    "typescript/no-misused-promises": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/prefer-string-starts-ends-with": "off",
+    "typescript/prefer-nullish-coalescing": "off",
+    "typescript/prefer-promise-reject-errors": "off",
+    "typescript/no-unnecessary-type-arguments": "off",
+    "typescript/prefer-return-this-type": "off",
+    "typescript/no-redundant-type-constituents": "off",
+    "typescript/prefer-optional-chain": "off",
+    "typescript/no-mixed-enums": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*"],
+      "excludeFiles": ["tests/**", "src/**/*.test.ts"],
+      "rules": {
+        "no-empty-function": [
+          "error",
+          {
+            "allow": ["arrowFunctions", "constructors", "privateConstructors"]
+          }
+        ],
+        "no-dupe-class-members": "error",
+        "default-param-last": "error",
+        "no-unused-expressions": [
+          "error",
+          {
+            "allowShortCircuit": true,
+            "allowTernary": true,
+            "allowTaggedTemplates": true,
+            "enforceForJSX": true
+          }
+        ],
+        "no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_"
+          }
+        ],
+        "require-yield": "error",
+        "default-case-last": "error",
+        "no-useless-catch": "error",
+        "no-new-wrappers": "error",
+        "typescript/prefer-readonly": "error",
+        "typescript/await-thenable": "error",
+        "typescript/no-misused-promises": [
+          "error",
+          {
+            "checksConditionals": true,
+            "checksSpreads": true,
+            "checksVoidReturn": {
+              "arguments": true,
+              "attributes": true,
+              "inheritedMethods": true,
+              "properties": true,
+              "returns": true,
+              "variables": true
+            }
+          }
+        ],
+        "typescript/no-base-to-string": "error",
+        "typescript/prefer-string-starts-ends-with": "error",
+        "typescript/prefer-nullish-coalescing": [
+          "error",
+          {
+            "ignoreConditionalTests": true,
+            "ignoreMixedLogicalExpressions": true,
+            "ignoreTernaryTests": false,
+            "ignorePrimitives": true
+          }
+        ],
+        "typescript/prefer-promise-reject-errors": [
+          "error",
+          {
+            "allowThrowingAny": true,
+            "allowThrowingUnknown": true
+          }
+        ],
+        "typescript/no-unnecessary-type-arguments": "error",
+        "typescript/prefer-return-this-type": "error",
+        "typescript/no-redundant-type-constituents": "error",
+        "typescript/prefer-optional-chain": "error",
+        "typescript/no-mixed-enums": "error",
+        "typescript/no-array-delete": "error",
+        "typescript/no-deprecated": "error",
+        "no-dupe-else-if": "error",
+        "no-duplicate-case": "error",
+        "no-invalid-regexp": "off",
+        "no-empty-character-class": "off",
+        "no-unused-private-class-members": ["error"],
+        "no-unsafe-finally": ["error"],
+        "no-caller": ["error"],
+        "use-isnan": ["error"],
+        "no-empty-pattern": [
+          "error",
+          {
+            "allowObjectPatternsAsParameters": false
+          }
+        ],
+        "typescript/no-this-alias": "off",
+        "no-extra-boolean-cast": ["error"],
+        "no-constructor-return": ["error"],
+        "no-extra-bind": ["error"],
+        "no-constant-binary-expression": ["error"],
+        "no-case-declarations": ["error"],
+        "import/no-mutable-exports": ["error"],
+        "unicorn/catch-error-name": [
+          "error",
+          {
+            "ignore": [
+              "^(e|ex)$",
+              "[eE][xX][cC][eE][pP][tT][iI][oO][nN]$",
+              "[eE][rR][rR]$",
+              "^_",
+              "^\\w\\$\\d+$",
+              "^[cC][aA][uU][sS][eE]$",
+              "^[rR][eE][aA][sS][oO][nN]$"
+            ]
+          }
+        ],
+        "unicorn/consistent-date-clone": ["error"],
+        "unicorn/consistent-empty-array-spread": ["error"],
+        "unicorn/consistent-function-scoping": [
+          "error",
+          {
+            "checkArrowFunctions": false
+          }
+        ],
+        "unicorn/error-message": ["error"],
+        "unicorn/new-for-builtins": ["error"],
+        "unicorn/no-abusive-eslint-disable": ["error"],
+        "unicorn/no-accessor-recursion": ["error"],
+        "unicorn/no-anonymous-default-export": ["error"],
+        "unicorn/no-array-callback-reference": ["error"],
+        "unicorn/no-array-for-each": ["error"],
+        "unicorn/no-array-method-this-argument": ["error"],
+        "no-sequences": ["error"],
+        "max-params": "off",
+        "no-empty": [
+          "error",
+          {
+            "allowEmptyCatch": true
+          }
+        ],
+        "no-lone-blocks": ["error"],
+        "no-multi-str": ["error"],
+        "no-dupe-keys": ["error"],
+        "no-self-assign": ["error"],
+        "no-unreachable-loop": ["error"],
+        "no-unreachable": ["error"],
+        "new-cap": [
+          "error",
+          {
+            "newIsCap": true,
+            "capIsNew": false,
+            "properties": false
+          }
+        ],
+        "typescript/no-inferrable-types": ["error"],
+        "no-var": ["error"],
+        "prefer-template": ["error"],
+        "no-throw-literal": ["error"],
+        "no-unsafe-negation": ["error"],
+        "constructor-super": ["error"],
+        "no-this-before-super": ["error"],
+        "import/no-duplicates": ["error"],
+        "typescript/no-misused-new": ["error"],
+        "typescript/consistent-type-assertions": [
+          "error",
+          {
+            "assertionStyle": "never"
+          }
+        ],
+        "typescript/prefer-for-of": ["error"],
+        "no-import-assign": ["error"],
+        "no-unsafe-optional-chaining": ["error"],
+        "no-async-promise-executor": ["error"],
+        "typescript/prefer-literal-enum-member": [
+          "error",
+          {
+            "allowBitwiseExpressions": false
+          }
+        ],
+        "no-extend-native": ["error"],
+        "no-unneeded-ternary": [
+          "error",
+          {
+            "defaultAssignment": false
+          }
+        ],
+        "no-useless-constructor": ["error"],
+        "no-lonely-if": ["error"],
+        "prefer-object-spread": ["error"],
+        "prefer-spread": ["error"],
+        "no-useless-call": ["error"],
+        "no-self-compare": ["error"],
+        "import/no-absolute-path": ["error"],
+        "import/no-self-import": ["error"],
+        "unicorn/no-await-expression-member": ["error"],
+        "unicorn/no-instanceof-builtins": ["error"],
+        "unicorn/no-invalid-fetch-options": ["error"],
+        "unicorn/no-negated-condition": ["error"],
+        "unicorn/no-negation-in-equality-check": ["error"],
+        "unicorn/no-object-as-default-parameter": ["error"],
+        "unicorn/no-single-promise-in-promise-methods": ["error"],
+        "unicorn/no-thenable": ["error"],
+        "unicorn/no-useless-length-check": ["error"],
+        "unicorn/prefer-array-find": ["error"],
+        "unicorn/prefer-array-flat": ["error"],
+        "unicorn/prefer-array-flat-map": ["error"],
+        "unicorn/prefer-array-index-of": ["error"],
+        "unicorn/prefer-array-some": ["error"],
+        "unicorn/prefer-at": ["error"],
+        "unicorn/prefer-blob-reading-methods": ["error"],
+        "unicorn/prefer-class-fields": ["error"],
+        "unicorn/prefer-code-point": ["error"],
+        "unicorn/prefer-date-now": ["error"],
+        "unicorn/prefer-default-parameters": ["error"],
+        "unicorn/prefer-dom-node-remove": ["error"],
+        "unicorn/prefer-export-from": ["error"],
+        "unicorn/prefer-includes": ["error"],
+        "unicorn/prefer-math-min-max": ["error"],
+        "unicorn/prefer-math-trunc": ["error"],
+        "unicorn/prefer-modern-dom-apis": ["error"],
+        "unicorn/prefer-modern-math-apis": ["error"],
+        "typescript/no-extraneous-class": [
+          "error",
+          {
+            "allowConstructorOnly": false,
+            "allowEmpty": false,
+            "allowStaticOnly": true,
+            "allowWithDecorator": true
+          }
+        ],
+        "no-sparse-arrays": ["error"],
+        "typescript/prefer-namespace-keyword": ["error"],
+        "getter-return": [
+          "error",
+          {
+            "allowImplicit": false
+          }
+        ],
+        "prefer-regex-literals": ["error"],
+        "no-loss-of-precision": ["error"],
+        "no-useless-escape": ["error"],
+        "no-nonoctal-decimal-escape": ["error"],
+        "typescript/no-confusing-non-null-assertion": ["error"],
+        "typescript/no-unnecessary-type-constraint": ["error"],
+        "typescript/prefer-enum-initializers": ["error"],
+        "typescript/no-duplicate-enum-values": ["error"],
+        "typescript/prefer-as-const": ["error"],
+        "typescript/prefer-function-type": ["error"],
+        "no-useless-rename": ["error"],
+        "prefer-object-has-own": ["error"],
+        "no-proto": ["error"],
+        "unicorn/no-this-assignment": ["error"],
+        "unicorn/no-typeof-undefined": ["error"],
+        "unicorn/no-unreadable-iife": ["error"],
+        "unicorn/no-useless-fallback-in-spread": ["error"],
+        "unicorn/no-useless-promise-resolve-reject": ["error"],
+        "unicorn/no-useless-spread": ["error"],
+        "unicorn/numeric-separators-style": [
+          "error",
+          {
+            "onlyIfContainsSeparator": true,
+            "number": {
+              "minimumDigits": 0,
+              "groupLength": 3
+            }
+          }
+        ],
+        "unicorn/prefer-native-coercion-functions": ["error"],
+        "unicorn/prefer-negative-index": ["error"],
+        "unicorn/prefer-node-protocol": ["error"],
+        "unicorn/prefer-number-properties": ["error"],
+        "unicorn/prefer-prototype-methods": ["error"],
+        "unicorn/prefer-set-has": ["error"],
+        "unicorn/prefer-set-size": ["error"],
+        "unicorn/prefer-single-call": ["error"],
+        "unicorn/prefer-string-raw": ["error"],
+        "unicorn/prefer-string-replace-all": ["error"],
+        "unicorn/prefer-string-trim-start-end": ["error"],
+        "unicorn/prefer-structured-clone": ["error"],
+        "unicorn/prefer-top-level-await": ["error"],
+        "unicorn/prefer-type-error": ["error"],
+        "unicorn/require-module-specifiers": ["error"]
+      }
+    },
+    {
+      "files": ["**/*.spec.ts", "tests/**/*.ts", "src/**/*.test.ts"],
+      "rules": {
+        "typescript/consistent-type-assertions": [
+          "error",
+          {
+            "assertionStyle": "as",
+            "objectLiteralTypeAssertions": "allow"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/content/load.ts"],
+      "rules": {
+        "anti-slop/no-unknown-parameters": "off",
+        "anti-slop/no-unsafe-dictionary-type": "off"
+      }
+    },
+    {
+      "files": ["src/show/messages.ts"],
+      "rules": {
+        "anti-slop/no-unknown-parameters": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*.ts", "*.config.ts"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

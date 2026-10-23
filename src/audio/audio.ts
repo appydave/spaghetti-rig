@@ -139,13 +139,13 @@ export class AudioEngine {
 
   private decks: Deck[] = [];
   private current: Deck | null = null;
-  private rotation = new Map<Theme, number>();
+  private readonly rotation = new Map<Theme, number>();
   private _theme: Theme = "silent";
   private _muted = false;
   private _paused = false;
   private _trackName = "";
-  private listeners: ((name: string) => void)[] = [];
-  private lastPlayed = new Map<Sfx, number>();
+  private readonly listeners: ((name: string) => void)[] = [];
+  private readonly lastPlayed = new Map<Sfx, number>();
   private activeSfx = 0;
 
   // ------------------------------------------------------------------ public API
@@ -236,12 +236,10 @@ export class AudioEngine {
   // ------------------------------------------------------------------ setup
 
   private init(): boolean {
-    const g = globalThis as unknown as {
-      AudioContext?: typeof AudioContext;
-      webkitAudioContext?: typeof AudioContext;
-    };
     const Ctor =
-      typeof AudioContext !== "undefined" ? AudioContext : g.webkitAudioContext;
+      typeof AudioContext === "undefined"
+        ? globalThis.webkitAudioContext
+        : AudioContext;
     if (!Ctor) return false;
     let ctx: AudioContext;
     try {
@@ -422,11 +420,14 @@ export class AudioEngine {
 
   private tick(): void {
     const ctx = this.ctx;
-    if (!ctx || ctx.state !== "running") return;
+    if (ctx?.state !== "running") return;
     try {
       const now = ctx.currentTime;
       const horizon = now + LOOKAHEAD;
-      for (const deck of [...this.decks]) this.scheduleDeck(deck, now, horizon);
+      // Iterate a snapshot: scheduleDeck can roll over to a new track, and createDeck pushes onto decks.
+      const decksAtTickStart = this.decks.slice();
+      for (const deck of decksAtTickStart)
+        this.scheduleDeck(deck, now, horizon);
       this.decks = this.decks.filter((d) => {
         if (d.stopAt !== null && now > d.stopAt + 3) {
           this.disposeDeck(d);
@@ -1300,14 +1301,14 @@ export class AudioEngine {
           dur: 0.2,
           vol: 0.12,
         });
-        [72, 76, 79, 84, 88].forEach((m, i) => {
+        for (const [i, m] of [72, 76, 79, 84, 88].entries()) {
           this.tone(out, t + i * 0.035, {
             type: "triangle",
             f: n(m),
             dur: 0.42,
             vol: 0.11,
           });
-        });
+        }
         this.tone(out, t + 0.18, {
           type: "sine",
           f: n(96),
@@ -1318,14 +1319,16 @@ export class AudioEngine {
         break;
       }
       case "codeFix": {
-        [72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96, 98].forEach((m, i) => {
+        for (const [i, m] of [
+          72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96, 98,
+        ].entries()) {
           this.tone(out, t + i * 0.045, {
             type: "sine",
             f: n(m),
             dur: 0.3,
             vol: 0.065,
           });
-        });
+        }
         this.noise(out, t, {
           filter: "bandpass",
           f: 1000,
@@ -1338,7 +1341,7 @@ export class AudioEngine {
         break;
       }
       case "heal": {
-        [65, 69, 72, 76, 79, 84].forEach((m, i) => {
+        for (const [i, m] of [65, 69, 72, 76, 79, 84].entries()) {
           const ti = t + i * 0.09;
           this.tone(out, ti, {
             type: "sine",
@@ -1353,7 +1356,7 @@ export class AudioEngine {
             dur: 0.4,
             vol: 0.03,
           });
-        });
+        }
         break;
       }
       case "gateBanner": {
@@ -1470,14 +1473,14 @@ export class AudioEngine {
           attack: 0.005,
         });
         this.tone(out, t, { type: "sine", f: 120, f2: 28, dur: 1.0, vol: 0.8 });
-        [67, 72, 76, 79, 84, 88].forEach((m, i) => {
+        for (const [i, m] of [67, 72, 76, 79, 84, 88].entries()) {
           this.tone(out, t + 0.35 + i * 0.07, {
             type: "triangle",
             f: n(m),
             dur: 0.5,
             vol: 0.12,
           });
-        });
+        }
         for (const m of [60, 64, 67, 72])
           this.brass(out, t + 0.8, m, 0.9, 0.06);
         break;
@@ -1502,20 +1505,20 @@ export class AudioEngine {
         }
         for (const m of [48, 55, 60, 64, 67])
           this.brass(out, t + 1.15, m, 1.25, 0.05);
-        [84, 88, 91, 96].forEach((m, i) => {
+        for (const [i, m] of [84, 88, 91, 96].entries()) {
           this.tone(out, t + 1.2 + i * 0.08, {
             type: "sine",
             f: n(m),
             dur: 0.8,
             vol: 0.05,
           });
-        });
+        }
         break;
       }
       case "lose": {
-        [58, 57, 56].forEach((m, i) =>
-          this.trombone(out, t + i * 0.42, m, 0.4, false),
-        );
+        for (const [i, m] of [58, 57, 56].entries()) {
+          this.trombone(out, t + i * 0.42, m, 0.4, false);
+        }
         this.trombone(out, t + 1.26, 55, 0.95, true);
         break;
       }

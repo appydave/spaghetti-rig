@@ -1,3 +1,5 @@
+import { byId, closestEl } from "../dom";
+import { parseDirectorMessage } from "./messages";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "../audio/audio";
 import { toolFor, type Game } from "../content/load";
@@ -20,8 +22,7 @@ import {
   type Step,
 } from "./script";
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
-  document.getElementById(id) as T;
+const $ = (id: string) => byId(id, HTMLElement);
 const PLAYERS: Player[] = ["p1", "p2"];
 const WHO: Record<Player, { n: string; name: string; sub: string }> = {
   p1: { n: "PLAYER 1", name: "Vibe coder", sub: "no tools · ships fast" },
@@ -73,10 +74,10 @@ export class Director {
     this.applyAutoplay();
     for (const p of PLAYERS) worlds[p].onSlip = () => this.slipped(p);
     this.channel?.addEventListener("message", (e) => {
-      const m = e.data as { type: string; key?: string };
+      const m = parseDirectorMessage(e.data);
+      if (!m) return;
       if (m.type === "hello") this.broadcast();
-      if (m.type === "cmd" && m.key)
-        dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
+      else dispatchEvent(new CustomEvent("rig-command", { detail: m.key }));
     });
     // The HUD lets the pointer through, so a press over the street lands on the canvas, which sits
     // beside #game rather than inside it. Listen on the window and fire on the press itself: a quick
@@ -87,8 +88,7 @@ export class Director {
     addEventListener("pointermove", move);
     addEventListener("pointerdown", (e) => {
       if (!this.active || this.paused || e.button !== 0) return;
-      if ((e.target as HTMLElement).closest?.("button, a, .tcard, .overlay"))
-        return;
+      if (closestEl(e.target, "button, a, .tcard, .overlay")) return;
       this.pointer = { x: e.clientX, y: e.clientY };
       this.aim(true);
     });
@@ -104,7 +104,7 @@ export class Director {
     return this.game.tiers[this.step.tier]!;
   }
   visible(): Player[] {
-    return isSplit(this.mode) ? PLAYERS : [this.mode as Player];
+    return isSplit(this.mode) ? PLAYERS : [this.mode];
   }
   /** In spec mode player 1 is driven by autoplay and the mouse plays player 2 only. */
   private machine(p: Player) {
@@ -410,7 +410,7 @@ export class Director {
     const el = this.lane(p)?.querySelector<HTMLElement>(".caption");
     if (!el) return;
     el.hidden = true;
-    if (!c || !c.text) return;
+    if (!c?.text) return;
     const show = () => {
       el.innerHTML = `<span class="label">${esc(c.label)}</span>${esc(c.text)}`;
       el.hidden = false;
@@ -440,7 +440,7 @@ export class Director {
   private renderVs() {
     const t = this.tier,
       vs = this.game.content.screens.vs;
-    const solo = isSplit(this.mode) ? null : (this.mode as Player);
+    const solo = isSplit(this.mode) ? null : this.mode;
     this.stage.vs.reset();
     this.stage.vs.solo = solo;
     $("backdrop").className = solo ? `solo-bg ${solo}` : "vs-bg";
@@ -479,11 +479,14 @@ export class Director {
         : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(6, "0")}</span></div>`;
     const el = $("result");
     el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML =
-      this.visible().map(col).join("") +
-      `<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
-    if (this.mode !== "p1") this.audio.play("win");
-    else this.audio.play("lose");
+    el.innerHTML = `${this.visible()
+      .map((c) => col(c))
+      .join("")}<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
+    if (this.mode === "p1") {
+      this.audio.play("lose");
+    } else {
+      this.audio.play("win");
+    }
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
@@ -491,13 +494,12 @@ export class Director {
     const e = this.game.content.endings;
     const el = $("ending");
     el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML =
-      this.visible()
-        .map(
-          (p) =>
-            `<div class="col ${p}"><span class="label">${p === "p1" ? "PLAYER 1 · VIBE-CODED" : "PLAYER 2 · GATED"}</span><div class="stamp">${esc(e[p].big)}</div><p>${esc(e[p].sub)}</p></div>`,
-        )
-        .join("") + `<div class="next">→ BACK TO THE MAP</div>`;
+    el.innerHTML = `${this.visible()
+      .map(
+        (p) =>
+          `<div class="col ${p}"><span class="label">${p === "p1" ? "PLAYER 1 · VIBE-CODED" : "PLAYER 2 · GATED"}</span><div class="stamp">${esc(e[p].big)}</div><p>${esc(e[p].sub)}</p></div>`,
+      )
+      .join("")}<div class="next">→ BACK TO THE MAP</div>`;
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
   }
 
@@ -566,9 +568,9 @@ export class Director {
       mode: this.mode,
       phase: this.step.phase,
       next:
-        i !== this.at
-          ? stepLabel(this.game, this.script[i]!)
-          : "Back to the map",
+        i === this.at
+          ? "Back to the map"
+          : stepLabel(this.game, this.script[i]!),
       notes: notesFor(this.game, this.step, this.mode),
       paused: this.paused,
     };

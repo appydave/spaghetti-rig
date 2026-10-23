@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { gateLabel } from "../content/gatelabel";
 import { ROAD_HALF } from "./city";
-import { INK, kit, toon } from "./toon";
+import { INK, kit } from "./toon";
+import { isDrawable, mapOf } from "./objects";
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
@@ -148,11 +149,11 @@ export class Gate {
 
   dispose() {
     this.group.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.geometry && !m.geometry.userData.shared) m.geometry.dispose();
-      const mat = m.material as THREE.MeshBasicMaterial | undefined;
-      if (mat && !Array.isArray(mat) && !mat.userData.shared) {
-        mat.map?.dispose();
+      if (!isDrawable(o)) return;
+      if (!o.geometry.userData.shared) o.geometry.dispose();
+      const mat = o.material;
+      if (!Array.isArray(mat) && !mat.userData.shared) {
+        mapOf(mat)?.dispose();
         mat.dispose();
       }
     });
@@ -160,4 +161,4 @@ export class Gate {
   }
 }
 
-export const gateToon = toon;
+export { toon as gateToon } from "./toon";

@@ -3,7 +3,7 @@ import { gateLabel } from "../content/gatelabel";
 import type { Stop } from "../content/types";
 
 export const esc = (s: string) =>
-  s.replace(
+  s.replaceAll(
     /[&<>"']/g,
     (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
@@ -28,7 +28,9 @@ export function toolImg(key: string | undefined) {
 
 /** A CI step packed onto one line ("- name: Lint     run: npm run lint") reads as two YAML lines, so it never wraps mid-command. */
 function yamlStep(code: string) {
-  return /^- name:/.test(code) ? code.replace(/\s{3,}(run:)/, "\n  $1") : code;
+  return code.startsWith("- name:")
+    ? code.replace(/\s{3,}(run:)/, "\n  $1")
+    : code;
 }
 
 /** A tool card, Magic: The Gathering style: frame, name, picture, type line, rules with the real config, power box. */

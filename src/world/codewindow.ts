@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Layout, Line, Mark } from "./codelayout";
 import { Debris } from "./physics";
 import { INK, kit, rng, toon } from "./toon";
+import { meshNamed } from "./objects";
 
 export type Mood = "angry" | "calm" | "fixed" | "boss";
 
@@ -165,18 +166,18 @@ export function paintCard(
   g.fillStyle = p.header;
   g.fillRect(0, 0, width, HEADER + 10);
   g.restore();
-  ["#ff8b69", "#ffd96a", "#aee5a3"].forEach((c, i) => {
+  for (const [i, c] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
     g.fillStyle = c;
     g.beginPath();
     g.arc(46 + i * 34, HEADER / 2 + 4, 11, 0, Math.PI * 2);
     g.fill();
-  });
+  }
   g.font = `600 28px ${MONO}`;
   g.fillStyle = "#f4f4e8";
   g.textBaseline = "middle";
   const fname =
     layout.filename.length > layout.cols - 8
-      ? "…" + layout.filename.slice(-(layout.cols - 9))
+      ? `…${layout.filename.slice(-(layout.cols - 9))}`
       : layout.filename;
   g.fillText(fname, 46 + 3 * 34 + 8, HEADER / 2 + 5);
 
@@ -223,14 +224,16 @@ export function paintCard(
     g.stroke();
     g.setLineDash([]);
     y += 26;
-    layout.notes.forEach((n, i) => {
+    for (const [i, n] of layout.notes.entries()) {
       const ls = noteLines[i]!;
       pin(g, PAD + 18, y + 18, n.pin, PIN[n.kind]);
       g.font = `500 30px Space, Arial, sans-serif`;
       g.fillStyle = "#e6eef7";
-      ls.forEach((l, j) => g.fillText(l, PAD + 52, y + 29 + j * 40));
+      for (const [j, l] of ls.entries()) {
+        g.fillText(l, PAD + 52, y + 29 + j * 40);
+      }
       y += Math.max(1, ls.length) * 40 + 8;
-    });
+    }
   }
   if (footLines.length) {
     y += 18;
@@ -680,7 +683,7 @@ export class CodeWindow {
     debris: Debris,
     from: THREE.Vector3,
     power = 6,
-    grid = [6, 4] as [number, number],
+    grid: [number, number] = [6, 4],
     seed = 7,
   ) {
     this.group.updateMatrixWorld(true);
@@ -753,10 +756,10 @@ export class CodeWindow {
         mesh.position.set(cx, cy, 0);
         this.group.add(mesh);
         const hull = new Float32Array(poly.length * 6);
-        poly.forEach(([x, y], k) => {
+        for (const [k, [x, y]] of poly.entries()) {
           hull.set([x - cx, y - cy, d / 2], k * 6);
           hull.set([x - cx, y - cy, -d / 2], k * 6 + 3);
-        });
+        }
         const world = mesh.getWorldPosition(centre);
         const away = world
           .clone()
@@ -782,7 +785,7 @@ export class CodeWindow {
         );
       }
     // The slab itself and the eyes go; eyes tumble as their own pieces.
-    const slab = this.group.getObjectByName("code-slab") as THREE.Mesh;
+    const slab = meshNamed(this.group, "code-slab");
     slab.geometry.dispose();
     slab.removeFromParent();
     if (this.eyes) debris.breakObject(this.eyes, { from, power: power * 0.8 });
@@ -791,9 +794,8 @@ export class CodeWindow {
 
   dispose() {
     this.group.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh && m.geometry && !m.geometry.userData.shared)
-        m.geometry.dispose();
+      if (o instanceof THREE.Mesh && !o.geometry.userData.shared)
+        o.geometry.dispose();
     });
     if (!this.face.userData.refs) {
       this.texture.dispose();

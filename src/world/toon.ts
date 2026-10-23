@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { isDrawable } from "./objects";
 
 export const INK = "#173e35";
 
@@ -9,7 +10,9 @@ export function toonGradient(): THREE.DataTexture {
   if (gradient) return gradient;
   const tones = [96, 150, 196, 232, 255];
   const data = new Uint8Array(tones.length * 4);
-  tones.forEach((t, i) => data.set([t, t, t, 255], i * 4));
+  for (const [i, t] of tones.entries()) {
+    data.set([t, t, t, 255], i * 4);
+  }
   gradient = new THREE.DataTexture(data, tones.length, 1, THREE.RGBAFormat);
   gradient.minFilter = gradient.magFilter = THREE.NearestFilter;
   gradient.generateMipmaps = false;
@@ -24,7 +27,9 @@ export function toon(
   emissive?: THREE.ColorRepresentation,
   emissiveIntensity = 0.6,
 ): THREE.MeshToonMaterial {
-  const key = `${color}|${emissive ?? ""}|${emissiveIntensity}`;
+  const emissiveKey =
+    emissive === undefined ? "" : new THREE.Color(emissive).getHexString();
+  const key = `${new THREE.Color(color).getHexString()}|${emissiveKey}|${emissiveIntensity}`;
   let m = cache.get(key);
   if (!m) {
     m = new THREE.MeshToonMaterial({ color, gradientMap: toonGradient() });
@@ -216,7 +221,9 @@ export function kit(outline = 0.022) {
     bevel = 0.01,
   ) {
     const shape = new THREE.Shape();
-    pts.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
+    for (const [i, [x, y]] of pts.entries()) {
+      i ? shape.lineTo(x, y) : shape.moveTo(x, y);
+    }
     shape.closePath();
     const g = new THREE.ExtrudeGeometry(shape, {
       depth,
@@ -234,13 +241,9 @@ export function kit(outline = 0.022) {
 /** Dispose an object's own (non-shared) geometries, materials and textures. */
 export function disposeTree(root: THREE.Object3D) {
   root.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (m.geometry && !m.geometry.userData.shared) m.geometry.dispose();
-    const mats = m.material
-      ? Array.isArray(m.material)
-        ? m.material
-        : [m.material]
-      : [];
+    if (!isDrawable(o)) return;
+    if (!o.geometry.userData.shared) o.geometry.dispose();
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
     for (const mat of mats) {
       if (mat.userData.shared) continue;
       if (typeof mat.userData.refs === "number" && --mat.userData.refs > 0)

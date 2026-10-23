@@ -1,4 +1,4 @@
-/** Shapes of public/content/cards.json. Only the fields the game reads are typed; the rest pass through. */
+/** Shapes of public/content/cards.json. Only the fields the game reads are typed; the parser (load.ts) drops every other field. */
 
 export type RowKind = "c" | "a" | "d" | "l";
 export type Row = [RowKind, string];

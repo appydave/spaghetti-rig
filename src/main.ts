@@ -1,6 +1,8 @@
 import { AudioEngine, TRACKS } from "./audio/audio";
-import { loadContent, type Game } from "./content/load";
-import { Director, type PresenterState } from "./show/director";
+import { loadContent } from "./content/load";
+import { byId, closestEl } from "./dom";
+import { Director } from "./show/director";
+import { parsePresenterState } from "./show/messages";
 import { isSplit, MODES, type Mode, type Player } from "./show/script";
 import { gatesText } from "./content/gatelabel";
 import { esc } from "./ui/card";
@@ -8,8 +10,7 @@ import { initPhysics } from "./world/physics";
 import { Stage } from "./world/stage";
 import { PlayerWorld } from "./world/world";
 
-const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
-  document.getElementById(id) as T;
+const $ = (id: string) => byId(id, HTMLElement);
 type Screen = "prelude" | "title" | "map" | "game";
 
 const store = {
@@ -29,19 +30,32 @@ const store = {
   },
 };
 
-function showError(err: unknown) {
-  console.error(err);
+function showError(message: string, cause?: unknown) {
+  console.error(cause ?? message);
   const el = document.createElement("div");
   el.className = "error";
-  el.textContent = `Something broke: ${err instanceof Error ? err.message : String(err)}`;
+  el.textContent = `Something broke: ${message}`;
   document.body.append(el);
   setTimeout(() => el.remove(), 8000);
 }
-addEventListener("error", (e) => showError(e.error ?? e.message));
-addEventListener("unhandledrejection", (e) => showError(e.reason));
+addEventListener("error", (e) =>
+  showError(e.error instanceof Error ? e.error.message : e.message, e.error),
+);
+addEventListener("unhandledrejection", (e) =>
+  showError(
+    e.reason instanceof Error ? e.reason.message : String(e.reason),
+    e.reason,
+  ),
+);
 
 if (new URLSearchParams(location.search).has("presenter")) presenter();
-else boot().catch(showError);
+else {
+  try {
+    await boot();
+  } catch (err) {
+    showError(err instanceof Error ? err.message : String(err), err);
+  }
+}
 
 async function boot() {
   const backdrop = document.createElement("div");
@@ -55,7 +69,7 @@ async function boot() {
     document.fonts.load("500 20px Space"),
   ]);
   const audio = new AudioEngine();
-  const stage = new Stage($("stage") as unknown as HTMLCanvasElement);
+  const stage = new Stage(byId("stage", HTMLCanvasElement));
   let mode: Mode =
     MODES.find((m) => m.mode === store.get("mode"))?.mode ?? "both";
   const pan = (p: Player) => (): number =>
@@ -109,11 +123,9 @@ async function boot() {
     mode = m;
     store.set("mode", m);
     director.setMode(m);
-    document
-      .querySelectorAll<HTMLElement>("[data-mode]")
-      .forEach((b) =>
-        b.setAttribute("aria-checked", String(b.dataset.mode === m)),
-      );
+    for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
+      b.setAttribute("aria-checked", String(b.dataset.mode === m));
+    }
     $("map-mode").textContent = MODES.find((x) => x.mode === m)!.map;
     audio.play("uiMove");
   }
@@ -187,9 +199,9 @@ async function boot() {
   function toggleMute() {
     audio.muted = !audio.muted;
     document.body.classList.toggle("muted", audio.muted);
-    document
-      .querySelectorAll(".sound-label")
-      .forEach((e) => (e.textContent = audio.muted ? "SOUND OFF" : "SOUND ON"));
+    for (const e of document.querySelectorAll(".sound-label")) {
+      e.textContent = audio.muted ? "SOUND OFF" : "SOUND ON";
+    }
   }
 
   function toggleHelp() {
@@ -211,14 +223,16 @@ async function boot() {
     show("map");
     audio.play("uiSelect");
   });
-  document.querySelectorAll<HTMLElement>("[data-mode]").forEach((b) =>
+  for (const b of document.querySelectorAll<HTMLElement>("[data-mode]")) {
     b.addEventListener("click", () => {
-      setMode(b.dataset.mode as Mode);
+      const mode = MODES.find((x) => x.mode === b.dataset.mode);
+      if (!mode) throw new Error(`Unknown mode "${b.dataset.mode}"`);
+      setMode(mode.mode);
       b.blur();
-    }),
-  );
+    });
+  }
   document.addEventListener("click", (e) => {
-    const a = (e.target as HTMLElement).closest<HTMLElement>("[data-action]");
+    const a = closestEl(e.target, "[data-action]");
     if (!a) return;
     const act = a.dataset.action;
     if (act === "mute") toggleMute();
@@ -239,7 +253,7 @@ async function boot() {
     if (a instanceof HTMLButtonElement) a.blur();
   });
   $("tiers").addEventListener("click", (e) => {
-    const li = (e.target as HTMLElement).closest<HTMLElement>(".tier");
+    const li = closestEl(e.target, ".tier");
     if (!li) return;
     const i = Number(li.dataset.i);
     if (i === selected) start(i);
@@ -343,18 +357,20 @@ async function boot() {
   });
   // The presenter window can drive the show too.
   addEventListener("rig-command", (e) => {
-    const k = (e as CustomEvent<string>).detail;
-    const map: Record<string, [string, boolean]> = {
-      next: ["ArrowRight", false],
-      back: ["ArrowLeft", false],
-      pause: ["KeyP", false],
-      p1: ["Digit1", false],
-      p2: ["Digit2", false],
-      both: ["KeyB", false],
-      spec: ["KeyS", false],
-      auto: ["KeyA", false],
-    };
-    const m = map[k];
+    if (!(e instanceof CustomEvent)) return;
+    const k: unknown = e.detail;
+    if (typeof k !== "string") return;
+    const map = new Map<string, [string, boolean]>([
+      ["next", ["ArrowRight", false]],
+      ["back", ["ArrowLeft", false]],
+      ["pause", ["KeyP", false]],
+      ["p1", ["Digit1", false]],
+      ["p2", ["Digit2", false]],
+      ["both", ["KeyB", false]],
+      ["spec", ["KeyS", false]],
+      ["auto", ["KeyA", false]],
+    ]);
+    const m = map.get(k);
     if (m) key(m[0], m[1], "");
   });
 
@@ -370,7 +386,7 @@ async function boot() {
   requestAnimationFrame(frame);
   stage.canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
-    showError(new Error("Graphics context lost — reload the page."));
+    showError("Graphics context lost — reload the page.");
   });
 
   // Hooks for the browser tests (dev builds only).
@@ -406,8 +422,8 @@ function presenter() {
   const send = (key: string) => ch.postMessage({ type: "cmd", key });
   ch.postMessage({ type: "hello" });
   ch.addEventListener("message", (e) => {
-    const s = e.data as PresenterState;
-    if (s.type !== "state") return;
+    const s = parsePresenterState(e.data);
+    if (!s) return;
     const n = s.notes;
     root.innerHTML = `
       <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? " · PAUSED" : ""}</span><br><b>${esc(n.heading)}</b></div>
@@ -419,25 +435,23 @@ function presenter() {
       <p class="next">Next: ${esc(s.next)}</p>`;
   });
   root.addEventListener("click", (e) => {
-    const k = (e.target as HTMLElement).dataset.k;
+    const k = e.target instanceof HTMLElement ? e.target.dataset.k : undefined;
     if (k) send(k);
   });
   addEventListener("keydown", (e) => {
-    const k = (
-      {
-        ArrowRight: "next",
-        Space: "next",
-        PageDown: "next",
-        ArrowLeft: "back",
-        PageUp: "back",
-        KeyP: "pause",
-        Digit1: "p1",
-        Digit2: "p2",
-        KeyB: "both",
-        KeyS: "spec",
-        KeyA: "auto",
-      } as Record<string, string>
-    )[e.code];
+    const k = new Map([
+      ["ArrowRight", "next"],
+      ["Space", "next"],
+      ["PageDown", "next"],
+      ["ArrowLeft", "back"],
+      ["PageUp", "back"],
+      ["KeyP", "pause"],
+      ["Digit1", "p1"],
+      ["Digit2", "p2"],
+      ["KeyB", "both"],
+      ["KeyS", "spec"],
+      ["KeyA", "auto"],
+    ]).get(e.code);
     if (k) {
       e.preventDefault();
       send(k);
@@ -445,4 +459,4 @@ function presenter() {
   });
 }
 
-export type { Game };
+export type { Game } from "./content/load";

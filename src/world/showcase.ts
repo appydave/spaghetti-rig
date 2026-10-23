@@ -5,6 +5,7 @@ import { CodeWindow, paintCard } from "./codewindow";
 import { kit } from "./toon";
 import type { Player } from "../show/script";
 import type { Card } from "../content/types";
+import { userData } from "./objects";
 
 function lights(scene: THREE.Scene) {
   scene.add(new THREE.HemisphereLight("#e4f7ff", "#586d55", 2.3));
@@ -48,9 +49,7 @@ function snippet(lines: string[], title: string): Card {
   return {
     id: "",
     title,
-    blocks: [
-      { view: "code", rows: lines.map((l) => ["c", l] as ["c", string]) },
-    ],
+    blocks: [{ view: "code", rows: lines.map((l): ["c", string] => ["c", l]) }],
     annotations: [
       { block: 0, row: 1, match: lines[1]!.trim(), kind: "problem", note: "" },
     ],
@@ -58,6 +57,9 @@ function snippet(lines: string[], title: string): Card {
 }
 
 /** The title screen's hero: the specialist and his cannon, angry code windows flying in. */
+const shadowOf = (root: THREE.Object3D) =>
+  userData(root, "shadow", THREE.Object3D);
+
 export class TitleShowcase {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(32, 16 / 9, 0.1, 100);
@@ -171,8 +173,8 @@ export class TitleShowcase {
     );
     this.hero.update(dt);
     this.sidekick.update(dt);
-    this.windows.forEach((w, i) => {
-      const home = w.group.userData.home as THREE.Vector3;
+    for (const [i, w] of this.windows.entries()) {
+      const home = userData(w.group, "home", THREE.Vector3);
       w.group.position.set(
         home.x + Math.sin(this.t * 0.7 + i) * 0.12,
         home.y + Math.sin(this.t * 1.1 + i * 2) * 0.18,
@@ -180,7 +182,7 @@ export class TitleShowcase {
       );
       w.group.rotation.y = 0.35 + Math.sin(this.t * 0.5 + i) * 0.08;
       w.update(dt);
-    });
+    }
     this.scene.traverse((o) => {
       if (o.userData.spin) o.rotation.y += dt * 1.5;
     });
@@ -247,7 +249,7 @@ export class VsShowcase {
     }
     for (const c of [this.p1, this.p2]) {
       c.root.visible = true;
-      (c.root.userData.shadow as THREE.Object3D).visible = true;
+      shadowOf(c.root).visible = true;
       c.root.scale.setScalar(1.45);
     }
     this.p1.root.rotation.y = -Math.PI / 2 - 0.85;
@@ -255,7 +257,7 @@ export class VsShowcase {
     this.p1.root.position.x = -2.1 - (1 - e) * 6;
     this.p2.root.position.x = 2.1 + (1 - e) * 6;
     for (const c of [this.p1, this.p2])
-      (c.root.userData.shadow as THREE.Object3D).position.x = c.root.position.x;
+      shadowOf(c.root).position.x = c.root.position.x;
     this.p1.pose = this.t > 0.6 ? "aim" : "walk";
     this.p2.pose = this.t > 0.6 ? "aim" : "walk";
     this.p1.aimAt(this.p2.root.position.clone().setY(1.5));
@@ -269,13 +271,13 @@ export class VsShowcase {
     const me = this.solo === "p1" ? this.p1 : this.p2,
       other = this.solo === "p1" ? this.p2 : this.p1;
     other.root.visible = false;
-    (other.root.userData.shadow as THREE.Object3D).visible = false;
+    shadowOf(other.root).visible = false;
     me.root.visible = true;
-    (me.root.userData.shadow as THREE.Object3D).visible = true;
+    shadowOf(me.root).visible = true;
     me.root.scale.setScalar(1.75);
     me.root.position.x = 2.6 + (1 - e) * 7;
     me.root.rotation.y = Math.PI - 0.6; // towards the camera, glancing left at the words
-    (me.root.userData.shadow as THREE.Object3D).position.x = me.root.position.x;
+    shadowOf(me.root).position.x = me.root.position.x;
     me.pose = this.t > 0.6 ? "aim" : "walk";
     me.aimAt(new THREE.Vector3(-6, 2.2, 3));
     me.update(dt);

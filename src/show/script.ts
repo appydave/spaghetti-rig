@@ -27,7 +27,8 @@ export interface Step {
 }
 /** p1 / p2: one player full screen. both: side by side. spec: side by side, you play the specialist and the vibe coder plays itself. */
 export type Mode = "p1" | "p2" | "both" | "spec";
-export const isSplit = (mode: Mode) => mode === "both" || mode === "spec";
+export const isSplit = (mode: Mode): mode is "both" | "spec" =>
+  mode === "both" || mode === "spec";
 export const MODES: {
   mode: Mode;
   key: string;
@@ -73,21 +74,23 @@ export function buildScript(game: Game): Step[] {
   const playable = game.tiers.filter((t) => t.playable);
   for (const t of playable) {
     s("vs", t.index);
-    t.stops.forEach((_, k) => {
+    for (const k of t.stops.keys()) {
       s("walk", t.index, k);
       s("problem", t.index, k);
       s("tool", t.index, k);
       s("fixed", t.index, k);
-    });
+    }
     if (t.hasBoss) {
       s("walk", t.index, t.stops.length); // walk to the boss arena
       s("boss", t.index);
-      t.boss.parts.forEach((_, i) => s("bossPart", t.index, -1, i));
+      for (const i of t.boss.parts.keys()) {
+        s("bossPart", t.index, -1, i);
+      }
       s("bossDown", t.index);
     }
     s("result", t.index);
   }
-  if (playable.length) s("ending", playable[playable.length - 1]!.index);
+  if (playable.length) s("ending", playable.at(-1)!.index);
   return steps;
 }
 
@@ -219,7 +222,7 @@ export interface Notes {
 export function notesFor(game: Game, step: Step, mode: Mode): Notes {
   const tier = game.tiers[step.tier];
   const stop = tier?.stops[step.stop];
-  const fromCard = (c: Card, heading: string): Notes => {
+  const fromCard = (c: Card): Notes => {
     const extra: Notes["extra"] = [];
     if (c.failureModes?.length)
       extra.push({
@@ -257,11 +260,11 @@ export function notesFor(game: Game, step: Step, mode: Mode): Notes {
   };
   switch (step.phase) {
     case "problem":
-      return stop ? fromCard(stop.p1, `${gateText(stop.gate)}`) : blank(step);
+      return stop ? fromCard(stop.p1) : blank(step);
     case "tool":
     case "fixed":
-      if (stop && mode !== "p1") return fromCard(stop.p2, gateText(stop.gate));
-      return stop ? fromCard(stop.p1, gateText(stop.gate)) : blank(step);
+      if (stop && mode !== "p1") return fromCard(stop.p2);
+      return stop ? fromCard(stop.p1) : blank(step);
     case "walk":
       return stop
         ? {
