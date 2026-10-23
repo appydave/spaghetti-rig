@@ -6,10 +6,7 @@ import { boot, press, rig, step, watchErrors } from "./helpers";
 const W = 1600;
 const H = 900;
 const shots = (page: Page) =>
-  rig<{ p1: number; p2: number }>(
-    page,
-    "({ p1: r.worlds.p1.shots, p2: r.worlds.p2.shots })",
-  );
+  rig(page, (r) => ({ p1: r.worlds.p1.shots, p2: r.worlds.p2.shots }));
 
 /** Pick a mode and start walking tier 1, with keys. */
 async function walk(page: Page, modeKey: string) {
@@ -64,17 +61,14 @@ test("a real click on an enemy kills it and the score goes up", async ({
   for (let i = 0; i < 80 && score === 0; i++) {
     await page.waitForTimeout(80);
 
-    const e = await rig<{ x: number; y: number } | null>(
-      page,
-      "r.worlds.p2.enemyScreen()",
-    );
+    const e = await rig(page, (r) => r.worlds.p2.enemyScreen());
 
     if (!e || Math.abs(e.x) > 0.95 || Math.abs(e.y) > 0.6) {
       continue;
     }
 
     await tap(page, ((e.x + 1) / 2) * W, ((1 - e.y) / 2) * H);
-    score = await rig<number>(page, "r.worlds.p2.score");
+    score = await rig(page, (r) => r.worlds.p2.score);
   }
 
   expect(score).toBeGreaterThan(0);
@@ -87,15 +81,15 @@ test("Space moves the show on and never fires; Page Down and Page Up step forwar
   await walk(page, "b");
 
   const before = await shots(page);
-  const at = await rig<number>(page, "r.director.at");
+  const at = await rig(page, (r) => r.director.at);
 
   await press(page, "Space", 300);
-  expect(await rig<number>(page, "r.director.at")).toBe(at + 1);
+  expect(await rig(page, (r) => r.director.at)).toBe(at + 1);
   expect(await shots(page)).toEqual(before);
   await press(page, "PageDown", 300);
-  expect(await rig<number>(page, "r.director.at")).toBe(at + 2);
+  expect(await rig(page, (r) => r.director.at)).toBe(at + 2);
   await press(page, "PageUp", 300);
-  expect(await rig<number>(page, "r.director.at")).toBe(at + 1);
+  expect(await rig(page, (r) => r.director.at)).toBe(at + 1);
   expect(await shots(page)).toEqual(before);
 });
 
@@ -107,10 +101,10 @@ test("Space after clicking the autoplay button still means next, not the button"
   await page.click('[data-chip="auto"]');
   await expect(page.locator("#hud-auto")).toHaveText("AUTOPLAY ON");
 
-  const at = await rig<number>(page, "r.director.at");
+  const at = await rig(page, (r) => r.director.at);
 
   await press(page, "Space", 300);
-  expect(await rig<number>(page, "r.director.at")).toBe(at + 1);
+  expect(await rig(page, (r) => r.director.at)).toBe(at + 1);
   await expect(page.locator("#hud-auto")).toHaveText("AUTOPLAY ON");
 });
 
@@ -165,11 +159,11 @@ test("mode S: player 1 plays itself, real clicks fire for player 2 only", async 
   expect((await shots(page)).p2).toBe(p2);
 
   // Switching in and out keeps your place.
-  const at = await rig<number>(page, "r.director.at");
+  const at = await rig(page, (r) => r.director.at);
 
   for (const k of ["b", "s", "2", "s"]) {
     await press(page, k, 200);
-    expect(await rig<number>(page, "r.director.at")).toBe(at);
+    expect(await rig(page, (r) => r.director.at)).toBe(at);
   }
 
   expect(errors).toEqual([]);
@@ -182,15 +176,15 @@ test("what you miss becomes debt: bugs shipped for player 1, caught by CI for pl
   await walk(page, "b");
   // Nobody shoots; let the street walk past.
   await expect
-    .poll(() => rig<number>(page, "r.worlds.p1.shipped"), { timeout: 12_000 })
+    .poll(() => rig(page, (r) => r.worlds.p1.shipped), { timeout: 12_000 })
     .toBeGreaterThan(0);
   await expect(page.locator(".lane[data-p='p1'] .shipped")).not.toHaveText("0");
   await expect(
     page.locator(".lane[data-p='p2'] .ci-pop").first(),
   ).toBeAttached();
   await expect(page.locator(".lane[data-p='p2'] .shipped")).toHaveCount(0);
-  expect(await rig<number>(page, "r.worlds.p1.health")).toBe(100);
-  expect(await rig<number>(page, "r.worlds.p2.health")).toBe(100);
+  expect(await rig(page, (r) => r.worlds.p1.health)).toBe(100);
+  expect(await rig(page, (r) => r.worlds.p2.health)).toBe(100);
 });
 
 test("single-player modes get a solo tier intro; B keeps the VS screen", async ({

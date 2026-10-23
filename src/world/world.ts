@@ -416,6 +416,11 @@ export class PlayerWorld {
     return present(this.tier, "the tier");
   }
 
+  /** For tests: the key of the stop window on show, or "" when there is none. */
+  get windowKey(): string {
+    return this.window?.key ?? "";
+  }
+
   private get shownWindow() {
     return present(this.window, "the stop window");
   }

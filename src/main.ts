@@ -14,6 +14,7 @@ import { gatesText } from "./content/gatelabel";
 import { esc } from "./ui/card";
 import { initPhysics } from "./world/physics";
 import { Stage } from "./world/stage";
+import type { TestHooks } from "./testhooks";
 import { PlayerWorld } from "./world/world";
 
 const $ = (id: string) => byId(id, HTMLElement);
@@ -529,21 +530,21 @@ async function boot() {
 
   // Hooks for the browser tests (dev builds only).
   if (import.meta.env.DEV) {
-    Object.assign(window, {
-      __rig: {
-        game,
-        director,
-        worlds,
-        stage,
-        audio,
-        show,
-        start,
-        key,
-        get screen() {
-          return screen;
-        },
+    const rig = {
+      game,
+      director,
+      worlds,
+      stage,
+      audio,
+      show,
+      start,
+      key,
+      get screen() {
+        return screen;
       },
-    });
+    };
+
+    Object.assign(window, { __rig: rig satisfies TestHooks });
   }
 
   show("prelude");
