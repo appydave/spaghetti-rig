@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "node scripts/check-no-suppressions.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json ."
+    "lint": "node scripts/check-no-suppressions.mjs && node lint/gates/css-colours.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json ."
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
