@@ -14,6 +14,72 @@ const LH = 50;
 const PAD = 44;
 const HEADER = 74;
 
+// The card's layout, in canvas pixels. Sizes grow with the content: the card is as wide as its code and as tall as its parts.
+/** The width of a character is measured on this many of them, then divided. */
+const CHAR_SAMPLE_COUNT = 10;
+/** The line-number gutter is this many character widths wide. */
+const GUTTER_COLUMNS = 2.2;
+/** A title next to a badge wraps this much narrower; a note wraps this much narrower to leave room for its pin. */
+const BADGE_RESERVE = 140;
+const NOTE_INDENT = 64;
+/** Line heights that differ from the code line height LH. */
+const RULE_HEIGHT = 34;
+const CAPTION_HEIGHT = 44;
+/** The title block: space above, per wrapped line, and below. */
+const TITLE_TOP = 40;
+const TITLE_LINE = 62;
+const TITLE_BOTTOM = 18;
+/** Space under the code. */
+const CODE_BOTTOM = 24;
+/** The notes block: space above it, per wrapped line, and between notes. */
+const NOTES_TOP = 26;
+const NOTE_LINE = 40;
+const NOTE_GAP = 8;
+/** The footer: space above it and per wrapped line, and where its text sits within a line. */
+const FOOT_TOP = 18;
+const FOOT_LINE = 38;
+const FOOT_BASELINE = 26;
+/** The bottom margin is this share of the side padding. */
+const BOTTOM_PAD_SHARE = 0.8;
+/** The slab: corner radius, the edge stroke and where it is drawn, and its own corner radius. */
+const SLAB_RADIUS = 30;
+const EDGE_WIDTH = 10;
+const EDGE_INSET = 5;
+const EDGE_RADIUS = 26;
+/** The title bar: inset from the edge (each side, then both), trimmed height, corner radius, and how far its fill overhangs. */
+const BAR_INSET = 10;
+const BAR_WIDTH_TRIM = 20;
+const BAR_HEIGHT_TRIM = 4;
+const BAR_RADIUS = 22;
+const BAR_OVERHANG = 10;
+/** The three window dots: first dot's x, spacing, count, drop below the bar's middle, radius. */
+const DOT_X = 46;
+const DOT_STEP = 34;
+const DOT_COUNT = 3;
+const DOT_DROP = 4;
+const DOT_RADIUS = 11;
+/** The file name: gap after the dots, drop below the bar's middle, and the columns kept free before it is cut short. */
+const FILENAME_GAP = 8;
+const FILENAME_DROP = 5;
+const FILENAME_MARGIN = 8;
+const FILENAME_CUT_MARGIN = 9;
+/** The label line: baseline below the bar, and the space between its letters. */
+const LABEL_BASELINE = 40;
+const LABEL_TRACKING = 4;
+/** The badge: padding around its text, how far it rises above the label baseline, its height and corner radius, and its text offset. */
+const BADGE_PAD = 34;
+const BADGE_RISE = 30;
+const BADGE_HEIGHT = 58;
+const BADGE_RADIUS = 8;
+const BADGE_TEXT_X = 17;
+const BADGE_TEXT_Y = 12;
+/** The dashed rule above the notes: dash and gap length. */
+const RULE_DASH = 8;
+/** A note's pin sits this far in and down; its text starts this far in and sits this far down. */
+const NOTE_PIN_OFFSET = 18;
+const NOTE_TEXT_INDENT = 52;
+const NOTE_BASELINE = 29;
+
 export const PALETTE: Record<
   Mood,
   {
@@ -133,8 +199,8 @@ export function paintCard(
 
   g.font = `600 ${FONT}px ${MONO}`;
 
-  const cw = g.measureText("MMMMMMMMMM").width / 10;
-  const gutter = cw * 2.2;
+  const cw = g.measureText("MMMMMMMMMM").width / CHAR_SAMPLE_COUNT;
+  const gutter = cw * GUTTER_COLUMNS;
   const width = Math.ceil(PAD * 2 + gutter + layout.cols * cw);
   const inner = width - PAD * 2;
 
@@ -144,26 +210,36 @@ export function paintCard(
   const titleLines = wrapProse(
     g,
     paint.title.toUpperCase(),
-    inner - (paint.badge ? 140 : 0),
+    inner - (paint.badge ? BADGE_RESERVE : 0),
   );
 
   g.font = `500 30px Space, Arial, sans-serif`;
 
-  const noteLines = layout.notes.map((n) => wrapProse(g, n.note, inner - 64));
+  const noteLines = layout.notes.map((n) =>
+    wrapProse(g, n.note, inner - NOTE_INDENT),
+  );
 
   g.font = `500 28px Space, Arial, sans-serif`;
 
   const footLines = paint.footer ? wrapProse(g, paint.footer, inner) : [];
   const lineH = (l: Line) =>
-    l.type === "rule" ? 34 : l.type === "caption" ? 44 : LH;
-  const titleH = 40 + titleLines.length * 62 + 18;
-  const codeH = layout.lines.reduce((s, l) => s + lineH(l), 0) + 24;
+    l.type === "rule"
+      ? RULE_HEIGHT
+      : l.type === "caption"
+        ? CAPTION_HEIGHT
+        : LH;
+  const titleH = TITLE_TOP + titleLines.length * TITLE_LINE + TITLE_BOTTOM;
+  const codeH = layout.lines.reduce((s, l) => s + lineH(l), 0) + CODE_BOTTOM;
   const notesH = layout.notes.length
-    ? 26 + noteLines.reduce((s, l) => s + Math.max(1, l.length) * 40 + 8, 0)
+    ? NOTES_TOP +
+      noteLines.reduce(
+        (s, l) => s + Math.max(1, l.length) * NOTE_LINE + NOTE_GAP,
+        0,
+      )
     : 0;
-  const footH = footLines.length ? 18 + footLines.length * 38 : 0;
+  const footH = footLines.length ? FOOT_TOP + footLines.length * FOOT_LINE : 0;
   const height = Math.ceil(
-    HEADER + titleH + codeH + notesH + footH + PAD * 0.8,
+    HEADER + titleH + codeH + notesH + footH + PAD * BOTTOM_PAD_SHARE,
   );
 
   cv.width = width;
@@ -173,23 +249,43 @@ export function paintCard(
 
   // Body with a bright inner edge (the slab's front lip).
   g.fillStyle = p.body;
-  roundRect(g, 0, 0, width, height, 30);
+  roundRect(g, 0, 0, width, height, SLAB_RADIUS);
   g.fill();
-  g.lineWidth = 10;
+  g.lineWidth = EDGE_WIDTH;
   g.strokeStyle = p.edge;
-  roundRect(g, 5, 5, width - 10, height - 10, 26);
+  roundRect(
+    g,
+    EDGE_INSET,
+    EDGE_INSET,
+    width - EDGE_WIDTH,
+    height - EDGE_WIDTH,
+    EDGE_RADIUS,
+  );
   g.stroke();
   // Title bar.
   g.save();
-  roundRect(g, 10, 10, width - 20, HEADER - 4, 22);
+  roundRect(
+    g,
+    BAR_INSET,
+    BAR_INSET,
+    width - BAR_WIDTH_TRIM,
+    HEADER - BAR_HEIGHT_TRIM,
+    BAR_RADIUS,
+  );
   g.clip();
   g.fillStyle = p.header;
-  g.fillRect(0, 0, width, HEADER + 10);
+  g.fillRect(0, 0, width, HEADER + BAR_OVERHANG);
   g.restore();
   for (const [i, c] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
     g.fillStyle = c;
     g.beginPath();
-    g.arc(46 + i * 34, HEADER / 2 + 4, 11, 0, Math.PI * 2);
+    g.arc(
+      DOT_X + i * DOT_STEP,
+      HEADER / 2 + DOT_DROP,
+      DOT_RADIUS,
+      0,
+      Math.PI * 2,
+    );
     g.fill();
   }
 
@@ -198,38 +294,49 @@ export function paintCard(
   g.textBaseline = "middle";
 
   const fname =
-    layout.filename.length > layout.cols - 8
-      ? `…${layout.filename.slice(-(layout.cols - 9))}`
+    layout.filename.length > layout.cols - FILENAME_MARGIN
+      ? `…${layout.filename.slice(-(layout.cols - FILENAME_CUT_MARGIN))}`
       : layout.filename;
 
-  g.fillText(fname, 46 + 3 * 34 + 8, HEADER / 2 + 5);
+  g.fillText(
+    fname,
+    DOT_X + DOT_COUNT * DOT_STEP + FILENAME_GAP,
+    HEADER / 2 + FILENAME_DROP,
+  );
 
-  let y = HEADER + 40;
+  let y = HEADER + LABEL_BASELINE;
 
   g.textBaseline = "alphabetic";
   g.font = `600 22px Space, Arial, sans-serif`;
   g.fillStyle = p.label;
-  spaced(g, paint.label.toUpperCase(), PAD, y, 4);
+  spaced(g, paint.label.toUpperCase(), PAD, y, LABEL_TRACKING);
   if (paint.badge) {
     g.font = `italic 800 40px Barlow, Impact, sans-serif`;
 
-    const bw = g.measureText(paint.badge).width + 34;
+    const bw = g.measureText(paint.badge).width + BADGE_PAD;
 
     g.fillStyle = mood === "angry" ? "#de6a47" : "#f9db48";
-    roundRect(g, width - PAD - bw, y - 30, bw, 58, 8);
+    roundRect(
+      g,
+      width - PAD - bw,
+      y - BADGE_RISE,
+      bw,
+      BADGE_HEIGHT,
+      BADGE_RADIUS,
+    );
     g.fill();
     g.fillStyle = INK;
-    g.fillText(paint.badge, width - PAD - bw + 17, y + 12);
+    g.fillText(paint.badge, width - PAD - bw + BADGE_TEXT_X, y + BADGE_TEXT_Y);
   }
 
   g.font = `italic 800 66px Barlow, Impact, sans-serif`;
   g.fillStyle = p.title;
   for (const t of titleLines) {
-    y += 62;
+    y += TITLE_LINE;
     g.fillText(t, PAD, y);
   }
 
-  y += 18;
+  y += TITLE_BOTTOM;
 
   // Code.
   const top = y;
@@ -241,41 +348,45 @@ export function paintCard(
     y += h;
   }
 
-  y += 24;
+  y += CODE_BOTTOM;
   // Output blocks get their own darker panel drawn underneath; re-tint by redrawing behind is costly, so it's inline above.
   void top;
 
   if (layout.notes.length) {
     g.strokeStyle = "rgba(214,226,240,.22)";
     g.lineWidth = 2;
-    g.setLineDash([8, 8]);
+    g.setLineDash([RULE_DASH, RULE_DASH]);
     g.beginPath();
     g.moveTo(PAD, y);
     g.lineTo(width - PAD, y);
     g.stroke();
     g.setLineDash([]);
-    y += 26;
+    y += NOTES_TOP;
     for (const [i, n] of layout.notes.entries()) {
       const ls = nth(noteLines, i, "note lines");
 
-      pin(g, PAD + 18, y + 18, n.pin, PIN[n.kind]);
+      pin(g, PAD + NOTE_PIN_OFFSET, y + NOTE_PIN_OFFSET, n.pin, PIN[n.kind]);
       g.font = `500 30px Space, Arial, sans-serif`;
       g.fillStyle = "#e6eef7";
       for (const [j, l] of ls.entries()) {
-        g.fillText(l, PAD + 52, y + 29 + j * 40);
+        g.fillText(
+          l,
+          PAD + NOTE_TEXT_INDENT,
+          y + NOTE_BASELINE + j * NOTE_LINE,
+        );
       }
 
-      y += Math.max(1, ls.length) * 40 + 8;
+      y += Math.max(1, ls.length) * NOTE_LINE + NOTE_GAP;
     }
   }
 
   if (footLines.length) {
-    y += 18;
+    y += FOOT_TOP;
     g.font = `500 28px Space, Arial, sans-serif`;
     g.fillStyle = mood === "angry" ? "#ffcdbd" : "#b9d3e3";
     for (const l of footLines) {
-      g.fillText(l, PAD, y + 26);
-      y += 38;
+      g.fillText(l, PAD, y + FOOT_BASELINE);
+      y += FOOT_LINE;
     }
   }
 
@@ -295,6 +406,10 @@ function spaced(
   }
 }
 
+/** A pin: its radius, and how far below its centre the number's baseline sits. */
+const PIN_RADIUS = 16;
+const PIN_DIGIT_DROP = 7;
+
 function pin(
   g: CanvasRenderingContext2D,
   x: number,
@@ -304,7 +419,7 @@ function pin(
 ) {
   g.fillStyle = color;
   g.beginPath();
-  g.arc(x, y, 16, 0, Math.PI * 2);
+  g.arc(x, y, PIN_RADIUS, 0, Math.PI * 2);
   g.fill();
   g.lineWidth = 3;
   g.strokeStyle = "#0b1d29";
@@ -312,9 +427,34 @@ function pin(
   g.fillStyle = "#0b1d29";
   g.font = `700 21px Space, Arial, sans-serif`;
   g.textAlign = "center";
-  g.fillText(String(n), x, y + 7);
+  g.fillText(String(n), x, y + PIN_DIGIT_DROP);
   g.textAlign = "left";
 }
+
+/** A caption line's text baseline below the top of the line. */
+const CAPTION_BASELINE = 32;
+/** The text baseline sits this share of the way down a code line. */
+const BASELINE_SHARE = 0.7;
+/** A line's middle is this share of its height down (strike-throughs and rules are drawn there). */
+const LINE_MIDDLE = 0.5;
+/** An output or diff panel bleeds past the text on each side, then on both sides together; a diff tint is this much shorter. */
+const PANEL_BLEED = 14;
+const PANEL_BLEED_BOTH = 28;
+const DIFF_TINT_TRIM = 4;
+/** A continuation arrow and a label line are drawn at these shares of the code font size. */
+const CONT_FONT_SHARE = 0.8;
+const LABEL_FONT_SHARE = 0.85;
+/** A removed line is drawn at this opacity. */
+const REMOVED_OPACITY = 0.78;
+/** The strike-through runs this far past the text at each end. */
+const STRIKE_OVERHANG = 4;
+/** The box round an added line: padding each side (then both), top offset, minimum width in characters, height trim, corner radius. */
+const ADDED_BOX_PAD = 7;
+const ADDED_BOX_PAD_BOTH = 14;
+const ADDED_BOX_TOP = 5;
+const ADDED_BOX_MIN_COLUMNS = 3;
+const ADDED_BOX_TRIM = 10;
+const ADDED_BOX_RADIUS = 7;
 
 function drawLine(
   g: CanvasRenderingContext2D,
@@ -341,23 +481,28 @@ function drawLine(
   if (line.type === "caption") {
     g.font = `500 31px Space, Arial, sans-serif`;
     g.fillStyle = "#f4f4e8";
-    g.fillText(line.text, x0, y + 32);
+    g.fillText(line.text, x0, y + CAPTION_BASELINE);
 
     return;
   }
 
-  const base = y + h * 0.7;
+  const base = y + h * BASELINE_SHARE;
   const tx = x0 + gutter;
 
   if (line.view === "output") {
     g.fillStyle = p.output;
-    g.fillRect(x0 - 14, y, inner + 28, h);
+    g.fillRect(x0 - PANEL_BLEED, y, inner + PANEL_BLEED_BOTH, h);
   }
 
   if (line.view === "diff" && (line.diff === "a" || line.diff === "d")) {
     g.fillStyle =
       line.diff === "a" ? "rgba(126,220,140,.15)" : "rgba(222,106,71,.17)";
-    g.fillRect(x0 - 14, y + 2, inner + 28, h - 4);
+    g.fillRect(
+      x0 - PANEL_BLEED,
+      y + 2,
+      inner + PANEL_BLEED_BOTH,
+      h - DIFF_TINT_TRIM,
+    );
     if (!line.cont) {
       g.font = `700 ${FONT}px ${MONO}`;
       g.fillStyle = line.diff === "a" ? "#8ef08a" : "#ff7b6b";
@@ -367,21 +512,21 @@ function drawLine(
 
   if (line.cont) {
     g.fillStyle = "rgba(125,166,198,.5)";
-    g.font = `600 ${FONT * 0.8}px ${MONO}`;
+    g.font = `600 ${FONT * CONT_FONT_SHARE}px ${MONO}`;
     g.fillText("↳", x0 + (line.view === "diff" ? cw : 0), base);
   }
 
   if (line.diff === "l") {
-    g.font = `600 ${FONT * 0.85}px ${MONO}`;
+    g.font = `600 ${FONT * LABEL_FONT_SHARE}px ${MONO}`;
     g.fillStyle = line.view === "output" ? "#ffd96a" : p.label;
     g.fillText((line.view === "output" ? "▸ " : "") + line.text, x0, base);
     drawMarks(
       g,
       line.marks,
-      x0 + (line.view === "output" ? cw * 0.85 * 2 : 0),
+      x0 + (line.view === "output" ? cw * LABEL_FONT_SHARE * 2 : 0),
       y,
       h,
-      cw * 0.85,
+      cw * LABEL_FONT_SHARE,
       line,
     );
 
@@ -392,7 +537,7 @@ function drawLine(
 
   let x = tx;
 
-  g.globalAlpha = line.diff === "d" ? 0.78 : 1;
+  g.globalAlpha = line.diff === "d" ? REMOVED_OPACITY : 1;
   for (const t of line.tokens) {
     g.fillStyle = t.color;
     g.fillText(t.text, x, base);
@@ -409,8 +554,8 @@ function drawLine(
     g.strokeStyle = "#ff6b5a";
     g.lineWidth = 4;
     g.beginPath();
-    g.moveTo(tx + lead - 4, y + h * 0.5);
-    g.lineTo(tx + textW + 4, y + h * 0.5);
+    g.moveTo(tx + lead - STRIKE_OVERHANG, y + h * LINE_MIDDLE);
+    g.lineTo(tx + textW + STRIKE_OVERHANG, y + h * LINE_MIDDLE);
     g.stroke();
   }
 
@@ -420,11 +565,11 @@ function drawLine(
     g.lineWidth = 2.5;
     roundRect(
       g,
-      tx + lead - 7,
-      y + 5,
-      Math.max(cw * 3, textW - lead + 14),
-      h - 10,
-      7,
+      tx + lead - ADDED_BOX_PAD,
+      y + ADDED_BOX_TOP,
+      Math.max(cw * ADDED_BOX_MIN_COLUMNS, textW - lead + ADDED_BOX_PAD_BOTH),
+      h - ADDED_BOX_TRIM,
+      ADDED_BOX_RADIUS,
     );
     g.stroke();
   }
