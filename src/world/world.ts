@@ -3,6 +3,8 @@ import type { AudioEngine, Sfx } from "../audio/audio";
 import { gateText } from "../content/gatelabel";
 import { toolFor, type Game, type PlayTier } from "../content/load";
 import type { Card, Stop } from "../content/types";
+import { context2d } from "../dom";
+import { nth, present } from "../nth";
 import { healthAt, partsBroken, type Player, type Step } from "../show/script";
 import { AutoGunner } from "./autogunner";
 import { BossModel, paintBossPanel } from "./boss";
@@ -15,7 +17,7 @@ import { Effects } from "./effects";
 import { Enemy, SCORE, type EnemyKind } from "./enemies";
 import { Gate, type GateState } from "./gate";
 import { Debris } from "./physics";
-import { shortTool } from "../ui/card";
+import { beforeParen, shortTool } from "../ui/card";
 import { clamp01, disposeTree, ease, kit, lerp, rng, toon } from "./toon";
 
 export type CameraMode = "follow" | "stop" | "boss" | "portrait";
@@ -147,6 +149,20 @@ export class PlayerWorld {
     this.debris.onBounce = (s) => this.sfx("debrisBounce", 0.3 + s * 0.5);
   }
 
+  /** The tier being played. Set when the first step builds it, so a step that needs it before then is a bug. */
+  private get playing(): PlayTier {
+    return present(this.tier, "the tier");
+  }
+  private get shownWindow() {
+    return present(this.window, "the stop window");
+  }
+  private get bossModel(): BossModel {
+    return present(this.boss, "the boss");
+  }
+  private gateAt(stop: number): Gate {
+    return nth(this.gates, stop, "gates");
+  }
+
   private sfx(name: Sfx, volume = 1) {
     this.audio.play(name, { pan: this.pan(), volume });
   }
@@ -154,7 +170,7 @@ export class PlayerWorld {
   // ───────────────────────────── state ─────────────────────────────
 
   private stateFor(step: Step): State {
-    const tier = this.game.tiers[step.tier]!;
+    const tier = nth(this.game.tiers, step.tier, "tiers");
     const n = tier.stops.length;
     const p1 = this.player === "p1";
     const hp = healthAt(this.game, step, this.player);
@@ -236,13 +252,14 @@ export class PlayerWorld {
   /** Make the world match a state, reusing whatever already matches. */
   private reconcile(s: State) {
     this.clearAnimations();
-    const tier = this.game.tiers[s.tier]!;
+    const tier = nth(this.game.tiers, s.tier, "tiers");
     if (this.tier !== tier) this.buildTier(tier);
     this.character.root.position.set(0, 0, s.z);
     this.character.root.rotation.y = 0;
     this.character.pose = s.pose;
     for (const [i, g] of s.gates.entries()) {
-      if (this.gates[i]) this.gates[i]!.state = g;
+      const gate = this.gates[i];
+      if (gate) gate.state = g;
     }
     // Stop window.
     const wantKey =
@@ -251,7 +268,7 @@ export class PlayerWorld {
       this.window?.win.dispose();
       this.window = null;
       if (wantKey) {
-        const stop = tier.stops[s.stop]!;
+        const stop = nth(tier.stops, s.stop, "stops");
         const win = this.makeStopWindow(
           stop,
           s.window === "fixed" ? "fixed" : "problem",
@@ -266,9 +283,9 @@ export class PlayerWorld {
         s.window === "problem" ? (this.player === "p1" ? 0.5 : 0.3) : 0;
     }
     // Tech debt trailing player 1.
-    while (this.debt.length > s.debt) this.debt.pop()!.win.dispose();
+    while (this.debt.length > s.debt) this.debt.pop()?.win.dispose();
     for (let k = this.debt.length; k < s.debt; k++) {
-      const stop = tier.stops[k]!;
+      const stop = nth(tier.stops, k, "stops");
       const win = new CodeWindow(
         this.paint(stop.p1, "angry", "problem", 30, stop),
         1.1,
@@ -363,7 +380,7 @@ export class PlayerWorld {
   ): HTMLCanvasElement {
     const width = Math.min(cols, Math.max(34, longestRow(card)));
     const layout: Layout = layoutCard(card, width, slugFile(card.title));
-    const tier = this.tier!;
+    const tier = this.playing;
     if (role === "problem") {
       return paintCard(layout, mood, {
         label: `Problem card ${card.id} · ${gateText(stop.gate)}`,
@@ -374,7 +391,7 @@ export class PlayerWorld {
     }
     const tool = toolFor(this.game, stop.p2.tool);
     return paintCard(layout, "fixed", {
-      label: `Fixed by ${tool.name.split("(")[0]!.trim()} · ${card.id}`,
+      label: `Fixed by ${beforeParen(tool.name)} · ${card.id}`,
       title: card.title.replace(/^Tool:\s*/i, "✓ "),
       footer: card.num,
       badge: "HP 100%",
@@ -407,15 +424,16 @@ export class PlayerWorld {
       title: b.name,
       footer: `${b.parts.length} sins · pushed to main`,
     });
-    const parts = b.parts.map((p, i) =>
-      paintBossPanel({
-        aspect: L.parts[i]!.w / L.parts[i]!.h,
+    const parts = b.parts.map((p, i) => {
+      const slot = nth(L.parts, i, "boss layout parts");
+      return paintBossPanel({
+        aspect: slot.w / slot.h,
         header: `Sin ${i + 1} of ${b.parts.length}`,
         title: p.part,
         badge: `${i + 1}`,
         footer: `✓ ${bossTool(shortTool(toolFor(this.game, p.beatenBy).name))}`,
-      }),
-    );
+      });
+    });
     const boss = new BossModel(core, parts);
     this.bossLayout = boss.layout;
     this.scene.add(boss.group);
@@ -478,7 +496,7 @@ export class PlayerWorld {
     switch (step.phase) {
       case "walk":
         this.reconcile(s);
-        this.exitWindow(prevWindow!);
+        this.exitWindow(prevWindow);
         this.startWalk(step);
         break;
       case "problem":
@@ -489,7 +507,7 @@ export class PlayerWorld {
         break;
       case "boss":
         this.reconcile(s);
-        if (keepWin) this.exitWindow(prevWindow!);
+        if (keepWin) this.exitWindow(prevWindow);
         this.enterBoss(s);
         break;
       case "bossPart":
@@ -550,7 +568,7 @@ export class PlayerWorld {
   }
 
   private startWalk(step: Step) {
-    const tier = this.tier!;
+    const tier = this.playing;
     const to =
       step.stop < tier.stops.length
         ? standZ(step.stop)
@@ -581,8 +599,12 @@ export class PlayerWorld {
       w.to,
       ease.inOutCubic(u) * 0.15 + u * 0.85,
     );
-    while (w.next < w.spawns.length && w.spawns[w.next]!.at <= u)
-      this.spawn(w.spawns[w.next++]!);
+    for (;;) {
+      const next = w.spawns[w.next];
+      if (!next || next.at > u) break;
+      w.next++;
+      this.spawn(next);
+    }
     if (u >= 1) {
       this.character.pose = "idle";
     }
@@ -619,15 +641,15 @@ export class PlayerWorld {
         : 100;
     this.reconcile(s);
     this.clearStreet();
-    const w = this.window!;
+    const w = this.shownWindow;
     w.reading = false;
     const g = w.win.group;
     g.visible = false;
     this.health = before;
-    this.gates[step.stop]!.state = "idle";
+    this.gateAt(step.stop).state = "idle";
     this.character.pose = "idle";
     this.after(0.2, () => {
-      this.gates[step.stop]!.state = "alarm";
+      this.gateAt(step.stop).state = "alarm";
     });
     const launch = 1.5,
       flight = 0.5;
@@ -664,7 +686,7 @@ export class PlayerWorld {
       this.fx.ring(chest, "#ff5d4f", 1.6, 0.4, false, this.camera.position);
       this.fx.text(
         chest.clone().add(new THREE.Vector3(0, 1.2, 0)),
-        `−${Math.round(90 / this.tier!.stops.length)}%`,
+        `−${Math.round(90 / this.playing.stops.length)}%`,
         "#ff8b69",
         1.0,
         1.4,
@@ -695,8 +717,8 @@ export class PlayerWorld {
 
   private enterFixed(step: Step, s: State) {
     this.reconcile(s);
-    const stop = this.tier!.stops[step.stop]!;
-    const fixed = this.window!;
+    const stop = nth(this.playing.stops, step.stop, "stops");
+    const fixed = this.shownWindow;
     if (this.player === "p1") return;
     fixed.reading = true;
     fixed.win.group.visible = false;
@@ -707,8 +729,8 @@ export class PlayerWorld {
     old.group.position.copy(pose.pos);
     old.group.scale.setScalar(pose.scale);
     this.faceCamera(old.group);
-    this.health = 100 - 90 / this.tier!.stops.length;
-    this.gates[step.stop]!.state = "alarm";
+    this.health = 100 - 90 / this.playing.stops.length;
+    this.gateAt(step.stop).state = "alarm";
     this.character.pose = "aim";
     this.after(0.45, () => {
       this.character.fire();
@@ -759,7 +781,7 @@ export class PlayerWorld {
           fixed.reading = true;
         },
       );
-      this.gates[step.stop]!.state = "open";
+      this.gateAt(step.stop).state = "open";
     });
     this.after(1.7, () => {
       this.sfx("heal");
@@ -786,7 +808,7 @@ export class PlayerWorld {
 
   private enterBoss(s: State) {
     this.clearStreet();
-    const boss = this.boss!;
+    const boss = this.bossModel;
     const home = boss.group.position.clone();
     boss.group.position.y = home.y + 26;
     this.after(0.9, () => this.sfx("bossArrive"));
@@ -830,21 +852,16 @@ export class PlayerWorld {
       if (step.part === 0) {
         // The boss finishes player 1 with one blow.
         this.after(0.9, () => {
+          const firstStop = nth(this.playing.stops, 0, "stops");
           const blow = this.track(
             new CodeWindow(
-              this.paint(
-                this.tier!.stops[0]!.p1,
-                "angry",
-                "problem",
-                30,
-                this.tier!.stops[0]!,
-              ),
+              this.paint(firstStop.p1, "angry", "problem", 30, firstStop),
               2.2,
               "angry",
             ),
           );
           this.scene.add(blow.group);
-          const from = this.boss!.partWorld(0),
+          const from = this.bossModel.partWorld(0),
             to = this.character.chestWorld();
           this.tween(
             0.45,
@@ -884,9 +901,9 @@ export class PlayerWorld {
     }
     // Player 2 fires the tool earned at that stop at the matching part.
     this.reconcile({ ...s, broken: step.part });
-    const boss = this.boss!;
+    const boss = this.bossModel;
     this.bossLeft = this.bossTotal - step.part;
-    const part = this.tier!.boss.parts[step.part]!;
+    const part = nth(this.playing.boss.parts, step.part, "boss parts");
     const tool = toolFor(this.game, part.beatenBy);
     this.after(0.25, () => {
       this.character.fire();
@@ -912,7 +929,7 @@ export class PlayerWorld {
           });
           this.fx.text(
             to.clone().add(new THREE.Vector3(0, 1.8, 0)),
-            tool.name.split("(")[0]!.trim().split(" ").slice(0, 2).join(" "),
+            beforeParen(tool.name).split(" ").slice(0, 2).join(" "),
             "#f9db48",
             1.1,
             1.6,
@@ -963,7 +980,7 @@ export class PlayerWorld {
       broken: this.bossTotal,
       pose: "aim",
     });
-    const boss = this.boss!;
+    const boss = this.bossModel;
     this.bossLeft = 0;
     this.after(0.3, () => {
       this.character.fire();
@@ -1367,7 +1384,7 @@ export class PlayerWorld {
    * foreground, off to one side so they never cover a part.
    */
   private bossShot(c: THREE.Vector3, fov: number) {
-    const L = this.bossLayout!;
+    const L = present(this.bossLayout, "boss layout");
     const back = this.bossBack(),
       t = Math.tan(fov / 2),
       band = this.bossBand();
@@ -1483,8 +1500,9 @@ export class PlayerWorld {
 /** A tool name short enough to read on a boss part from the back of the room (the tray shows it in full). */
 function bossTool(name: string) {
   const words = name.split(/\s+/);
-  let out = words[0]!;
-  for (const w of words.slice(1)) {
+  const [first = "", ...rest] = words;
+  let out = first;
+  for (const w of rest) {
     if (`${out} ${w}`.length > 18) break;
     out += ` ${w}`;
   }
@@ -1497,7 +1515,7 @@ function toolBolt(name: string) {
   const cv = document.createElement("canvas");
   cv.width = 256;
   cv.height = 340;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   g.fillStyle = "#f9db48";
   g.beginPath();
   g.roundRect(0, 0, 256, 340, 22);
@@ -1510,12 +1528,7 @@ function toolBolt(name: string) {
   g.fillStyle = "#173e35";
   g.font = "italic 800 46px Barlow, Impact, sans-serif";
   g.textAlign = "center";
-  for (const [i, w] of name
-    .split("(")[0]!
-    .trim()
-    .split(" ")
-    .slice(0, 3)
-    .entries()) {
+  for (const [i, w] of beforeParen(name).split(" ").slice(0, 3).entries()) {
     g.fillText(w, 128, 130 + i * 52);
   }
   const tex = new THREE.CanvasTexture(cv);

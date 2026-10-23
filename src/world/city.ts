@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { context2d } from "../dom";
+import { nth } from "../nth";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { rng, toon } from "./toon";
 
@@ -19,7 +21,7 @@ const WINDOW = ["#5f8f86", "#6f9d92", "#4f7f78", "#86b0a3"];
 function pavingTexture() {
   const cv = document.createElement("canvas");
   cv.width = cv.height = 512;
-  const g = cv.getContext("2d")!;
+  const g = context2d(cv);
   g.fillStyle = "#e8efe1";
   g.fillRect(0, 0, 512, 512);
   g.strokeStyle = "#d3dfcf";
@@ -86,7 +88,7 @@ class Batch {
     );
     for (const [i, m] of this.matrices.entries()) {
       mesh.setMatrixAt(i, m);
-      mesh.setColorAt(i, this.colors[i]!);
+      mesh.setColorAt(i, nth(this.colors, i, "city colors"));
     }
     mesh.count = this.matrices.length;
     mesh.castShadow = cast;
@@ -108,7 +110,8 @@ export function buildCity(
   const city = new THREE.Group();
   city.name = "mint-city";
   const rand = rng(seed);
-  const pick = <T>(a: T[]) => a[Math.floor(rand() * a.length)]!;
+  const pick = <T>(a: T[]) =>
+    nth(a, Math.floor(rand() * a.length), "pick list");
 
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(400, length + 400),

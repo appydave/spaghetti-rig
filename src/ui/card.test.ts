@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { esc, shortTool } from "./card";
+import { beforeParen, esc, shortTool } from "./card";
 
 describe("esc", () => {
   it("escapes the five HTML characters and leaves the rest", () => {
@@ -16,5 +16,14 @@ describe("shortTool", () => {
     expect(shortTool("Oxlint + anti-slop")).toBe("Oxlint");
     expect(shortTool("Knip")).toBe("Knip");
     expect(shortTool("A (b)\n+ c")).toBe("A");
+  });
+});
+
+describe("beforeParen", () => {
+  it("drops a bracketed note and keeps a plus", () => {
+    expect(beforeParen("Prettier (code formatter)")).toBe("Prettier");
+    expect(beforeParen("Oxlint + anti-slop")).toBe("Oxlint + anti-slop");
+    expect(beforeParen("Knip (dead code\nfinder)")).toBe("Knip");
+    expect(beforeParen("Vitest")).toBe("Vitest");
   });
 });

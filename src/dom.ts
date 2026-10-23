@@ -41,3 +41,12 @@ export function queryAllEl(root: ParentNode, selector: string): HTMLElement[] {
     (el) => el instanceof HTMLElement,
   );
 }
+
+/** The 2D drawing context of a canvas; throws if the browser cannot make one. */
+export function context2d(
+  canvas: Pick<HTMLCanvasElement, "getContext">,
+): CanvasRenderingContext2D {
+  const g = canvas.getContext("2d");
+  if (!g) throw new Error("This browser cannot draw to a 2D canvas");
+  return g;
+}
