@@ -13,7 +13,7 @@ export type Scenario = {
   visit?: number[];
   /** After each tier's steps, take them again last to first (a presenter paging back). */
   andBack?: boolean;
-  /** Leave the first tier after this many steps and go on to the next in the same world: a jump out of the middle of a tier, with its window, debt, boss and enemies still up. */
+  /** Leave the first tier after this many steps and go on to the next in the same world: a jump out of the middle of a tier, with its window, debt and boss still up. */
   cutAt?: number;
 };
 
@@ -27,6 +27,7 @@ const JUMP_SEEDS = 30;
 const SKIP_SEEDS = 40;
 const RESIZE_SEEDS = 50;
 const TOUR_SEEDS = 60;
+const PAGES_BACK_SEEDS = 70;
 /** How many of tier 0's steps are played before a tour cuts to tier 1, each ending where something is still up in the world. */
 const AFTER_FIRST_TOOL = 4; // the stop window up
 const AFTER_LAST_FIX = 17; // the window up and the debt trailing
@@ -126,7 +127,7 @@ function onTours(named: Namer): Named[] {
         player,
         tier,
         mode: "tour",
-        seed: tier + TOUR_SEEDS,
+        seed: tier + PAGES_BACK_SEEDS,
         andBack: true,
       }),
     ),
