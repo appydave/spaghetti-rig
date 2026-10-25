@@ -13,6 +13,8 @@ export type Scenario = {
   visit?: number[];
   /** After each tier's steps, take them again last to first (a presenter paging back). */
   andBack?: boolean;
+  /** Leave the first tier after this many steps and go on to the next in the same world: a jump out of the middle of a tier, with its window, debt, boss and enemies still up. */
+  cutAt?: number;
 };
 
 export type Named = [string, () => string[]];
@@ -25,6 +27,17 @@ const JUMP_SEEDS = 30;
 const SKIP_SEEDS = 40;
 const RESIZE_SEEDS = 50;
 const TOUR_SEEDS = 60;
+/** How many of tier 0's steps are played before a tour cuts to tier 1, each ending where something is still up in the world. */
+const AFTER_FIRST_TOOL = 4; // the stop window up
+const AFTER_LAST_FIX = 17; // the window up and the debt trailing
+const AFTER_LAST_WALK = 18; // the walk to the boss just begun
+const AFTER_SECOND_BOSS_PART = 21; // the boss up with parts knocked off
+const CUT_STEPS = [
+  AFTER_FIRST_TOOL,
+  AFTER_LAST_FIX,
+  AFTER_LAST_WALK,
+  AFTER_SECOND_BOSS_PART,
+];
 /** The slower ways of playing are run on the tiers up to this one. */
 const LAST_FULL_TIER = 1;
 const TALL_SEED = 7;
@@ -98,6 +111,16 @@ function onTours(named: Namer): Named[] {
       seed: TOUR_SEEDS,
       visit: [0, 1, 0],
     }),
+    ...CUT_STEPS.map((cutAt) =>
+      named(`cuts from step ${cutAt} to tier 1`, {
+        player,
+        tier: 0,
+        mode: "tour",
+        seed: cutAt + TOUR_SEEDS,
+        visit: [0, 1],
+        cutAt,
+      }),
+    ),
     ...[0, 1].map((tier) =>
       named("pages back through the tier", {
         player,

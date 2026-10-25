@@ -135,10 +135,18 @@ function playStep(run: Run, step: Step, first: boolean): void {
 
 const RESIZE_EVERY = 3;
 
-/** The steps of the tiers to visit, in order; with andBack, each tier is paged back through once forward. */
-function stepsToPlay(visit: number[], andBack: boolean): Step[] {
-  return visit.flatMap((t) => {
+/** The steps of the tiers to visit, in order; with andBack, each tier is paged back through once forward; with cutAt, the first tier stops short. */
+function stepsToPlay(
+  visit: number[],
+  andBack: boolean,
+  cutAt?: number,
+): Step[] {
+  return visit.flatMap((t, i) => {
     const steps = script.filter((s) => s.tier === t);
+
+    if (i === 0 && cutAt !== undefined) {
+      return steps.slice(0, cutAt);
+    }
 
     return andBack ? [...steps, ...steps.slice(0, -1).reverse()] : steps;
   });
@@ -154,6 +162,7 @@ function play({
   resize,
   visit = [tier],
   andBack = false,
+  cutAt,
 }: Scenario): string[] {
   const sounds: Arg[][] = [];
   const audio: any = {
@@ -191,7 +200,7 @@ function play({
     w.setAspect(tall ? TALL : WIDE);
     w.autoplay = mode === "autoplay";
     w.onSlip = (kind: string) => events.push(`slip:${kind}`);
-    for (const [i, step] of stepsToPlay(visit, andBack).entries()) {
+    for (const [i, step] of stepsToPlay(visit, andBack, cutAt).entries()) {
       playStep({ w, mode, look, events }, step, i === 0);
     }
 
