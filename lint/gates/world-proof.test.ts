@@ -82,25 +82,28 @@ type Run = {
 function playStep(run: Run, step: Step, first: boolean): void {
   const { w, mode, look, events } = run;
 
-  if (mode === "jump" && step.phase !== "walk") {
+  // A tour settles on each step, as jumping about does, but leaves it after a moment, as skipping through does.
+  const settles = mode === "jump" || mode === "tour";
+  const leaves = mode === "skip" || mode === "tour";
+
+  if (settles && step.phase !== "walk") {
     w.settle(step);
   } else {
     w.enter(step);
   }
 
-  if (first || mode === "jump") {
+  if (first || settles) {
     w.snapCamera();
     // Looked at straight away: the scenery that follows the camera must already be right, before any frame runs.
     look(`snap ${step.phase}${step.stop}.${step.part}`);
   }
 
   // A skipping presenter leaves each step after a moment, with its tweens and cues still running.
-  const frames =
-    mode === "skip"
-      ? SKIP_FRAMES
-      : step.phase === "walk"
-        ? WALK_FRAMES
-        : STEP_FRAMES;
+  const frames = leaves
+    ? SKIP_FRAMES
+    : step.phase === "walk"
+      ? WALK_FRAMES
+      : STEP_FRAMES;
   let walkT = 0;
 
   for (let f = 0; f < frames; f++) {
@@ -124,13 +127,30 @@ function playStep(run: Run, step: Step, first: boolean): void {
     }
 
     w.update(FRAME);
-    if (SAMPLES.includes(f) || (mode === "skip" && f === SKIP_FRAMES - 1)) {
+    if (SAMPLES.includes(f) || (leaves && f === SKIP_FRAMES - 1)) {
       look(`${step.phase}${step.stop}.${step.part} f${f}`);
     }
   }
 }
 
 const RESIZE_EVERY = 3;
+
+/** The steps of the tiers to visit, in order; with andBack, each tier is paged back through once forward; with cutAt, the first tier stops short. */
+function stepsToPlay(
+  visit: number[],
+  andBack: boolean,
+  cutAt?: number,
+): Step[] {
+  return visit.flatMap((t, i) => {
+    const steps = script.filter((s) => s.tier === t);
+
+    if (i === 0 && cutAt !== undefined) {
+      return steps.slice(0, cutAt);
+    }
+
+    return andBack ? [...steps, ...steps.slice(0, -1).reverse()] : steps;
+  });
+}
 
 /** One scenario: play a player through one tier and return a hash per look at the world. */
 function play({
@@ -140,6 +160,9 @@ function play({
   seed,
   tall = false,
   resize,
+  visit = [tier],
+  andBack = false,
+  cutAt,
 }: Scenario): string[] {
   const sounds: Arg[][] = [];
   const audio: any = {
@@ -177,7 +200,7 @@ function play({
     w.setAspect(tall ? TALL : WIDE);
     w.autoplay = mode === "autoplay";
     w.onSlip = (kind: string) => events.push(`slip:${kind}`);
-    for (const [i, step] of script.filter((s) => s.tier === tier).entries()) {
+    for (const [i, step] of stepsToPlay(visit, andBack, cutAt).entries()) {
       playStep({ w, mode, look, events }, step, i === 0);
     }
 

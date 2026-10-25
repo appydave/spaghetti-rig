@@ -1,6 +1,6 @@
 // The scenarios the world harness plays (G04 H1k-a): a player, a tier and how the world is played. Moved out of world-proof.test.ts as it
 // was, so the harness can grow without that file passing 300 lines.
-export type Mode = "watch" | "autoplay" | "pointer" | "jump" | "skip";
+export type Mode = "watch" | "autoplay" | "pointer" | "jump" | "skip" | "tour";
 export type Scenario = {
   player: "p1" | "p2";
   tier: number;
@@ -9,6 +9,12 @@ export type Scenario = {
   tall?: boolean;
   /** Resize the window at every third look, so it lands mid-step with a window and a boss up: "flip" between wide and tall, "same" between two talls (the boss stands further back the narrower the screen). */
   resize?: "flip" | "same";
+  /** The tiers to visit, in order, in one world (default: just `tier`). */
+  visit?: number[];
+  /** After each tier's steps, take them again last to first (a presenter paging back). */
+  andBack?: boolean;
+  /** Leave the first tier after this many steps and go on to the next in the same world: a jump out of the middle of a tier, with its window, debt and boss still up. */
+  cutAt?: number;
 };
 
 export type Named = [string, () => string[]];
@@ -20,6 +26,19 @@ const POINTER_SEEDS = 20;
 const JUMP_SEEDS = 30;
 const SKIP_SEEDS = 40;
 const RESIZE_SEEDS = 50;
+const TOUR_SEEDS = 60;
+const PAGES_BACK_SEEDS = 70;
+/** How many of tier 0's steps are played before a tour cuts to tier 1, each ending where something is still up in the world. */
+const AFTER_FIRST_TOOL = 4; // the stop window up
+const AFTER_LAST_FIX = 17; // the window up and the debt trailing
+const AFTER_LAST_WALK = 18; // the walk to the boss just begun
+const AFTER_SECOND_BOSS_PART = 21; // the boss up with parts knocked off
+const CUT_STEPS = [
+  AFTER_FIRST_TOOL,
+  AFTER_LAST_FIX,
+  AFTER_LAST_WALK,
+  AFTER_SECOND_BOSS_PART,
+];
 /** The slower ways of playing are run on the tiers up to this one. */
 const LAST_FULL_TIER = 1;
 const TALL_SEED = 7;
@@ -83,6 +102,38 @@ function onScreens(named: Namer, tiers: { index: number }[]): Named[] {
   ];
 }
 
+/** Tours across tiers and back, and a tier paged back through: a tier change, and a world stepped backwards, in one world. */
+function onTours(named: Namer): Named[] {
+  return (["p1", "p2"] as const).flatMap((player) => [
+    named("tours tiers 0, 1, 0", {
+      player,
+      tier: 0,
+      mode: "tour",
+      seed: TOUR_SEEDS,
+      visit: [0, 1, 0],
+    }),
+    ...CUT_STEPS.map((cutAt) =>
+      named(`cuts from step ${cutAt} to tier 1`, {
+        player,
+        tier: 0,
+        mode: "tour",
+        seed: cutAt + TOUR_SEEDS,
+        visit: [0, 1],
+        cutAt,
+      }),
+    ),
+    ...[0, 1].map((tier) =>
+      named("pages back through the tier", {
+        player,
+        tier,
+        mode: "tour",
+        seed: tier + PAGES_BACK_SEEDS,
+        andBack: true,
+      }),
+    ),
+  ]);
+}
+
 /** Every scenario, each named and ready to run with the given play function. */
 export function scenarioList(
   tiers: { index: number }[],
@@ -100,5 +151,6 @@ export function scenarioList(
       ),
     ),
     ...onScreens(named, tiers),
+    ...onTours(named),
   ];
 }
