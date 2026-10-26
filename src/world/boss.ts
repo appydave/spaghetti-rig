@@ -1,200 +1,56 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
 import { bossLayout, type BossLayout } from "./bosslayout";
-import { CodeWindow, PALETTE } from "./codewindow";
+import { paintPanel, type BossPanel, type BossPanelText } from "./boss-panel";
+import { CodeWindow } from "./codewindow";
 import { Debris } from "./physics";
 import { geo, INK, kit } from "./toon";
 import { userData } from "./objects";
-import { context2d } from "../dom";
 import { nth } from "../nth";
 
-const BARLOW = "Barlow, Impact, sans-serif";
-const SPACE = "Space, Arial, sans-serif";
-
-function wrap(
-  g: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-): string[] {
-  const out: string[] = [];
-  let cur = "";
-
-  for (const w of text.split(/\s+/).filter(Boolean)) {
-    const next = cur ? `${cur} ${w}` : w;
-
-    if (g.measureText(next).width > width && cur) {
-      out.push(cur);
-      cur = w;
-    } else {
-      cur = next;
-    }
-  }
-
-  if (cur) {
-    out.push(cur);
-  }
-
-  return out;
-}
-
-/** The biggest font size at which the text fits in `lines` lines of `width`. */
-function fit(
-  g: CanvasRenderingContext2D,
-  text: string,
-  font: (px: number) => string,
-  width: number,
-  lines: number,
-  from: number,
-  to: number,
-) {
-  for (let px = from; px > to; px -= 4) {
-    g.font = font(px);
-
-    const l = wrap(g, text, width);
-
-    if (l.length <= lines && l.every((x) => g.measureText(x).width <= width)) {
-      return { px, lines: l };
-    }
-  }
-
-  g.font = font(to);
-
-  return { px: to, lines: wrap(g, text, width).slice(0, lines) };
-}
+/** The numbers and colours of a boss window face: data only, read by paintPanel in boss-panel.ts. */
+const BOSS_PANEL = {
+  half: 0.5,
+  turn: 2,
+  width: 1200,
+  pad: 40,
+  bar: 150,
+  corner: 40,
+  edge: { width: 16, inset: 8, span: 16, corner: 34 },
+  head: {
+    inset: 16,
+    span: 32,
+    corner: 26,
+    extra: 30,
+    nudge: 3,
+    color: "#fff1e0",
+    font: { from: 112, to: 50, step: 4 },
+  },
+  dots: {
+    colors: ["#ff8b69", "#ffd96a", "#aee5a3"],
+    x: 66,
+    step: 50,
+    radius: 17,
+  },
+  gap: 18,
+  badge: {
+    max: 250,
+    share: 0.62,
+    corner: 26,
+    font: 0.86,
+    nudge: 0.05,
+    margin: 36,
+    color: "#ffd96a",
+  },
+  footer: { max: 190, share: 0.34, font: 0.85, min: 50, color: "#ffae59" },
+  title: { lines: 3, from: 320, to: 70, step: 4, leading: 0.9 },
+} as const satisfies BossPanel;
 
 /**
  * A boss window face: a few words, painted to fill the window so they read from the back of the room.
  * `aspect` is the window's width over height, so the words are laid out for the shape they will have.
  */
-export function paintBossPanel(p: {
-  aspect: number;
-  header: string;
-  title: string;
-  footer?: string;
-  badge?: string;
-}): HTMLCanvasElement {
-  const W = 1200;
-  const H = Math.round(W / p.aspect);
-  const PAD = 40;
-  const BAR = 150;
-  const cv = document.createElement("canvas");
-
-  cv.width = W;
-  cv.height = H;
-
-  const g = context2d(cv);
-  const c = PALETTE.boss;
-
-  g.fillStyle = c.body;
-  g.beginPath();
-  g.roundRect(0, 0, W, H, 40);
-  g.fill();
-  g.lineWidth = 16;
-  g.strokeStyle = c.edge;
-  g.beginPath();
-  g.roundRect(8, 8, W - 16, H - 16, 34);
-  g.stroke();
-  g.save();
-  g.beginPath();
-  g.roundRect(16, 16, W - 32, BAR, 26);
-  g.clip();
-  g.fillStyle = c.header;
-  g.fillRect(0, 0, W, BAR + 30);
-  g.restore();
-  g.textBaseline = "middle";
-  for (const [i, col] of ["#ff8b69", "#ffd96a", "#aee5a3"].entries()) {
-    g.fillStyle = col;
-    g.beginPath();
-    g.arc(66 + i * 50, 16 + BAR / 2, 17, 0, Math.PI * 2);
-    g.fill();
-  }
-
-  const hx = 66 + 3 * 50;
-  const head = fit(
-    g,
-    p.header.toUpperCase(),
-    (px) => `700 ${px}px ${SPACE}`,
-    W - hx - PAD,
-    1,
-    112,
-    50,
-  );
-
-  g.fillStyle = "#fff1e0";
-  g.fillText(head.lines[0] ?? "", hx, 16 + BAR / 2 + 3);
-
-  // Body: optional number badge on the left, the title, then the footer line.
-  const top = 16 + BAR + 18;
-  const bottom = H - PAD;
-  const bodyH = bottom - top;
-  let left = PAD;
-
-  if (p.badge) {
-    const b = Math.min(250, bodyH * 0.62);
-
-    g.fillStyle = "#ffd96a";
-    g.beginPath();
-    g.roundRect(PAD, top + (bodyH - b) / 2, b, b, 26);
-    g.fill();
-    g.fillStyle = INK;
-    g.textAlign = "center";
-    g.font = `italic 800 ${Math.round(b * 0.86)}px ${BARLOW}`;
-    g.fillText(p.badge, PAD + b / 2, top + bodyH / 2 + b * 0.05);
-    g.textAlign = "left";
-    left = PAD + b + 36;
-  }
-
-  const footH = p.footer ? Math.min(190, bodyH * 0.34) : 0;
-  const titleH = bodyH - footH;
-  const width = W - left - PAD;
-  let t = fit(
-    g,
-    p.title.toUpperCase(),
-    (px) => `italic 800 ${px}px ${BARLOW}`,
-    width,
-    3,
-    320,
-    70,
-  );
-
-  while (t.px > 70 && t.lines.length * t.px * 0.9 > titleH) {
-    t = fit(
-      g,
-      p.title.toUpperCase(),
-      (px) => `italic 800 ${px}px ${BARLOW}`,
-      width,
-      3,
-      t.px - 4,
-      70,
-    );
-  }
-
-  const lh = t.px * 0.9;
-  let y = top + (titleH - lh * t.lines.length) / 2 + lh / 2;
-
-  g.fillStyle = c.title;
-  for (const line of t.lines) {
-    g.fillText(line, left, y);
-    y += lh;
-  }
-
-  if (p.footer) {
-    const f = fit(
-      g,
-      p.footer.toUpperCase(),
-      (px) => `italic 800 ${px}px ${BARLOW}`,
-      width,
-      1,
-      Math.round(footH * 0.85),
-      50,
-    );
-
-    g.fillStyle = "#ffae59";
-    g.fillText(f.lines[0] ?? "", left, bottom - footH / 2);
-  }
-
-  return cv;
-}
+export const paintBossPanel = (p: BossPanelText) => paintPanel(p, BOSS_PANEL);
 
 /**
  * The tier boss: an angry head on a giant code window (the core), with one window per sin
