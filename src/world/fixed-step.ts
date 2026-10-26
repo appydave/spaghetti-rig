@@ -11,7 +11,6 @@ import { ease, lerp } from "./toon";
 import { EVENT } from "./palette";
 import type { State } from "./world-shared";
 
-const OLD_CARD_RATTLE = 0.4;
 const AIM_TO_FIRE_DELAY = 0.45;
 const BEAM_RING_SIZE = 2.5;
 const BEAM_RING_LIFE = 0.5;
@@ -65,7 +64,6 @@ export function enterFixed(c: StepContext, step: Step, s: State) {
     ),
   );
 
-  old.rattle = OLD_CARD_RATTLE;
   c.scene.add(old.group);
 
   const pose = c.rig.readingPose(old, c.character.root.position.z);
