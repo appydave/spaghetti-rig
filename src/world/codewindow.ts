@@ -14,6 +14,7 @@ import {
   WINDOW_DOTS,
   type Mood,
 } from "./palette";
+import { wrap as wrapProse } from "./canvas-text";
 import { meshNamed } from "./objects";
 import { context2d } from "../dom";
 import { nth } from "../nth";
@@ -98,32 +99,6 @@ export interface Paint {
   title: string;
   footer?: string;
   badge?: string;
-}
-
-function wrapProse(
-  g: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-): string[] {
-  const out: string[] = [];
-  let cur = "";
-
-  for (const w of text.split(/\s+/)) {
-    const next = cur ? `${cur} ${w}` : w;
-
-    if (g.measureText(next).width > width && cur) {
-      out.push(cur);
-      cur = w;
-    } else {
-      cur = next;
-    }
-  }
-
-  if (cur) {
-    out.push(cur);
-  }
-
-  return out;
 }
 
 function roundRect(
