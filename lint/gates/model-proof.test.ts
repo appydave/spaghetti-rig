@@ -6,9 +6,12 @@
 // MODEL_PROOF_OUT=<file> writes the fingerprints and runs the full 50-seed sweep; MODEL_PROOF_PLANT=<model name> nudges that
 // model by 0.01 before it is fingerprinted, to show the proof fails and names it.
 import { writeFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { fingerprint, type Print } from "./model-fingerprint";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 // The builders only paint label textures on a canvas; a canvas that accepts any drawing call is all they need.
 const hole: any = new Proxy(function () {}, {
@@ -40,16 +43,13 @@ const TEST_TIMEOUT_MS = 120_000;
 const OUT = process.env.MODEL_PROOF_OUT;
 const PLANT = process.env.MODEL_PROOF_PLANT;
 const PLANT_SHIFT = 0.01;
-// The proof run (MODEL_PROOF_OUT) is complete; as an always-on test it is a light version, to keep the unit job quick.
-const FULL = Boolean(OUT);
-const SEEDS = FULL ? 50 : 2;
+// The committed log is the complete proof, so the always-on test runs the complete proof too.
+const SEEDS = 50;
 const STEP = 1 / 60;
-const SAMPLE_TIMES = FULL ? [0, 0.3, 0.5, 1.0] : [0];
+const SAMPLE_TIMES = [0, 0.3, 0.5, 1.0];
 const KINDS = ["spaghetti", "bug", "robot"] as const;
-const ALL_POSES = ["idle", "walk", "hurt", "down", "victory", "aim"] as const;
-const POSES = FULL ? ALL_POSES : (["idle", "walk"] as const);
-const ALL_GATE_STATES = ["idle", "alarm", "open", "broken"] as const;
-const GATE_STATES = FULL ? ALL_GATE_STATES : (["idle"] as const);
+const POSES = ["idle", "walk", "hurt", "down", "victory", "aim"] as const;
+const GATE_STATES = ["idle", "alarm", "open", "broken"] as const;
 
 /** A built model: its scene, and how to advance its animation by dt seconds. */
 type Subject = { root: THREE.Object3D; step: (dt: number) => void };
@@ -230,6 +230,17 @@ describe("model proof harness", () => {
     },
     TEST_TIMEOUT_MS,
   );
+
+  // The committed log: one model per line with its hash. Skipped when scripts/model-proof.mjs drives this file (OUT): it compares two trees itself. (The sequence and constant streams are asserted equal by the next test.)
+  it.skipIf(OUT)("builds the same models as the committed log", async () => {
+    const lines = [...results.sequence].map(
+      ([name, print]) => `${name} | ${print.hash}`,
+    );
+
+    await expect(`${lines.join("\n")}\n`).toMatchFileSnapshot(
+      "./__snapshots__/model-proof.txt",
+    );
+  });
 
   it(
     "builds the same whatever Math.random says",

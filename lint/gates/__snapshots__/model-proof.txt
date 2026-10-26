@@ -1,0 +1,350 @@
+character p1 idle @t=0 | bfd48d5acac60792
+character p1 idle @t=0.3 | 4fe92e56a0eb0110
+character p1 idle @t=0.5 | 2f24dc34767701bc
+character p1 idle @t=1 | 389ef575a7590a1c
+character p1 walk @t=0 | bfd48d5acac60792
+character p1 walk @t=0.3 | 8e821ced06553e72
+character p1 walk @t=0.5 | ddcc1bfc87d4afbd
+character p1 walk @t=1 | c1a888742ce9604d
+character p1 hurt @t=0 | bfd48d5acac60792
+character p1 hurt @t=0.3 | c0f93700edc686b2
+character p1 hurt @t=0.5 | 732df16687816f8a
+character p1 hurt @t=1 | 2d2fd77766465374
+character p1 down @t=0 | bfd48d5acac60792
+character p1 down @t=0.3 | 403b2eb8f31deb94
+character p1 down @t=0.5 | b39ed02d54d7e1f7
+character p1 down @t=1 | 21f48268ecda72db
+character p1 victory @t=0 | bfd48d5acac60792
+character p1 victory @t=0.3 | 41a201e18a6d3ada
+character p1 victory @t=0.5 | 9df92587d9390c24
+character p1 victory @t=1 | 24d41167678cc117
+character p1 aim @t=0 | bfd48d5acac60792
+character p1 aim @t=0.3 | 4fe92e56a0eb0110
+character p1 aim @t=0.5 | 2f24dc34767701bc
+character p1 aim @t=1 | 389ef575a7590a1c
+character p2 idle @t=0 | 9c361d697981de1f
+character p2 idle @t=0.3 | 89be175fa786fce7
+character p2 idle @t=0.5 | 87b504baa6c334ac
+character p2 idle @t=1 | 1c00e9b64c77e108
+character p2 walk @t=0 | 9c361d697981de1f
+character p2 walk @t=0.3 | 14fee89fe256a628
+character p2 walk @t=0.5 | c1703300ecdefbda
+character p2 walk @t=1 | f18dd062e44b4216
+character p2 hurt @t=0 | 9c361d697981de1f
+character p2 hurt @t=0.3 | 78c02573d24bb4c6
+character p2 hurt @t=0.5 | 66d29b2ca47d4d2d
+character p2 hurt @t=1 | 579502a7dac18cb7
+character p2 down @t=0 | 9c361d697981de1f
+character p2 down @t=0.3 | 5b9510b9d5f61c81
+character p2 down @t=0.5 | b24e8db92ffb1776
+character p2 down @t=1 | d6a71bebcceabf32
+character p2 victory @t=0 | 9c361d697981de1f
+character p2 victory @t=0.3 | c1cf2e3037752ac8
+character p2 victory @t=0.5 | f41ead6ea29bdfa9
+character p2 victory @t=1 | 548c5958b265c1a8
+character p2 aim @t=0 | 9c361d697981de1f
+character p2 aim @t=0.3 | 89be175fa786fce7
+character p2 aim @t=0.5 | 87b504baa6c334ac
+character p2 aim @t=1 | 1c00e9b64c77e108
+enemy spaghetti @t=0 | 1ea9bf09d900990e
+enemy spaghetti @t=0.3 | 4a6cc2066a5e3e5e
+enemy spaghetti @t=0.5 | 6878188e5e0b352f
+enemy spaghetti @t=1 | 43c532d875404d76
+enemy bug @t=0 | 4756860693a44a1d
+enemy bug @t=0.3 | 1dce7970dcf00d6a
+enemy bug @t=0.5 | 22323432ef00d6c8
+enemy bug @t=1 | d139170c6c6ee1c9
+enemy robot @t=0 | 40321a4ea1af8ff6
+enemy robot @t=0.3 | 1bc5519f75cf6bd7
+enemy robot @t=0.5 | ba029abb85d15bf7
+enemy robot @t=1 | 04540644feecb9fd
+gate idle @t=0 | b2ddbff3ab37921f
+gate idle @t=0.3 | 33112bc15827f397
+gate idle @t=0.5 | bfa239a566c51b54
+gate idle @t=1 | ee8279b9414732c3
+gate alarm @t=0 | b2ddbff3ab37921f
+gate alarm @t=0.3 | 409e556bb4eaba04
+gate alarm @t=0.5 | 1406554bffcca93d
+gate alarm @t=1 | f7a7c6cdb1082f7e
+gate open @t=0 | b2ddbff3ab37921f
+gate open @t=0.3 | f4d1c65fc7e7fa85
+gate open @t=0.5 | 2411f3aa3798af8f
+gate open @t=1 | 892e4167032b83ed
+gate broken @t=0 | b2ddbff3ab37921f
+gate broken @t=0.3 | 27a31c018faf153e
+gate broken @t=0.5 | eedf766a6139f371
+gate broken @t=1 | 5564103a6ebc9627
+city (no plaza) @t=0 | 0389b8a7a7dbc2af
+city (no plaza) @t=0.3 | 0389b8a7a7dbc2af
+city (no plaza) @t=0.5 | 0389b8a7a7dbc2af
+city (no plaza) @t=1 | 0389b8a7a7dbc2af
+city (boss plaza) @t=0 | 79b4e9ca084bf0ce
+city (boss plaza) @t=0.3 | 79b4e9ca084bf0ce
+city (boss plaza) @t=0.5 | 79b4e9ca084bf0ce
+city (boss plaza) @t=1 | 79b4e9ca084bf0ce
+boss (4 parts) @t=0 | f5a1795e9f16ebf2
+boss (4 parts) @t=0.3 | 1656bccaa51a305e
+boss (4 parts) @t=0.5 | 361b2eb33d9e90f5
+boss (4 parts) @t=1 | 7d03e2a9a6e14041
+boss (6 parts) @t=0 | d883980a4e98d904
+boss (6 parts) @t=0.3 | 542ccfba4de7e5a9
+boss (6 parts) @t=0.5 | 8bb1cff9de45a2e4
+boss (6 parts) @t=1 | 7e241658397e961a
+title showcase @t=0 | bbd75281a9e9628d
+title showcase @t=0.3 | de4798d109c5bfd0
+title showcase @t=0.5 | aa28478c40224f53
+title showcase @t=1 | 8b67f8a1a6c79c00
+vs showcase @t=0 | 289054b81bb7b3b6
+vs showcase @t=0.3 | 0576b0182fa7a6cf
+vs showcase @t=0.5 | 85d767c70900cdb9
+vs showcase @t=1 | f10f3ee7c12140e8
+enemy spaghetti seed 1 | ac07ccc2f464fdd3
+enemy bug seed 1 | 4756860693a44a1d
+enemy robot seed 1 | 40321a4ea1af8ff6
+city (no plaza) seed 1 | a8eb2e8b49ebb44e
+city (boss plaza) seed 1 | b1d8375cccad6fb3
+enemy spaghetti seed 2 | 9c57040ee008827b
+enemy bug seed 2 | 4756860693a44a1d
+enemy robot seed 2 | 40321a4ea1af8ff6
+city (no plaza) seed 2 | 5642c5c6cef6a068
+city (boss plaza) seed 2 | b7d458e546ccc868
+enemy spaghetti seed 3 | a5015ca3b8b5ace3
+enemy bug seed 3 | 4756860693a44a1d
+enemy robot seed 3 | 40321a4ea1af8ff6
+city (no plaza) seed 3 | 3587217224272ca5
+city (boss plaza) seed 3 | ecc3cd53d656bd98
+enemy spaghetti seed 4 | 62c2cc79ca2958e4
+enemy bug seed 4 | 4756860693a44a1d
+enemy robot seed 4 | 40321a4ea1af8ff6
+city (no plaza) seed 4 | c35ab9947c196cb0
+city (boss plaza) seed 4 | 2fd9bd59d2533f37
+enemy spaghetti seed 5 | b16865071cb2d8d3
+enemy bug seed 5 | 4756860693a44a1d
+enemy robot seed 5 | 40321a4ea1af8ff6
+city (no plaza) seed 5 | 93117dfe9c108f4f
+city (boss plaza) seed 5 | eb572a02b1750eb7
+enemy spaghetti seed 6 | f019b4b2e420c32a
+enemy bug seed 6 | 4756860693a44a1d
+enemy robot seed 6 | 40321a4ea1af8ff6
+city (no plaza) seed 6 | 4a65fc41458086c8
+city (boss plaza) seed 6 | 4b60a61b1569d6a2
+enemy spaghetti seed 7 | 1ea9bf09d900990e
+enemy bug seed 7 | 4756860693a44a1d
+enemy robot seed 7 | 40321a4ea1af8ff6
+city (no plaza) seed 7 | 0389b8a7a7dbc2af
+city (boss plaza) seed 7 | 79b4e9ca084bf0ce
+enemy spaghetti seed 8 | e1c1803a099f4214
+enemy bug seed 8 | 4756860693a44a1d
+enemy robot seed 8 | 40321a4ea1af8ff6
+city (no plaza) seed 8 | 6349df2e36fef828
+city (boss plaza) seed 8 | e14290faed30af70
+enemy spaghetti seed 9 | 1c574e38fdf4140e
+enemy bug seed 9 | 4756860693a44a1d
+enemy robot seed 9 | 40321a4ea1af8ff6
+city (no plaza) seed 9 | 293dab230e976683
+city (boss plaza) seed 9 | 1c8074cd9edb694f
+enemy spaghetti seed 10 | b161712ec6668da3
+enemy bug seed 10 | 4756860693a44a1d
+enemy robot seed 10 | 40321a4ea1af8ff6
+city (no plaza) seed 10 | 5c929cf80254ab34
+city (boss plaza) seed 10 | 25b52f347c842dd0
+enemy spaghetti seed 11 | dc43f3dc339c9e35
+enemy bug seed 11 | 4756860693a44a1d
+enemy robot seed 11 | 40321a4ea1af8ff6
+city (no plaza) seed 11 | 6afd949a422b1bcc
+city (boss plaza) seed 11 | 14bce03381ecfe9e
+enemy spaghetti seed 12 | 38f51c3bfc9a5f88
+enemy bug seed 12 | 4756860693a44a1d
+enemy robot seed 12 | 40321a4ea1af8ff6
+city (no plaza) seed 12 | 89dc854380b5030b
+city (boss plaza) seed 12 | 7af1f2bb2cd1f667
+enemy spaghetti seed 13 | a389d9bacb9b88cd
+enemy bug seed 13 | 4756860693a44a1d
+enemy robot seed 13 | 40321a4ea1af8ff6
+city (no plaza) seed 13 | 3c5f09c1a394bef7
+city (boss plaza) seed 13 | 5dff6bb6cb2bc144
+enemy spaghetti seed 14 | e0783b0d1ee17ee6
+enemy bug seed 14 | 4756860693a44a1d
+enemy robot seed 14 | 40321a4ea1af8ff6
+city (no plaza) seed 14 | c03154156960489f
+city (boss plaza) seed 14 | a5d3b4b3d43d9216
+enemy spaghetti seed 15 | aff03c2c095717a6
+enemy bug seed 15 | 4756860693a44a1d
+enemy robot seed 15 | 40321a4ea1af8ff6
+city (no plaza) seed 15 | 20dd655d23574108
+city (boss plaza) seed 15 | 1fb7530488b6df76
+enemy spaghetti seed 16 | 394ee8ac246419ee
+enemy bug seed 16 | 4756860693a44a1d
+enemy robot seed 16 | 40321a4ea1af8ff6
+city (no plaza) seed 16 | 32d31f224cb19849
+city (boss plaza) seed 16 | 8df23754936051a5
+enemy spaghetti seed 17 | 7c889181dce0fafa
+enemy bug seed 17 | 4756860693a44a1d
+enemy robot seed 17 | 40321a4ea1af8ff6
+city (no plaza) seed 17 | 3ba1af248e32915b
+city (boss plaza) seed 17 | 2685cbba7021408b
+enemy spaghetti seed 18 | c488ea79f8f7474e
+enemy bug seed 18 | 4756860693a44a1d
+enemy robot seed 18 | 40321a4ea1af8ff6
+city (no plaza) seed 18 | 65731e94db2642cf
+city (boss plaza) seed 18 | 481f0d34c3b8c6d9
+enemy spaghetti seed 19 | ef20c36af10175e5
+enemy bug seed 19 | 4756860693a44a1d
+enemy robot seed 19 | 40321a4ea1af8ff6
+city (no plaza) seed 19 | 628476f28f73c88b
+city (boss plaza) seed 19 | 2bcbf8a74fea220f
+enemy spaghetti seed 20 | 3721094995bb8fd3
+enemy bug seed 20 | 4756860693a44a1d
+enemy robot seed 20 | 40321a4ea1af8ff6
+city (no plaza) seed 20 | ab15d5e10d640787
+city (boss plaza) seed 20 | 2c8f96982b9a7eaa
+enemy spaghetti seed 21 | 1cf4a39e1053e95c
+enemy bug seed 21 | 4756860693a44a1d
+enemy robot seed 21 | 40321a4ea1af8ff6
+city (no plaza) seed 21 | 28beb895739ddb1a
+city (boss plaza) seed 21 | 16fd584d8f50981e
+enemy spaghetti seed 22 | fe32b9b05b7d0803
+enemy bug seed 22 | 4756860693a44a1d
+enemy robot seed 22 | 40321a4ea1af8ff6
+city (no plaza) seed 22 | d346f8bddbe1e4c1
+city (boss plaza) seed 22 | b2894e467b6a4dcc
+enemy spaghetti seed 23 | 0e5c9a900d02441d
+enemy bug seed 23 | 4756860693a44a1d
+enemy robot seed 23 | 40321a4ea1af8ff6
+city (no plaza) seed 23 | 4d8c350f7ea6794a
+city (boss plaza) seed 23 | 970171cb6d16dd83
+enemy spaghetti seed 24 | d9784ccc8c2dae30
+enemy bug seed 24 | 4756860693a44a1d
+enemy robot seed 24 | 40321a4ea1af8ff6
+city (no plaza) seed 24 | a9b59a7403348477
+city (boss plaza) seed 24 | bea376fd96fbad46
+enemy spaghetti seed 25 | 51106c1e2027a34c
+enemy bug seed 25 | 4756860693a44a1d
+enemy robot seed 25 | 40321a4ea1af8ff6
+city (no plaza) seed 25 | 392b78d61f2b0bbd
+city (boss plaza) seed 25 | b6da2221c9759fa7
+enemy spaghetti seed 26 | e2e99bbc5d45104d
+enemy bug seed 26 | 4756860693a44a1d
+enemy robot seed 26 | 40321a4ea1af8ff6
+city (no plaza) seed 26 | 0e070a03fb9cc19d
+city (boss plaza) seed 26 | d890f5cc1909ebe0
+enemy spaghetti seed 27 | f24a4a39776afc04
+enemy bug seed 27 | 4756860693a44a1d
+enemy robot seed 27 | 40321a4ea1af8ff6
+city (no plaza) seed 27 | 7b4e4f3e750597ee
+city (boss plaza) seed 27 | 101b393e73c2aff1
+enemy spaghetti seed 28 | 3f3abca10d5f15d9
+enemy bug seed 28 | 4756860693a44a1d
+enemy robot seed 28 | 40321a4ea1af8ff6
+city (no plaza) seed 28 | 9177644c7c868e4d
+city (boss plaza) seed 28 | 3ca731373b99069d
+enemy spaghetti seed 29 | b2732e336e0953ee
+enemy bug seed 29 | 4756860693a44a1d
+enemy robot seed 29 | 40321a4ea1af8ff6
+city (no plaza) seed 29 | 404a6702ce4d7de2
+city (boss plaza) seed 29 | a54f779be9e3c93b
+enemy spaghetti seed 30 | ca39b10bef770822
+enemy bug seed 30 | 4756860693a44a1d
+enemy robot seed 30 | 40321a4ea1af8ff6
+city (no plaza) seed 30 | 52c065473ac04947
+city (boss plaza) seed 30 | e87cb155080b6908
+enemy spaghetti seed 31 | a704a706adeb9603
+enemy bug seed 31 | 4756860693a44a1d
+enemy robot seed 31 | 40321a4ea1af8ff6
+city (no plaza) seed 31 | 18c8491a78c75c44
+city (boss plaza) seed 31 | beaab51b028d6f3f
+enemy spaghetti seed 32 | 5332734482587608
+enemy bug seed 32 | 4756860693a44a1d
+enemy robot seed 32 | 40321a4ea1af8ff6
+city (no plaza) seed 32 | 33de4a26a54f3358
+city (boss plaza) seed 32 | 157a87729e83c0c3
+enemy spaghetti seed 33 | e2c9a893b3d6beec
+enemy bug seed 33 | 4756860693a44a1d
+enemy robot seed 33 | 40321a4ea1af8ff6
+city (no plaza) seed 33 | bf41a38d606ff30b
+city (boss plaza) seed 33 | 9d41b63f7fc22f3c
+enemy spaghetti seed 34 | 01249d65faa756d3
+enemy bug seed 34 | 4756860693a44a1d
+enemy robot seed 34 | 40321a4ea1af8ff6
+city (no plaza) seed 34 | b160425014110a2e
+city (boss plaza) seed 34 | e3151371eabe86b5
+enemy spaghetti seed 35 | 7209bc413a4045ef
+enemy bug seed 35 | 4756860693a44a1d
+enemy robot seed 35 | 40321a4ea1af8ff6
+city (no plaza) seed 35 | 2a8c5b13e88b95d8
+city (boss plaza) seed 35 | 8e26d226378b59f5
+enemy spaghetti seed 36 | 1791ac8bd4de8ce9
+enemy bug seed 36 | 4756860693a44a1d
+enemy robot seed 36 | 40321a4ea1af8ff6
+city (no plaza) seed 36 | 86d48a714de2fc85
+city (boss plaza) seed 36 | 908c45958444558f
+enemy spaghetti seed 37 | 4a1823c49010e6fc
+enemy bug seed 37 | 4756860693a44a1d
+enemy robot seed 37 | 40321a4ea1af8ff6
+city (no plaza) seed 37 | 728897fa81e38ba3
+city (boss plaza) seed 37 | b38b0423e8a93256
+enemy spaghetti seed 38 | 20adf5094144aaec
+enemy bug seed 38 | 4756860693a44a1d
+enemy robot seed 38 | 40321a4ea1af8ff6
+city (no plaza) seed 38 | 06814e26ae00e059
+city (boss plaza) seed 38 | 4ef9fea7d483f84b
+enemy spaghetti seed 39 | eb3883b86d9ebb31
+enemy bug seed 39 | 4756860693a44a1d
+enemy robot seed 39 | 40321a4ea1af8ff6
+city (no plaza) seed 39 | d362a2f2df19ff8c
+city (boss plaza) seed 39 | c7b033c1bf587d5b
+enemy spaghetti seed 40 | 3b7e4815a3bbdc4d
+enemy bug seed 40 | 4756860693a44a1d
+enemy robot seed 40 | 40321a4ea1af8ff6
+city (no plaza) seed 40 | 405dae8d367999a0
+city (boss plaza) seed 40 | 0d29099b5028bf69
+enemy spaghetti seed 41 | 3eea7e131ea3aa67
+enemy bug seed 41 | 4756860693a44a1d
+enemy robot seed 41 | 40321a4ea1af8ff6
+city (no plaza) seed 41 | c26704180e57d37a
+city (boss plaza) seed 41 | 7eaf3f2cf3f960da
+enemy spaghetti seed 42 | 6491497466a59277
+enemy bug seed 42 | 4756860693a44a1d
+enemy robot seed 42 | 40321a4ea1af8ff6
+city (no plaza) seed 42 | ec7e9de3d28b151e
+city (boss plaza) seed 42 | 9a8f1092d72a4629
+enemy spaghetti seed 43 | 23a845dd65c592ef
+enemy bug seed 43 | 4756860693a44a1d
+enemy robot seed 43 | 40321a4ea1af8ff6
+city (no plaza) seed 43 | fbd96ef759497546
+city (boss plaza) seed 43 | 5f05d8984b3d9ff7
+enemy spaghetti seed 44 | f9d72bdc4aa33088
+enemy bug seed 44 | 4756860693a44a1d
+enemy robot seed 44 | 40321a4ea1af8ff6
+city (no plaza) seed 44 | e208e8ee60d9d3d6
+city (boss plaza) seed 44 | 29c29c1072cec3dd
+enemy spaghetti seed 45 | 95a1983acaa6234c
+enemy bug seed 45 | 4756860693a44a1d
+enemy robot seed 45 | 40321a4ea1af8ff6
+city (no plaza) seed 45 | 6e92f42182d9652d
+city (boss plaza) seed 45 | 847662772951e4ff
+enemy spaghetti seed 46 | cfc1453aec6a1657
+enemy bug seed 46 | 4756860693a44a1d
+enemy robot seed 46 | 40321a4ea1af8ff6
+city (no plaza) seed 46 | 51157653ac7312c2
+city (boss plaza) seed 46 | 8603e5bf4a805f22
+enemy spaghetti seed 47 | 6dadcf55a16f3bfe
+enemy bug seed 47 | 4756860693a44a1d
+enemy robot seed 47 | 40321a4ea1af8ff6
+city (no plaza) seed 47 | 70f1bb2e9e443e58
+city (boss plaza) seed 47 | 4f6c446aa33e9f77
+enemy spaghetti seed 48 | b62f455f7d9ccf71
+enemy bug seed 48 | 4756860693a44a1d
+enemy robot seed 48 | 40321a4ea1af8ff6
+city (no plaza) seed 48 | 064fb58cfab19ed3
+city (boss plaza) seed 48 | f3bdc55c0fa501a1
+enemy spaghetti seed 49 | e82cb8f5c06ad5aa
+enemy bug seed 49 | 4756860693a44a1d
+enemy robot seed 49 | 40321a4ea1af8ff6
+city (no plaza) seed 49 | 3bb2df8cc566e44c
+city (boss plaza) seed 49 | b1217dfeae808e7e
+enemy spaghetti seed 50 | 13158028f7bae2ea
+enemy bug seed 50 | 4756860693a44a1d
+enemy robot seed 50 | 40321a4ea1af8ff6
+city (no plaza) seed 50 | 97fe4c08007acf94
+city (boss plaza) seed 50 | 21dd1524638ea6b5

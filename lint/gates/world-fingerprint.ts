@@ -55,12 +55,19 @@ function positionsOf(a: Positions | undefined): string {
   return hash;
 }
 
-/** What was drawn on a texture's canvas: its size and a hash of every drawing call and property set the builders made. */
+/** Every decimal number in a line of text, rounded like the rest of the fingerprint (a drawing call's angle or offset comes from trig). */
+const roundedIn = (text: string) =>
+  text.replaceAll(/-?\d+\.\d+(?:e[-+]?\d+)?/g, (n) => num(Number(n)));
+
+/** What was drawn on a texture's canvas: its size and a hash of every drawing call and property set the builders made, numbers rounded. */
 function paintedOn(
   image: { width: number; height: number; log?: string[] } | undefined,
 ) {
   return image?.log
-    ? `${image.width}x${image.height}:${createHash("sha1").update(image.log.join("\n")).digest("hex").slice(0, HASH_CHARS)}`
+    ? `${image.width}x${image.height}:${createHash("sha1")
+        .update(roundedIn(image.log.join("\n")))
+        .digest("hex")
+        .slice(0, HASH_CHARS)}`
     : "";
 }
 
@@ -98,10 +105,10 @@ export function sceneOf(root: THREE.Object3D): string {
         o.receiveShadow,
         nums(o.matrixWorld.elements),
         positionsOf(o.geometry?.attributes?.position),
-        m ? [m.color?.getHexString(), m.opacity, m.visible].join("/") : "",
+        m ? [m.color?.getHexString(), num(m.opacity), m.visible].join("/") : "",
         paintedOn(m?.map?.image),
         instancesOf(o),
-        o.isLight ? [o.color.getHexString(), o.intensity].join("/") : "",
+        o.isLight ? [o.color.getHexString(), num(o.intensity)].join("/") : "",
       ].join("|"),
     );
   });

@@ -14,7 +14,11 @@ import { spyOnTemps } from "./disposal-spy";
 import { makeCanvas } from "./recording-canvas";
 import { scenarioList, type Mode, type Scenario } from "./world-scenarios";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { logLines } from "./proof-lines";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 (globalThis as any).document = {
   createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
@@ -259,5 +263,13 @@ describe("world proof harness", () => {
     expect(log.length).toBeGreaterThan(0);
     expect(new Set(log).size).toBeGreaterThan(1);
     all[name] = log;
+  });
+
+  // The committed log: every fingerprint of every scenario, as the two-tree script compared them (`npx vitest run -u` rewrites it). Skipped when
+  // scripts/world-proof.mjs drives this file (OUT): it compares two trees itself, and a changed tree must not fail the harness.
+  it.skipIf(OUT)("looks the same as the committed log", async () => {
+    await expect(logLines(all)).toMatchFileSnapshot(
+      "./__snapshots__/world-proof.txt",
+    );
   });
 });
