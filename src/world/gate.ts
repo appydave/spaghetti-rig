@@ -48,6 +48,27 @@ const CHECK_SPIN_SPEED = 2;
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
+/** The angle the boom eases towards, and its tilt, in each state. */
+const BOOM_TARGET: Record<GateState, number> = {
+  idle: 0,
+  alarm: 0,
+  open: Math.PI / 2 - BOOM_OPEN_SHORT,
+  broken: BOOM_BROKEN_ANGLE,
+};
+const BOOM_TILT: Record<GateState, number> = {
+  idle: 0,
+  alarm: 0,
+  open: 0,
+  broken: BOOM_BROKEN_TILT,
+};
+/** The status light's colour in each state (the alarm's other colour is the blink's off beat). */
+const LIGHT_ON: Record<GateState, string> = {
+  idle: GATE.lightIdle,
+  alarm: GATE.lightAlarmOn,
+  open: GATE.lightOpen,
+  broken: GATE.lightAlarmOn,
+};
+
 /** A checkpoint arch over the road: pillars, a sign with the gate's name, a boom barrier and a status light. */
 export class Gate {
   readonly group = new THREE.Group();
@@ -194,31 +215,17 @@ export class Gate {
 
   update(dt: number) {
     this.t += dt;
-
-    const target =
-      this.state === "open"
-        ? Math.PI / 2 - BOOM_OPEN_SHORT
-        : this.state === "broken"
-          ? BOOM_BROKEN_ANGLE
-          : 0;
-
     this.boomAngle +=
-      (target - this.boomAngle) * (1 - Math.exp(-dt * BOOM_EASE_RATE));
+      (BOOM_TARGET[this.state] - this.boomAngle) *
+      (1 - Math.exp(-dt * BOOM_EASE_RATE));
     this.boom.rotation.z = this.boomAngle;
-    this.boom.rotation.x = this.state === "broken" ? BOOM_BROKEN_TILT : 0;
+    this.boom.rotation.x = BOOM_TILT[this.state];
 
+    // Only the alarm blinks; the other states show their own colour all the time.
     const on =
-      this.state === "alarm" ? Math.sin(this.t * ALARM_BLINK_RATE) > 0 : true;
+      this.state !== "alarm" || Math.sin(this.t * ALARM_BLINK_RATE) > 0;
 
-    this.lightMat.color.set(
-      this.state === "open"
-        ? GATE.lightOpen
-        : this.state === "idle"
-          ? GATE.lightIdle
-          : on
-            ? GATE.lightAlarmOn
-            : GATE.lightAlarmOff,
-    );
+    this.lightMat.color.set(on ? LIGHT_ON[this.state] : GATE.lightAlarmOff);
     this.check.visible = this.state === "open";
     this.check.rotation.y += dt * CHECK_SPIN_SPEED;
   }
