@@ -23,6 +23,7 @@ import {
   PLANTED,
   type Probe,
 } from "./rules-probes";
+import { COLOUR_SET_PROBES } from "./colour-set-probes";
 
 const REPO = resolve(import.meta.dirname, "../..");
 const OXLINT = join(REPO, "node_modules/.bin/oxlint");
@@ -66,6 +67,7 @@ const EXEMPTION = (o: Override): boolean =>
 const PROBES: readonly Probe[] = [
   ...NUMBER_PROBES,
   ...COLOUR_PROBES,
+  ...COLOUR_SET_PROBES,
   ...PLANTED,
   [
     "a new file with a magic number and a hex colour fails both rules",
