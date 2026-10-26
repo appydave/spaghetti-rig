@@ -225,7 +225,7 @@ export class PlayerWorld {
   private readonly timeline = new Timeline();
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
-  private readonly stepContext: StepContext;
+  private stepContextMade: StepContext | null = null;
 
   get aspect() {
     return this.rig.aspect;
@@ -299,11 +299,15 @@ export class PlayerWorld {
       autoplay: () => this.autoplay,
       walking: () => this.walk !== null,
     });
-
-    this.stepContext = this.makeStepContext();
   }
 
-  /** What the step handlers get of this world. */
+  /** What the step handlers get of this world, made the first time a step is entered. */
+  private get stepContext(): StepContext {
+    this.stepContextMade ??= this.makeStepContext();
+
+    return this.stepContextMade;
+  }
+
   private makeStepContext(): StepContext {
     return {
       player: this.player,
