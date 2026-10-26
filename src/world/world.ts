@@ -1,33 +1,28 @@
 import * as THREE from "three";
 import type { AudioEngine, Sfx } from "../audio/audio";
-import {
-  FULL_HEALTH,
-  toolFor,
-  type Game,
-  type PlayTier,
-} from "../content/load";
-import { context2d } from "../dom";
+import { FULL_HEALTH, type Game, type PlayTier } from "../content/load";
 import { nth, present } from "../nth";
-import { healthAt, type Player, type Step } from "../show/script";
+import type { Player, Step } from "../show/script";
 import { CameraRig, type ShotView } from "./camera-rig";
 import { Character } from "./characters";
 import { Combat } from "./combat";
 import { CodeWindow } from "./codewindow";
 import { Effects } from "./effects";
-import { Enemy, type EnemyKind } from "./enemies";
-import { makePile } from "./pile";
+import type { EnemyKind } from "./enemies";
+import { enterBoss } from "./boss-arrive-step";
+import { enterBossDown } from "./boss-down-step";
+import { enterBossPart } from "./boss-part-step";
 import { enterFixed } from "./fixed-step";
 import { enterProblem } from "./problem-step";
 import type { StepContext } from "./step-context";
 import { Street } from "./street";
 import { Timeline } from "./timeline";
-import { paintStopCard } from "./tier-content";
+import { advanceWalk, startWalk, type Walk } from "./walk";
 import { stateFor } from "./world-state";
 import { Debris } from "./physics";
-import { beforeParen } from "../ui/card";
-import { clamp01, ease, lerp, rng } from "./toon";
-import { BOLT, EVENT, WORLD } from "./palette";
-import { DEBT_WINDOW_COLS, State, standZ } from "./world-shared";
+import { ease, lerp } from "./toon";
+import { EVENT, WORLD } from "./palette";
+import { State } from "./world-shared";
 
 export { walkSeconds } from "./world-shared";
 export type { CameraMode } from "./world-shared";
@@ -62,96 +57,6 @@ const EXIT_SPIN_DEBT = 0.3;
 const EXIT_SPIN_MUZZLE = 4;
 const EXIT_BURST_COUNT = 18;
 const EXIT_BURST_SPEED = 3;
-const WALK_SEED_BASE = 500;
-const WALK_SEED_PER_TIER = 31;
-const WALK_SEED_PER_STOP = 7;
-const SPAWNS_MIN = 7;
-const SPAWNS_SPREAD = 3;
-const SPAWN_FIRST_AT = 0.04;
-const SPAWN_SPAN = 0.72;
-const SPAWN_JITTER = 0.05;
-const SPAGHETTI_CHANCE_UP_TO = 0.45;
-const BUG_CHANCE_UP_TO = 0.75;
-const SPAWN_SEED_RANGE = 1e6;
-const WALK_EASED_SHARE = 0.15;
-const WALK_LINEAR_SHARE = 0.85;
-const SPAWN_DISTANCE_AHEAD = 18;
-const SPAWN_DISTANCE_JITTER = 8;
-const COIN_FLIP = 0.5;
-const SPAGHETTI_START_X = 3;
-const SPAGHETTI_END_X = 1.5;
-const SPAGHETTI_TRAVEL_Z = 10;
-const SPAGHETTI_SPEED = 2.2;
-const BUG_LANE_X = 5;
-const BUG_TRAVEL_Z = 4;
-const BUG_SPEED = 3.2;
-const ROBOT_LANE_X = 9;
-const ROBOT_START_BACK = 4;
-const ROBOT_TRAVEL_Z = 2;
-const ROBOT_SPEED = 2.6;
-
-const BOSS_DROP_HEIGHT = 26;
-const BOSS_ARRIVE_SOUND_DELAY = 0.9;
-const BOSS_DROP_SECONDS = 1.3;
-const BOSS_LANDING_SHAKE = 1.2;
-const BOSS_LANDING_DUST_Y = 0.2;
-const BOSS_LANDING_BURST_COUNT = 60;
-const BOSS_LANDING_BURST_SPEED = 10;
-const MIN_TWEEN_SECONDS = 0.001;
-const BOSS_BOUNCE_SHOT_A = 2.6;
-const BOSS_BOUNCE_SHOT_B = 3.0;
-const BOSS_BOUNCE_SHOT_C = 3.4;
-const PART_SHOT_A_DELAY = 0.2;
-const PART_SHOT_B_DELAY = 0.5;
-const KO_BLOW_DELAY = 0.9;
-const KO_BLOW_WIDTH = 2.2;
-const KO_BLOW_SECONDS = 0.45;
-const KO_BLOW_SPIN = 6;
-const KO_SHAKE = 1.4;
-const KO_BURST_COUNT = 50;
-const KO_BURST_SPEED = 8;
-const KO_TEXT_RISE = 1.4;
-const KO_TEXT_SIZE = 1.3;
-const KO_TEXT_LIFE = 1.8;
-const KO_SHATTER_POWER = 5;
-const KO_SHATTER_GRID_COLS = 3;
-const KO_SHATTER_GRID_ROWS = 2;
-const KO_HEALTH_SECONDS = 0.6;
-const TOOL_FIRE_DELAY = 0.25;
-const TOOL_BOLT_SECONDS = 0.4;
-const TOOL_BOLT_SPIN = 8;
-const PART_BURST_COUNT = 50;
-const PART_BURST_SPEED = 9;
-const PART_TEXT_RISE = 1.8;
-const PART_TEXT_WORDS = 2;
-const PART_TEXT_SIZE = 1.1;
-const PART_TEXT_LIFE = 1.6;
-const PART_BREAK_SHAKE = 0.8;
-const PART_HEALTH_SECONDS = 0.6;
-const PILE_DROP_HEIGHT = 9;
-const PILE_DROP_SECONDS = 0.9;
-const PILE_LANDING_SHAKE = 0.7;
-const PILE_DUST_Y = 0.4;
-const PILE_BURST_COUNT = 40;
-const PILE_BURST_SPEED = 6;
-const PILE_LOSE_SOUND_DELAY = 0.2;
-const PILE_LOSE_VOLUME = 0.6;
-const FINISH_FIRE_DELAY = 0.3;
-const CORE_CRACK_SEED_FIRST = 5;
-const CORE_CRACKS_DELAY = 0.7;
-const CORE_CRACK_SEED_B = 17;
-const CORE_CRACK_B_U = 0.3;
-const CORE_CRACK_B_V = 0.4;
-const CORE_CRACK_SEED_C = 23;
-const CORE_CRACK_C_U = 0.7;
-const CORE_CRACK_C_V = 0.7;
-const BOSS_DESTROY_DELAY = 1.1;
-const BOSS_DEFEAT_SHAKE = 1.5;
-const BOSS_CONFETTI_COUNT = 200;
-const BOSS_RING_SIZE = 6;
-const BOSS_RING_LIFE = 0.8;
-const WIN_SOUND_DELAY = 1.6;
-
 const DEBT_SLOT_X = -1.1;
 const DEBT_SLOT_SPACING_X = 0.7;
 const DEBT_SLOT_Y = 2.8;
@@ -173,23 +78,6 @@ const READING_BOB_HEIGHT = 0.004;
 const DEBT_EASE_RATE = 4;
 const DEBT_WOBBLE_SPEED = 3;
 const DEBT_WOBBLE = 0.08;
-const BOLT_WIDTH = 256;
-const BOLT_HEIGHT = 340;
-const BOLT_CORNER = 22;
-const BOLT_BORDER = 12;
-const BOLT_INSET = 8;
-/** The card's inner frame sits BOLT_INSET in from each edge, so it is this much smaller than the card. */
-const BOLT_INNER_WIDTH = BOLT_WIDTH - BOLT_INSET * 2;
-const BOLT_INNER_HEIGHT = BOLT_HEIGHT - BOLT_INSET * 2;
-/** The words are centred on the card. */
-const BOLT_TEXT_X = BOLT_WIDTH / 2;
-const BOLT_INNER_CORNER = 16;
-const BOLT_TEXT_LINES = 3;
-const BOLT_TEXT_TOP = 130;
-const BOLT_TEXT_LINE = 52;
-const BOLT_PLANE_HEIGHT = 1.33;
-const BOLT_LIGHT_INTENSITY = 4;
-const BOLT_LIGHT_RANGE = 6;
 
 /**
  * One player's world: street, gates, character, enemies, the stop's code window and the boss.
@@ -211,13 +99,7 @@ export class PlayerWorld {
   autoplay = false;
 
   private state: State | null = null;
-  private walk: {
-    from: number;
-    to: number;
-    u: number;
-    spawns: { at: number; kind: EnemyKind; seed: number }[];
-    next: number;
-  } | null = null;
+  private walk: Walk | null = null;
   private shake = 0;
   private readonly rig = new CameraRig(this.camera);
   readonly combat: Combat;
@@ -428,13 +310,11 @@ export class PlayerWorld {
   enter(step: Step) {
     this.stepRef = step;
 
-    const prevWindow = this.street.window;
     const keepWin =
-      prevWindow && (step.phase === "walk" || step.phase === "boss");
-
-    if (keepWin) {
-      this.street.window = null;
-    } // keep it alive for its exit animation
+      this.street.window !== null &&
+      (step.phase === "walk" || step.phase === "boss");
+    // A window that is leaving is kept alive for its exit animation.
+    const prevWindow = keepWin ? this.street.releaseWindow() : null;
 
     const s = stateFor(this.game, this.player, step);
 
@@ -442,7 +322,7 @@ export class PlayerWorld {
       case "walk":
         this.reconcile(s);
         this.exitWindow(prevWindow);
-        this.startWalk(step);
+        this.walk = startWalk(this.makeStepContext(), step);
         break;
       case "problem":
         enterProblem(this.makeStepContext(), step, s);
@@ -456,13 +336,13 @@ export class PlayerWorld {
           this.exitWindow(prevWindow);
         }
 
-        this.enterBoss(s);
+        enterBoss(this.makeStepContext());
         break;
       case "bossPart":
-        this.enterBossPart(step, s);
+        enterBossPart(this.makeStepContext(), step, s);
         break;
       case "bossDown":
-        this.enterBossDown(step, s);
+        enterBossDown(this.makeStepContext(), s);
         break;
       case "tool":
         this.reconcile(s);
@@ -516,360 +396,11 @@ export class PlayerWorld {
     );
   }
 
-  private startWalk(step: Step) {
-    const tier = this.street.playing;
-    const to =
-      step.stop < tier.stops.length
-        ? standZ(step.stop)
-        : standZ(tier.stops.length);
-    const from = this.character.root.position.z;
-    const r = rng(
-      WALK_SEED_BASE +
-        step.tier * WALK_SEED_PER_TIER +
-        step.stop * WALK_SEED_PER_STOP,
-    );
-    const spawns: { at: number; kind: EnemyKind; seed: number }[] = [];
-    const count = SPAWNS_MIN + Math.floor(r() * SPAWNS_SPREAD);
-
-    for (let i = 0; i < count; i++) {
-      const roll = r();
-
-      spawns.push({
-        at: SPAWN_FIRST_AT + (i / count) * SPAWN_SPAN + r() * SPAWN_JITTER,
-        kind:
-          roll < SPAGHETTI_CHANCE_UP_TO
-            ? "spaghetti"
-            : roll < BUG_CHANCE_UP_TO
-              ? "bug"
-              : "robot",
-        seed: Math.floor(r() * SPAWN_SEED_RANGE),
-      });
-    }
-
-    this.walk = { from, to, u: 0, spawns, next: 0 };
-    this.character.pose = "walk";
-  }
-
   /** Director drives walking so both players stay in lockstep. u: 0 → 1. */
   setWalk(u: number) {
-    const w = this.walk;
-
-    if (!w) {
-      return;
+    if (this.walk) {
+      advanceWalk(this.makeStepContext(), this.walk, u);
     }
-
-    w.u = u;
-    this.character.root.position.z = lerp(
-      w.from,
-      w.to,
-      ease.inOutCubic(u) * WALK_EASED_SHARE + u * WALK_LINEAR_SHARE,
-    );
-    for (;;) {
-      const next = w.spawns[w.next];
-
-      if (!next || next.at > u) {
-        break;
-      }
-
-      w.next++;
-      this.spawn(next);
-    }
-
-    if (u >= 1) {
-      this.character.pose = "idle";
-    }
-  }
-
-  private spawn(sp: { kind: EnemyKind; seed: number }) {
-    const r = rng(sp.seed);
-    const z0 =
-      this.character.root.position.z -
-      SPAWN_DISTANCE_AHEAD -
-      r() * SPAWN_DISTANCE_JITTER;
-    const side = r() < COIN_FLIP ? -1 : 1;
-    let from: THREE.Vector3;
-    let to: THREE.Vector3;
-    let speed: number;
-
-    if (sp.kind === "spaghetti") {
-      from = new THREE.Vector3(side * SPAGHETTI_START_X, 0, z0);
-      to = new THREE.Vector3(
-        -side * SPAGHETTI_END_X,
-        0,
-        z0 + SPAGHETTI_TRAVEL_Z,
-      );
-      speed = SPAGHETTI_SPEED;
-    } else if (sp.kind === "bug") {
-      from = new THREE.Vector3(side * BUG_LANE_X, 0, z0);
-      to = new THREE.Vector3(-side * BUG_LANE_X, 0, z0 + BUG_TRAVEL_Z);
-      speed = BUG_SPEED;
-    } else {
-      from = new THREE.Vector3(side * ROBOT_LANE_X, 0, z0 - ROBOT_START_BACK);
-      to = new THREE.Vector3(-side * ROBOT_LANE_X, 0, z0 + ROBOT_TRAVEL_Z);
-      speed = ROBOT_SPEED;
-    }
-
-    const e = new Enemy(sp.kind, sp.seed, from, to, speed);
-
-    this.combat.enemies.push(e);
-    this.scene.add(e.group);
-  }
-
-  private enterBoss(s: State) {
-    this.combat.clearStreet();
-
-    const boss = this.street.bossModel;
-    const home = boss.group.position.clone();
-
-    boss.group.position.y = home.y + BOSS_DROP_HEIGHT;
-    this.timeline.after(BOSS_ARRIVE_SOUND_DELAY, () => this.sfx("bossArrive"));
-    this.timeline.tween(
-      BOSS_DROP_SECONDS,
-      (k) => {
-        boss.group.position.y =
-          home.y + BOSS_DROP_HEIGHT * (1 - ease.outCubic(clamp01(k)));
-      },
-      () => {
-        this.shake = BOSS_LANDING_SHAKE;
-        boss.shake = 1;
-        this.fx.burst(home.clone().setY(BOSS_LANDING_DUST_Y), {
-          n: BOSS_LANDING_BURST_COUNT,
-          colors: EVENT.bossArriveBurst,
-          speed: BOSS_LANDING_BURST_SPEED,
-        });
-      },
-    );
-    this.timeline.tween(MIN_TWEEN_SECONDS, () => void 0);
-    if (this.player === "p1") {
-      // Player 1 has nothing that works: shots bounce off.
-      for (const t of [
-        BOSS_BOUNCE_SHOT_A,
-        BOSS_BOUNCE_SHOT_B,
-        BOSS_BOUNCE_SHOT_C,
-      ]) {
-        this.timeline.after(t, () => this.combat.shootBoss());
-      }
-    }
-
-    void s;
-  }
-
-  private enterBossPart(step: Step, s: State) {
-    if (this.player === "p1") {
-      this.reconcile({
-        ...s,
-        pose: step.part === 0 ? "hurt" : "down",
-        health:
-          step.part === 0
-            ? healthAt(this.game, { ...step, phase: "boss" }, "p1")
-            : 0,
-      });
-      this.timeline.after(PART_SHOT_A_DELAY, () => this.combat.shootBoss());
-      this.timeline.after(PART_SHOT_B_DELAY, () => this.combat.shootBoss());
-      if (step.part === 0) {
-        // The boss finishes player 1 with one blow.
-        this.timeline.after(KO_BLOW_DELAY, () => {
-          const firstStop = nth(this.street.playing.stops, 0, "stops");
-          const blow = this.timeline.track(
-            new CodeWindow(
-              paintStopCard(
-                { game: this.game, tier: this.street.playing },
-                firstStop,
-                "problem",
-                DEBT_WINDOW_COLS,
-              ),
-              KO_BLOW_WIDTH,
-              "angry",
-            ),
-          );
-
-          this.scene.add(blow.group);
-
-          const from = this.street.bossModel.partWorld(0);
-          const to = this.character.chestWorld();
-
-          this.timeline.tween(
-            KO_BLOW_SECONDS,
-            (k) => {
-              blow.group.position.lerpVectors(from, to, ease.inCubic(k));
-              blow.group.rotation.z = k * KO_BLOW_SPIN;
-            },
-            () => {
-              this.sfx("slam");
-              this.sfx("lose");
-              this.shake = KO_SHAKE;
-              this.character.hit();
-              this.character.pose = "down";
-              this.fx.burst(to, {
-                n: KO_BURST_COUNT,
-                colors: EVENT.bossHitBurst,
-                speed: KO_BURST_SPEED,
-              });
-              this.fx.text(
-                to.clone().add(new THREE.Vector3(0, KO_TEXT_RISE, 0)),
-                "K.O.",
-                EVENT.koText,
-                KO_TEXT_SIZE,
-                KO_TEXT_LIFE,
-              );
-              blow.shatter(this.debris, from, KO_SHATTER_POWER, [
-                KO_SHATTER_GRID_COLS,
-                KO_SHATTER_GRID_ROWS,
-              ]);
-              this.timeline.untrack(blow);
-
-              const h0 = this.health;
-
-              this.timeline.tween(KO_HEALTH_SECONDS, (k) => {
-                this.health = lerp(h0, 0, k);
-              });
-            },
-          );
-        });
-      }
-
-      return;
-    }
-
-    // Player 2 fires the tool earned at that stop at the matching part.
-    this.reconcile({ ...s, broken: step.part });
-
-    const boss = this.street.bossModel;
-
-    this.street.bossLeft = this.street.bossTotal - step.part;
-
-    const part = nth(this.street.playing.boss.parts, step.part, "boss parts");
-    const tool = toolFor(this.game, part.beatenBy);
-
-    this.timeline.after(TOOL_FIRE_DELAY, () => {
-      this.character.fire();
-
-      const from = this.character.muzzleWorld();
-      const to = boss.partWorld(step.part);
-
-      this.fx.muzzle(from, EVENT.partMuzzle);
-      this.sfx("cardPlay");
-
-      const card = this.timeline.track(toolBolt(tool.name));
-
-      this.scene.add(card.group);
-      this.timeline.tween(
-        TOOL_BOLT_SECONDS,
-        (k) => {
-          card.group.position.lerpVectors(from, to, ease.inCubic(k));
-          card.group.rotation.z = k * TOOL_BOLT_SPIN;
-          this.rig.face(card.group, true);
-        },
-        () => {
-          this.fx.beam(from, to, EVENT.partBeam);
-          this.fx.burst(to, {
-            n: PART_BURST_COUNT,
-            colors: EVENT.partBreakBurst,
-            speed: PART_BURST_SPEED,
-          });
-          this.fx.text(
-            to.clone().add(new THREE.Vector3(0, PART_TEXT_RISE, 0)),
-            beforeParen(tool.name)
-              .split(" ")
-              .slice(0, PART_TEXT_WORDS)
-              .join(" "),
-            EVENT.partText,
-            PART_TEXT_SIZE,
-            PART_TEXT_LIFE,
-          );
-          boss.breakPart(step.part, this.debris, from);
-          this.sfx("bossPartBreak");
-          this.street.bossLeft = this.street.bossTotal - step.part - 1;
-          this.shake = PART_BREAK_SHAKE;
-          card.dispose();
-          this.timeline.untrack(card);
-
-          const h0 = this.health;
-
-          this.timeline.tween(PART_HEALTH_SECONDS, (k) => {
-            this.health = lerp(h0, s.health, k);
-          });
-        },
-      );
-    });
-  }
-
-  private enterBossDown(_step: Step, s: State) {
-    if (this.player === "p1") {
-      this.reconcile({ ...s, pile: false });
-
-      // Spaghetti rains down and buries them.
-      const pile = makePile();
-
-      this.street.pile = pile;
-      this.scene.add(pile);
-      pile.position.set(0, PILE_DROP_HEIGHT, s.z);
-      this.timeline.tween(
-        PILE_DROP_SECONDS,
-        (k) => {
-          pile.position.y = PILE_DROP_HEIGHT * (1 - ease.outCubic(k));
-        },
-        () => {
-          this.shake = PILE_LANDING_SHAKE;
-          this.fx.burst(pile.position.clone().setY(PILE_DUST_Y), {
-            n: PILE_BURST_COUNT,
-            colors: EVENT.bossDownBurst,
-            speed: PILE_BURST_SPEED,
-          });
-        },
-      );
-      this.timeline.after(PILE_LOSE_SOUND_DELAY, () =>
-        this.sfx("lose", PILE_LOSE_VOLUME),
-      );
-
-      return;
-    }
-
-    this.reconcile({
-      ...s,
-      boss: "alive",
-      broken: this.street.bossTotal,
-      pose: "aim",
-    });
-
-    const boss = this.street.bossModel;
-
-    this.street.bossLeft = 0;
-    this.timeline.after(FINISH_FIRE_DELAY, () => {
-      this.character.fire();
-
-      const from = this.character.muzzleWorld();
-      const to = boss.core.group.getWorldPosition(new THREE.Vector3());
-
-      this.fx.beam(from, to, EVENT.bossDownBeam);
-      boss.core.crack(CORE_CRACK_SEED_FIRST);
-      this.sfx("glassCrack");
-    });
-    this.timeline.after(CORE_CRACKS_DELAY, () => {
-      boss.core.crack(CORE_CRACK_SEED_B, CORE_CRACK_B_U, CORE_CRACK_B_V);
-      boss.core.crack(CORE_CRACK_SEED_C, CORE_CRACK_C_U, CORE_CRACK_C_V);
-      boss.shake = 1;
-    });
-    this.timeline.after(BOSS_DESTROY_DELAY, () => {
-      const at = boss.core.group.getWorldPosition(new THREE.Vector3());
-
-      boss.destroy(this.debris, this.character.muzzleWorld().setY(0));
-      this.street.boss = null;
-      this.sfx("bossDefeat");
-      this.sfx("shatter");
-      this.shake = BOSS_DEFEAT_SHAKE;
-      this.fx.confetti(at, BOSS_CONFETTI_COUNT);
-      this.fx.ring(
-        at,
-        EVENT.bossDownRing,
-        BOSS_RING_SIZE,
-        BOSS_RING_LIFE,
-        false,
-        this.camera.position,
-      );
-      this.character.pose = "victory";
-    });
-    this.timeline.after(WIN_SOUND_DELAY, () => this.sfx("win"));
   }
 
   // ───────────────────────────── per frame ─────────────────────────────
@@ -1035,74 +566,4 @@ export class PlayerWorld {
   get debrisCount() {
     return this.debris.count;
   }
-}
-
-/** The tool card as a projectile: a small glowing yellow card. */
-function toolBolt(name: string) {
-  const group = new THREE.Group();
-  const cv = document.createElement("canvas");
-
-  cv.width = BOLT_WIDTH;
-  cv.height = BOLT_HEIGHT;
-
-  const g = context2d(cv);
-
-  g.fillStyle = BOLT.card;
-  g.beginPath();
-  g.roundRect(0, 0, BOLT_WIDTH, BOLT_HEIGHT, BOLT_CORNER);
-  g.fill();
-  g.strokeStyle = BOLT.border;
-  g.lineWidth = BOLT_BORDER;
-  g.beginPath();
-  g.roundRect(
-    BOLT_INSET,
-    BOLT_INSET,
-    BOLT_INNER_WIDTH,
-    BOLT_INNER_HEIGHT,
-    BOLT_INNER_CORNER,
-  );
-  g.stroke();
-  g.fillStyle = BOLT.text;
-  g.font = "italic 800 46px Barlow, Impact, sans-serif";
-  g.textAlign = "center";
-  for (const [i, w] of beforeParen(name)
-    .split(" ")
-    .slice(0, BOLT_TEXT_LINES)
-    .entries()) {
-    g.fillText(w, BOLT_TEXT_X, BOLT_TEXT_TOP + i * BOLT_TEXT_LINE);
-  }
-
-  const tex = new THREE.CanvasTexture(cv);
-
-  tex.colorSpace = THREE.SRGBColorSpace;
-
-  const mat = new THREE.MeshBasicMaterial({
-    map: tex,
-    toneMapped: false,
-    side: THREE.DoubleSide,
-  });
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.0, BOLT_PLANE_HEIGHT),
-    mat,
-  );
-
-  group.add(mesh);
-
-  const light = new THREE.PointLight(
-    BOLT.light,
-    BOLT_LIGHT_INTENSITY,
-    BOLT_LIGHT_RANGE,
-  );
-
-  group.add(light);
-
-  return {
-    group,
-    dispose: () => {
-      tex.dispose();
-      mat.dispose();
-      mesh.geometry.dispose();
-      group.removeFromParent();
-    },
-  };
 }
