@@ -2,7 +2,6 @@ import * as THREE from "three";
 import type { AudioEngine, Sfx } from "../audio/audio";
 import {
   FULL_HEALTH,
-  TIER_HEALTH_LOSS,
   toolFor,
   type Game,
   type PlayTier,
@@ -17,9 +16,12 @@ import { CodeWindow } from "./codewindow";
 import { Effects } from "./effects";
 import { Enemy, type EnemyKind } from "./enemies";
 import { makePile } from "./pile";
+import { enterFixed } from "./fixed-step";
+import { enterProblem } from "./problem-step";
+import type { StepContext } from "./step-context";
 import { Street } from "./street";
 import { Timeline } from "./timeline";
-import { makeStopWindow, paintStopCard } from "./tier-content";
+import { paintStopCard } from "./tier-content";
 import { stateFor } from "./world-state";
 import { Debris } from "./physics";
 import { beforeParen } from "../ui/card";
@@ -88,54 +90,6 @@ const ROBOT_START_BACK = 4;
 const ROBOT_TRAVEL_Z = 2;
 const ROBOT_SPEED = 2.6;
 
-const PROBLEM_ALARM_DELAY = 0.2;
-const CARD_LAUNCH_DELAY = 1.5;
-const CARD_FLIGHT_SECONDS = 0.5;
-const CARD_LAUNCH_Y = 6;
-const CARD_LAUNCH_Z = -34;
-const CARD_HIT_Y = 0.6;
-const CARD_HIT_Z = -0.6;
-const CARD_FLIGHT_START_SCALE = 0.35;
-const CARD_FLIGHT_END_SCALE = 0.55;
-const CARD_FLIGHT_SPIN = 2.5;
-const DAMAGE_VOLUME = 0.8;
-const HIT_BURST_COUNT = 40;
-const HIT_BURST_SPEED = 7;
-const HIT_RING_SIZE = 1.6;
-const HIT_RING_LIFE = 0.4;
-const HIT_TEXT_RISE = 1.2;
-const HIT_TEXT_LIFE = 1.4;
-const HEALTH_DROP_SECONDS = 0.5;
-const CARD_BOUNCE_SECONDS = 0.55;
-const OLD_CARD_RATTLE = 0.4;
-const AIM_TO_FIRE_DELAY = 0.45;
-const BEAM_RING_SIZE = 2.5;
-const BEAM_RING_LIFE = 0.5;
-const FIRST_CRACK_DELAY = 0.65;
-const FIRST_CRACK_SEED = 3;
-const MORE_CRACKS_DELAY = 0.85;
-const SECOND_CRACK_SEED = 9;
-const SECOND_CRACK_U = 0.3;
-const SECOND_CRACK_V = 0.6;
-const THIRD_CRACK_SEED = 13;
-const THIRD_CRACK_U = 0.75;
-const THIRD_CRACK_V = 0.35;
-const SHATTER_DELAY = 1.05;
-const SHATTER_POWER = 7;
-const SHATTER_GRID_SHORT = 5;
-const SHATTER_GRID_LONG = 7;
-const SHATTER_SEED_BASE = 21;
-const SHATTER_SHAKE = 0.5;
-const FIXED_CARD_DELAY = 1.3;
-const FIXED_CARD_SECONDS = 0.6;
-const FIXED_CARD_DROP = 3;
-const FIXED_CARD_START_SCALE = 0.6;
-const HEAL_DELAY = 1.7;
-const HEAL_RISE = 1.2;
-const HEAL_TEXT_RISE = 1.4;
-const HEAL_TEXT_LIFE = 1.6;
-const HEAL_SECONDS = 0.8;
-const VICTORY_POSE_SECONDS = 1.2;
 const BOSS_DROP_HEIGHT = 26;
 const BOSS_ARRIVE_SOUND_DELAY = 0.9;
 const BOSS_DROP_SECONDS = 1.3;
@@ -346,6 +300,32 @@ export class PlayerWorld {
     });
   }
 
+  /** What the step handlers get of this world. */
+  private makeStepContext(): StepContext {
+    return {
+      player: this.player,
+      game: this.game,
+      scene: this.scene,
+      camera: this.camera,
+      rig: this.rig,
+      character: this.character,
+      street: this.street,
+      combat: this.combat,
+      timeline: this.timeline,
+      fx: this.fx,
+      debris: this.debris,
+      health: () => this.health,
+      setHealth: (h) => {
+        this.health = h;
+      },
+      setShake: (v) => {
+        this.shake = v;
+      },
+      sfx: (name, volume) => this.sfx(name, volume),
+      reconcile: (s) => this.reconcile(s),
+    };
+  }
+
   get windowKey(): string {
     return this.street.windowKey;
   }
@@ -465,10 +445,10 @@ export class PlayerWorld {
         this.startWalk(step);
         break;
       case "problem":
-        this.enterProblem(step, s);
+        enterProblem(this.makeStepContext(), step, s);
         break;
       case "fixed":
-        this.enterFixed(step, s);
+        enterFixed(this.makeStepContext(), step, s);
         break;
       case "boss":
         this.reconcile(s);
@@ -633,254 +613,6 @@ export class PlayerWorld {
 
     this.combat.enemies.push(e);
     this.scene.add(e.group);
-  }
-
-  private enterProblem(step: Step, s: State) {
-    // Arrive with no window, then the angry card flies down the road and slams in.
-    const before =
-      this.player === "p1"
-        ? healthAt(this.game, { ...step, phase: "walk" }, "p1")
-        : FULL_HEALTH;
-
-    this.reconcile(s);
-    this.combat.clearStreet();
-
-    const w = this.street.shownWindow;
-
-    w.reading = false;
-
-    const g = w.win.group;
-
-    g.visible = false;
-    this.health = before;
-    this.street.gateAt(step.stop).state = "idle";
-    this.character.pose = "idle";
-    this.timeline.after(PROBLEM_ALARM_DELAY, () => {
-      this.street.gateAt(step.stop).state = "alarm";
-    });
-
-    const launch = CARD_LAUNCH_DELAY;
-    const flight = CARD_FLIGHT_SECONDS;
-
-    this.timeline.after(launch, () => {
-      g.visible = true;
-
-      const start = this.character.root.position
-        .clone()
-        .add(new THREE.Vector3(0, CARD_LAUNCH_Y, CARD_LAUNCH_Z));
-      const chest = this.character.chestWorld();
-
-      this.timeline.tween(flight, (k) => {
-        const e = ease.inCubic(k);
-
-        g.position.lerpVectors(
-          start,
-          chest.clone().add(new THREE.Vector3(0, CARD_HIT_Y, CARD_HIT_Z)),
-          e,
-        );
-        g.scale.setScalar(
-          lerp(CARD_FLIGHT_START_SCALE, CARD_FLIGHT_END_SCALE, e),
-        );
-        g.rotation.set(0, 0, (1 - e) * CARD_FLIGHT_SPIN);
-        g.quaternion.premultiply(new THREE.Quaternion());
-        this.rig.face(g);
-      });
-    });
-    this.timeline.after(launch + flight, () => {
-      this.sfx("slam");
-      this.sfx("damage", DAMAGE_VOLUME);
-      this.character.hit();
-      this.shake = 1;
-
-      const chest = this.character.chestWorld();
-
-      this.fx.burst(chest, {
-        colors: EVENT.hitBurst,
-        n: HIT_BURST_COUNT,
-        speed: HIT_BURST_SPEED,
-      });
-      this.fx.ring(
-        chest,
-        EVENT.hitRing,
-        HIT_RING_SIZE,
-        HIT_RING_LIFE,
-        false,
-        this.camera.position,
-      );
-      this.fx.text(
-        chest.clone().add(new THREE.Vector3(0, HIT_TEXT_RISE, 0)),
-        `−${Math.round(TIER_HEALTH_LOSS / this.street.playing.stops.length)}%`,
-        EVENT.hitText,
-        1.0,
-        HIT_TEXT_LIFE,
-      );
-
-      const from = this.health;
-
-      this.timeline.tween(HEALTH_DROP_SECONDS, (k) => {
-        this.health = lerp(from, s.health, ease.outCubic(k));
-      });
-      this.character.pose = s.pose;
-
-      // Bounce back into the reading spot.
-      const hitPos = g.position.clone();
-      const hitScale = g.scale.x;
-
-      this.timeline.tween(
-        CARD_BOUNCE_SECONDS,
-        (k) => {
-          const e = ease.outBack(k);
-          const target = this.rig.readingPose(
-            w.win,
-            this.character.root.position.z,
-          );
-
-          g.position.lerpVectors(hitPos, target.pos, e);
-          g.scale.setScalar(lerp(hitScale, target.scale, e));
-          this.rig.face(g);
-        },
-        () => {
-          w.reading = true;
-        },
-      );
-    });
-  }
-
-  private enterFixed(step: Step, s: State) {
-    this.reconcile(s);
-
-    const stop = nth(this.street.playing.stops, step.stop, "stops");
-    const fixed = this.street.shownWindow;
-
-    if (this.player === "p1") {
-      return;
-    }
-
-    fixed.reading = true;
-    fixed.win.group.visible = false;
-
-    const old = this.timeline.track(
-      makeStopWindow(
-        { game: this.game, tier: this.street.playing },
-        stop,
-        "problem",
-        this.rig.shape,
-      ),
-    );
-
-    old.rattle = OLD_CARD_RATTLE;
-    this.scene.add(old.group);
-
-    const pose = this.rig.readingPose(old, this.character.root.position.z);
-
-    old.group.position.copy(pose.pos);
-    old.group.scale.setScalar(pose.scale);
-    this.rig.face(old.group);
-    this.health =
-      FULL_HEALTH - TIER_HEALTH_LOSS / this.street.playing.stops.length;
-    this.street.gateAt(step.stop).state = "alarm";
-    this.character.pose = "aim";
-    this.timeline.after(AIM_TO_FIRE_DELAY, () => {
-      this.character.fire();
-
-      const from = this.character.muzzleWorld();
-      const to = old.group.position.clone();
-
-      this.fx.muzzle(from, EVENT.toolMuzzle);
-      this.fx.beam(from, to);
-      this.fx.ring(
-        to,
-        EVENT.toolRing,
-        BEAM_RING_SIZE,
-        BEAM_RING_LIFE,
-        false,
-        this.camera.position,
-      );
-      this.sfx("cardPlay");
-    });
-    this.timeline.after(FIRST_CRACK_DELAY, () => {
-      old.crack(FIRST_CRACK_SEED);
-      this.sfx("glassCrack");
-    });
-    this.timeline.after(MORE_CRACKS_DELAY, () => {
-      old.crack(SECOND_CRACK_SEED, SECOND_CRACK_U, SECOND_CRACK_V);
-      old.crack(THIRD_CRACK_SEED, THIRD_CRACK_U, THIRD_CRACK_V);
-    });
-    this.timeline.after(SHATTER_DELAY, () => {
-      this.sfx("shatter");
-
-      const from = this.character.muzzleWorld();
-
-      old.shatter(
-        this.debris,
-        from.setY(from.y - 1),
-        SHATTER_POWER,
-        this.rig.shape === "tall"
-          ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
-          : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
-        SHATTER_SEED_BASE + step.stop,
-      );
-      this.timeline.untrack(old);
-      this.shake = SHATTER_SHAKE;
-    });
-    this.timeline.after(FIXED_CARD_DELAY, () => {
-      this.sfx("codeFix");
-      fixed.win.group.visible = true;
-
-      const g = fixed.win.group;
-
-      fixed.reading = false;
-      this.timeline.tween(
-        FIXED_CARD_SECONDS,
-        (k) => {
-          const t = this.rig.readingPose(
-            fixed.win,
-            this.character.root.position.z,
-          );
-
-          g.position
-            .copy(t.pos)
-            .add(
-              new THREE.Vector3(0, (1 - ease.outBack(k)) * FIXED_CARD_DROP, 0),
-            );
-          g.scale.setScalar(
-            t.scale * lerp(FIXED_CARD_START_SCALE, 1, ease.outBack(k)),
-          );
-          this.rig.face(g);
-        },
-        () => {
-          fixed.reading = true;
-        },
-      );
-      this.street.gateAt(step.stop).state = "open";
-    });
-    this.timeline.after(HEAL_DELAY, () => {
-      this.sfx("heal");
-      this.fx.heal(
-        this.character.root.position
-          .clone()
-          .add(new THREE.Vector3(0, HEAL_RISE, 0)),
-      );
-      this.fx.text(
-        this.character
-          .chestWorld()
-          .add(new THREE.Vector3(0, HEAL_TEXT_RISE, 0)),
-        "+100% HP",
-        EVENT.healText,
-        1.0,
-        HEAL_TEXT_LIFE,
-      );
-
-      const from = this.health;
-
-      this.timeline.tween(HEAL_SECONDS, (k) => {
-        this.health = lerp(from, FULL_HEALTH, ease.outCubic(k));
-      });
-      this.character.pose = "victory";
-      this.timeline.after(VICTORY_POSE_SECONDS, () => {
-        this.character.pose = "idle";
-      });
-    });
   }
 
   private enterBoss(s: State) {
