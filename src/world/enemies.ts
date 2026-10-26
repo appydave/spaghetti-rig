@@ -3,6 +3,11 @@ import * as THREE from "three";
 import { INK, kit, toon } from "./toon";
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
+import {
+  ROBOT_PAUSE_SECONDS,
+  stepEnemy,
+  type EnemyMotion,
+} from "./enemy-motion";
 
 export type EnemyKind = "spaghetti" | "bug" | "robot";
 export const SCORE: Record<EnemyKind, number> = {
@@ -26,6 +31,28 @@ const ROBOT_STATES = ["GENERATING…", "THINKING…", "SHIPPING…", "10K LINES/
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
+/** The numbers of each kind's animation: data only, read by stepEnemy in enemy-motion.ts. */
+const ENEMY_MOTION = {
+  spaghetti: {
+    hopRate: 5,
+    hopHeight: 0.6,
+    squash: 0.15,
+    swayRate: 2,
+    swayAmount: 0.4,
+  },
+  bug: { legRate: 22, legSwing: 0.5, bob: 0.03 },
+  robot: {
+    swingRate: 9,
+    swingPhase: 1.6,
+    swing: 0.6,
+    idleArm: -0.9,
+    idleRate: 12,
+    idleAmount: 0.3,
+    nodRate: 5,
+    nodAmount: 0.15,
+  },
+} as const satisfies EnemyMotion;
+
 export class Enemy {
   readonly group = new THREE.Group();
   hp: number;
@@ -41,7 +68,7 @@ export class Enemy {
     name: string;
     state: string;
   };
-  private readonly parts: Record<string, THREE.Object3D> = {};
+  readonly parts: Record<string, THREE.Object3D> = {};
 
   constructor(
     readonly kind: EnemyKind,
@@ -271,11 +298,11 @@ export class Enemy {
     };
   }
 
-  private part(name: string): THREE.Object3D {
+  part(name: string): THREE.Object3D {
     return present(this.parts[name], `the robot part "${name}"`);
   }
 
-  private drawLabel(state: string) {
+  drawLabel(state: string) {
     const l = present(this.label, "the robot label");
 
     if (l.state === state) {
@@ -307,72 +334,16 @@ export class Enemy {
   }
 
   update(dt: number, facing: THREE.Vector3) {
-    this.age += dt;
-    this.flash = Math.max(0, this.flash - dt * 5);
+    stepEnemy(this, ENEMY_MOTION, dt, facing);
+  }
 
-    const t = this.age;
-    // Move along from → to.
-    const total = this.from.distanceTo(this.to);
-    // Robots stop halfway to think (and generate spaghetti) before walking on.
-    const half = total / 2 / this.speed;
-    const pause = this.kind === "robot" && t > half && t < half + 2.5;
-    const moving =
-      this.kind === "robot" ? (t < half ? t : Math.max(half, t - 2.5)) : t;
-    const travelled = Math.min(total, moving * this.speed);
-    const dir = this.to.clone().sub(this.from).normalize();
-
-    this.group.position.copy(this.from).addScaledVector(dir, travelled);
-    if (this.kind === "spaghetti") {
-      const hop = Math.abs(Math.sin(t * 5));
-
-      this.group.position.y = hop * 0.6;
-      this.part("body").scale.set(
-        1 + (1 - hop) * 0.15,
-        1 - (1 - hop) * 0.15,
-        1 + (1 - hop) * 0.15,
-      );
-      this.part("body").rotation.y = Math.sin(t * 2) * 0.4;
-    } else if (this.kind === "bug") {
-      for (const [k, leg] of Object.entries(this.parts)) {
-        if (k.startsWith("leg")) {
-          leg.rotation.y = Math.sin(t * 22 + k.length) * 0.5;
-        }
-      }
-
-      this.group.position.y = Math.abs(Math.sin(t * 22)) * 0.03;
-    } else {
-      const walking = !pause && travelled < total;
-
-      for (const side of [-1, 1]) {
-        this.part(`leg${side}`).rotation.x = walking
-          ? Math.sin(t * 9 + side * 1.6) * 0.6
-          : 0;
-        this.part(`arm${side}`).rotation.x = walking
-          ? -Math.sin(t * 9 + side * 1.6) * 0.6
-          : -0.9 + Math.sin(t * 12) * 0.3;
-      }
-
-      this.part("head").rotation.z = pause ? Math.sin(t * 5) * 0.15 : 0;
-      this.drawLabel(
-        pause
-          ? nth(
-              ROBOT_STATES,
-              Math.floor(t) % ROBOT_STATES.length,
-              "robot states",
-            )
-          : "ARMORED",
-      );
-    }
-
-    // Face the player.
-    const look = facing.clone();
-
-    look.y = this.group.position.y;
-    this.group.lookAt(look);
-
-    const s = 1 + this.flash * 0.15;
-
-    this.group.scale.setScalar(s);
+  /** What the robot's label says while it stands and thinks: the states, one a second. */
+  thinking(t: number) {
+    return nth(
+      ROBOT_STATES,
+      Math.floor(t) % ROBOT_STATES.length,
+      "robot states",
+    );
   }
 
   /** Returns true when this hit kills it. */
@@ -388,7 +359,8 @@ export class Enemy {
 
   get finished() {
     return (
-      (this.age - (this.kind === "robot" ? 2.5 : 0)) * this.speed >=
+      (this.age - (this.kind === "robot" ? ROBOT_PAUSE_SECONDS : 0)) *
+        this.speed >=
       this.from.distanceTo(this.to)
     );
   }
