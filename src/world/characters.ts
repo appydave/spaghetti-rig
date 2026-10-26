@@ -1,11 +1,57 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
+import {
+  stepCharacter,
+  newMotionState,
+  type CharacterMotion,
+} from "./character-motion";
 import { INK, kit, toon, clamp01, lerp } from "./toon";
 import { context2d } from "../dom";
 
 export type Pose = "idle" | "walk" | "hurt" | "down" | "victory" | "aim";
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+
+/** The numbers of a character's animation: data only, read by stepCharacter in character-motion.ts. */
+const CHARACTER_MOTION = {
+  walk: { rate: 8.5, legSwing: 0.55, bob: 0.06, lean: 0.06 },
+  idle: { bobRate: 2.2, bob: 0.012, tiltRate: 1.3, tilt: 0.04 },
+  hurt: {
+    bobRate: 3,
+    bob: 0.01,
+    lean: -0.12,
+    tilt: 0.18,
+    tiltRate: 5,
+    tiltSwing: 0.05,
+  },
+  victory: { rate: 5, bob: 0.18, armUp: 0.8, tilt: -0.15 },
+  fall: {
+    riseRate: 2.2,
+    getUpRate: 3,
+    curve: 2,
+    quarterTurn: 0.5,
+    restTilt: 0.06,
+    sink: 0.28,
+    bounce: 0.25,
+  },
+  body: {
+    hipsHeight: 0.92,
+    pitchLean: 0.6,
+    hurtLean: 0.45,
+    recoilLift: -0.06,
+    armLean: 0.15,
+    yawFollow: 0.8,
+    hurtShakeRate: 9,
+    hurtShake: 0.2,
+    headHurt: 0.25,
+    headNodRate: 1.7,
+    headNod: 0.03,
+    weaponPitch: 0.4,
+    weaponRecoil: 0.22,
+    weaponArm: 0.45,
+    weaponKick: 0.08,
+  },
+} as const satisfies CharacterMotion;
 
 /**
  * A chunky, bobble-headed toy character facing -Z. The rig: root → hips → (legs, upper → arms, head, weapon).
@@ -21,14 +67,8 @@ export class Character {
   readonly weapon = new THREE.Group();
   readonly muzzle = new THREE.Object3D();
   pose: Pose = "idle";
-  private t = 0;
-  private recoil = 0;
-  private hurtKick = 0;
-  private downT = 0;
-  private aimYaw = 0;
-  private aimPitch = 0;
-  private targetYaw = 0;
-  private targetPitch = 0;
+  /** What the animation keeps between frames (character-motion.ts). */
+  readonly motion = newMotionState();
 
   constructor(readonly kind: "p1" | "p2") {
     this.root.name = kind === "p1" ? "vibe-coder" : "quality-specialist";
@@ -55,8 +95,8 @@ export class Character {
   /** Point the upper body at a world position (clamped, so they never twist their spine off). */
   aimAt(world: THREE.Vector3 | null) {
     if (!world) {
-      this.targetYaw = 0;
-      this.targetPitch = 0;
+      this.motion.targetYaw = 0;
+      this.motion.targetPitch = 0;
 
       return;
     }
@@ -65,8 +105,12 @@ export class Character {
     const from = V(0, 1.25, 0);
     const d = local.sub(from);
 
-    this.targetYaw = THREE.MathUtils.clamp(Math.atan2(-d.x, -d.z), -0.9, 0.9);
-    this.targetPitch = THREE.MathUtils.clamp(
+    this.motion.targetYaw = THREE.MathUtils.clamp(
+      Math.atan2(-d.x, -d.z),
+      -0.9,
+      0.9,
+    );
+    this.motion.targetPitch = THREE.MathUtils.clamp(
       Math.atan2(d.y, Math.hypot(d.x, d.z)),
       -0.35,
       0.5,
@@ -74,93 +118,15 @@ export class Character {
   }
 
   fire() {
-    this.recoil = 1;
+    this.motion.recoil = 1;
   }
 
   hit() {
-    this.hurtKick = 1;
+    this.motion.hurtKick = 1;
   }
 
   update(dt: number) {
-    this.t += dt;
-
-    const t = this.t;
-
-    this.recoil = Math.max(0, this.recoil - dt * 6);
-    this.hurtKick = Math.max(0, this.hurtKick - dt * 2.2);
-
-    const k = 1 - Math.exp(-dt * 10);
-
-    this.aimYaw = lerp(this.aimYaw, this.targetYaw, k);
-    this.aimPitch = lerp(this.aimPitch, this.targetPitch, k);
-
-    let legSwing = 0;
-    let bob = 0;
-    let lean = 0;
-    let headTilt = 0;
-    let armUp = 0;
-    let rootTilt = 0;
-    let rootY = 0;
-
-    switch (this.pose) {
-      case "walk":
-        legSwing = Math.sin(t * 8.5) * 0.55;
-        bob = Math.abs(Math.cos(t * 8.5)) * 0.06;
-        lean = 0.06;
-        break;
-      case "idle":
-      case "aim":
-        bob = Math.sin(t * 2.2) * 0.012;
-        headTilt = Math.sin(t * 1.3) * 0.04;
-        break;
-      case "hurt":
-        bob = Math.sin(t * 3) * 0.01;
-        lean = -0.12;
-        headTilt = 0.18 + Math.sin(t * 5) * 0.05;
-        break;
-      case "victory":
-        bob = Math.abs(Math.sin(t * 5)) * 0.18;
-        armUp = 0.8;
-        headTilt = -0.15;
-        break;
-      case "down":
-        break;
-    }
-
-    this.downT =
-      this.pose === "down"
-        ? Math.min(1, this.downT + dt * 2.2)
-        : Math.max(0, this.downT - dt * 3);
-
-    const fall = this.downT < 1 ? 1 - Math.pow(1 - this.downT, 2) : 1;
-
-    rootTilt = fall * (Math.PI / 2 - 0.06);
-    rootY =
-      fall * 0.28 +
-      (this.downT > 0 && this.downT < 1
-        ? Math.sin(this.downT * Math.PI) * 0.25
-        : 0);
-
-    this.legL.rotation.x = legSwing;
-    this.legR.rotation.x = -legSwing;
-    this.hips.position.y = 0.92 + bob;
-    this.root.rotation.x = rootTilt; // falls on their back
-    this.root.position.y = rootY;
-
-    const hurt = this.hurtKick;
-
-    this.upper.rotation.x =
-      -lean +
-      this.aimPitch * 0.6 -
-      hurt * 0.45 +
-      this.recoil * -0.06 -
-      armUp * 0.15;
-    this.upper.rotation.y = this.aimYaw * 0.8 + Math.sin(hurt * 9) * hurt * 0.2;
-    this.head.rotation.x = -headTilt - hurt * 0.25;
-    this.head.rotation.z = Math.sin(t * 1.7) * 0.03;
-    this.weapon.rotation.x =
-      this.aimPitch * 0.4 + this.recoil * 0.22 + armUp * 0.45;
-    this.weapon.position.z = this.recoil * 0.08;
+    stepCharacter(this, dt, CHARACTER_MOTION);
   }
 
   /** World position of the muzzle. */
