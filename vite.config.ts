@@ -7,9 +7,9 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
 // Coverage floors: see the note at `thresholds`.
-const STATEMENTS_FLOOR = 90;
-const BRANCHES_FLOOR = 80;
-const FUNCTIONS_FLOOR = 84;
+const STATEMENTS_FLOOR = 91.6;
+const BRANCHES_FLOOR = 82.5;
+const FUNCTIONS_FLOOR = 87.7;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -48,10 +48,11 @@ export default defineConfig({
       // 75.04: a NAMED DEPARTURE from the one-decimal floors above. G04's splits (W1-W6, D1, A1-A2, C1-C2) restructure code and wobble coverage
       // slightly, and one-decimal floors would turn every small wobble into a ruling. The event this floor must catch is far bigger: the
       // harness being deleted or skipped drops coverage by about 35 points. A floor below these is a lost test and goes to David.
-      // G04's closing slice re-ratchets all three to the measured value at one decimal.
       // Since G04 H2 lint/gates/director-proof.test.ts also plays the whole Director (under happy-dom, the one test file that has a DOM), so
       // the measured numbers rose again to 91.08, 81.66 and 85.82. The G04 rule for these whole-number floors: the whole number at least ONE point
-      // below the measured value (90, 80, 84), which gives the splits room to wobble. The closing slice still re-ratchets all three to one decimal.
+      // below the measured value (90, 80, 84), which gives the splits room to wobble.
+      // G04's closing slice (2026-10-26) ended that departure: all three are back to one decimal, rounded down from the measured 91.68, 82.51 and
+      // 87.78 (91.6, 82.5, 87.7). A floor below these is a lost test and goes to David.
       // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change, while statements did not move.
       thresholds: {
         statements: STATEMENTS_FLOOR,

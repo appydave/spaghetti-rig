@@ -536,8 +536,9 @@
       }
     },
     {
-      // NOT YET ENFORCED: the files still over a limit, by name. G04 splits them one slice at a time, each removing its files here; the last
-      // slice deletes this block. lint/gates/size.test.ts keeps it honest: every name exists and still has a finding.
+      // CARRIED TO TIER 5 by David's option 2, 10-24: these files still exceed a size limit; tier 5 (structure) splits them; this list may shrink,
+      // never grow. G04 split the rest of the app one slice at a time, each removing its files here. lint/gates/size.test.ts pins it: every
+      // name exists, still has a finding (so a name leaves the list the moment its file is clean), and the list is exactly the set it states.
       "files": [
         "lint/gates/audio-proof.test.ts",
         "lint/gates/color-policy.mjs",

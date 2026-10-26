@@ -1,6 +1,7 @@
 // Proves the size gate (G04) is wired and kept honest. The probes run in a sandbox that mirrors the repo (the real .oxlintrc.json, the
 // plugin files, node_modules): each limit fails just over it and passes exactly on it. The guard keeps the two ways out of the gate
-// honest: the asset-data exemption is exactly five files, and the not-yet-enforced list only names files that exist and still need it.
+// honest: the asset-data exemption is exactly five files, and the list carried to tier 5 is exactly the files named here, each of which
+// exists and still needs it.
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -27,6 +28,25 @@ const ASSET_DATA = [
   "src/world/city.ts",
   "src/world/enemies.ts",
   "src/world/showcase.ts",
+];
+/** The files carried to tier 5 (structure) by David's option 2, 10-24: they still exceed a size limit and tier 5 splits them. The list may shrink, never grow. */
+const CARRIED_TO_TIER_5 = [
+  "lint/gates/audio-proof.test.ts",
+  "lint/gates/color-policy.mjs",
+  "src/audio/audio.ts",
+  "src/audio/tracks.ts",
+  "src/content/load.ts",
+  "src/main.ts",
+  "src/show/director.ts",
+  "src/show/script.ts",
+  "src/world/codelayout.ts",
+  "src/world/codewindow.ts",
+  "src/world/effects.ts",
+  "src/world/gate.ts",
+  "src/world/physics.ts",
+  "src/world/toon.ts",
+  "src/world/world.ts",
+  "tests/show.spec.ts",
 ];
 const OVER_FILE = file(301);
 
@@ -123,7 +143,7 @@ const covered = [
     ],
   ),
   [
-    "a file on the not-yet-enforced list is skipped",
+    "a file on the carried list is skipped",
     notYetEnforced[0] ?? "",
     fn(61),
     [],
@@ -181,7 +201,11 @@ describe("size gate", () => {
     expect(ASSET_DATA.filter((f) => hit.get(f)?.length === 0)).toEqual([]);
   });
 
-  it("the not-yet-enforced list names real files, never a pattern and never an asset file", () => {
+  it("the list carried to tier 5 is exactly the files named in this test, so no file can join it", () => {
+    expect([...notYetEnforced].sort()).toEqual([...CARRIED_TO_TIER_5].sort());
+  });
+
+  it("the carried list names real files, never a pattern and never an asset file", () => {
     expect(
       notYetEnforced.filter(
         (f) =>
@@ -192,7 +216,7 @@ describe("size gate", () => {
     ).toEqual([]);
   });
 
-  it("every file on the not-yet-enforced list still has a size finding, so a name leaves the list the moment its file is clean", () => {
+  it("every file on the carried list still has a size finding, so a name leaves the list the moment its file is clean", () => {
     const hit = findingsWithout(
       config.overrides.filter((o) => turnsSizeOff(o) && !exemption.includes(o)),
       notYetEnforced,
