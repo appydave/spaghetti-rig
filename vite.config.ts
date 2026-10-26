@@ -6,10 +6,13 @@ const DEFAULT_DEV_PORT = 5173;
 const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
-// Coverage floors: see the note at `thresholds`.
-const STATEMENTS_FLOOR = 92.5;
-const BRANCHES_FLOOR = 83.2;
-const FUNCTIONS_FLOOR = 88.6;
+// Coverage: the most statements, branches and functions that may be left uncovered, and the percentage backstop. See `thresholds`.
+const MAX_UNCOVERED_STATEMENTS = 441;
+const MAX_UNCOVERED_BRANCHES = 387;
+const MAX_UNCOVERED_FUNCTIONS = 78;
+const BACKSTOP_STATEMENTS = 91.6;
+const BACKSTOP_BRANCHES = 82.5;
+const BACKSTOP_FUNCTIONS = 87.7;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -35,30 +38,22 @@ export default defineConfig({
       // Count every source file, not only the ones a test imports, so an untested file lowers the numbers.
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts"],
-      // A floor is a ratchet at the measured coverage (G00b): it fails if coverage falls, and a gate never lowers it; any drop goes to David.
-      // Since G05 H most of the coverage comes from lint/gates/model-proof.test.ts, which builds every model: it runs the builders but
-      // asserts no visuals, so this coverage is shallow, and it still must not fall. Branches (42.4) and functions (45.0) are rounded down
-      // from the measured 42.42 and 45.08. Statements was held at 28.0 while G05 named numbers (a `const X = n` is a statement in modules
-      // no test loads); G05's closing PR re-ratcheted it to the measured 49.92, rounded down to 49.9.
-      // Since G05 N7h and N7h2 lint/gates/audio-proof.test.ts also runs the whole audio engine (init, every track's instrument voices, the
-      // scheduler, the sound effects) against a recording AudioContext. That is shallow coverage too, and it must not fall either: branches
-      // (42.4) and functions (45.0) are rounded down from the measured 42.41 and 45.08 (statements measured 47.57 then, re-ratcheted above).
-      // Since G04 H1 lint/gates/world-proof.test.ts also plays the whole of PlayerWorld (all six tiers, both players) against a stubbed canvas.
-      // That is shallow coverage too, and it must not fall. The floors are now WHOLE numbers, rounded down from the measured 83.79, 68.57 and
-      // 75.04: a NAMED DEPARTURE from the one-decimal floors above. G04's splits (W1-W6, D1, A1-A2, C1-C2) restructure code and wobble coverage
-      // slightly, and one-decimal floors would turn every small wobble into a ruling. The event this floor must catch is far bigger: the
-      // harness being deleted or skipped drops coverage by about 35 points. A floor below these is a lost test and goes to David.
-      // Since G04 H2 lint/gates/director-proof.test.ts also plays the whole Director (under happy-dom, the one test file that has a DOM), so
-      // the measured numbers rose again to 91.08, 81.66 and 85.82. The G04 rule for these whole-number floors: the whole number at least ONE point
-      // below the measured value (90, 80, 84), which gives the splits room to wobble.
-      // G04's closing slice (2026-10-26) ended that departure: all three are back to one decimal, rounded down from the measured 91.68, 82.51 and
-      // 87.78 (91.6, 82.5, 87.7). A floor below these is a lost test and goes to David.
-      // After-G04 A1's showcase tests (src/world/showcase.test.ts) then raised the measured numbers to 92.59, 83.23 and 88.69: floors 92.5, 83.2, 88.6.
-      // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change, while statements did not move.
+      // The ratchet is the UNCOVERED COUNT (David's ruling B, 2026-10-26): CI fails if the number of uncovered statements, branches or
+      // functions grows. A negative threshold is Vitest's "most uncovered items allowed", so -441 means at most 441 statements uncovered.
+      // Deleting covered code leaves the count where it was and fails nothing; adding code no test runs raises it and fails. The numbers are
+      // the counts measured on main at 1186929 (the MAX_UNCOVERED_* constants above). When a PR lowers a count, lower the constant to the new
+      // uncovered total (total minus covered, from `npx vitest run --coverage`) in the same PR, so the count only ever shrinks.
+      // The percentages below are a backstop, not the gate: the G04-close values, 91.6 / 82.5 / 87.7, over everything under src/.
+      // A figure below them is a lost test and goes to David. No lines threshold: lines measure layout (Prettier moved them 12.38% -> 10.55%).
       thresholds: {
-        statements: STATEMENTS_FLOOR,
-        branches: BRANCHES_FLOOR,
-        functions: FUNCTIONS_FLOOR,
+        statements: -MAX_UNCOVERED_STATEMENTS,
+        branches: -MAX_UNCOVERED_BRANCHES,
+        functions: -MAX_UNCOVERED_FUNCTIONS,
+        "src/**/*.ts": {
+          statements: BACKSTOP_STATEMENTS,
+          branches: BACKSTOP_BRANCHES,
+          functions: BACKSTOP_FUNCTIONS,
+        },
       },
     },
   },
