@@ -70,39 +70,60 @@ const amount = (v: unknown, path: string): Amount => {
 const maybe = <T>(v: unknown, read: (x: unknown) => T): T | undefined =>
   v === undefined ? undefined : read(v);
 
-function parseLayer(raw: unknown, path: string): Layer {
-  const o = obj(raw, path);
-  const at = (k: string): string => `${path}.${k}`;
-  const kind = oneOf(o.kind, KINDS, at("kind"));
-  const has = (k: string): boolean => OWN[kind].includes(k);
-  const notes = (v: unknown, k: string): number[] =>
-    list(v, at(k)).map((m) => num(m, at(k)));
-  const rep = obj(o.repeat ?? {}, at("repeat"));
+type Loose = ReturnType<typeof obj>;
+
+const owns = (kind: Layer["kind"], k: string): boolean => OWN[kind].includes(k);
+
+/** Refuse a layer with a field its kind does not have, with no pitch, or with notes beside note or repeat.count. */
+function refuseMisfits(
+  o: Loose,
+  kind: Layer["kind"],
+  rep: Loose,
+  path: string,
+) {
   const unknown = Object.keys(o).find(
     (k) => ![...SHARED, ...OWN[kind]].includes(k),
   );
 
   if (unknown) {
-    throw new Error(`${at(unknown)} is not a field of a ${kind} layer`);
+    throw new Error(`${path}.${unknown} is not a field of a ${kind} layer`);
   }
 
-  if (!has("f") && o.note === undefined && o.notes === undefined) {
-    throw new Error(`${at("note")}: a ${kind} layer needs note or notes`);
+  if (!owns(kind, "f") && o.note === undefined && o.notes === undefined) {
+    throw new Error(`${path}.note: a ${kind} layer needs note or notes`);
   }
 
   if (o.notes !== undefined && (o.note ?? rep.count) !== undefined) {
-    throw new Error(`${at("notes")} cannot go with note or repeat.count`);
+    throw new Error(`${path}.notes cannot go with note or repeat.count`);
   }
+}
 
-  const seq =
-    maybe(o.notes, (v) => notes(v, "notes")) ??
-    (typeof o.note === "number" ? [o.note] : undefined);
+const noteList = (v: unknown, path: string): number[] =>
+  list(v, path).map((m) => num(m, path));
+
+/** The notes a layer plays in order: a list of notes, or a lone fixed note. */
+function sequenceOf(o: Loose, path: string): number[] | undefined {
+  return (
+    maybe(o.notes, (v) => noteList(v, `${path}.notes`)) ??
+    (typeof o.note === "number" ? [o.note] : undefined)
+  );
+}
+
+function parseLayer(raw: unknown, path: string): Layer {
+  const o = obj(raw, path);
+  const at = (k: string): string => `${path}.${k}`;
+  const kind = oneOf(o.kind, KINDS, at("kind"));
+  const rep = obj(o.repeat ?? {}, at("repeat"));
+
+  refuseMisfits(o, kind, rep, path);
+
+  const seq = sequenceOf(o, path);
 
   return {
     kind,
     pitch: seq
       ? { seq }
-      : (maybe(o.note, (v) => ({ pick: notes(v, "note") })) ?? {
+      : (maybe(o.note, (v) => ({ pick: noteList(v, at("note")) })) ?? {
           hz: amount(o.f, at("f")),
         }),
     dur: amount(o.dur, at("dur")),
@@ -112,13 +133,13 @@ function parseLayer(raw: unknown, path: string): Layer {
       start: numOr(rep.start, 0, at("repeat.start")),
       step: numOr(rep.step, 0, at("repeat.step")),
     },
-    wave: has("wave")
+    wave: owns(kind, "wave")
       ? oneOf(o.wave, ["sine", "square", "sawtooth", "triangle"], at("wave"))
       : "sine",
-    filter: has("filter")
+    filter: owns(kind, "filter")
       ? oneOf(o.filter, ["lowpass", "highpass", "bandpass"], at("filter"))
       : "lowpass",
-    vol: has("vol") ? amount(o.vol, at("vol")) : 0,
+    vol: owns(kind, "vol") ? amount(o.vol, at("vol")) : 0,
     f2: maybe(o.f2, (v) => amount(v, at("f2"))),
     attack: maybe(o.attack, (v) => num(v, at("attack"))),
     lp: maybe(o.lp, (v) => num(v, at("lp"))),
@@ -142,26 +163,37 @@ export function parseSfx(raw: unknown): Map<string, Layer[]> {
 const draw = (a: Amount): number =>
   typeof a === "number" ? a : a.min + Math.random() * (a.max - a.min);
 
+/** The midi note a layer plays at repeat i: none for a pitch in hertz, the i-th of a sequence, or one drawn from the list. */
+function midiOf(p: Pitch, i: number): number | undefined {
+  if ("hz" in p) {
+    return undefined;
+  }
+
+  if ("seq" in p) {
+    return nth(p.seq, i, "notes");
+  }
+
+  return nth(p.pick, Math.floor(Math.random() * p.pick.length), "note list");
+}
+
+/** A brass or trombone voice: its length is drawn first, then (brass) its volume. */
+function horn(l: Layer, at: number, midi: number | undefined): Play {
+  const dur = draw(l.dur);
+  const note = present(midi, "the note of a brass or trombone layer");
+
+  return l.kind === "brass"
+    ? { kind: "brass", at, midi: note, dur, vol: draw(l.vol) }
+    : { kind: "trombone", at, midi: note, dur, wobble: l.wobble };
+}
+
 function play(l: Layer, t: number, i: number): Play {
   const r = l.repeat;
   const p = l.pitch;
   const at = t + r.start + i * r.step + (l.at === undefined ? 0 : draw(l.at));
-  const midi =
-    "hz" in p
-      ? undefined
-      : "seq" in p
-        ? nth(p.seq, i, "notes")
-        : nth(p.pick, Math.floor(Math.random() * p.pick.length), "note list");
+  const midi = midiOf(p, i);
 
   if (l.kind === "brass" || l.kind === "trombone") {
-    const [dur, note] = [
-      draw(l.dur),
-      present(midi, "the note of a brass or trombone layer"),
-    ];
-
-    return l.kind === "brass"
-      ? { kind: "brass", at, midi: note, dur, vol: draw(l.vol) }
-      : { kind: "trombone", at, midi: note, dur, wobble: l.wobble };
+    return horn(l, at, midi);
   }
 
   const voice = {
