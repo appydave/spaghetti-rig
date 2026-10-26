@@ -7,10 +7,12 @@ export function collectRules(properties: string[]) {
 
   document.body.append(probe);
 
+  // The browser resolves url(...) against the page, so the origin (the dev server's port) is dropped: it is not a colour.
   const read = () =>
     properties
       .map((p) => getComputedStyle(probe).getPropertyValue(p))
-      .join(" | ");
+      .join(" | ")
+      .replaceAll(location.origin, "");
   const blank = read();
   const out: Record<string, string> = {};
   const seen: Record<string, number> = {};
@@ -101,7 +103,8 @@ export function collectScreen(properties: string[]): ScreenColours {
       const style = getComputedStyle(el, pseudo);
       const colours = properties
         .map((p) => style.getPropertyValue(p))
-        .join(" | ");
+        .join(" | ")
+        .replaceAll(location.origin, "");
 
       feed(`${place(el)}${pseudo ?? ""}=${colours};`);
       counts[colours] = (counts[colours] ?? 0) + 1;

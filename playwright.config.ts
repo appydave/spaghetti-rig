@@ -28,6 +28,8 @@ export default defineConfig({
   timeout: TEST_TIMEOUT_MS,
   workers: 1,
   forbidOnly: inCI,
+  // CI only compares: a missing snapshot fails there instead of being written. Locally a missing one is written (and the run fails once).
+  updateSnapshots: inCI ? "none" : "missing",
   reporter: "list",
   use: {
     baseURL: `http://localhost:${DEV_PORT}`,
