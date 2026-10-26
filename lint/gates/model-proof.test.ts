@@ -1,11 +1,8 @@
 // The model proof harness (R7). It builds every game model headless, with no browser, and fingerprints each one: for every node
 // of its scene the world-space vertices, index count, material, light and transform. Two trees that fingerprint the same build
-// the same models. scripts/model-proof.mjs runs this file on an old and a new tree and compares what it writes.
+// the same models. The hashes are committed as lint/gates/__snapshots__/model-proof.txt and this file compares against them.
 //
 // As a normal test it also guards the models for good: they must build the same whatever Math.random says, and the same twice.
-// MODEL_PROOF_OUT=<file> writes the fingerprints and runs the full 50-seed sweep; MODEL_PROOF_PLANT=<model name> nudges that
-// model by 0.01 before it is fingerprinted, to show the proof fails and names it.
-import { writeFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { fingerprint, type Print } from "./model-fingerprint";
@@ -40,9 +37,6 @@ const { TitleShowcase, VsShowcase } = await import("../../src/world/showcase");
 
 /** The full proof builds a few hundred models more than once: well past the default 5 s. */
 const TEST_TIMEOUT_MS = 120_000;
-const OUT = process.env.MODEL_PROOF_OUT;
-const PLANT = process.env.MODEL_PROOF_PLANT;
-const PLANT_SHIFT = 0.01;
 // The committed log is the complete proof, so the always-on test runs the complete proof too.
 const SEEDS = 50;
 const STEP = 1 / 60;
@@ -167,10 +161,6 @@ function sample(name: string, make: () => Subject, out: Map<string, Print>) {
       subject.step(STEP);
     }
 
-    if (PLANT && name.startsWith(PLANT)) {
-      subject.root.position.x += PLANT_SHIFT;
-    }
-
     out.set(`${name} @t=${t}`, fingerprint(subject.root));
   }
 }
@@ -217,22 +207,13 @@ describe("model proof harness", () => {
   it(
     "builds every model, at every sample time and seed",
     () => {
-      if (OUT) {
-        const plain = Object.entries(results).map(([stream, prints]) => [
-          stream,
-          Object.fromEntries(prints),
-        ]);
-
-        writeFileSync(OUT, JSON.stringify(Object.fromEntries(plain)));
-      }
-
       expect(results.sequence.size).toBeGreaterThan(SEEDS * KINDS.length);
     },
     TEST_TIMEOUT_MS,
   );
 
-  // The committed log: one model per line with its hash. Skipped when scripts/model-proof.mjs drives this file (OUT): it compares two trees itself. (The sequence and constant streams are asserted equal by the next test.)
-  it.skipIf(OUT)("builds the same models as the committed log", async () => {
+  // The committed log: one model per line with its hash. (The sequence and constant streams are asserted equal by the next test.)
+  it("builds the same models as the committed log", async () => {
     const lines = [...results.sequence].map(
       ([name, print]) => `${name} | ${print.hash}`,
     );

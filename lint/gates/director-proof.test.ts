@@ -3,11 +3,10 @@
 // a fake stage and fake worlds that record every call and hold scripted numbers, a recording audio engine and BroadcastChannel, a seeded
 // Math.random and a fixed frame step. After every step and at fixed frames it fingerprints the page (every element, attribute, class
 // and text), the calls the Director made, the sounds and broadcasts, and its own state. Two trees that write the same log show the same
-// show. scripts/director-proof.mjs runs this file on an old and a new tree and compares; the split of director.ts (D1) must leave it unchanged.
+// show. The log is committed as lint/gates/__snapshots__/director-proof.txt and this file compares against it; the split of director.ts (D1) must leave it unchanged.
 // What it cannot see: layout, the CSS cascade and rendering (happy-dom has none), so a style that only works through a stylesheet is invisible.
-// This is the ONLY test file that opts in to a DOM; the default test environment stays node. DIRECTOR_PROOF_OUT=<file> writes the log.
-import { writeFileSync } from "node:fs";
-import { afterAll, describe, expect, it, vi } from "vitest";
+// This is the ONLY test file that opts in to a DOM; the default test environment stays node.
+import { describe, expect, it, vi } from "vitest";
 import type { Mode } from "../../src/show/script";
 import { FakeChannel } from "./director-dom";
 import { Show } from "./director-show";
@@ -16,7 +15,6 @@ import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
-const OUT = process.env.DIRECTOR_PROOF_OUT;
 /** Frames a step is held before the harness moves on (a banner lasts up to 2.6 s and a caption 2.9 s). */
 const HOLD_FRAMES = 70;
 const LIMIT = 1000;
@@ -203,12 +201,6 @@ const scenarios: Scenario[] = [
 ];
 const all: Record<string, string[]> = {};
 
-afterAll(() => {
-  if (OUT) {
-    writeFileSync(OUT, JSON.stringify(all));
-  }
-});
-
 describe("director proof harness", () => {
   it.each(scenarios.map((s, i) => [...s, i] as const))(
     "%s: plays through and is looked at",
@@ -226,9 +218,8 @@ describe("director proof harness", () => {
     },
   );
 
-  // The committed log: every fingerprint of every scenario, as the two-tree script compared them (`npx vitest run -u` rewrites it). Skipped when
-  // scripts/director-proof.mjs drives this file (OUT): it compares two trees itself, and a changed tree must not fail the harness.
-  it.skipIf(OUT)("looks the same as the committed log", async () => {
+  // The committed log: every fingerprint of every scenario (`npx vitest run -u` rewrites it).
+  it("looks the same as the committed log", async () => {
     await expect(logLines(all)).toMatchFileSnapshot(
       "./__snapshots__/director-proof.txt",
     );
