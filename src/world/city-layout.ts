@@ -26,6 +26,9 @@ const emptySide = (): SideLayout => ({
   bulbs: [],
 });
 
+/** A draw centred on zero (a random number minus this), and the centre of a cell (its index plus this). */
+const CENTRE = 0.5;
+
 const at = (
   position: readonly [number, number, number],
   size: readonly [number, number, number],
@@ -120,9 +123,9 @@ class Planner {
       out.roofs.push(
         at(
           [
-            b.cx + side * (this.rand() - 1 / 2) * b.d * k.boxSpread,
+            b.cx + side * (this.rand() - CENTRE) * b.d * k.boxSpread,
             b.h + k.boxLift,
-            b.cz + (this.rand() - 1 / 2) * b.w * k.boxSpread,
+            b.cz + (this.rand() - CENTRE) * b.w * k.boxSpread,
           ],
           k.boxSize,
           k.boxColor,
@@ -150,7 +153,7 @@ class Planner {
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const wz = b.cz - usable / 2 + (c + 1 / 2) * (usable / cols);
+        const wz = b.cz - usable / 2 + (c + CENTRE) * (usable / cols);
         const wy = k.firstRow + r * k.rowHeight + k.sill;
 
         out.windows.push(
