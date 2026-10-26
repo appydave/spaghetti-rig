@@ -2,19 +2,18 @@
 // a fake clock (fixed frame steps), a recording audio engine and a stubbed canvas, and writes down what the world looks like and
 // holds after every step and at fixed frames inside it: its scene graph (every node's transform, visibility and material), its state
 // (health, score, camera, gates, enemies, boss, window), and the sounds it asked for. Two trees that write the same log play the same
-// game. scripts/world-proof.mjs runs this file on an old and a new tree and compares what it writes; the split of world.ts (W1-W6)
+// game. The log is committed as lint/gates/__snapshots__/world-proof.txt and this file compares against it; the split of world.ts (W1-W6)
 // must leave it unchanged. A scenario is one it(): a player, a tier, and how the world is played (watching, autoplay, the pointer).
-// Repeating itself across processes is checked by the script (a first run warms module-level caches, so a second run in the same process
-// draws differently by design); as a normal test it checks each scenario really plays: a log of several distinct looks.
-// WORLD_PROOF_OUT=<file> writes the log.
-import { readFileSync, writeFileSync } from "node:fs";
+// Each scenario is also checked to really play: a log of several distinct looks. (Repeating itself in one process is not checked: a first run
+// warms module-level caches, so a second run in the same process draws differently by design.)
+import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import type { Step } from "../../src/show/script";
 import { spyOnTemps } from "./disposal-spy";
 import { makeCanvas } from "./recording-canvas";
 import { scenarioList, type Mode, type Scenario } from "./world-scenarios";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { logLines } from "./proof-lines";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
 
@@ -31,7 +30,6 @@ const { initPhysics } = await import("../../src/world/physics");
 
 await initPhysics();
 
-const OUT = process.env.WORLD_PROOF_OUT;
 const FRAME = 1 / 20;
 /** Frames played inside a step before the world is looked at again, per kind of step (a walk takes about nine seconds). */
 const WALK_FRAMES = 190;
@@ -250,12 +248,6 @@ describe("the fingerprint sees a vertex edited in place", () => {
   });
 });
 
-afterAll(() => {
-  if (OUT) {
-    writeFileSync(OUT, JSON.stringify(all));
-  }
-});
-
 describe("world proof harness", () => {
   it.each(SCENARIOS)("%s: plays through and is looked at", (name, run) => {
     const log = run();
@@ -265,9 +257,8 @@ describe("world proof harness", () => {
     all[name] = log;
   });
 
-  // The committed log: every fingerprint of every scenario, as the two-tree script compared them (`npx vitest run -u` rewrites it). Skipped when
-  // scripts/world-proof.mjs drives this file (OUT): it compares two trees itself, and a changed tree must not fail the harness.
-  it.skipIf(OUT)("looks the same as the committed log", async () => {
+  // The committed log: every fingerprint of every scenario (`npx vitest run -u` rewrites it).
+  it("looks the same as the committed log", async () => {
     await expect(logLines(all)).toMatchFileSnapshot(
       "./__snapshots__/world-proof.txt",
     );
