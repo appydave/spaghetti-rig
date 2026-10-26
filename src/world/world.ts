@@ -10,25 +10,22 @@ import {
 import { context2d } from "../dom";
 import { nth, present } from "../nth";
 import { healthAt, type Player, type Step } from "../show/script";
-import { BossModel } from "./boss";
-import type { BossLayout } from "./bosslayout";
 import { CameraRig, type ShotView } from "./camera-rig";
 import { Character } from "./characters";
 import { Combat } from "./combat";
-import { buildCity, SEGMENT } from "./city";
 import { CodeWindow } from "./codewindow";
 import { Effects } from "./effects";
 import { Enemy, type EnemyKind } from "./enemies";
-import { Gate } from "./gate";
 import { makePile } from "./pile";
+import { Street } from "./street";
 import { Timeline } from "./timeline";
-import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
+import { makeStopWindow, paintStopCard } from "./tier-content";
 import { stateFor } from "./world-state";
 import { Debris } from "./physics";
 import { beforeParen } from "../ui/card";
-import { clamp01, disposeTree, ease, lerp, rng } from "./toon";
+import { clamp01, ease, lerp, rng } from "./toon";
 import { BOLT, EVENT, WORLD } from "./palette";
-import { BOSS, DEBT_WINDOW_COLS, State, standZ, stopZ } from "./world-shared";
+import { DEBT_WINDOW_COLS, State, standZ } from "./world-shared";
 
 export { walkSeconds } from "./world-shared";
 export type { CameraMode } from "./world-shared";
@@ -56,14 +53,6 @@ const RIM_Y = 20;
 const RIM_Z = -40;
 const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
-const RATTLE_P1 = 0.5;
-const RATTLE_P2 = 0.3;
-const DEBT_WINDOW_WIDTH = 1.1;
-const CITY_TAIL_LENGTH = 40;
-const CITY_SEED_BASE = 1000;
-const CITY_SEED_PER_TIER = 77;
-const CITY_CLEAR_BEHIND_ARENA = 16;
-const CITY_CLEAR_AHEAD_OF_ARENA = 60;
 const EXIT_WINDOW_SECONDS = 0.7;
 const EXIT_SCALE_DEBT = 0.2;
 const EXIT_SCALE_MUZZLE = 0.02;
@@ -265,20 +254,8 @@ export class PlayerWorld {
   readonly debris: Debris;
   /** Health shown in the HUD (animated). */
   health = FULL_HEALTH;
-  bossTotal = 0;
-  bossLeft = 0;
   autoplay = false;
 
-  private tier: PlayTier | null = null;
-  private city: THREE.Group | null = null;
-  private gates: Gate[] = [];
-  private window: { win: CodeWindow; key: string; reading: boolean } | null =
-    null;
-  private debt: { win: CodeWindow; key: string }[] = [];
-  private boss: BossModel | null = null;
-  /** Kept after the boss breaks, so the camera holds its shot. */
-  private bossLayout: BossLayout | null = null;
-  private pile: THREE.Group | null = null;
   private state: State | null = null;
   private walk: {
     from: number;
@@ -290,6 +267,7 @@ export class PlayerWorld {
   private shake = 0;
   private readonly rig = new CameraRig(this.camera);
   readonly combat: Combat;
+  private readonly street: Street;
   private readonly timeline = new Timeline();
   private readonly sun: THREE.DirectionalLight;
   private stepRef: Step | null = null;
@@ -351,6 +329,7 @@ export class PlayerWorld {
         "debrisBounce",
         DEBRIS_BOUNCE_VOLUME_BASE + s * DEBRIS_BOUNCE_VOLUME_SCALE,
       );
+    this.street = new Street(this.scene, game, player, this.rig);
     this.combat = new Combat({
       player,
       camera: this.camera,
@@ -361,10 +340,22 @@ export class PlayerWorld {
       shake: (atLeast) => {
         this.shake = Math.max(this.shake, atLeast);
       },
-      boss: () => this.boss,
+      boss: () => this.street.boss,
       autoplay: () => this.autoplay,
       walking: () => this.walk !== null,
     });
+  }
+
+  get windowKey(): string {
+    return this.street.windowKey;
+  }
+
+  get bossTotal() {
+    return this.street.bossTotal;
+  }
+
+  get bossLeft() {
+    return this.street.bossLeft;
   }
 
   get score() {
@@ -402,28 +393,6 @@ export class PlayerWorld {
     return this.combat.enemyScreen();
   }
 
-  /** The tier being played. Set when the first step builds it, so a step that needs it before then is a bug. */
-  private get playing(): PlayTier {
-    return present(this.tier, "the tier");
-  }
-
-  /** For tests: the key of the stop window on show, or "" when there is none. */
-  get windowKey(): string {
-    return this.window?.key ?? "";
-  }
-
-  private get shownWindow() {
-    return present(this.window, "the stop window");
-  }
-
-  private get bossModel(): BossModel {
-    return present(this.boss, "the boss");
-  }
-
-  private gateAt(stop: number): Gate {
-    return nth(this.gates, stop, "gates");
-  }
-
   private sfx(name: Sfx, volume = 1) {
     this.audio.play(name, { pan: this.pan(), volume });
   }
@@ -436,127 +405,17 @@ export class PlayerWorld {
 
     const tier = nth(this.game.tiers, s.tier, "tiers");
 
-    if (this.tier !== tier) {
+    if (this.street.tier !== tier) {
       this.buildTier(tier);
     }
 
     this.character.root.position.set(0, 0, s.z);
     this.character.root.rotation.y = 0;
     this.character.pose = s.pose;
-    for (const [i, g] of s.gates.entries()) {
-      const gate = this.gates[i];
-
-      if (gate) {
-        gate.state = g;
-      }
-    }
-
-    // Stop window.
-    const wantKey =
-      s.window === "none" ? "" : `${s.stop}:${s.window}:${this.rig.shape}`;
-
-    if ((this.window?.key ?? "") !== wantKey) {
-      this.window?.win.dispose();
-      this.window = null;
-      if (wantKey) {
-        const stop = nth(tier.stops, s.stop, "stops");
-        const win = makeStopWindow(
-          { game: this.game, tier },
-          stop,
-          s.window === "fixed" ? "fixed" : "problem",
-          this.rig.shape,
-        );
-
-        this.scene.add(win.group);
-        this.window = { win, key: wantKey, reading: true };
-      }
-    }
-
-    if (this.window) {
-      this.window.reading = true;
-      this.window.win.rattle =
-        s.window === "problem"
-          ? this.player === "p1"
-            ? RATTLE_P1
-            : RATTLE_P2
-          : 0;
-    }
-
-    // Tech debt trailing player 1.
-    while (this.debt.length > s.debt) {
-      this.debt.pop()?.win.dispose();
-    }
-
-    for (let k = this.debt.length; k < s.debt; k++) {
-      const stop = nth(tier.stops, k, "stops");
-      const win = new CodeWindow(
-        paintStopCard(
-          { game: this.game, tier },
-          stop,
-          "problem",
-          DEBT_WINDOW_COLS,
-        ),
-        DEBT_WINDOW_WIDTH,
-        "angry",
-      );
-
-      this.scene.add(win.group);
-      this.debt.push({ win, key: String(k) });
-    }
-
-    // Boss.
-    if (s.boss === "none" || s.boss === "dead") {
-      this.boss?.dispose();
-      this.boss = null;
-    } else {
-      if (
-        !this.boss ||
-        this.boss.remaining < tier.boss.parts.length - s.broken
-      ) {
-        this.boss?.dispose();
-        this.boss = this.addBoss(tier);
-      }
-
-      for (let i = 0; i < s.broken; i++) {
-        this.boss.dropPart(i);
-      }
-
-      this.boss.group.position.set(
-        0,
-        BOSS.y,
-        s.z - this.rig.bossBack(present(this.bossLayout, "boss layout")),
-      );
-    }
-
-    this.bossTotal = tier.hasBoss ? tier.boss.parts.length : 0;
-    this.bossLeft = s.boss === "dead" ? 0 : this.bossTotal - s.broken;
-    // Spaghetti burying player 1.
-    if (s.pile && !this.pile) {
-      this.pile = makePile();
-      this.scene.add(this.pile);
-    }
-
-    if (!s.pile && this.pile) {
-      disposeTree(this.pile);
-      this.pile = null;
-    }
-
-    if (this.pile) {
-      this.pile.position.set(0, 0, s.z);
-    }
-
+    this.street.sync(s, tier);
     this.health = s.health;
     this.rig.mode = s.camera;
     this.state = s;
-  }
-
-  private addBoss(tier: PlayTier): BossModel {
-    const boss = makeBossModel(this.game, tier);
-
-    this.bossLayout = boss.layout;
-    this.scene.add(boss.group);
-
-    return boss;
   }
 
   private clearAnimations() {
@@ -565,51 +424,11 @@ export class PlayerWorld {
   }
 
   private buildTier(tier: PlayTier) {
-    if (this.city) {
-      disposeTree(this.city);
-    }
-
-    for (const g of this.gates) {
-      g.dispose();
-    }
-
-    this.window?.win.dispose();
-    this.window = null;
-    for (const d of this.debt) {
-      d.win.dispose();
-    }
-
-    this.debt = [];
-    this.boss?.dispose();
-    this.boss = null;
-    this.bossLayout = null;
+    this.street.clear();
     this.combat.clear();
     this.debris.clear();
     this.fx.clear();
-
-    const length = (tier.stops.length + 1) * SEGMENT + CITY_TAIL_LENGTH;
-    // The boss stands in an open plaza beyond the last stop, so no building can hide any part of it.
-    const arena = standZ(tier.stops.length);
-
-    this.city = buildCity(
-      length,
-      CITY_SEED_BASE + tier.index * CITY_SEED_PER_TIER,
-      tier.hasBoss
-        ? {
-            from: arena + CITY_CLEAR_BEHIND_ARENA,
-            to: arena - CITY_CLEAR_AHEAD_OF_ARENA,
-          }
-        : undefined,
-    );
-    this.scene.add(this.city);
-    this.gates = tier.stops.map((s, k) => {
-      const g = new Gate(s.gate, stopZ(k));
-
-      this.scene.add(g.group);
-
-      return g;
-    });
-    this.tier = tier;
+    this.street.build(tier);
   }
 
   // ───────────────────────────── content → objects ─────────────────────────────
@@ -629,12 +448,12 @@ export class PlayerWorld {
   enter(step: Step) {
     this.stepRef = step;
 
-    const prevWindow = this.window;
+    const prevWindow = this.street.window;
     const keepWin =
       prevWindow && (step.phase === "walk" || step.phase === "boss");
 
     if (keepWin) {
-      this.window = null;
+      this.street.window = null;
     } // keep it alive for its exit animation
 
     const s = stateFor(this.game, this.player, step);
@@ -693,7 +512,7 @@ export class PlayerWorld {
       (k) => {
         const e = ease.inOutCubic(k);
         const to = p1
-          ? this.debtSlot(this.debt.length - 1)
+          ? this.debtSlot(this.street.debt.length - 1)
           : this.character.muzzleWorld();
 
         win.group.position.lerpVectors(from, to, e);
@@ -718,7 +537,7 @@ export class PlayerWorld {
   }
 
   private startWalk(step: Step) {
-    const tier = this.playing;
+    const tier = this.street.playing;
     const to =
       step.stop < tier.stops.length
         ? standZ(step.stop)
@@ -826,7 +645,7 @@ export class PlayerWorld {
     this.reconcile(s);
     this.combat.clearStreet();
 
-    const w = this.shownWindow;
+    const w = this.street.shownWindow;
 
     w.reading = false;
 
@@ -834,10 +653,10 @@ export class PlayerWorld {
 
     g.visible = false;
     this.health = before;
-    this.gateAt(step.stop).state = "idle";
+    this.street.gateAt(step.stop).state = "idle";
     this.character.pose = "idle";
     this.timeline.after(PROBLEM_ALARM_DELAY, () => {
-      this.gateAt(step.stop).state = "alarm";
+      this.street.gateAt(step.stop).state = "alarm";
     });
 
     const launch = CARD_LAUNCH_DELAY;
@@ -890,7 +709,7 @@ export class PlayerWorld {
       );
       this.fx.text(
         chest.clone().add(new THREE.Vector3(0, HIT_TEXT_RISE, 0)),
-        `−${Math.round(TIER_HEALTH_LOSS / this.playing.stops.length)}%`,
+        `−${Math.round(TIER_HEALTH_LOSS / this.street.playing.stops.length)}%`,
         EVENT.hitText,
         1.0,
         HIT_TEXT_LIFE,
@@ -930,8 +749,8 @@ export class PlayerWorld {
   private enterFixed(step: Step, s: State) {
     this.reconcile(s);
 
-    const stop = nth(this.playing.stops, step.stop, "stops");
-    const fixed = this.shownWindow;
+    const stop = nth(this.street.playing.stops, step.stop, "stops");
+    const fixed = this.street.shownWindow;
 
     if (this.player === "p1") {
       return;
@@ -942,7 +761,7 @@ export class PlayerWorld {
 
     const old = this.timeline.track(
       makeStopWindow(
-        { game: this.game, tier: this.playing },
+        { game: this.game, tier: this.street.playing },
         stop,
         "problem",
         this.rig.shape,
@@ -957,8 +776,9 @@ export class PlayerWorld {
     old.group.position.copy(pose.pos);
     old.group.scale.setScalar(pose.scale);
     this.rig.face(old.group);
-    this.health = FULL_HEALTH - TIER_HEALTH_LOSS / this.playing.stops.length;
-    this.gateAt(step.stop).state = "alarm";
+    this.health =
+      FULL_HEALTH - TIER_HEALTH_LOSS / this.street.playing.stops.length;
+    this.street.gateAt(step.stop).state = "alarm";
     this.character.pose = "aim";
     this.timeline.after(AIM_TO_FIRE_DELAY, () => {
       this.character.fire();
@@ -1032,7 +852,7 @@ export class PlayerWorld {
           fixed.reading = true;
         },
       );
-      this.gateAt(step.stop).state = "open";
+      this.street.gateAt(step.stop).state = "open";
     });
     this.timeline.after(HEAL_DELAY, () => {
       this.sfx("heal");
@@ -1066,7 +886,7 @@ export class PlayerWorld {
   private enterBoss(s: State) {
     this.combat.clearStreet();
 
-    const boss = this.bossModel;
+    const boss = this.street.bossModel;
     const home = boss.group.position.clone();
 
     boss.group.position.y = home.y + BOSS_DROP_HEIGHT;
@@ -1117,11 +937,11 @@ export class PlayerWorld {
       if (step.part === 0) {
         // The boss finishes player 1 with one blow.
         this.timeline.after(KO_BLOW_DELAY, () => {
-          const firstStop = nth(this.playing.stops, 0, "stops");
+          const firstStop = nth(this.street.playing.stops, 0, "stops");
           const blow = this.timeline.track(
             new CodeWindow(
               paintStopCard(
-                { game: this.game, tier: this.playing },
+                { game: this.game, tier: this.street.playing },
                 firstStop,
                 "problem",
                 DEBT_WINDOW_COLS,
@@ -1133,7 +953,7 @@ export class PlayerWorld {
 
           this.scene.add(blow.group);
 
-          const from = this.bossModel.partWorld(0);
+          const from = this.street.bossModel.partWorld(0);
           const to = this.character.chestWorld();
 
           this.timeline.tween(
@@ -1182,11 +1002,11 @@ export class PlayerWorld {
     // Player 2 fires the tool earned at that stop at the matching part.
     this.reconcile({ ...s, broken: step.part });
 
-    const boss = this.bossModel;
+    const boss = this.street.bossModel;
 
-    this.bossLeft = this.bossTotal - step.part;
+    this.street.bossLeft = this.street.bossTotal - step.part;
 
-    const part = nth(this.playing.boss.parts, step.part, "boss parts");
+    const part = nth(this.street.playing.boss.parts, step.part, "boss parts");
     const tool = toolFor(this.game, part.beatenBy);
 
     this.timeline.after(TOOL_FIRE_DELAY, () => {
@@ -1227,7 +1047,7 @@ export class PlayerWorld {
           );
           boss.breakPart(step.part, this.debris, from);
           this.sfx("bossPartBreak");
-          this.bossLeft = this.bossTotal - step.part - 1;
+          this.street.bossLeft = this.street.bossTotal - step.part - 1;
           this.shake = PART_BREAK_SHAKE;
           card.dispose();
           this.timeline.untrack(card);
@@ -1249,7 +1069,7 @@ export class PlayerWorld {
       // Spaghetti rains down and buries them.
       const pile = makePile();
 
-      this.pile = pile;
+      this.street.pile = pile;
       this.scene.add(pile);
       pile.position.set(0, PILE_DROP_HEIGHT, s.z);
       this.timeline.tween(
@@ -1276,13 +1096,13 @@ export class PlayerWorld {
     this.reconcile({
       ...s,
       boss: "alive",
-      broken: this.bossTotal,
+      broken: this.street.bossTotal,
       pose: "aim",
     });
 
-    const boss = this.bossModel;
+    const boss = this.street.bossModel;
 
-    this.bossLeft = 0;
+    this.street.bossLeft = 0;
     this.timeline.after(FINISH_FIRE_DELAY, () => {
       this.character.fire();
 
@@ -1302,7 +1122,7 @@ export class PlayerWorld {
       const at = boss.core.group.getWorldPosition(new THREE.Vector3());
 
       boss.destroy(this.debris, this.character.muzzleWorld().setY(0));
-      this.boss = null;
+      this.street.boss = null;
       this.sfx("bossDefeat");
       this.sfx("shatter");
       this.shake = BOSS_DEFEAT_SHAKE;
@@ -1339,10 +1159,10 @@ export class PlayerWorld {
   setAspect(aspect: number) {
     const changed = this.rig.setAspect(aspect);
 
-    if (this.boss && this.state) {
-      this.boss.group.position.z =
+    if (this.street.boss && this.state) {
+      this.street.boss.group.position.z =
         this.state.z -
-        this.rig.bossBack(present(this.bossLayout, "boss layout"));
+        this.rig.bossBack(present(this.street.bossLayout, "boss layout"));
     }
 
     // Re-lay the stop window for the new shape.
@@ -1356,9 +1176,9 @@ export class PlayerWorld {
 
   private shotView(): ShotView {
     return {
-      layout: this.bossLayout,
-      window: this.window?.win ?? null,
-      pile: this.pile !== null,
+      layout: this.street.bossLayout,
+      window: this.street.window?.win ?? null,
+      pile: this.street.pile !== null,
     };
   }
 
@@ -1374,14 +1194,14 @@ export class PlayerWorld {
     const c = this.character.root.position;
 
     // Side-on views look across the street, so the near side's buildings step out of the way.
-    const right = this.city?.getObjectByName("city-right");
+    const right = this.street.city?.getObjectByName("city-right");
     const ahead = this.rig.mode === "follow" || this.rig.mode === "boss";
 
     if (right) {
       right.visible = ahead;
     }
 
-    for (const g of this.gates) {
+    for (const g of this.street.gates) {
       g.near.visible = ahead;
     }
 
@@ -1416,13 +1236,13 @@ export class PlayerWorld {
     }
 
     this.character.update(dt);
-    for (const g of this.gates) {
+    for (const g of this.street.gates) {
       g.update(dt);
     }
 
     this.updateCamera(dt);
-    if (this.window) {
-      const w = this.window;
+    if (this.street.window) {
+      const w = this.street.window;
 
       if (w.reading) {
         const t = this.rig.readingPose(w.win, this.character.root.position.z);
@@ -1444,7 +1264,7 @@ export class PlayerWorld {
       w.win.update(dt);
     }
 
-    for (const [i, d] of this.debt.entries()) {
+    for (const [i, d] of this.street.debt.entries()) {
       // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
       d.win.group.visible =
         this.rig.mode !== "portrait" && this.rig.mode !== "boss";
@@ -1459,11 +1279,11 @@ export class PlayerWorld {
       d.win.update(dt);
     }
 
-    if (this.boss) {
-      this.boss.update(dt);
-      this.boss.group.lookAt(
+    if (this.street.boss) {
+      this.street.boss.update(dt);
+      this.street.boss.group.lookAt(
         this.camera.position.x,
-        this.boss.group.position.y,
+        this.street.boss.group.position.y,
         this.camera.position.z,
       );
     }
