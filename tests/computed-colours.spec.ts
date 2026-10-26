@@ -34,6 +34,9 @@ const COLOUR_PROPERTIES = [
 const MODE_KEYS = ["b", "1", "2"];
 const AFTER_KEYS = ["p", "p", "n", "n", "h", "Escape"];
 const SETTLE_MS = 250;
+// The same settle time in the game's own seconds. The health bar and other HUD colours follow the game clock, which advances by at most
+// 0.05 s a frame, so a slow runner reaches less game time in 250 ms of wall time than a fast one and would be read earlier in the show.
+const SETTLE_GAME_SECONDS = SETTLE_MS / 1000;
 // A full walk of all three modes takes minutes, not the seconds of an ordinary test.
 const WALK_TIMEOUT_MS = 900_000;
 // Animations and transitions are frozen while the screens are read: an element caught mid-flash has a colour that depends on timing, not
@@ -54,8 +57,18 @@ async function ready(page: Page) {
 /** Walk every screen of the show, in the order the old script did, and read each one. */
 async function readScreens(page: Page) {
   const screens = new Map<string, ScreenColours>();
-  const grab = async (name: string) => {
+  const gameClock = async () =>
+    Number(await page.evaluate("window.__rig?.director.clock ?? 0"));
+  // Read a screen once SETTLE_MS of wall time AND SETTLE_GAME_SECONDS of game time have passed since `since` (a gameClock() reading taken
+  // before the action), and the frame that applies the game's HUD has run. A director that is not running has no game time to wait for.
+  const grab = async (name: string, since = 0) => {
     await page.waitForTimeout(SETTLE_MS);
+    await page.waitForFunction(
+      `(() => { const d = window.__rig?.director; return !d || !d.active || d.paused || d.clock - ${since} >= ${SETTLE_GAME_SECONDS}; })()`,
+    );
+    await page.evaluate(
+      "new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))",
+    );
     screens.set(name, await page.evaluate(collectScreen, COLOUR_PROPERTIES));
   };
 
@@ -72,13 +85,17 @@ async function readScreens(page: Page) {
     const steps = await page.evaluate("window.__rig.director.script.length");
 
     for (let i = 0; i < Number(steps); i++) {
+      const since = await gameClock();
+
       await page.evaluate(`window.__rig.director.go(${i}, true)`);
-      await grab(`mode-${mode}-step-${i}`);
+      await grab(`mode-${mode}-step-${i}`, since);
     }
 
     for (const key of AFTER_KEYS) {
+      const since = await gameClock();
+
       await page.keyboard.press(key);
-      await grab(`mode-${mode}-key-${key}-${screens.size}`);
+      await grab(`mode-${mode}-key-${key}-${screens.size}`, since);
     }
 
     await page.reload();
