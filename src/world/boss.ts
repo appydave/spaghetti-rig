@@ -10,8 +10,6 @@ import { nth } from "../nth";
 
 /** The numbers and colours of a boss window face: data only, read by paintPanel in boss-panel.ts. */
 const BOSS_PANEL = {
-  half: 0.5,
-  turn: 2,
   width: 1200,
   pad: 40,
   bar: 150,

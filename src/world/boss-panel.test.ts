@@ -51,7 +51,6 @@ vi.stubGlobal("document", {
 
 const { paintBossPanel } = await import("./boss");
 
-const WIDTH = 1200;
 const PAD = 40;
 const BAR_BOTTOM = 16 + 150 + 18;
 const sizeOf = (d: Drawn) => Number(/(\d+(?:\.\d+)?)px/.exec(d.font)?.[1]);
@@ -186,6 +185,24 @@ describe("the badge and the footer", () => {
     const tall = paint(1, { aspect: 1, header: "h", title: "t", badge: "3" });
 
     expect(tall.drawn.at(-1)?.x).toBeCloseTo(PAD + 250 + 36, 6);
+  });
+
+  it("narrows the title: the same words get a smaller size beside a badge than without one", () => {
+    const title = "alpha beta gamma";
+    const plain = paint(2, { aspect: 2, header: "h", title });
+    const badged = paint(2, { aspect: 2, header: "h", title, badge: "4" });
+    // The badge's number is drawn before the title; the title's first line is the first thing drawn after the header that is not that number.
+    const titleSize = (d: Drawn[]) =>
+      sizeOf(
+        d.filter((x) => x.text !== "4")[1] ?? {
+          text: "",
+          x: 0,
+          y: 0,
+          font: "",
+        },
+      );
+
+    expect(titleSize(badged.drawn)).toBeLessThan(titleSize(plain.drawn));
   });
 
   it("draws the badge's number centred in it", () => {

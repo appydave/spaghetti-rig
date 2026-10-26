@@ -21,8 +21,6 @@ export interface BossPanelText {
 
 /** The numbers and colours of the panel: data only, read by paintBossPanel. */
 export interface BossPanel {
-  half: number;
-  turn: number;
   width: number;
   pad: number;
   bar: number;
@@ -126,14 +124,14 @@ class Painter {
         this.barMiddle(),
         k.dots.radius,
         0,
-        Math.PI * k.turn,
+        Math.PI * 2,
       );
       g.fill();
     }
   }
 
   private barMiddle() {
-    return this.k.head.inset + this.k.bar * this.k.half;
+    return this.k.head.inset + this.k.bar / 2;
   }
 
   /** The header words, in the bar to the right of the dots. */
@@ -164,16 +162,12 @@ class Painter {
 
     g.fillStyle = k.badge.color;
     g.beginPath();
-    g.roundRect(k.pad, this.top + (bodyH - b) * k.half, b, b, k.badge.corner);
+    g.roundRect(k.pad, this.top + (bodyH - b) / 2, b, b, k.badge.corner);
     g.fill();
     g.fillStyle = INK;
     g.textAlign = "center";
     g.font = `italic 800 ${Math.round(b * k.badge.font)}px ${BARLOW}`;
-    g.fillText(
-      text,
-      k.pad + b * k.half,
-      this.top + bodyH * k.half + b * k.badge.nudge,
-    );
+    g.fillText(text, k.pad + b / 2, this.top + bodyH / 2 + b * k.badge.nudge);
     g.textAlign = "left";
 
     return k.pad + b + k.badge.margin;
@@ -194,7 +188,7 @@ class Painter {
     }
 
     const lh = t.px * k.title.leading;
-    let y = this.top + (titleH - lh * t.lines.length) * k.half + lh * k.half;
+    let y = this.top + (titleH - lh * t.lines.length) / 2 + lh / 2;
 
     g.fillStyle = PALETTE.boss.title;
     for (const line of t.lines) {
@@ -217,7 +211,7 @@ class Painter {
     const f = fit(g, text.toUpperCase(), spec);
 
     g.fillStyle = k.footer.color;
-    g.fillText(f.lines[0] ?? "", left, this.h - k.pad - footH * k.half);
+    g.fillText(f.lines[0] ?? "", left, this.h - k.pad - footH / 2);
   }
 
   /** The room the body has between the header bar and the bottom padding. */
