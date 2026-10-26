@@ -12,6 +12,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
+import { num } from "./world-fingerprint";
 
 const SEEDS = 20;
 const START = 1;
@@ -65,6 +66,14 @@ function seeded(seed: number): () => number {
 }
 
 type Arg = number | string | Record<string, number | string>;
+
+/** JSON.stringify's replacer: every number is rounded the way the world fingerprint rounds (four decimals), because the synth's maths
+ * differs in the last bits between macOS arm64 and Linux x64, and a hash or a committed log must be the same on both. */
+type Loggable = Arg | readonly Loggable[];
+
+const stable = (_key: string, v: Loggable) =>
+  typeof v === "number" ? Number(num(v)) : v;
+const json = (v: Loggable) => JSON.stringify(v, stable);
 
 /** An object with its keys in order, so the order a call happened to list them in cannot show. */
 const sorted = (v: Arg): Arg =>
@@ -124,7 +133,7 @@ function recorder(log: Arg[][], buffers: Float32Array[][]) {
     typeof v === "function"
       ? String(v[PATH])
       : typeof v === "object"
-        ? JSON.stringify(v)
+        ? json(v)
         : v;
   const node = (
     path: string,
@@ -220,10 +229,7 @@ function scenario(seed: number, run: (engine: any) => void): [string, number] {
     log.push(["buffer sum", ...data.map((d) => d.reduce((a, b) => a + b, 0))]);
   }
 
-  return [
-    createHash("sha1").update(JSON.stringify(log)).digest("hex"),
-    log.length,
-  ];
+  return [createHash("sha1").update(json(log)).digest("hex"), log.length];
 }
 
 /** How long apart an effect may be played again, and what the engine does when it is too busy: each is tried just either side of its limit. */
@@ -425,7 +431,7 @@ describe("audio proof harness", () => {
   // One run per line, so a changed voice shows as a changed line in the diff.
   it("plays the same voices as the committed log", async () => {
     const lines = Object.entries(all).map(
-      ([run, voices]) => `${JSON.stringify(run)}: ${JSON.stringify(voices)}`,
+      ([run, voices]) => `${JSON.stringify(run)}: ${json(voices)}`,
     );
 
     await expect(`{\n${lines.join(",\n")}\n}\n`).toMatchFileSnapshot(
