@@ -95,7 +95,7 @@ describe("soundtrack", () => {
         }
       });
 
-      it("all notes are finite and in a sane MIDI range", () => {
+      it("every melody note is finite and in a sane MIDI range", () => {
         for (const bar of def.melody) {
           for (const t of parseMelodyBar(bar)) {
             if (t.midi !== null) {
@@ -103,7 +103,9 @@ describe("soundtrack", () => {
             }
           }
         }
+      });
 
+      it("every chord has a finite bass and a pad of three or more finite notes", () => {
         for (const h of def.harmony) {
           const c = parseChord(h, def.beatsPerBar);
 
@@ -111,7 +113,9 @@ describe("soundtrack", () => {
           expect(c.pad.length).toBeGreaterThanOrEqual(3);
           c.pad.forEach((n) => expect(sane(n)).toBe(true));
         }
+      });
 
+      it("the compiled track fills every bar and keeps every note finite and in a sane MIDI range", () => {
         const compiled = COMPILED_TRACKS.find((c) => c.def === def)!;
 
         expect(compiled.steps.length).toBe(bars * stepsPerBar);

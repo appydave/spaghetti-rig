@@ -84,6 +84,21 @@ function constructorColor(node, child) {
   );
 }
 
+/** A `receiver.set(...)` call that sets a colour: the receiver is named like one, built as one or told to be one, and the argument is a channel. */
+function colorSet(node, position, isColorReceiver) {
+  const receiver = node.callee.object;
+  const receiverName = memberName(receiver);
+  const color =
+    (!!receiverName && COLOR_FIELD.test(receiverName)) ||
+    isColorReceiver(receiver);
+  const constructed =
+    receiver.type === "NewExpression" &&
+    memberName(receiver.callee) === "Color";
+  const validPosition = position >= FIRST_ARGUMENT && position < RGB_COMPONENTS;
+
+  return (color || constructed) && validPosition;
+}
+
 function callColor(node, child, isColorReceiver) {
   if (node.callee.type !== "MemberExpression") {
     return false;
@@ -102,17 +117,7 @@ function callColor(node, child, isColorReceiver) {
     return position >= FIRST_ARGUMENT && position < count;
   }
 
-  const receiver = node.callee.object;
-  const receiverName = memberName(receiver);
-  const color =
-    (!!receiverName && COLOR_FIELD.test(receiverName)) ||
-    isColorReceiver(receiver);
-  const constructed =
-    receiver.type === "NewExpression" &&
-    memberName(receiver.callee) === "Color";
-  const validPosition = position >= FIRST_ARGUMENT && position < RGB_COMPONENTS;
-
-  return name === "set" && (color || constructed) && validPosition;
+  return name === "set" && colorSet(node, position, isColorReceiver);
 }
 
 function parentColor(parent, child, isColorReceiver) {

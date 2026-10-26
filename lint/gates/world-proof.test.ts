@@ -80,13 +80,14 @@ type Run = {
   events: string[];
 };
 
-/** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
-function playStep(run: Run, step: Step, first: boolean, linger?: number): void {
-  const { w, mode, look, events } = run;
+/** A tour settles on each step, as jumping about does. */
+const SETTLING_MODES = new Set<Mode>(["jump", "tour"]);
+/** A tour leaves each step after a moment, as skipping through does. */
+const LEAVING_MODES = new Set<Mode>(["skip", "tour"]);
 
-  // A tour settles on each step, as jumping about does, but leaves it after a moment, as skipping through does.
-  const settles = mode === "jump" || mode === "tour";
-  const leaves = mode === "skip" || mode === "tour";
+/** Enter a step as the Director does, or settle on it when jumping about, and look at it straight away when it is first or settled on. */
+function enterStep({ w, mode, look }: Run, step: Step, first: boolean): void {
+  const settles = SETTLING_MODES.has(mode);
 
   if (settles && step.phase !== "walk") {
     w.settle(step);
@@ -99,33 +100,60 @@ function playStep(run: Run, step: Step, first: boolean, linger?: number): void {
     // Looked at straight away: the scenery that follows the camera must already be right, before any frame runs.
     look(`snap ${step.phase}${step.stop}.${step.part}`);
   }
+}
 
-  // A skipping presenter leaves each step after a moment, with its tweens and cues still running.
-  const frames =
-    linger ??
-    (leaves ? SKIP_FRAMES : step.phase === "walk" ? WALK_FRAMES : STEP_FRAMES);
+/** Frames played inside a step: a skipping presenter leaves each one after a moment, with its tweens and cues still running. */
+function framesIn(step: Step, leaves: boolean): number {
+  if (leaves) {
+    return SKIP_FRAMES;
+  }
+
+  return step.phase === "walk" ? WALK_FRAMES : STEP_FRAMES;
+}
+
+/** The Director drives the walk, so both players stay in step: u runs 0 to 1 over the walk. Returns the walk time reached. */
+function driveWalk(w: any, step: Step, walkT: number): number {
+  if (step.phase !== "walk") {
+    return walkT;
+  }
+
+  const reached = walkT + FRAME;
+
+  w.setWalk(Math.min(1, reached / walkSeconds()));
+
+  return reached;
+}
+
+/** In pointer mode, every few frames the pointer fires at an enemy (or somewhere), and now and then leaves the window. */
+function movePointer({ w, mode, events }: Run, f: number): void {
+  if (mode !== "pointer" || f % POINTER_EVERY !== 0) {
+    return;
+  }
+
+  events.push(
+    `hit:${w.pointer(
+      w.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
+      true,
+    )}`,
+  );
+  if (f % (POINTER_EVERY * POINTER_LEAVES_EVERY) === 0) {
+    events.push(`left:${w.pointer(null, false)}`);
+  }
+}
+
+/** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
+function playStep(run: Run, step: Step, first: boolean, linger?: number): void {
+  const { w, mode, look } = run;
+  const leaves = LEAVING_MODES.has(mode);
+
+  enterStep(run, step, first);
+
+  const frames = linger ?? framesIn(step, leaves);
   let walkT = 0;
 
   for (let f = 0; f < frames; f++) {
-    if (step.phase === "walk") {
-      // The Director drives the walk, so both players stay in step: u runs 0 to 1 over the walk.
-      walkT += FRAME;
-      w.setWalk(Math.min(1, walkT / walkSeconds()));
-    }
-
-    if (mode === "pointer" && f % POINTER_EVERY === 0) {
-      events.push(
-        `hit:${w.pointer(
-          w.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
-          true,
-        )}`,
-      );
-      // The pointer leaves the window now and then.
-      if (f % (POINTER_EVERY * POINTER_LEAVES_EVERY) === 0) {
-        events.push(`left:${w.pointer(null, false)}`);
-      }
-    }
-
+    walkT = driveWalk(w, step, walkT);
+    movePointer(run, f);
     w.update(FRAME);
     if (SAMPLES.includes(f) || (leaves && f === frames - 1)) {
       look(`${step.phase}${step.stop}.${step.part} f${f}`);

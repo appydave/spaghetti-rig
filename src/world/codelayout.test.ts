@@ -13,6 +13,25 @@ const game = parseContent(
 );
 const stops = game.tiers.flatMap((t) => t.stops);
 
+/** One card at one width: every annotation is pinned once, every code line keeps its text, and every annotation has a note. */
+function expectLaidOut(card: (typeof stops)[number]["p1"], cols: number) {
+  const l = layoutCard(card, cols, "x.ts");
+  const pins = l.lines
+    .flatMap((x) => x.marks.map((m) => m.pin))
+    .filter((p) => p > 0);
+
+  expect(new Set(pins).size, `${card.id} @${cols}`).toBe(
+    card.annotations.length,
+  );
+  for (const line of l.lines) {
+    expect(line.tokens.map((t) => t.text).join("")).toBe(
+      line.type === "code" ? line.text : "",
+    );
+  }
+
+  expect(l.notes).toHaveLength(card.annotations.length);
+}
+
 describe("code layout", () => {
   it("colours keywords, strings and numbers", () => {
     const t = tokenize('const a = "x"; // hi 42', "code", "c");
@@ -41,21 +60,7 @@ describe("code layout", () => {
     for (const s of stops) {
       for (const card of [s.p1, s.p2]) {
         for (const cols of [40, 56, 72]) {
-          const l = layoutCard(card, cols, "x.ts");
-          const pins = l.lines
-            .flatMap((x) => x.marks.map((m) => m.pin))
-            .filter((p) => p > 0);
-
-          expect(new Set(pins).size, `${card.id} @${cols}`).toBe(
-            card.annotations.length,
-          );
-          for (const line of l.lines) {
-            expect(line.tokens.map((t) => t.text).join("")).toBe(
-              line.type === "code" ? line.text : "",
-            );
-          }
-
-          expect(l.notes).toHaveLength(card.annotations.length);
+          expectLaidOut(card, cols);
         }
       }
     }
