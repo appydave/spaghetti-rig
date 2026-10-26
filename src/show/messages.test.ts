@@ -27,6 +27,7 @@ describe("parsePresenterState", () => {
     expect(parsePresenterState(null)).toBeNull();
     expect(parsePresenterState("state")).toBeNull();
     expect(parsePresenterState({ type: "hello" })).toBeNull();
+    expect(parsePresenterState({ ...state, type: "hello" })).toBeNull();
   });
 
   it("rejects a state with a missing or wrong-typed field", () => {
@@ -46,11 +47,13 @@ describe("parsePresenterState", () => {
       { ...n, heading: 1 },
       { ...n, say: undefined },
       { ...n, presenter: [1] },
+      { ...n, presenter: ["ok", 1] },
       { ...n, extra: "none" },
       { ...n, extra: [null] },
       { ...n, extra: [{ rows: [] }] },
       { ...n, extra: [{ label: "x" }] },
       { ...n, extra: [{ label: "x", rows: [[1]] }] },
+      { ...n, extra: [{ label: "x", rows: [["ok"], [1]] }] },
     ];
 
     for (const notes of badNotes) {
