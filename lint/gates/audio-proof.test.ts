@@ -1,21 +1,20 @@
 // The audio proof harness (N6). It plays every sound effect against a recording engine and a seeded Math.random, and writes down every
 // tone, noise, brass and trombone voice the effect asked for, with its start time and every parameter. Two trees that write the same
-// log play the same sounds. scripts/audio-proof.mjs runs this file on an old and a new tree and compares what it writes.
+// log play the same sounds. The log is committed as lint/gates/__snapshots__/audio-proof.json, so every pull request proves in CI that
+// it plays the same sounds, and an intended change shows as a diff of that file (`npx vitest run -u` rewrites it).
 //
 // It also drives the rest of the engine against a recording AudioContext that logs every node made, every parameter set and every
 // connection: the graph setup (init), a deck per track, every step of every track (the instrument voices), the scheduler, and the
 // tone, noise, brass and trombone bodies. Those logs are long, so they are written as a hash and an entry count per scenario.
 //
-// As a normal test it also guards the effects for good: the same seed gives the same log, and no effect is silent.
-// AUDIO_PROOF_OUT=<file> writes the log and runs the full 20-seed sweep.
+// It also guards the effects: the same seed gives the same log, and no effect is silent.
 import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
+import { num } from "./world-fingerprint";
 
-const OUT = process.env.AUDIO_PROOF_OUT;
-const SEEDS = OUT ? 20 : 2;
+const SEEDS = 20;
 const START = 1;
 const SFX = [
   "shoot",
@@ -67,6 +66,14 @@ function seeded(seed: number): () => number {
 }
 
 type Arg = number | string | Record<string, number | string>;
+
+/** JSON.stringify's replacer: every number is rounded the way the world fingerprint rounds (four decimals), because the synth's maths
+ * differs in the last bits between macOS arm64 and Linux x64, and a hash or a committed log must be the same on both. */
+type Loggable = Arg | readonly Loggable[];
+
+const stable = (_key: string, v: Loggable) =>
+  typeof v === "number" ? Number(num(v)) : v;
+const json = (v: Loggable) => JSON.stringify(v, stable);
 
 /** An object with its keys in order, so the order a call happened to list them in cannot show. */
 const sorted = (v: Arg): Arg =>
@@ -126,7 +133,7 @@ function recorder(log: Arg[][], buffers: Float32Array[][]) {
     typeof v === "function"
       ? String(v[PATH])
       : typeof v === "object"
-        ? JSON.stringify(v)
+        ? json(v)
         : v;
   const node = (
     path: string,
@@ -222,10 +229,7 @@ function scenario(seed: number, run: (engine: any) => void): [string, number] {
     log.push(["buffer sum", ...data.map((d) => d.reduce((a, b) => a + b, 0))]);
   }
 
-  return [
-    createHash("sha1").update(JSON.stringify(log)).digest("hex"),
-    log.length,
-  ];
+  return [createHash("sha1").update(json(log)).digest("hex"), log.length];
 }
 
 /** How long apart an effect may be played again, and what the engine does when it is too busy: each is tried just either side of its limit. */
@@ -366,12 +370,6 @@ const bodies = (e: any): void => {
 
 const all: Record<string, Arg[][] | [string, number]> = {};
 
-afterAll(() => {
-  if (OUT) {
-    writeFileSync(OUT, JSON.stringify(all));
-  }
-});
-
 const runs: [string, (e: any) => void][] = [
   ["engine bodies", bodies],
   ["engine control", control],
@@ -428,5 +426,16 @@ describe("audio proof harness", () => {
         all[`${sfx} seed ${seed}`] = calls;
       }
     }
+  });
+
+  // One run per line, so a changed voice shows as a changed line in the diff.
+  it("plays the same voices as the committed log", async () => {
+    const lines = Object.entries(all).map(
+      ([run, voices]) => `${JSON.stringify(run)}: ${json(voices)}`,
+    );
+
+    await expect(`{\n${lines.join(",\n")}\n}\n`).toMatchFileSnapshot(
+      "./__snapshots__/audio-proof.json",
+    );
   });
 });

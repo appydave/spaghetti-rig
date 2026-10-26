@@ -8,3 +8,5 @@ package-lock.json
 docs/origin
 # Binary and vector art, fonts and music ship as authored.
 public/assets
+# Committed test snapshots: generated data, rewritten by `vitest -u`.
+lint/gates/__snapshots__
