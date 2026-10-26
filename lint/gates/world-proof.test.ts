@@ -79,7 +79,7 @@ type Run = {
 };
 
 /** Play one step as the Director does: enter it (or settle on it, when jumping about) and run its frames, looking at fixed ones. */
-function playStep(run: Run, step: Step, first: boolean): void {
+function playStep(run: Run, step: Step, first: boolean, linger?: number): void {
   const { w, mode, look, events } = run;
 
   // A tour settles on each step, as jumping about does, but leaves it after a moment, as skipping through does.
@@ -99,11 +99,9 @@ function playStep(run: Run, step: Step, first: boolean): void {
   }
 
   // A skipping presenter leaves each step after a moment, with its tweens and cues still running.
-  const frames = leaves
-    ? SKIP_FRAMES
-    : step.phase === "walk"
-      ? WALK_FRAMES
-      : STEP_FRAMES;
+  const frames =
+    linger ??
+    (leaves ? SKIP_FRAMES : step.phase === "walk" ? WALK_FRAMES : STEP_FRAMES);
   let walkT = 0;
 
   for (let f = 0; f < frames; f++) {
@@ -127,7 +125,7 @@ function playStep(run: Run, step: Step, first: boolean): void {
     }
 
     w.update(FRAME);
-    if (SAMPLES.includes(f) || (leaves && f === SKIP_FRAMES - 1)) {
+    if (SAMPLES.includes(f) || (leaves && f === frames - 1)) {
       look(`${step.phase}${step.stop}.${step.part} f${f}`);
     }
   }
@@ -152,6 +150,19 @@ function stepsToPlay(
   });
 }
 
+/** Resize the world's window: "flip" between wide and tall, "same" between two talls. */
+function resizeWorld(w: any, resize: "flip" | "same"): void {
+  w.setAspect(
+    resize === "flip"
+      ? w.aspect === WIDE
+        ? TALL
+        : WIDE
+      : w.aspect === TALL
+        ? WIDER_TALL
+        : TALL,
+  );
+}
+
 /** One scenario: play a player through one tier and return a hash per look at the world. */
 function play({
   player,
@@ -163,6 +174,7 @@ function play({
   visit = [tier],
   andBack = false,
   cutAt,
+  lingerFrames,
 }: Scenario): string[] {
   const sounds: Arg[][] = [];
   const audio: any = {
@@ -181,15 +193,7 @@ function play({
     const look = (label: string): void => {
       events.push(temps());
       if (resize && log.length % RESIZE_EVERY === RESIZE_EVERY - 1) {
-        w.setAspect(
-          resize === "flip"
-            ? w.aspect === WIDE
-              ? TALL
-              : WIDE
-            : w.aspect === TALL
-              ? WIDER_TALL
-              : TALL,
-        );
+        resizeWorld(w, resize);
       }
 
       log.push(
@@ -198,10 +202,15 @@ function play({
     };
 
     w.setAspect(tall ? TALL : WIDE);
-    w.autoplay = mode === "autoplay";
+    w.autoplay = mode === "autoplay" || lingerFrames !== undefined;
     w.onSlip = (kind: string) => events.push(`slip:${kind}`);
     for (const [i, step] of stepsToPlay(visit, andBack, cutAt).entries()) {
-      playStep({ w, mode, look, events }, step, i === 0);
+      playStep(
+        { w, mode, look, events },
+        step,
+        i === 0,
+        i === (cutAt ?? 0) - 1 ? lingerFrames : undefined,
+      );
     }
 
     return log;

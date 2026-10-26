@@ -15,6 +15,8 @@ export type Scenario = {
   andBack?: boolean;
   /** Leave the first tier after this many steps and go on to the next in the same world: a jump out of the middle of a tier, with its window, debt and boss still up. */
   cutAt?: number;
+  /** Play the last step before the cut for this many frames, on autoplay, so a walk has its enemies on the road and its effects up when the world jumps to the next tier. */
+  lingerFrames?: number;
 };
 
 export type Named = [string, () => string[]];
@@ -27,12 +29,17 @@ const JUMP_SEEDS = 30;
 const SKIP_SEEDS = 40;
 const RESIZE_SEEDS = 50;
 const TOUR_SEEDS = 60;
+const MIDWALK_SEEDS = 80;
 const PAGES_BACK_SEEDS = 70;
 /** How many of tier 0's steps are played before a tour cuts to tier 1, each ending where something is still up in the world. */
+const AFTER_FIRST_WALK = 2; // the walk to the first stop begun
 const AFTER_FIRST_TOOL = 4; // the stop window up
 const AFTER_LAST_FIX = 17; // the window up and the debt trailing
 const AFTER_LAST_WALK = 18; // the walk to the boss just begun
 const AFTER_SECOND_BOSS_PART = 21; // the boss up with parts knocked off
+/** Tier 0's walks to its first stop and to its boss, played this long before the cut, when the street has enemies on it. */
+const MIDWALK_CUTS = [AFTER_FIRST_WALK, AFTER_LAST_WALK];
+const MIDWALK_FRAMES = 95;
 const CUT_STEPS = [
   AFTER_FIRST_TOOL,
   AFTER_LAST_FIX,
@@ -120,6 +127,17 @@ function onTours(named: Namer): Named[] {
         seed: cutAt + TOUR_SEEDS,
         visit: [0, 1],
         cutAt,
+      }),
+    ),
+    ...MIDWALK_CUTS.map((cutAt) =>
+      named(`cuts from mid-walk, step ${cutAt}, to tier 1`, {
+        player,
+        tier: 0,
+        mode: "tour",
+        seed: cutAt + MIDWALK_SEEDS,
+        visit: [0, 1],
+        cutAt,
+        lingerFrames: MIDWALK_FRAMES,
       }),
     ),
     ...[0, 1].map((tier) =>
