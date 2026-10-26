@@ -23,7 +23,6 @@ const WINDOW = ["#5f8f86", "#6f9d92", "#4f7f78", "#86b0a3"];
 
 /** The numbers and colours of the street's layout: data only, read by layoutCity in city-layout.ts. */
 export const CITY_LAYOUT = {
-  half: 0.5,
   roadHalf: ROAD_HALF,
   buildings: {
     startZ: 30,

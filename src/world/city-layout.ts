@@ -91,13 +91,10 @@ class Planner {
 
       const cx =
         side *
-        (this.k.roadHalf +
-          k.setback +
-          d * this.k.half +
-          this.rand() * k.setbackJitter);
-      const cz = z - w * this.k.half;
+        (this.k.roadHalf + k.setback + d / 2 + this.rand() * k.setbackJitter);
+      const cz = z - w / 2;
 
-      if (this.open(cz, w * this.k.half)) {
+      if (this.open(cz, w / 2)) {
         z -= w + k.step;
         continue;
       }
@@ -111,9 +108,7 @@ class Planner {
     const k = this.k.roof;
     const color = this.pick(this.k.buildings.colors);
 
-    out.bodies.push(
-      at([b.cx, b.h * this.k.half, b.cz], [b.d, b.h, b.w], color),
-    );
+    out.bodies.push(at([b.cx, b.h / 2, b.cz], [b.d, b.h, b.w], color));
     out.roofs.push(
       at(
         [b.cx, b.h + k.lift, b.cz],
@@ -125,9 +120,9 @@ class Planner {
       out.roofs.push(
         at(
           [
-            b.cx + side * (this.rand() - this.k.half) * b.d * k.boxSpread,
+            b.cx + side * (this.rand() - 1 / 2) * b.d * k.boxSpread,
             b.h + k.boxLift,
-            b.cz + (this.rand() - this.k.half) * b.w * k.boxSpread,
+            b.cz + (this.rand() - 1 / 2) * b.w * k.boxSpread,
           ],
           k.boxSize,
           k.boxColor,
@@ -147,7 +142,7 @@ class Planner {
   /** The window grid on the face toward the road. */
   private windowGrid(side: Side, b: Building, out: SideLayout) {
     const k = this.k.windows;
-    const face = b.cx - side * (b.d * this.k.half + k.faceOffset);
+    const face = b.cx - side * (b.d / 2 + k.faceOffset);
     const usable = b.w - k.margin;
     const cols = Math.max(1, Math.floor(usable / k.columnWidth));
     const rows = Math.max(1, Math.floor((b.h - k.rowMargin) / k.rowHeight));
@@ -155,8 +150,7 @@ class Planner {
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const wz =
-          b.cz - usable * this.k.half + (c + this.k.half) * (usable / cols);
+        const wz = b.cz - usable / 2 + (c + 1 / 2) * (usable / cols);
         const wy = k.firstRow + r * k.rowHeight + k.sill;
 
         out.windows.push(

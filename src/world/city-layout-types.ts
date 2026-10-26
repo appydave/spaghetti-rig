@@ -44,8 +44,6 @@ export interface Span {
 
 /** The numbers and colours of the layout: data only, read by layoutCity. */
 export interface CityLayoutTable {
-  /** One half, for centring and halving. */
-  half: number;
   roadHalf: number;
   buildings: {
     startZ: number;
