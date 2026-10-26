@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { context2d } from "../dom";
 import { nth } from "../nth";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { layoutCity } from "./city-layout";
+import type { CityLayoutTable, Placement } from "./city-layout-types";
 import { rng, toon } from "./toon";
 
 export const ROAD_HALF = 3.6;
@@ -18,6 +20,85 @@ const BUILDING = [
   "#d9e9e1",
 ];
 const WINDOW = ["#5f8f86", "#6f9d92", "#4f7f78", "#86b0a3"];
+
+/** The numbers and colours of the street's layout: data only, read by layoutCity in city-layout.ts. */
+export const CITY_LAYOUT = {
+  roadHalf: ROAD_HALF,
+  buildings: {
+    startZ: 30,
+    endMargin: 30,
+    width: { min: 4, spread: 4 },
+    depth: { min: 5, spread: 4 },
+    height: { min: 4.5, spread: 12 },
+    gapChance: 0.13,
+    gap: { min: 3.5, spread: 3 },
+    setback: 3,
+    setbackJitter: 1.2,
+    step: 0.4,
+    stepJitter: 1.2,
+    colors: BUILDING,
+  },
+  roof: {
+    lift: 0.12,
+    slab: 0.28,
+    overhang: 0.35,
+    boxChance: 0.5,
+    boxLift: 0.55,
+    boxSpread: 0.4,
+    boxSize: [0.9, 0.7, 0.9],
+    boxColor: "#c9dccb",
+    aerialChance: 0.3,
+    aerialLift: 1.2,
+    aerialSize: [0.12, 2, 0.12],
+    aerialColor: "#9fbfae",
+    slabColor: "#f4f4e8",
+  },
+  windows: {
+    faceOffset: 0.02,
+    margin: 0.8,
+    columnWidth: 1.05,
+    rowHeight: 1.25,
+    rowMargin: 1.2,
+    firstRow: 1.1,
+    sill: 0.3,
+    size: [0.12, 0.72, 0.6],
+    darkChance: 0.12,
+    darkColor: "#2f5f57",
+    colors: WINDOW,
+  },
+  trees: {
+    startZ: 24,
+    startJitter: 4,
+    endMargin: 20,
+    step: 7,
+    stepJitter: 3,
+    clearance: 4,
+    kerb: 1.5,
+    planter: { y: 0.35, size: [1.1, 0.5, 1.1], color: "#7fae8f" },
+    trunk: { y: 1.1, size: [0.12, 1.4, 0.12], color: "#7a9f83" },
+    crown: { y: 2.2, base: 0.75, spread: 0.25, color: "#a9d3b1" },
+    crownB: { x: 0.35, y: 2.0, z: 0.25, share: 0.6, color: "#bfe0c1" },
+    crownC: { x: -0.3, y: 2.45, z: -0.2, share: 0.55, color: "#98c7a3" },
+    crownTall: 0.95,
+    lampChance: 0.45,
+    lampBack: 3.5,
+    lamp: { y: 1.7, size: [0.08, 3.4, 0.08], color: "#4f7f78" },
+    arm: { x: 0.35, y: 3.4, size: [0.8, 0.08, 0.08] },
+    bulb: { x: 0.7, y: 3.3, size: [0.22, 0.14, 0.22], color: "#fff1b8" },
+  },
+  far: {
+    count: 40,
+    alternate: 2,
+    minX: 30,
+    spreadX: 30,
+    startZ: 30,
+    extra: 80,
+    width: { min: 6, spread: 8 },
+    height: { min: 10, spread: 26 },
+    depth: { min: 6, spread: 8 },
+    color: "#c3dacb",
+  },
+} as const satisfies CityLayoutTable;
 
 function pavingTexture() {
   const cv = document.createElement("canvas");
@@ -116,6 +197,17 @@ class Batch {
   }
 }
 
+/** A batch holding these placements, in order. */
+function batchOf(placements: Placement[]): Batch {
+  const batch = new Batch();
+
+  for (const p of placements) {
+    batch.add(p.x, p.y, p.z, p.sx, p.sy, p.sz, p.color);
+  }
+
+  return batch;
+}
+
 /** A street from z=+30 down to z=-length. Both players get the same one (same seed). */
 /** `plaza`: a stretch of road (z from → to, from > to) with no buildings or trees, for the boss arena. */
 export function buildCity(
@@ -123,15 +215,11 @@ export function buildCity(
   seed: number,
   plaza?: { from: number; to: number },
 ): THREE.Group {
-  const open = (z: number, half = 0) =>
-    !!plaza && z + half > plaza.to && z - half < plaza.from;
   const city = new THREE.Group();
 
   city.name = "mint-city";
 
-  const rand = rng(seed);
-  const pick = <T>(a: T[]) =>
-    nth(a, Math.floor(rand() * a.length), "pick list");
+  const layout = layoutCity(length, seed, plaza, CITY_LAYOUT);
 
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(400, length + 400),
@@ -165,14 +253,15 @@ export function buildCity(
 
   for (const side of [-1, 1]) {
     // Each side of the street is its own group, so a side-on camera can hide the near side.
-    const bodies = new Batch();
-    const roofs = new Batch();
-    const windows = new Batch();
-    const trunks = new Batch();
-    const crowns = new Batch();
-    const planters = new Batch();
-    const lamps = new Batch();
-    const bulbs = new Batch();
+    const mine = side > 0 ? layout.right : layout.left;
+    const bodies = batchOf(mine.bodies);
+    const roofs = batchOf(mine.roofs);
+    const windows = batchOf(mine.windows);
+    const trunks = batchOf(mine.trunks);
+    const crowns = batchOf(mine.crowns);
+    const planters = batchOf(mine.planters);
+    const lamps = batchOf(mine.lamps);
+    const bulbs = batchOf(mine.bulbs);
 
     // Sidewalk slab and curb.
     curbs.add(
@@ -193,103 +282,6 @@ export function buildCity(
       length + 60,
       "#c3d6c4",
     );
-    // Buildings along the street, with occasional gaps for side streets.
-    for (let z = 30; z > -length - 30;) {
-      const w = 4 + rand() * 4;
-      const d = 5 + rand() * 4;
-      const h = 4.5 + rand() * rand() * 12;
-
-      if (rand() < 0.13) {
-        z -= 3.5 + rand() * 3;
-        continue;
-      }
-
-      const cx = side * (ROAD_HALF + 3 + d / 2 + rand() * 1.2);
-      const cz = z - w / 2;
-
-      if (open(cz, w / 2)) {
-        z -= w + 0.4;
-        continue;
-      }
-
-      const col = pick(BUILDING);
-
-      bodies.add(cx, h / 2, cz, d, h, w, col);
-      roofs.add(cx, h + 0.12, cz, d + 0.35, 0.28, w + 0.35, "#f4f4e8");
-      if (rand() < 0.5) {
-        roofs.add(
-          cx + side * (rand() - 0.5) * d * 0.4,
-          h + 0.55,
-          cz + (rand() - 0.5) * w * 0.4,
-          0.9,
-          0.7,
-          0.9,
-          "#c9dccb",
-        );
-      }
-
-      if (rand() < 0.3) {
-        roofs.add(cx, h + 1.2, cz, 0.12, 2, 0.12, "#9fbfae");
-      }
-
-      // Window grid on the face toward the road.
-      const face = cx - side * (d / 2 + 0.02);
-      const cols = Math.max(1, Math.floor((w - 0.8) / 1.05));
-      const rows = Math.max(1, Math.floor((h - 1.2) / 1.25));
-      const wc = pick(WINDOW);
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const wz = cz - (w - 0.8) / 2 + (c + 0.5) * ((w - 0.8) / cols);
-          const wy = 1.1 + r * 1.25 + 0.3;
-
-          windows.add(
-            face,
-            wy,
-            wz,
-            0.12,
-            0.72,
-            0.6,
-            rand() < 0.12 ? "#2f5f57" : wc,
-          );
-        }
-      }
-
-      z -= w + 0.4 + rand() * 1.2;
-    }
-
-    // Lollipop trees in planters, and lamp posts.
-    for (let z = 24 - rand() * 4; z > -length - 20; z -= 7 + rand() * 3) {
-      const x = side * (ROAD_HALF + 1.5);
-
-      if (open(z, 4)) {
-        continue;
-      }
-
-      planters.add(x, 0.35, z, 1.1, 0.5, 1.1, "#7fae8f");
-      trunks.add(x, 1.1, z, 0.12, 1.4, 0.12, "#7a9f83");
-
-      const s = 0.75 + rand() * 0.25;
-
-      crowns.add(x, 2.2, z, s, s * 0.95, s, "#a9d3b1");
-      crowns.add(x + 0.35, 2.0, z + 0.25, s * 0.6, s * 0.6, s * 0.6, "#bfe0c1");
-      crowns.add(
-        x - 0.3,
-        2.45,
-        z - 0.2,
-        s * 0.55,
-        s * 0.55,
-        s * 0.55,
-        "#98c7a3",
-      );
-      if (rand() < 0.45) {
-        const lz = z - 3.5;
-
-        lamps.add(x, 1.7, lz, 0.08, 3.4, 0.08, "#4f7f78");
-        lamps.add(x - side * 0.35, 3.4, lz, 0.8, 0.08, 0.08, "#4f7f78");
-        bulbs.add(x - side * 0.7, 3.3, lz, 0.22, 0.14, 0.22, "#fff1b8");
-      }
-    }
 
     const half = new THREE.Group();
 
@@ -320,21 +312,7 @@ export function buildCity(
   city.add(curbs.build(new THREE.BoxGeometry(1, 1, 1), false));
 
   // Distant skyline silhouettes beyond the street, softened by fog.
-  const far = new Batch();
-
-  for (let i = 0; i < 40; i++) {
-    const side = i % 2 ? 1 : -1;
-
-    far.add(
-      side * (30 + rand() * 30),
-      0,
-      30 - rand() * (length + 80),
-      6 + rand() * 8,
-      10 + rand() * 26,
-      6 + rand() * 8,
-      "#c3dacb",
-    );
-  }
+  const far = batchOf(layout.far);
 
   const farMesh = far.build(
     new RoundedBoxGeometry(1, 1, 1, 2, 0.1),
