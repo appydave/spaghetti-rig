@@ -17,6 +17,10 @@
     {
       "name": "size",
       "specifier": "./lint/gates/size-limits.mjs"
+    },
+    {
+      "name": "sonarjs",
+      "specifier": "eslint-plugin-sonarjs"
     }
   ],
   "options": {
@@ -33,8 +37,12 @@
     "**/*.d.ts"
   ],
   "rules": {
-    "anti-slop/cognitive-complexity": "off",
-    "anti-slop/cyclomatic-complexity": "off",
+    // G06 Complexity, after Omer (3bfcf06 -> 176a8f0). Cyclomatic is a STATED DEPARTURE from Omer's 6, ruled by David on 2026-10-26: below
+    // this every cyclomatic-only finding was a flat switch over the ten-value Phase union, a guard ladder or a run of ?? defaults, where
+    // fixing it changed the score and not the design. Cognitive complexity catches the real tangles. Why and what it cost: decisions.md 10-26.
+    "anti-slop/cognitive-complexity": ["error", 8],
+    "anti-slop/cyclomatic-complexity": ["error", { "threshold": 15 }],
+    "sonarjs/expression-complexity": ["error", { "max": 3 }],
     "anti-slop/max-lines": "off",
     "anti-slop/max-lines-per-function": "off",
     "anti-slop/no-chained-type-assertions": "error",
@@ -587,6 +595,42 @@
         "size/max-members": "off",
         "size/max-signature-params": "off",
         "size/max-test-function-lines": "off"
+      }
+    },
+    {
+      // G06 Complexity, procedural data (procedural-data.md): the Gate constructor (cognitive 13) is a named builder, hand-placed geometry
+      // written as code. Any other function in this file is not a builder and has to move out. lint/gates/complexity.test.ts pins this list
+      // at exactly this file and checks it still needs the exemption.
+      "files": ["src/world/gate.ts"],
+      "rules": {
+        "anti-slop/cognitive-complexity": "off",
+        "anti-slop/cyclomatic-complexity": "off",
+        "sonarjs/expression-complexity": "off"
+      }
+    },
+    {
+      // CARRIED TO TIER 5 for complexity too (David, scope B, 2026-10-26): tier 5 (structure) splits these files, and each slice takes its file
+      // out of this list. It may shrink, never grow. These are the carried files that still have a complexity finding (color-policy.mjs and
+      // tests/show.spec.ts are carried for size only). lint/gates/complexity.test.ts pins it: exactly these names, each still has a finding.
+      "files": [
+        "lint/gates/audio-proof.test.ts",
+        "src/audio/audio.ts",
+        "src/audio/tracks.ts",
+        "src/content/load.ts",
+        "src/main.ts",
+        "src/show/director.ts",
+        "src/show/script.ts",
+        "src/world/codelayout.ts",
+        "src/world/codewindow.ts",
+        "src/world/effects.ts",
+        "src/world/physics.ts",
+        "src/world/toon.ts",
+        "src/world/world.ts"
+      ],
+      "rules": {
+        "anti-slop/cognitive-complexity": "off",
+        "anti-slop/cyclomatic-complexity": "off",
+        "sonarjs/expression-complexity": "off"
       }
     }
   ]
