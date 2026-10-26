@@ -1,0 +1,691 @@
+p1 plays tier 0 | start 9dc29df09a5e
+p1 plays tier 0 | after 0 8b781f9c6850
+p1 plays tier 0 | after 1 4d8cd46cc50c
+p1 plays tier 0 | problem2 511f23d37899
+p1 plays tier 0 | after 2 4c7807309323
+p1 plays tier 0 | after 5 72d361951872
+p1 plays tier 0 | problem6 78f07c15f7ed
+p1 plays tier 0 | after 6 8ccef505788c
+p1 plays tier 0 | after 9 9d6c9434470b
+p1 plays tier 0 | problem10 69df13701697
+p1 plays tier 0 | after 10 c7adfb5e7399
+p1 plays tier 0 | after 13 29ac5ceff3e2
+p1 plays tier 0 | problem14 72ecfd83c476
+p1 plays tier 0 | after 14 0402ad22b667
+p1 plays tier 0 | after 17 49420be0b876
+p1 plays tier 0 | boss18 6d18550e8641
+p1 plays tier 0 | after 18 00ef7e09eb08
+p1 plays tier 0 | bossPart19 b86c5614b13a
+p1 plays tier 0 | after 19 fc3e91a19be3
+p1 plays tier 0 | bossPart20 7614f425d5e5
+p1 plays tier 0 | after 20 1ee5241269f0
+p1 plays tier 0 | bossPart21 0109a1fba218
+p1 plays tier 0 | after 21 cbe9869f8c47
+p1 plays tier 0 | bossPart22 501839aedcd4
+p1 plays tier 0 | after 22 e9ad9564cfa2
+p1 plays tier 0 | bossDown23 4d5e187a2fc7
+p1 plays tier 0 | after 23 78dcb5a3699f
+p1 plays tier 0 | result24 7d320321dbd7
+p1 plays tier 0 | after 24 cf3081144f8a
+p1 plays tier 1 | start 0500ff350590
+p1 plays tier 1 | after 25 c72fe89d6bfc
+p1 plays tier 1 | after 26 2749f7a5ba43
+p1 plays tier 1 | problem27 dd98bc412578
+p1 plays tier 1 | after 27 1279f4f4d605
+p1 plays tier 1 | after 30 9736b2d81b12
+p1 plays tier 1 | problem31 30a50305c1d8
+p1 plays tier 1 | after 31 aa3f9a1fbddb
+p1 plays tier 1 | after 34 d3bde3e9fbbe
+p1 plays tier 1 | problem35 8f88470aa7ae
+p1 plays tier 1 | after 35 ce8ea44a48de
+p1 plays tier 1 | after 38 c7c79178e15b
+p1 plays tier 1 | boss39 f8888283553e
+p1 plays tier 1 | after 39 201e77ee6d5c
+p1 plays tier 1 | bossPart40 5c65531c88d3
+p1 plays tier 1 | after 40 2fd250fe191b
+p1 plays tier 1 | bossPart41 d5b69097561d
+p1 plays tier 1 | after 41 d36c311385a0
+p1 plays tier 1 | bossPart42 82fe1cd3f4ba
+p1 plays tier 1 | after 42 ec2605ee50a8
+p1 plays tier 1 | bossDown43 150acd41b7de
+p1 plays tier 1 | after 43 7cd9a06c7e3f
+p1 plays tier 1 | result44 565396255cd3
+p1 plays tier 1 | after 44 57790f786d22
+p1 plays tier 4 | start 4d4a1fc25843
+p1 plays tier 4 | after 67 c4966fbf0803
+p1 plays tier 4 | after 68 276d10b50198
+p1 plays tier 4 | problem69 6fed9eec7478
+p1 plays tier 4 | after 69 04fedf6cd5be
+p1 plays tier 4 | after 72 0c60b06f6ba6
+p1 plays tier 4 | problem73 ec4529a479c3
+p1 plays tier 4 | after 73 fbb6a8150213
+p1 plays tier 4 | after 76 4a19bda0f7a6
+p1 plays tier 4 | problem77 2d09643ab0eb
+p1 plays tier 4 | after 77 64d3262fe01f
+p1 plays tier 4 | after 80 a8e1bf8732c1
+p1 plays tier 4 | problem81 36c72fcb1c4d
+p1 plays tier 4 | after 81 f4b30e70db10
+p1 plays tier 4 | after 84 0d9eabb037bb
+p1 plays tier 4 | boss85 7adef624a990
+p1 plays tier 4 | after 85 fe3d757abec4
+p1 plays tier 4 | bossPart86 e8e49f75feca
+p1 plays tier 4 | after 86 26f659175454
+p1 plays tier 4 | bossPart87 fb8ac5859f62
+p1 plays tier 4 | after 87 59d70695f655
+p1 plays tier 4 | bossPart88 96c9dcfbc7b0
+p1 plays tier 4 | after 88 db91c81da009
+p1 plays tier 4 | bossPart89 23b1287bc1f8
+p1 plays tier 4 | after 89 6030b30101f4
+p1 plays tier 4 | bossPart90 a3f8ad28efc6
+p1 plays tier 4 | after 90 473d7604abd9
+p1 plays tier 4 | bossDown91 d17c884ccb8e
+p1 plays tier 4 | after 91 5588a1250ff9
+p1 plays tier 4 | result92 f68c1eda3b48
+p1 plays tier 4 | after 92 3a56848fed76
+p1 plays tier 5 | start ccb8be1a054d
+p1 plays tier 5 | after 93 54f64f210f45
+p1 plays tier 5 | after 94 fa8bb5a6f9a8
+p1 plays tier 5 | problem95 ee6b617182c7
+p1 plays tier 5 | after 95 c0b5ed23429e
+p1 plays tier 5 | after 98 1a56f8abcdca
+p1 plays tier 5 | problem99 1ff15a529266
+p1 plays tier 5 | after 99 7228ef4c498e
+p1 plays tier 5 | after 102 6978dabede76
+p1 plays tier 5 | problem103 7b072b5a357b
+p1 plays tier 5 | after 103 7742bc3873ac
+p1 plays tier 5 | after 106 26e1d86abb06
+p1 plays tier 5 | boss107 bc906e4e179a
+p1 plays tier 5 | after 107 6f26d4848028
+p1 plays tier 5 | bossPart108 baee940972dc
+p1 plays tier 5 | after 108 c2b107afd8d5
+p1 plays tier 5 | bossPart109 a7d195903a22
+p1 plays tier 5 | after 109 a036ea996701
+p1 plays tier 5 | bossPart110 26d7301d873b
+p1 plays tier 5 | after 110 1b67acd8d0c6
+p1 plays tier 5 | bossDown111 dd2c298c0454
+p1 plays tier 5 | after 111 4fbd89621fd2
+p1 plays tier 5 | result112 47a205ac7cd3
+p1 plays tier 5 | after 112 bfd88b800725
+p1 plays tier 5 | ending113 3285c2f19b32
+p2 plays tier 0 | start 26cd3d91f074
+p2 plays tier 0 | after 0 ad28d8c990d1
+p2 plays tier 0 | after 1 e4307f749369
+p2 plays tier 0 | problem2 3c49a67c9c9d
+p2 plays tier 0 | after 2 aa277c6ac442
+p2 plays tier 0 | tool3 e8b2c5f28c58
+p2 plays tier 0 | after 3 aa456dce502c
+p2 plays tier 0 | fixed4 35b71aa19901
+p2 plays tier 0 | after 4 3d493389b39a
+p2 plays tier 0 | after 5 b8d05e923afe
+p2 plays tier 0 | problem6 8ac059ee8c17
+p2 plays tier 0 | after 6 f6c349bca3f3
+p2 plays tier 0 | tool7 04d570657f87
+p2 plays tier 0 | after 7 5fa0f099f98f
+p2 plays tier 0 | fixed8 c0637315e26f
+p2 plays tier 0 | after 8 261cdd28e16d
+p2 plays tier 0 | after 9 dc8dc3b1a348
+p2 plays tier 0 | problem10 02f5e8ac121a
+p2 plays tier 0 | after 10 d57d411c6405
+p2 plays tier 0 | tool11 ee8b523fa772
+p2 plays tier 0 | after 11 454c18f8ff9a
+p2 plays tier 0 | fixed12 2b3d0d954b78
+p2 plays tier 0 | after 12 6b214f486abd
+p2 plays tier 0 | after 13 3fa13ec6abd5
+p2 plays tier 0 | problem14 05fe5c2e5321
+p2 plays tier 0 | after 14 cb6fa1f27b4d
+p2 plays tier 0 | tool15 8f0e86a4ad45
+p2 plays tier 0 | after 15 d68ddd1db0ff
+p2 plays tier 0 | fixed16 2642db676623
+p2 plays tier 0 | after 16 2d1d5fe5d4aa
+p2 plays tier 0 | after 17 6fe817135676
+p2 plays tier 0 | boss18 73619b78d0e7
+p2 plays tier 0 | after 18 8a5bed0be6bf
+p2 plays tier 0 | bossPart19 ac40781b521a
+p2 plays tier 0 | after 19 21b466400150
+p2 plays tier 0 | bossPart20 94406d5ea6d1
+p2 plays tier 0 | after 20 02668460b0bf
+p2 plays tier 0 | bossPart21 fd7d4da4ad31
+p2 plays tier 0 | after 21 08055f1c17a7
+p2 plays tier 0 | bossPart22 ba0f12bf83b3
+p2 plays tier 0 | after 22 a573a8f2db33
+p2 plays tier 0 | bossDown23 d8b9915bba13
+p2 plays tier 0 | after 23 2427c5d75c2a
+p2 plays tier 0 | result24 0e463d44e482
+p2 plays tier 0 | after 24 d5cea6739fac
+p2 plays tier 1 | start bac076f9b4fb
+p2 plays tier 1 | after 25 2a154a091027
+p2 plays tier 1 | after 26 e7e9b870fd95
+p2 plays tier 1 | problem27 d9c8bd2cf398
+p2 plays tier 1 | after 27 61053828bff1
+p2 plays tier 1 | tool28 d1cc02a77ff8
+p2 plays tier 1 | after 28 e6f41bcaf8d5
+p2 plays tier 1 | fixed29 7edbab5c7d9a
+p2 plays tier 1 | after 29 b1b02fa97d11
+p2 plays tier 1 | after 30 5ac4f1efa1f5
+p2 plays tier 1 | problem31 8e92ffcc1e6a
+p2 plays tier 1 | after 31 7412a2b0952d
+p2 plays tier 1 | tool32 1c8ea31aef40
+p2 plays tier 1 | after 32 459536f4ef3e
+p2 plays tier 1 | fixed33 d92c579456c3
+p2 plays tier 1 | after 33 eb5884089a52
+p2 plays tier 1 | after 34 d44cc9df4fb9
+p2 plays tier 1 | problem35 625ef1b4ba4e
+p2 plays tier 1 | after 35 238632a31a7b
+p2 plays tier 1 | tool36 b52f2f78b146
+p2 plays tier 1 | after 36 ead97a7d3382
+p2 plays tier 1 | fixed37 94444c0dde23
+p2 plays tier 1 | after 37 592b5f04fd27
+p2 plays tier 1 | after 38 03fad3c9e051
+p2 plays tier 1 | boss39 8a3467a82283
+p2 plays tier 1 | after 39 4edcf2556aee
+p2 plays tier 1 | bossPart40 4cfcac5a9744
+p2 plays tier 1 | after 40 95409c7dbd40
+p2 plays tier 1 | bossPart41 57408eda68fd
+p2 plays tier 1 | after 41 34c86d2bdad9
+p2 plays tier 1 | bossPart42 3e44f6fab9d6
+p2 plays tier 1 | after 42 05f590062289
+p2 plays tier 1 | bossDown43 293c76040cca
+p2 plays tier 1 | after 43 1edce268f994
+p2 plays tier 1 | result44 b3dfb6bc296d
+p2 plays tier 1 | after 44 27bfcafbcf20
+p2 plays tier 4 | start 860cf518f9ec
+p2 plays tier 4 | after 67 24ab2dd08184
+p2 plays tier 4 | after 68 3199049b9a28
+p2 plays tier 4 | problem69 203ae6428ec4
+p2 plays tier 4 | after 69 54a87191655d
+p2 plays tier 4 | tool70 83b830a6455c
+p2 plays tier 4 | after 70 a1f76271851a
+p2 plays tier 4 | fixed71 f350b43fbfa9
+p2 plays tier 4 | after 71 f83bb7ca32b1
+p2 plays tier 4 | after 72 b157f3df75ba
+p2 plays tier 4 | problem73 df4689932d78
+p2 plays tier 4 | after 73 b88f3593144b
+p2 plays tier 4 | tool74 aba834291d64
+p2 plays tier 4 | after 74 f47d58323e1f
+p2 plays tier 4 | fixed75 be940698a082
+p2 plays tier 4 | after 75 5d2f417ad006
+p2 plays tier 4 | after 76 1a93ccd361db
+p2 plays tier 4 | problem77 ee37491f5bef
+p2 plays tier 4 | after 77 ec3fa8283060
+p2 plays tier 4 | tool78 712db392e341
+p2 plays tier 4 | after 78 bfb7102488d8
+p2 plays tier 4 | fixed79 43836a1beccc
+p2 plays tier 4 | after 79 6ac442acdcab
+p2 plays tier 4 | after 80 8c3520713f87
+p2 plays tier 4 | problem81 34bb931e2646
+p2 plays tier 4 | after 81 1abef2624d84
+p2 plays tier 4 | tool82 72a96728b6f2
+p2 plays tier 4 | after 82 daac36280051
+p2 plays tier 4 | fixed83 68217646f2fb
+p2 plays tier 4 | after 83 ce9383441919
+p2 plays tier 4 | after 84 560256752104
+p2 plays tier 4 | boss85 4ca708816013
+p2 plays tier 4 | after 85 a84af55d4112
+p2 plays tier 4 | bossPart86 f94ef064bf6d
+p2 plays tier 4 | after 86 3550d9914f31
+p2 plays tier 4 | bossPart87 daa1a7e53171
+p2 plays tier 4 | after 87 6d44c3ec74a3
+p2 plays tier 4 | bossPart88 c37390db3a51
+p2 plays tier 4 | after 88 5f2b41c8430d
+p2 plays tier 4 | bossPart89 aa92bc8a82a4
+p2 plays tier 4 | after 89 9aa62b64c605
+p2 plays tier 4 | bossPart90 c4e59ff0c9a2
+p2 plays tier 4 | after 90 abe470357e11
+p2 plays tier 4 | bossDown91 bc527f1a7bf7
+p2 plays tier 4 | after 91 2fd021d3fd72
+p2 plays tier 4 | result92 1b32d9006e22
+p2 plays tier 4 | after 92 7363ff68bc89
+p2 plays tier 5 | start 7fe70d3c63dc
+p2 plays tier 5 | after 93 d51a6e98f3b7
+p2 plays tier 5 | after 94 c6e9a02eeea1
+p2 plays tier 5 | problem95 28b060eedbe6
+p2 plays tier 5 | after 95 4f220c04433f
+p2 plays tier 5 | tool96 9dfe3c7571f2
+p2 plays tier 5 | after 96 38af58eff3e1
+p2 plays tier 5 | fixed97 6cfc9d14fb6c
+p2 plays tier 5 | after 97 0c523a586476
+p2 plays tier 5 | after 98 df7cab4af677
+p2 plays tier 5 | problem99 8f74e9dad6ae
+p2 plays tier 5 | after 99 04b907ffc6cf
+p2 plays tier 5 | tool100 5fd8eee74f9d
+p2 plays tier 5 | after 100 f229947439e6
+p2 plays tier 5 | fixed101 1b7cef6a2c93
+p2 plays tier 5 | after 101 ed4cb68fbedb
+p2 plays tier 5 | after 102 5454baf194ac
+p2 plays tier 5 | problem103 87673cfe79fc
+p2 plays tier 5 | after 103 86f2732ad062
+p2 plays tier 5 | tool104 3fbf8f07ee12
+p2 plays tier 5 | after 104 7eb2523534f6
+p2 plays tier 5 | fixed105 8ff65c77ad48
+p2 plays tier 5 | after 105 8113fd99b159
+p2 plays tier 5 | after 106 c520fcc0abde
+p2 plays tier 5 | boss107 3f8f961a58b5
+p2 plays tier 5 | after 107 24c6f0367b4f
+p2 plays tier 5 | bossPart108 77a37d031946
+p2 plays tier 5 | after 108 d7a81255728b
+p2 plays tier 5 | bossPart109 5b94d7e18766
+p2 plays tier 5 | after 109 f31916fce007
+p2 plays tier 5 | bossPart110 5125c7689669
+p2 plays tier 5 | after 110 6e5d41ee45e1
+p2 plays tier 5 | bossDown111 9f249027ac1e
+p2 plays tier 5 | after 111 411b1da18129
+p2 plays tier 5 | result112 59b286bbeccb
+p2 plays tier 5 | after 112 f6e83dc8a5f8
+p2 plays tier 5 | ending113 2ce9c0336d0a
+both plays tier 0 | start 2ef883a7bdf4
+both plays tier 0 | after 0 a8e9a4b1ddf7
+both plays tier 0 | after 1 6411fd73ea6c
+both plays tier 0 | problem2 caf281f0f067
+both plays tier 0 | after 2 d758c977b4e7
+both plays tier 0 | tool3 018521758b38
+both plays tier 0 | after 3 1b5394861d10
+both plays tier 0 | fixed4 c5dcfd5ae4f1
+both plays tier 0 | after 4 c1b9cece9de9
+both plays tier 0 | after 5 8471d025f326
+both plays tier 0 | problem6 070eeaa3bdd8
+both plays tier 0 | after 6 4a0dde32fdec
+both plays tier 0 | tool7 5ce6b6b6c293
+both plays tier 0 | after 7 d7513019e91b
+both plays tier 0 | fixed8 9bf68e8b7d54
+both plays tier 0 | after 8 2dfddd8aa9a7
+both plays tier 0 | after 9 c19628c84272
+both plays tier 0 | problem10 8633978d04f0
+both plays tier 0 | after 10 1f5d13f3162f
+both plays tier 0 | tool11 94675da1f555
+both plays tier 0 | after 11 3c8d14dc5253
+both plays tier 0 | fixed12 3cb716ec0ccb
+both plays tier 0 | after 12 f9efa6f63cae
+both plays tier 0 | after 13 656c58de2048
+both plays tier 0 | problem14 f7dd4616b35f
+both plays tier 0 | after 14 817dfa1657a1
+both plays tier 0 | tool15 1df22b8bbcd0
+both plays tier 0 | after 15 3a375d4aeeee
+both plays tier 0 | fixed16 1eee7d66daad
+both plays tier 0 | after 16 e270f87c47ac
+both plays tier 0 | after 17 cf30df2f57f6
+both plays tier 0 | boss18 00c07ed1fe3e
+both plays tier 0 | after 18 f1513fa1b972
+both plays tier 0 | bossPart19 d861fe22a932
+both plays tier 0 | after 19 bf1848d57c8a
+both plays tier 0 | bossPart20 f88e3b4d23a1
+both plays tier 0 | after 20 c16fadbf51e2
+both plays tier 0 | bossPart21 00c97b03dd47
+both plays tier 0 | after 21 eaee365b86c0
+both plays tier 0 | bossPart22 59b212222a9c
+both plays tier 0 | after 22 84253b5a942a
+both plays tier 0 | bossDown23 51f0b95783ff
+both plays tier 0 | after 23 a95a09d7b970
+both plays tier 0 | result24 5823883e458a
+both plays tier 0 | after 24 57d6b99213b2
+both plays tier 1 | start 5a9cde8627d2
+both plays tier 1 | after 25 e3639b22cad1
+both plays tier 1 | after 26 2e494c9b1d8b
+both plays tier 1 | problem27 b0beec96a95e
+both plays tier 1 | after 27 58d3cbf51e66
+both plays tier 1 | tool28 4ebd38132c53
+both plays tier 1 | after 28 5864a0475ae1
+both plays tier 1 | fixed29 1dae76bf31f9
+both plays tier 1 | after 29 6e9a3a44842a
+both plays tier 1 | after 30 74009d8e0c3f
+both plays tier 1 | problem31 572ad2353dcd
+both plays tier 1 | after 31 2e4939822b74
+both plays tier 1 | tool32 606337d61bfc
+both plays tier 1 | after 32 f68f9852bb50
+both plays tier 1 | fixed33 61a532016737
+both plays tier 1 | after 33 c4ae336f5975
+both plays tier 1 | after 34 e6ab4695a5ea
+both plays tier 1 | problem35 fd6b95deefe6
+both plays tier 1 | after 35 e24b93d20ea2
+both plays tier 1 | tool36 d01b08e9a0e2
+both plays tier 1 | after 36 2f1e82bf0f74
+both plays tier 1 | fixed37 876f4fcca4c1
+both plays tier 1 | after 37 9d6c5931c3ce
+both plays tier 1 | after 38 9ac5925219a2
+both plays tier 1 | boss39 15fe3797cdac
+both plays tier 1 | after 39 c886277ea16b
+both plays tier 1 | bossPart40 7d4d46eac808
+both plays tier 1 | after 40 cb6fc29b1771
+both plays tier 1 | bossPart41 57a7d30de91c
+both plays tier 1 | after 41 e781cd7a857d
+both plays tier 1 | bossPart42 99024be26496
+both plays tier 1 | after 42 f1a19c3ac9ee
+both plays tier 1 | bossDown43 9422ccedfecd
+both plays tier 1 | after 43 2976a49562fc
+both plays tier 1 | result44 29c3aefdfd89
+both plays tier 1 | after 44 d606de753d13
+both plays tier 4 | start 44570d3f74e7
+both plays tier 4 | after 67 11313ef6953b
+both plays tier 4 | after 68 be309d3fa3a1
+both plays tier 4 | problem69 e4eb7d67bc49
+both plays tier 4 | after 69 cee84ec94839
+both plays tier 4 | tool70 8077bbc852cf
+both plays tier 4 | after 70 e686fca5217a
+both plays tier 4 | fixed71 fa5d5ddfc1da
+both plays tier 4 | after 71 beb324075468
+both plays tier 4 | after 72 a15adff67832
+both plays tier 4 | problem73 d1e6a28880f9
+both plays tier 4 | after 73 95f310aac584
+both plays tier 4 | tool74 6e1ba5196dfc
+both plays tier 4 | after 74 1e74a187eeb5
+both plays tier 4 | fixed75 b50081ba1130
+both plays tier 4 | after 75 34d458395486
+both plays tier 4 | after 76 2ebd790f0188
+both plays tier 4 | problem77 f1b0aa2f127d
+both plays tier 4 | after 77 38e08ecab4aa
+both plays tier 4 | tool78 202a567b1626
+both plays tier 4 | after 78 2a6df47f2269
+both plays tier 4 | fixed79 6635a19dff2c
+both plays tier 4 | after 79 9e59595b232e
+both plays tier 4 | after 80 c77e53908e04
+both plays tier 4 | problem81 348e7aa26cb1
+both plays tier 4 | after 81 34b4d71e6bdd
+both plays tier 4 | tool82 0373b8398e33
+both plays tier 4 | after 82 429855b72382
+both plays tier 4 | fixed83 257b8192ccc7
+both plays tier 4 | after 83 5599a10f5926
+both plays tier 4 | after 84 3e1c54f5605f
+both plays tier 4 | boss85 9ceae54333b8
+both plays tier 4 | after 85 6ab86299b9af
+both plays tier 4 | bossPart86 3bd9f43759be
+both plays tier 4 | after 86 a2a2f5ed9991
+both plays tier 4 | bossPart87 7716de8e1a6b
+both plays tier 4 | after 87 737f4a802bfe
+both plays tier 4 | bossPart88 6795b82cb363
+both plays tier 4 | after 88 d6a2cd939356
+both plays tier 4 | bossPart89 2b7714c460bd
+both plays tier 4 | after 89 8951e3c675e3
+both plays tier 4 | bossPart90 549c5efb4b4d
+both plays tier 4 | after 90 623fb32cfc39
+both plays tier 4 | bossDown91 09b3b0c48db3
+both plays tier 4 | after 91 5c592c3a90c8
+both plays tier 4 | result92 83cf3e7f3504
+both plays tier 4 | after 92 95d2ea8f2a28
+both plays tier 5 | start eed126e99ea6
+both plays tier 5 | after 93 08b88bf7a24d
+both plays tier 5 | after 94 6417a8d74078
+both plays tier 5 | problem95 83a4a23587fc
+both plays tier 5 | after 95 7e108a26af72
+both plays tier 5 | tool96 1ca68c71a0b2
+both plays tier 5 | after 96 a974c3676207
+both plays tier 5 | fixed97 bc830e13a94b
+both plays tier 5 | after 97 6bc7dfad189b
+both plays tier 5 | after 98 5390eca0a1b4
+both plays tier 5 | problem99 530cb47f983c
+both plays tier 5 | after 99 496edd234c44
+both plays tier 5 | tool100 2bf3e489196a
+both plays tier 5 | after 100 5ae6ea92f577
+both plays tier 5 | fixed101 441d0f11cde9
+both plays tier 5 | after 101 ee381b01dd59
+both plays tier 5 | after 102 bd72a5ac48ec
+both plays tier 5 | problem103 8a8204501d2e
+both plays tier 5 | after 103 a911db0b7fd0
+both plays tier 5 | tool104 eaf164c2ab6c
+both plays tier 5 | after 104 48bea16bd41e
+both plays tier 5 | fixed105 8e44ff37ca6a
+both plays tier 5 | after 105 a2676cf0a6c2
+both plays tier 5 | after 106 993853c22ce8
+both plays tier 5 | boss107 77300a9c8217
+both plays tier 5 | after 107 72379b46a6ed
+both plays tier 5 | bossPart108 206aabbad4fb
+both plays tier 5 | after 108 c39c18a896c5
+both plays tier 5 | bossPart109 7143eaa0e3af
+both plays tier 5 | after 109 d134e7616d5a
+both plays tier 5 | bossPart110 e04522853ea0
+both plays tier 5 | after 110 614910e33bd8
+both plays tier 5 | bossDown111 de85cde81a56
+both plays tier 5 | after 111 659e01fac635
+both plays tier 5 | result112 61800e651dcc
+both plays tier 5 | after 112 25699e4a01e4
+both plays tier 5 | ending113 608f11623ce6
+spec plays tier 0 | start 33bd2d2b1af3
+spec plays tier 0 | after 0 1f06800a5806
+spec plays tier 0 | after 1 0d33310c1ec0
+spec plays tier 0 | problem2 ab686c160c3a
+spec plays tier 0 | after 2 975a32b499e5
+spec plays tier 0 | tool3 a50e2543b3c2
+spec plays tier 0 | after 3 200dbd17b863
+spec plays tier 0 | fixed4 7c6950ebfa82
+spec plays tier 0 | after 4 dd4f1a721218
+spec plays tier 0 | after 5 5591634b546d
+spec plays tier 0 | problem6 5ad1d915d42c
+spec plays tier 0 | after 6 d19adc78798b
+spec plays tier 0 | tool7 82bba583da38
+spec plays tier 0 | after 7 25eee4cea775
+spec plays tier 0 | fixed8 17627a94dbc7
+spec plays tier 0 | after 8 51b547992d52
+spec plays tier 0 | after 9 284eccc9ec62
+spec plays tier 0 | problem10 3a439f7d5a03
+spec plays tier 0 | after 10 e5008e05a0a1
+spec plays tier 0 | tool11 110f625ba2da
+spec plays tier 0 | after 11 7cd2998ad30d
+spec plays tier 0 | fixed12 79b7e91d5333
+spec plays tier 0 | after 12 e91ead46e986
+spec plays tier 0 | after 13 501b6016e606
+spec plays tier 0 | problem14 631e73e396b0
+spec plays tier 0 | after 14 35a1bad0368d
+spec plays tier 0 | tool15 ac0649980a0d
+spec plays tier 0 | after 15 b7884d4c7478
+spec plays tier 0 | fixed16 1e73ae6661a1
+spec plays tier 0 | after 16 ba2301d5e3e2
+spec plays tier 0 | after 17 b31df8242932
+spec plays tier 0 | boss18 6f569ba31a3f
+spec plays tier 0 | after 18 827a83aee842
+spec plays tier 0 | bossPart19 003ac17e1b42
+spec plays tier 0 | after 19 b390fc0f0d04
+spec plays tier 0 | bossPart20 634928cffa92
+spec plays tier 0 | after 20 7669e64079f1
+spec plays tier 0 | bossPart21 8de9aef4bcca
+spec plays tier 0 | after 21 b3ec0a367e1b
+spec plays tier 0 | bossPart22 cd8c7e49078b
+spec plays tier 0 | after 22 0cddd20084cf
+spec plays tier 0 | bossDown23 c42fa453f11c
+spec plays tier 0 | after 23 82aed9f18b2a
+spec plays tier 0 | result24 90f02e09c9b6
+spec plays tier 0 | after 24 eb5ca144ab10
+spec plays tier 1 | start 2ae63e82e1c0
+spec plays tier 1 | after 25 a110fb66f12a
+spec plays tier 1 | after 26 52ded4a574eb
+spec plays tier 1 | problem27 b1885f002a9c
+spec plays tier 1 | after 27 562d699aca6b
+spec plays tier 1 | tool28 04a71dfcc2b5
+spec plays tier 1 | after 28 f8fd89f8058e
+spec plays tier 1 | fixed29 d8ae615dd27e
+spec plays tier 1 | after 29 f84ab400d888
+spec plays tier 1 | after 30 04862bdeb6f8
+spec plays tier 1 | problem31 740eeaad39b3
+spec plays tier 1 | after 31 c26e3369c83a
+spec plays tier 1 | tool32 4d8afa83f4a1
+spec plays tier 1 | after 32 7ed59ab716a8
+spec plays tier 1 | fixed33 3201690ff13b
+spec plays tier 1 | after 33 48a336d387e6
+spec plays tier 1 | after 34 b99b7b29121d
+spec plays tier 1 | problem35 6c88637e8af3
+spec plays tier 1 | after 35 26e93bb3363d
+spec plays tier 1 | tool36 a013611775be
+spec plays tier 1 | after 36 0a2f4b45140a
+spec plays tier 1 | fixed37 23e7ec6b7c7f
+spec plays tier 1 | after 37 09c643cd97d1
+spec plays tier 1 | after 38 82cde831129a
+spec plays tier 1 | boss39 7d13eaf8bd56
+spec plays tier 1 | after 39 13ac0b418b95
+spec plays tier 1 | bossPart40 d078b36e2432
+spec plays tier 1 | after 40 c36e521c54b7
+spec plays tier 1 | bossPart41 6aec6248383d
+spec plays tier 1 | after 41 2d017975b80f
+spec plays tier 1 | bossPart42 6cd687c495fe
+spec plays tier 1 | after 42 97d548e90803
+spec plays tier 1 | bossDown43 f6034733d58e
+spec plays tier 1 | after 43 4d6beb938e7f
+spec plays tier 1 | result44 f041b5f4f0dc
+spec plays tier 1 | after 44 d456c1f5c779
+spec plays tier 4 | start fc61010a0859
+spec plays tier 4 | after 67 b4527bf94af5
+spec plays tier 4 | after 68 327353691274
+spec plays tier 4 | problem69 62ee7dd307a2
+spec plays tier 4 | after 69 9ffa5fad8143
+spec plays tier 4 | tool70 036bf467c7bf
+spec plays tier 4 | after 70 e18f7a0700a7
+spec plays tier 4 | fixed71 5299885d2583
+spec plays tier 4 | after 71 ae823d9fdfa8
+spec plays tier 4 | after 72 de9f85be6e4d
+spec plays tier 4 | problem73 49fbaea969be
+spec plays tier 4 | after 73 00e835ec792b
+spec plays tier 4 | tool74 02afe618bb2f
+spec plays tier 4 | after 74 036f82af8dae
+spec plays tier 4 | fixed75 30879812f8d4
+spec plays tier 4 | after 75 4f39f6084e3c
+spec plays tier 4 | after 76 46845bd21c4e
+spec plays tier 4 | problem77 d631aa68911f
+spec plays tier 4 | after 77 8c8a6bd9584d
+spec plays tier 4 | tool78 f6b58e551141
+spec plays tier 4 | after 78 ecc6e4c04a03
+spec plays tier 4 | fixed79 470f0d0f4aec
+spec plays tier 4 | after 79 ff10910c7a4a
+spec plays tier 4 | after 80 c22a065ef53a
+spec plays tier 4 | problem81 1c8209a6c503
+spec plays tier 4 | after 81 04984028bd7f
+spec plays tier 4 | tool82 945145f6a276
+spec plays tier 4 | after 82 c58c500c0c35
+spec plays tier 4 | fixed83 ba1a4f2fe5a2
+spec plays tier 4 | after 83 70c88645a092
+spec plays tier 4 | after 84 bca8b052ffbc
+spec plays tier 4 | boss85 86c97feae04d
+spec plays tier 4 | after 85 b1a78d7d6eb3
+spec plays tier 4 | bossPart86 7c3f80d22317
+spec plays tier 4 | after 86 d8d2a4ff3a4a
+spec plays tier 4 | bossPart87 1e413b0daca6
+spec plays tier 4 | after 87 001a2ccca942
+spec plays tier 4 | bossPart88 8367c76bcb19
+spec plays tier 4 | after 88 397003d34944
+spec plays tier 4 | bossPart89 b6333a81e854
+spec plays tier 4 | after 89 4ed329dbdfa3
+spec plays tier 4 | bossPart90 847be2b49c8c
+spec plays tier 4 | after 90 2e84cbce4f89
+spec plays tier 4 | bossDown91 ca9d3e73aa3c
+spec plays tier 4 | after 91 d9ecdbe22e51
+spec plays tier 4 | result92 ae15fe9a723a
+spec plays tier 4 | after 92 4117416a464a
+spec plays tier 5 | start cb85e8b830fd
+spec plays tier 5 | after 93 5acd1aa756f5
+spec plays tier 5 | after 94 5c441af2eff0
+spec plays tier 5 | problem95 5e01f36ff0f5
+spec plays tier 5 | after 95 68b1d2136682
+spec plays tier 5 | tool96 6e97bf08b49a
+spec plays tier 5 | after 96 948d48ebc56a
+spec plays tier 5 | fixed97 8c89d80cf74f
+spec plays tier 5 | after 97 05ec3ca0b00f
+spec plays tier 5 | after 98 5b8fd7f68921
+spec plays tier 5 | problem99 b2a5e79125a1
+spec plays tier 5 | after 99 75be2f8906f0
+spec plays tier 5 | tool100 c5b4a4c381d0
+spec plays tier 5 | after 100 c03900915d39
+spec plays tier 5 | fixed101 745a3aa322fb
+spec plays tier 5 | after 101 68938fdd49ba
+spec plays tier 5 | after 102 6b28f7703d61
+spec plays tier 5 | problem103 a7aca10c9335
+spec plays tier 5 | after 103 92bd5ff70382
+spec plays tier 5 | tool104 7c35400913a9
+spec plays tier 5 | after 104 5dea8eca4366
+spec plays tier 5 | fixed105 66a2ebe7c5cf
+spec plays tier 5 | after 105 5e9b241ed726
+spec plays tier 5 | after 106 8e062e259ba5
+spec plays tier 5 | boss107 8548940f9c6e
+spec plays tier 5 | after 107 12450320a5ab
+spec plays tier 5 | bossPart108 bc3c35b6631b
+spec plays tier 5 | after 108 6beb521d97af
+spec plays tier 5 | bossPart109 cbeacddcf46b
+spec plays tier 5 | after 109 e09f4edefc2f
+spec plays tier 5 | bossPart110 130d02001611
+spec plays tier 5 | after 110 5317e18b4d2e
+spec plays tier 5 | bossDown111 84fe798e198d
+spec plays tier 5 | after 111 b6ea3932597d
+spec plays tier 5 | result112 923a65d200b2
+spec plays tier 5 | after 112 c223e9f43d4a
+spec plays tier 5 | ending113 bcd04facbfb8
+both uses the controls | tier started a14a4f8338e5
+both uses the controls | autoplay and notes on 55928eee1440
+both uses the controls | mode both 9535037f8336
+both uses the controls | mode p1 83b4e0330d9e
+both uses the controls | mode spec a7b6ec7cd240
+both uses the controls | mode p2 f6945f0efc3c
+both uses the controls | paused d49ab29e5542
+both uses the controls | jumped to tier 2 b5bc674b1508
+both uses the controls | back, next, tier 1 false 98dc6b349d47
+p1 uses the controls | tier started 46be2033dd1f
+p1 uses the controls | autoplay and notes on a6c49a54b256
+p1 uses the controls | mode both 7b1a636d1774
+p1 uses the controls | mode p1 83b4e0330d9e
+p1 uses the controls | mode spec a7b6ec7cd240
+p1 uses the controls | mode p2 f6945f0efc3c
+p1 uses the controls | paused d49ab29e5542
+p1 uses the controls | jumped to tier 2 b5bc674b1508
+p1 uses the controls | back, next, tier 1 false 98dc6b349d47
+both points the mouse | pointer over the left lane b29b28fce10b
+both points the mouse | pressed in each lane b0d7e6ccad1b
+both points the mouse | presses that do not count 1f632e9e3818
+both points the mouse | press while paused 2a95138b9640
+both points the mouse | pointer left the page a12d764c4aae
+spec points the mouse | pointer over the left lane b20c96069753
+spec points the mouse | pressed in each lane eaf6fe6b5d40
+spec points the mouse | presses that do not count 40242af23306
+spec points the mouse | press while paused a6e9f389cf82
+spec points the mouse | pointer left the page f46b30633eda
+both misses enemies and swings in health | a bug on each side bdd58afe531a
+both misses enemies and swings in health | health swing 0 e4bbd95bf8f2
+both misses enemies and swings in health | health swing 1 e0a9ef8cb3d1
+both misses enemies and swings in health | health swing 2 d6d1650862a4
+both misses enemies and swings in health | health swing 3 e06ab4d77785
+both misses enemies and swings in health | health swing 4 1ce1244eb2f0
+both misses enemies and swings in health | health swing 5 5905d853165a
+p2 misses enemies and swings in health | a bug on each side 288dcfa787bf
+p2 misses enemies and swings in health | health swing 0 1202dc5f5a37
+p2 misses enemies and swings in health | health swing 1 b10baf2e895b
+p2 misses enemies and swings in health | health swing 2 873ba4891b53
+p2 misses enemies and swings in health | health swing 3 5938c201304b
+p2 misses enemies and swings in health | health swing 4 9f8a57e00ed2
+p2 misses enemies and swings in health | health swing 5 83235edd2558
+both talks to the presenter window | hello 59281edd5cac
+both talks to the presenter window | a key 259fa6031de8
+both talks to the presenter window | paused broadcast 0408bf73bfcc
+both taps through tier 0 with notes on | tap vs0 8706665e56b5
+both taps through tier 0 with notes on | tap walk1 a45475c672df
+both taps through tier 0 with notes on | tap problem2 4094534cb989
+both taps through tier 0 with notes on | tap tool3 8e338eb95f88
+both taps through tier 0 with notes on | tap fixed4 9e4981cdebba
+both taps through tier 0 with notes on | tap walk5 b64db9c1d1d2
+both taps through tier 0 with notes on | tap problem6 fef41f2b3b27
+both taps through tier 0 with notes on | tap tool7 245ccd4d308c
+both taps through tier 0 with notes on | tap fixed8 c802fd57f633
+both taps through tier 0 with notes on | tap walk9 14f244fc706f
+both taps through tier 0 with notes on | tap problem10 42182fc10604
+both taps through tier 0 with notes on | tap tool11 f6a6ee1e3892
+both taps through tier 0 with notes on | tap fixed12 da709b000582
+both taps through tier 0 with notes on | tap walk13 f28911634fe7
+both taps through tier 0 with notes on | tap problem14 ba991758f788
+both taps through tier 0 with notes on | tap tool15 0dcb33555993
+both taps through tier 0 with notes on | tap fixed16 3f7b8c6fd4b6
+both taps through tier 0 with notes on | tap walk17 d115287a87e6
+both taps through tier 0 with notes on | tap boss18 baaf0162f6e1
+both taps through tier 0 with notes on | tap bossPart19 9d312579080b
+both taps through tier 0 with notes on | tap bossPart20 e68799eb394a
+both taps through tier 0 with notes on | tap bossPart21 626ac23796a3
+both taps through tier 0 with notes on | tap bossPart22 03705e3149a6
+both taps through tier 0 with notes on | tap bossDown23 86e889a7322e
+both taps through tier 0 with notes on | tap result24 4f032251d711
+p1 taps through tier 0 with notes on | tap vs0 10b34abb5d45
+p1 taps through tier 0 with notes on | tap walk1 60453c32668c
+p1 taps through tier 0 with notes on | tap problem2 c5e32de10190
+p1 taps through tier 0 with notes on | tap walk5 706a6e3c6569
+p1 taps through tier 0 with notes on | tap problem6 c0808bfc2243
+p1 taps through tier 0 with notes on | tap walk9 86bf88ff9318
+p1 taps through tier 0 with notes on | tap problem10 34d96437f30f
+p1 taps through tier 0 with notes on | tap walk13 290eef887091
+p1 taps through tier 0 with notes on | tap problem14 bdbf21e6d611
+p1 taps through tier 0 with notes on | tap walk17 18496df24e57
+p1 taps through tier 0 with notes on | tap boss18 c9dc4a9674a7
+p1 taps through tier 0 with notes on | tap bossPart19 48b7393e5c49
+p1 taps through tier 0 with notes on | tap bossPart20 11e2b6f21af9
+p1 taps through tier 0 with notes on | tap bossPart21 1beff9a28ac9
+p1 taps through tier 0 with notes on | tap bossPart22 da3b942f37fd
+p1 taps through tier 0 with notes on | tap bossDown23 a9aac6094952
+p1 taps through tier 0 with notes on | tap result24 b1e2b2de1568

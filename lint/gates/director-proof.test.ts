@@ -11,6 +11,7 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 import type { Mode } from "../../src/show/script";
 import { FakeChannel } from "./director-dom";
 import { Show } from "./director-show";
+import { logLines } from "./proof-lines";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
@@ -224,4 +225,12 @@ describe("director proof harness", () => {
       all[name] = show.looks;
     },
   );
+
+  // The committed log: every fingerprint of every scenario, as the two-tree script compared them (`npx vitest run -u` rewrites it). Skipped when
+  // scripts/director-proof.mjs drives this file (OUT): it compares two trees itself, and a changed tree must not fail the harness.
+  it.skipIf(OUT)("looks the same as the committed log", async () => {
+    await expect(logLines(all)).toMatchFileSnapshot(
+      "./__snapshots__/director-proof.txt",
+    );
+  });
 });
