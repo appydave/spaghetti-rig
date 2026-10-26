@@ -7,9 +7,9 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
 // Coverage floors: see the note at `thresholds`.
-const STATEMENTS_FLOOR = 91.6;
-const BRANCHES_FLOOR = 82.5;
-const FUNCTIONS_FLOOR = 87.7;
+const STATEMENTS_FLOOR = 92.5;
+const BRANCHES_FLOOR = 83.2;
+const FUNCTIONS_FLOOR = 88.6;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -53,6 +53,7 @@ export default defineConfig({
       // below the measured value (90, 80, 84), which gives the splits room to wobble.
       // G04's closing slice (2026-10-26) ended that departure: all three are back to one decimal, rounded down from the measured 91.68, 82.51 and
       // 87.78 (91.6, 82.5, 87.7). A floor below these is a lost test and goes to David.
+      // After-G04 A1's showcase tests (src/world/showcase.test.ts) then raised the measured numbers to 92.59, 83.23 and 88.69: floors 92.5, 83.2, 88.6.
       // No lines floor: lines measure layout. Prettier moved them 12.38% -> 10.55% with no code or test change, while statements did not move.
       thresholds: {
         statements: STATEMENTS_FLOOR,

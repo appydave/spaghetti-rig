@@ -5,11 +5,6 @@ import { kit } from "./toon";
 import { isDrawable, mapOf } from "./objects";
 import { context2d } from "../dom";
 import { GATE } from "./palette";
-import { GATE_SCHEMA } from "./gate-model";
-import gateJson from "./gate.json";
-
-/** Where every part of the gate sits and how big it is: gate.json, checked on the way in. */
-const MODEL = GATE_SCHEMA.read(gateJson, "gate");
 
 const OUTLINE = 0.025;
 const SIGN_ANISOTROPY = 8;
@@ -53,6 +48,27 @@ const CHECK_SPIN_SPEED = 2;
 
 export type GateState = "idle" | "alarm" | "open" | "broken";
 
+/** The angle the boom eases towards, and its tilt, in each state. */
+const BOOM_TARGET: Record<GateState, number> = {
+  idle: 0,
+  alarm: 0,
+  open: Math.PI / 2 - BOOM_OPEN_SHORT,
+  broken: BOOM_BROKEN_ANGLE,
+};
+const BOOM_TILT: Record<GateState, number> = {
+  idle: 0,
+  alarm: 0,
+  open: 0,
+  broken: BOOM_BROKEN_TILT,
+};
+/** The status light's colour in each state (the alarm's other colour is the blink's off beat). */
+const LIGHT_ON: Record<GateState, string> = {
+  idle: GATE.lightIdle,
+  alarm: GATE.lightAlarmOn,
+  open: GATE.lightOpen,
+  broken: GATE.lightAlarmOn,
+};
+
 /** A checkpoint arch over the road: pillars, a sign with the gate's name, a boom barrier and a status light. */
 export class Gate {
   readonly group = new THREE.Group();
@@ -74,41 +90,21 @@ export class Gate {
 
     this.group.position.z = z;
 
-    const x = ROAD_HALF + MODEL.pillar.margin;
+    const x = ROAD_HALF + 0.5;
 
     this.group.add(this.near);
     for (const s of [-1, 1]) {
       const g = s > 0 ? this.near : this.group;
 
-      for (const part of MODEL.pillar.parts) {
-        for (const at of part.at) {
-          a[part.shape](
-            g,
-            GATE[part.colour],
-            s * x + at.x,
-            at.y,
-            at.z,
-            part.size.x,
-            part.size.y,
-            part.size.z,
-            part.outlined,
-          );
-        }
+      a.soft(g, GATE.post, s * x, 2.4, 0, 0.6, 4.8, 0.6);
+      for (const y of [0.8, 1.8, 2.8, 3.8]) {
+        a.box(g, GATE.ink, s * x, y, 0, 0.64, 0.18, 0.64, false);
       }
+
+      a.soft(g, GATE.foot, s * x, 0.2, 0, 0.9, 0.4, 0.9);
     }
 
-    const beam = MODEL.beam;
-
-    a.soft(
-      this.near,
-      GATE[beam.colour],
-      0,
-      beam.at.y,
-      0,
-      x * 2 + beam.overhang,
-      beam.size.y,
-      beam.size.z,
-    );
+    a.soft(this.near, GATE.beam, 0, 5.0, 0, x * 2 + 1.0, 0.7, 0.7);
 
     // The sign, readable from both directions.
     const cv = document.createElement("canvas");
@@ -173,7 +169,7 @@ export class Gate {
     tex.anisotropy = SIGN_ANISOTROPY;
 
     const sign = new THREE.Mesh(
-      new THREE.PlaneGeometry(MODEL.sign.width, MODEL.sign.height),
+      new THREE.PlaneGeometry(5.6, 1.1),
       new THREE.MeshBasicMaterial({
         map: tex,
         toneMapped: false,
@@ -181,104 +177,55 @@ export class Gate {
       }),
     );
 
-    sign.position.set(0, MODEL.sign.at.y, MODEL.sign.at.z);
+    sign.position.set(0, 6.0, 0.05);
     this.near.add(sign);
-
-    const posts = MODEL.signPosts;
-
-    for (const at of posts.at) {
-      a.box(
-        this.near,
-        GATE[posts.colour],
-        at.x,
-        at.y,
-        at.z,
-        posts.size.x,
-        posts.size.y,
-        posts.size.z,
-        posts.outlined,
-      );
-    }
-
+    a.box(this.near, GATE.ink, -2, 5.45, 0, 0.08, 0.5, 0.08, false);
+    a.box(this.near, GATE.ink, 2, 5.45, 0, 0.08, 0.5, 0.08, false);
     // Status light on top.
-    const light = MODEL.light;
-
     this.light = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        light.radius,
-        light.widthSegments,
-        light.heightSegments,
-      ),
+      new THREE.SphereGeometry(0.32, 16, 12),
       this.lightMat,
     );
-    this.light.position.set(0, light.at.y, 0);
+    this.light.position.set(0, 7.0, 0);
     this.near.add(this.light);
-
-    const check = MODEL.check;
-
     this.check = new THREE.Mesh(
-      new THREE.TorusGeometry(
-        check.radius,
-        check.tube,
-        check.radialSegments,
-        check.tubularSegments,
-      ),
-      new THREE.MeshBasicMaterial({
-        color: GATE[check.colour],
-        toneMapped: false,
-      }),
+      new THREE.TorusGeometry(0.42, 0.06, 8, 24),
+      new THREE.MeshBasicMaterial({ color: GATE.check, toneMapped: false }),
     );
     this.check.position.copy(this.light.position);
     this.check.visible = false;
     this.near.add(this.check);
     // Boom barrier hinged at the left pillar.
-
-    const boom = MODEL.boom;
-
-    this.boom.position.set(-x + boom.hinge.inset, boom.hinge.y, 0);
+    this.boom.position.set(-x + 0.3, 1.25, 0);
     this.group.add(this.boom);
-    for (let i = 0; i < boom.count; i++) {
+    for (let i = 0; i < 7; i++) {
       a.box(
         this.boom,
-        GATE[boom.colours[i % boom.colours.length] ?? "boomStripeGap"],
-        boom.start + i * boom.length,
+        i % 2 ? GATE.boomStripe : GATE.boomStripeGap,
+        0.5 + i * 0.95,
         0,
         0,
-        boom.length,
-        boom.size.y,
-        boom.size.z,
-        i === 0 ? boom.outlinedFirst : boom.outlinedRest,
+        0.95,
+        0.22,
+        0.18,
+        i === 0,
       );
     }
   }
 
   update(dt: number) {
     this.t += dt;
-
-    const target =
-      this.state === "open"
-        ? Math.PI / 2 - BOOM_OPEN_SHORT
-        : this.state === "broken"
-          ? BOOM_BROKEN_ANGLE
-          : 0;
-
     this.boomAngle +=
-      (target - this.boomAngle) * (1 - Math.exp(-dt * BOOM_EASE_RATE));
+      (BOOM_TARGET[this.state] - this.boomAngle) *
+      (1 - Math.exp(-dt * BOOM_EASE_RATE));
     this.boom.rotation.z = this.boomAngle;
-    this.boom.rotation.x = this.state === "broken" ? BOOM_BROKEN_TILT : 0;
+    this.boom.rotation.x = BOOM_TILT[this.state];
 
+    // Only the alarm blinks; the other states show their own colour all the time.
     const on =
-      this.state === "alarm" ? Math.sin(this.t * ALARM_BLINK_RATE) > 0 : true;
+      this.state !== "alarm" || Math.sin(this.t * ALARM_BLINK_RATE) > 0;
 
-    this.lightMat.color.set(
-      this.state === "open"
-        ? GATE.lightOpen
-        : this.state === "idle"
-          ? GATE.lightIdle
-          : on
-            ? GATE.lightAlarmOn
-            : GATE.lightAlarmOff,
-    );
+    this.lightMat.color.set(on ? LIGHT_ON[this.state] : GATE.lightAlarmOff);
     this.check.visible = this.state === "open";
     this.check.rotation.y += dt * CHECK_SPIN_SPEED;
   }
