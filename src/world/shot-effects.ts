@@ -26,6 +26,9 @@ export interface CombatDeps {
   walking: () => boolean;
 }
 
+const TRACER_WIDTH_P1 = 0.04;
+const TRACER_WIDTH_P2 = 0.07;
+const SHOT_VOLUME = 0.7;
 const BOUNCE_VOLUME = 0.8;
 const BOUNCE_BURST_COUNT = 14;
 const BOUNCE_BURST_SPEED = 6;
@@ -53,6 +56,31 @@ const SLIP_TEXT_AHEAD = 6;
 const SLIP_TEXT_MAX_X = 3;
 const SLIP_TEXT_LIFE = 1.2;
 const SLIP_VOLUME = 0.5;
+
+/** What a player's gun looks and sounds like: the muzzle flash, the tracer and its width, and the shot sound. */
+const GUN = {
+  p1: {
+    muzzle: EVENT.muzzleP1,
+    tracer: EVENT.tracerP1,
+    width: TRACER_WIDTH_P1,
+    sound: "shootP1",
+  },
+  p2: {
+    muzzle: EVENT.muzzleP2,
+    tracer: EVENT.tracerP2,
+    width: TRACER_WIDTH_P2,
+    sound: "shoot",
+  },
+} as const;
+
+/** The flash at the muzzle, the tracer to where the shot lands, and the bang. */
+export function shootFx(d: CombatDeps, from: THREE.Vector3, to: THREE.Vector3) {
+  const gun = GUN[d.player];
+
+  d.fx.muzzle(from, gun.muzzle);
+  d.fx.tracer(from, to, gun.tracer, gun.width);
+  d.sfx(gun.sound, SHOT_VOLUME);
+}
 
 /** A useless shot bounces off with a plink. */
 export function bounceFx(d: CombatDeps, at: THREE.Vector3) {

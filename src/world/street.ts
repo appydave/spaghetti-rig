@@ -25,6 +25,7 @@ import {
 
 const RATTLE_P1 = 0.5;
 const RATTLE_P2 = 0.3;
+const RATTLE: Record<Player, number> = { p1: RATTLE_P1, p2: RATTLE_P2 };
 const DEBT_WINDOW_WIDTH = 1.1;
 const CITY_TAIL_LENGTH = 40;
 const CITY_SEED_BASE = 1000;
@@ -187,30 +188,27 @@ export class Street {
 
     if ((this.window?.key ?? "") !== wantKey) {
       this.window?.win.dispose();
-      this.window = null;
-      if (wantKey) {
-        const stop = nth(tier.stops, s.stop, "stops");
-        const win = makeStopWindow(
-          { game: this.game, tier },
-          stop,
-          s.window === "fixed" ? "fixed" : "problem",
-          this.rig.shape,
-        );
-
-        this.scene.add(win.group);
-        this.window = { win, key: wantKey, reading: true };
-      }
+      this.window = wantKey ? this.openWindow(s, tier, wantKey) : null;
     }
 
     if (this.window) {
       this.window.reading = true;
-      this.window.win.rattle =
-        s.window === "problem"
-          ? this.player === "p1"
-            ? RATTLE_P1
-            : RATTLE_P2
-          : 0;
+      this.window.win.rattle = s.window === "problem" ? RATTLE[this.player] : 0;
     }
+  }
+
+  private openWindow(s: State, tier: PlayTier, key: string) {
+    const stop = nth(tier.stops, s.stop, "stops");
+    const win = makeStopWindow(
+      { game: this.game, tier },
+      stop,
+      s.window === "fixed" ? "fixed" : "problem",
+      this.rig.shape,
+    );
+
+    this.scene.add(win.group);
+
+    return { win, key, reading: true };
   }
 
   private syncDebt(s: State, tier: PlayTier) {
