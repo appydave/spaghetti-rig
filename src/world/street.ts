@@ -11,6 +11,7 @@ import type { CameraRig } from "./camera-rig";
 import { buildCity, SEGMENT } from "./city";
 import { CodeWindow } from "./codewindow";
 import { Gate } from "./gate";
+import type { Debris } from "./physics";
 import { makePile } from "./pile";
 import { makeBossModel, makeStopWindow, paintStopCard } from "./tier-content";
 import { disposeTree } from "./toon";
@@ -67,6 +68,36 @@ export class Street {
 
   get bossModel(): BossModel {
     return present(this.boss, "the boss");
+  }
+
+  /** Take the stop window off the street without disposing it, so the caller can animate it away. */
+  releaseWindow() {
+    const w = this.window;
+
+    this.window = null;
+
+    return w;
+  }
+
+  /** Show that this many of the boss's parts are broken. */
+  setBroken(parts: number) {
+    this.bossLeft = this.bossTotal - parts;
+  }
+
+  /** Spaghetti buries player 1: add the pile to the scene and return it. */
+  bury() {
+    const pile = makePile();
+
+    this.pile = pile;
+    this.scene.add(pile);
+
+    return pile;
+  }
+
+  /** The boss is beaten: break it apart and take it off the street. */
+  defeat(debris: Debris, from: THREE.Vector3) {
+    this.bossModel.destroy(debris, from);
+    this.boss = null;
   }
 
   gateAt(stop: number): Gate {
