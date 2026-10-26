@@ -47,12 +47,13 @@ const readConfig = (): { overrides: Override[] } =>
   );
 const config = readConfig();
 
-/** The five model files that are asset data (hand-placed geometry and materials), exempt from both rules for good: R7 revised. */
+/** The six model files that are asset data (hand-placed geometry and materials), exempt from both rules for good: R7 revised. */
 const EXEMPT = [
   "src/world/boss.ts",
   "src/world/characters.ts",
   "src/world/city.ts",
   "src/world/enemies.ts",
+  "src/world/gate.ts",
   "src/world/showcase.ts",
 ];
 const BAD_SOURCE =
@@ -149,7 +150,7 @@ describe("magic numbers and colours gate", () => {
     }
   });
 
-  it("the exemption names exactly the five asset files, each of which exists", () => {
+  it("the exemption names exactly the six asset files, each of which exists", () => {
     const exemptions = config.overrides.filter(EXEMPTION);
 
     expect(exemptions).toHaveLength(1);

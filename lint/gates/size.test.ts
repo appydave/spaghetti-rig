@@ -1,6 +1,6 @@
 // Proves the size gate (G04) is wired and kept honest. The probes run in a sandbox that mirrors the repo (the real .oxlintrc.json, the
 // plugin files, node_modules): each limit fails just over it and passes exactly on it. The guard keeps the two ways out of the gate
-// honest: the asset-data exemption is exactly five files, and the list carried to tier 5 is exactly the files named here, each of which
+// honest: the asset-data exemption is exactly six files, and the list carried to tier 5 is exactly the files named here, each of which
 // exists and still needs it.
 import { spawnSync } from "node:child_process";
 import {
@@ -21,12 +21,13 @@ import { SIZE_CODES, SIZE_PROBES, fn, file } from "./size-probes";
 const REPO = resolve(import.meta.dirname, "../..");
 const OXLINT = join(REPO, "node_modules/.bin/oxlint");
 const MAX_OUTPUT = 1 << 28;
-/** The five model files that are asset data (hand-placed geometry and materials): exempt from the size rules for good. */
+/** The six model files that are asset data (hand-placed geometry and materials): exempt from the size rules for good. */
 const ASSET_DATA = [
   "src/world/boss.ts",
   "src/world/characters.ts",
   "src/world/city.ts",
   "src/world/enemies.ts",
+  "src/world/gate.ts",
   "src/world/showcase.ts",
 ];
 /** The files carried to tier 5 (structure) by David's option 2, 10-24: they still exceed a size limit and tier 5 splits them. The list may shrink, never grow. */
@@ -42,7 +43,6 @@ const CARRIED_TO_TIER_5 = [
   "src/world/codelayout.ts",
   "src/world/codewindow.ts",
   "src/world/effects.ts",
-  "src/world/gate.ts",
   "src/world/physics.ts",
   "src/world/toon.ts",
   "src/world/world.ts",
@@ -187,7 +187,7 @@ describe("size gate", () => {
     expect(PROBES.filter((p) => p[3].length === 0).length).toBeGreaterThan(0);
   });
 
-  it("the exemption is exactly the five asset files, in one block, each of which exists", () => {
+  it("the exemption is exactly the six asset files, in one block, each of which exists", () => {
     expect(exemption).toHaveLength(1);
     expect([...(exemption[0]?.files ?? [])].sort()).toEqual(
       [...ASSET_DATA].sort(),

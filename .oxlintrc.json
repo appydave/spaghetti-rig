@@ -489,13 +489,16 @@
       }
     },
     {
-      // R7 revised (David, 2026-10-23): hand-placed model geometry and materials are asset data, like Omer's GLB files, so these five
-      // files are exempt from the two rules above for good. lint/gates/rules.test.ts keeps this list at exactly these five.
+      // R7 revised (David, 2026-10-23): hand-placed model geometry and materials are asset data, like Omer's GLB files, so these six
+      // files are exempt from the two rules above for good. gate.ts joined on 2026-10-26, when the gate.json experiment was unwound
+      // (David, decisions-2026-10-25-audit.md "Unwind it"): it is the hand-placed checkpoint gate, like its five siblings.
+      // lint/gates/rules.test.ts keeps this list at exactly these six.
       "files": [
         "src/world/boss.ts",
         "src/world/characters.ts",
         "src/world/city.ts",
         "src/world/enemies.ts",
+        "src/world/gate.ts",
         "src/world/showcase.ts"
       ],
       "rules": {
@@ -551,7 +554,6 @@
         "src/world/codelayout.ts",
         "src/world/codewindow.ts",
         "src/world/effects.ts",
-        "src/world/gate.ts",
         "src/world/physics.ts",
         "src/world/toon.ts",
         "src/world/world.ts",
@@ -568,12 +570,14 @@
     },
     {
       // R7 revised (David, 2026-10-23), applied to size: hand-placed model geometry and materials are asset data, like Omer's GLB files, so these
-      // five files are exempt from the size rules for good. lint/gates/size.test.ts keeps this list at exactly these five.
+      // six files are exempt from the size rules for good (gate.ts joined on 2026-10-26, when gate.json was unwound: it is the hand-placed
+      // checkpoint gate, like its five siblings). lint/gates/size.test.ts keeps this list at exactly these six.
       "files": [
         "src/world/boss.ts",
         "src/world/characters.ts",
         "src/world/city.ts",
         "src/world/enemies.ts",
+        "src/world/gate.ts",
         "src/world/showcase.ts"
       ],
       "rules": {
