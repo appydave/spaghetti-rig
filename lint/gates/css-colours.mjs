@@ -25,11 +25,24 @@ function coloursIn(value) {
   return [...(bare.match(HEX) ?? []), ...calls, ...words];
 }
 
-/** @param {string} css @returns {{ line: number, colour: string, declaration: string }[]} */
-export function findCssColours(css) {
-  const text = css.replaceAll(/\/\*[\s\S]*?\*\//g, (c) =>
-    c.replaceAll(/[^\n]/g, " "),
-  );
+/**
+ * The declaration that ends at `end` (a ";" or a "}"), if there is one outside :root: its line and its text.
+ * @param {string} text @param {number} start @param {number} end @param {string | undefined} rule
+ */
+function declarationEndingAt(text, start, end, rule) {
+  const segment = text.slice(start, end);
+
+  if (segment.indexOf(":") <= 0 || rule === ":root") {
+    return [];
+  }
+
+  const first = start + segment.length - segment.trimStart().length;
+
+  return [{ line: text.slice(0, first).split("\n").length, segment }];
+}
+
+/** Every declaration outside :root, in order, found by walking the braces and semicolons of the text. */
+function declarationsOutsideRoot(text) {
   const found = [];
   const rules = [];
   let start = 0;
@@ -41,18 +54,7 @@ export function findCssColours(css) {
       rules.push(text.slice(start, i).trim());
       start = i + 1;
     } else if (ch === ";" || ch === "}") {
-      const segment = text.slice(start, i);
-      const colon = segment.indexOf(":");
-
-      if (colon > 0 && rules.at(-1) !== ":root") {
-        const first = start + segment.length - segment.trimStart().length;
-        const line = text.slice(0, first).split("\n").length;
-
-        for (const colour of coloursIn(segment.slice(colon + 1))) {
-          found.push({ line, colour, declaration: segment.trim() });
-        }
-      }
-
+      found.push(...declarationEndingAt(text, start, i, rules.at(-1)));
       if (ch === "}") {
         rules.pop();
       }
@@ -62,6 +64,21 @@ export function findCssColours(css) {
   }
 
   return found;
+}
+
+/** @param {string} css @returns {{ line: number, colour: string, declaration: string }[]} */
+export function findCssColours(css) {
+  const text = css.replaceAll(/\/\*[\s\S]*?\*\//g, (c) =>
+    c.replaceAll(/[^\n]/g, " "),
+  );
+
+  return declarationsOutsideRoot(text).flatMap(({ line, segment }) =>
+    coloursIn(segment.slice(segment.indexOf(":") + 1)).map((colour) => ({
+      line,
+      colour,
+      declaration: segment.trim(),
+    })),
+  );
 }
 
 export function scan(dir) {

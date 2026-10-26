@@ -29,19 +29,23 @@ export function collectRules(properties: string[]) {
     }
   };
 
+  const addKeyframes = (rule: CSSKeyframesRule) => {
+    for (const frame of rule.cssRules) {
+      if (frame instanceof CSSKeyframeRule) {
+        addDeclarations(
+          `@keyframes ${rule.name} ${frame.keyText}`,
+          frame.style,
+        );
+      }
+    }
+  };
+
   const walk = (rules: CSSRuleList, context: string) => {
     for (const rule of rules) {
       if (rule instanceof CSSStyleRule) {
         addDeclarations(`${context}${rule.selectorText}`, rule.style);
       } else if (rule instanceof CSSKeyframesRule) {
-        for (const frame of rule.cssRules) {
-          if (frame instanceof CSSKeyframeRule) {
-            addDeclarations(
-              `@keyframes ${rule.name} ${frame.keyText}`,
-              frame.style,
-            );
-          }
-        }
+        addKeyframes(rule);
       } else if (rule instanceof CSSConditionRule) {
         walk(rule.cssRules, `${context}${rule.conditionText} `);
       }

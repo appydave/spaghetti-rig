@@ -6,8 +6,9 @@ export const COLOUR = "strict-colors(no-color-literals)";
 /** A probe: its name, where it sits in the sandbox repo, its source and the findings expected for it (none = allowed). */
 export type Probe = readonly [string, string, string, readonly string[]];
 
-const file = (...rows: string[]): string => `${rows.join("\n")}\n`;
-const THREE = 'import * as THREE from "three";';
+export const file = (...rows: string[]): string => `${rows.join("\n")}\n`;
+export const THREE = 'import * as THREE from "three";';
+
 // Built from pieces so this file does not trip the suppression scan it exercises.
 const OFF = `${"eslint"}-${"disable"}-next-line`;
 

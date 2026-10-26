@@ -25,6 +25,34 @@ const RIGHT = { x: 1200, y: 300 };
 const SWINGS = 6;
 const SWING_FRAMES = 12;
 
+/** The steps that play on their own while the presenter waits. */
+const RUNS_ON_ITS_OWN = ["vs", "walk"];
+
+/** Let a step run on its own, a frame at a time, until the show moves to the next step or the tier ends. */
+function waitForNextStep(show: Show, tier: number): void {
+  const d = show.director;
+  const at = d.at;
+
+  for (let f = 0; f < LIMIT && d.at === at && d.step.tier === tier; f++) {
+    show.frames(1);
+  }
+}
+
+/** Hold a step a moment, look at it, and go on. False at the ending, where the tier stops. */
+function holdThenGoOn(show: Show, at: number): boolean {
+  const d = show.director;
+
+  show.frames(HOLD_FRAMES);
+  show.look(`${d.step.phase}${at}`);
+  if (d.step.phase === "ending") {
+    return false;
+  }
+
+  d.next();
+
+  return true;
+}
+
 /** Play one tier through, as a presenter would: let vs and walk steps run on their own, hold the others a moment, then go on. */
 function runTier(show: Show, tier: number): void {
   const d = show.director;
@@ -34,19 +62,10 @@ function runTier(show: Show, tier: number): void {
   for (let guard = 0; guard < LIMIT && d.step.tier === tier; guard++) {
     const at = d.at;
 
-    if (["vs", "walk"].includes(d.step.phase)) {
-      for (let f = 0; f < LIMIT && d.at === at && d.step.tier === tier; f++) {
-        show.frames(1);
-      }
-    } else {
-      show.frames(HOLD_FRAMES);
-      show.look(`${d.step.phase}${at}`);
-
-      if (d.step.phase === "ending") {
-        break;
-      }
-
-      d.next();
+    if (RUNS_ON_ITS_OWN.includes(d.step.phase)) {
+      waitForNextStep(show, tier);
+    } else if (!holdThenGoOn(show, at)) {
+      break;
     }
 
     show.look(`after ${at}`);

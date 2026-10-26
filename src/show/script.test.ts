@@ -143,12 +143,12 @@ describe("script", () => {
 describe("health", () => {
   const tier = game.tiers.find((t) => t.stops.length === 4)!;
   const steps = script.filter((s) => s.tier === tier.index);
+  /** A negative wanted number matches any. */
+  const matches = (want: number, got: number) => want < 0 || got === want;
   const at = (phase: string, stop = -1, part = -1) =>
     steps.find(
       (s) =>
-        s.phase === phase &&
-        (stop < 0 || s.stop === stop) &&
-        (part < 0 || s.part === part),
+        s.phase === phase && matches(stop, s.stop) && matches(part, s.part),
     )!;
 
   it("player 1 drops 90/n per stop and reaches the boss on 10%", () => {

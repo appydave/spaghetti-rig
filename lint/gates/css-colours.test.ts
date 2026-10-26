@@ -64,6 +64,10 @@ const PASSES: readonly [string, string][] = [
     rule(`--ico: url(data:image/svg+xml,stroke=${NAMED}&fill=${hex("fff")})`),
   ],
   ["a colour word inside a string", rule(`content: "${NAMED}"`)],
+  [
+    "a custom property declared after a nested block inside :root",
+    `:root {\n  .nested {\n    margin: 0;\n  }\n  --ink: ${hex("ff0000")};\n}\n`,
+  ],
 ];
 
 let dir = "";
