@@ -7,10 +7,13 @@
 // What it cannot see: layout, the CSS cascade and rendering (happy-dom has none), so a style that only works through a stylesheet is invisible.
 // This is the ONLY test file that opts in to a DOM; the default test environment stays node. DIRECTOR_PROOF_OUT=<file> writes the log.
 import { writeFileSync } from "node:fs";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import type { Mode } from "../../src/show/script";
 import { FakeChannel } from "./director-dom";
 import { Show } from "./director-show";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 const OUT = process.env.DIRECTOR_PROOF_OUT;
 /** Frames a step is held before the harness moves on (a banner lasts up to 2.6 s and a caption 2.9 s). */

@@ -6,9 +6,12 @@
 // MODEL_PROOF_OUT=<file> writes the fingerprints and runs the full 50-seed sweep; MODEL_PROOF_PLANT=<model name> nudges that
 // model by 0.01 before it is fingerprinted, to show the proof fails and names it.
 import { writeFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { fingerprint, type Print } from "./model-fingerprint";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 // The builders only paint label textures on a canvas; a canvas that accepts any drawing call is all they need.
 const hole: any = new Proxy(function () {}, {

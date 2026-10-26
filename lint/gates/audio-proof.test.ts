@@ -13,6 +13,9 @@ import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
 import { num } from "./world-fingerprint";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 const SEEDS = 20;
 const START = 1;

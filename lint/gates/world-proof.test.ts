@@ -14,7 +14,10 @@ import { spyOnTemps } from "./disposal-spy";
 import { makeCanvas } from "./recording-canvas";
 import { scenarioList, type Mode, type Scenario } from "./world-scenarios";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 (globalThis as any).document = {
   createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
