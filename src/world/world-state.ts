@@ -2,7 +2,13 @@
 // no world fields. Moved out of world.ts as it was, split by phase so each part stays within the function-length limit.
 import { nth } from "../nth";
 import type { Game, PlayTier } from "../content/load";
-import { healthAt, partsBroken, type Player, type Step } from "../show/script";
+import {
+  healthAt,
+  partsBroken,
+  type Phase,
+  type Player,
+  type Step,
+} from "../show/script";
 import { standZ, type State } from "./world-shared";
 
 /** Mark the first k gates passed: broken for player 1, open for player 2. */
@@ -26,43 +32,38 @@ function stopState(s: State, step: Step, p1: boolean) {
   s.pose = p1 ? "hurt" : fixed ? "idle" : "aim";
 }
 
+const FIGHTING: ReadonlySet<Phase> = new Set(["boss", "bossPart"]);
+const ENDED: ReadonlySet<Phase> = new Set(["result", "ending"]);
+
+/** The boss once the arena is reached: player 2 beats it at bossDown, player 1 is buried and the boss leaves with the result. */
+function bossStatus(phase: Phase, p1: boolean): State["boss"] {
+  if (ENDED.has(phase)) {
+    return p1 ? "none" : "dead";
+  }
+
+  return !p1 && phase === "bossDown" ? "dead" : "alive";
+}
+
+function bossPose(phase: Phase, p1: boolean): State["pose"] {
+  if (p1) {
+    return phase === "boss" ? "hurt" : "down";
+  }
+
+  return FIGHTING.has(phase) ? "aim" : "victory";
+}
+
 /** Boss arena and after. */
 function bossState(s: State, step: Step, tier: PlayTier, p1: boolean) {
   const n = tier.stops.length;
 
   s.z = standZ(n);
-  s.camera = "boss";
+  s.camera = ENDED.has(step.phase) ? "portrait" : "boss";
   passed(s, n, p1);
   s.debt = p1 ? n : 0;
-  s.boss = "alive";
+  s.boss = bossStatus(step.phase, p1);
   s.broken = p1 ? 0 : partsBroken(step, tier);
-  if (
-    step.phase === "bossDown" ||
-    step.phase === "result" ||
-    step.phase === "ending"
-  ) {
-    s.boss = p1 ? "alive" : "dead";
-  }
-
-  s.pose = p1
-    ? step.phase === "boss"
-      ? "hurt"
-      : "down"
-    : step.phase === "boss" || step.phase === "bossPart"
-      ? "aim"
-      : "victory";
-  s.pile = p1 && step.phase !== "boss" && step.phase !== "bossPart";
-  if (step.phase === "result" || step.phase === "ending") {
-    s.camera = "portrait";
-  }
-
-  if (p1 && (step.phase === "result" || step.phase === "ending")) {
-    s.boss = "none";
-  }
-
-  if (!p1 && (step.phase === "result" || step.phase === "ending")) {
-    s.boss = "dead";
-  }
+  s.pose = bossPose(step.phase, p1);
+  s.pile = p1 && !FIGHTING.has(step.phase);
 }
 
 export function stateFor(game: Game, player: Player, step: Step): State {

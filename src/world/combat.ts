@@ -4,7 +4,13 @@ import * as THREE from "three";
 import { AutoGunner } from "./autogunner";
 import { Enemy, SCORE, type EnemyKind } from "./enemies";
 import { EVENT } from "./palette";
-import { bounceFx, killFx, slipFx, type CombatDeps } from "./shot-effects";
+import {
+  bounceFx,
+  killFx,
+  shootFx,
+  slipFx,
+  type CombatDeps,
+} from "./shot-effects";
 import { disposeTree } from "./toon";
 import { RANDOM_CENTRE } from "./world-shared";
 
@@ -14,9 +20,6 @@ const STREET_CLEAR_BURST_COUNT = 10;
 const STREET_CLEAR_BURST_SPEED = 3;
 const POINTER_FALLBACK_DISTANCE = 30;
 const ENEMY_HIT_PADDING = 1.15;
-const TRACER_WIDTH_P1 = 0.04;
-const TRACER_WIDTH_P2 = 0.07;
-const SHOT_VOLUME = 0.7;
 const ENEMY_HIT_VOLUME = 0.6;
 const ENEMY_HIT_BURST_COUNT = 12;
 const ENEMY_HIT_BURST_SPEED = 5;
@@ -30,6 +33,12 @@ const AUTO_RANGE_FAR = 30;
 const AUTO_REST_Y = 1.2;
 const AUTO_REST_Z = -14;
 const SLIP_PAST_CHARACTER = 4;
+
+interface Hit {
+  point: THREE.Vector3;
+  enemy?: Enemy;
+  boss?: boolean;
+}
 
 export class Combat {
   enemies: Enemy[] = [];
@@ -74,11 +83,13 @@ export class Combat {
     return !!hit;
   }
 
-  private pick(
-    ray: THREE.Ray,
-  ): { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null {
-    let best: { point: THREE.Vector3; enemy?: Enemy; boss?: boolean } | null =
-      null;
+  private pick(ray: THREE.Ray): Hit | null {
+    return this.pickEnemy(ray) ?? this.pickBoss(ray);
+  }
+
+  /** The nearest enemy the ray goes through. */
+  private pickEnemy(ray: THREE.Ray): Hit | null {
+    let best: Hit | null = null;
     let bestD = Infinity;
     const c = new THREE.Vector3();
 
@@ -98,18 +109,20 @@ export class Combat {
       }
     }
 
+    return best;
+  }
+
+  private pickBoss(ray: THREE.Ray): Hit | null {
     const boss = this.d.boss();
 
-    if (boss && !best) {
-      const box = new THREE.Box3().setFromObject(boss.core.group);
-      const p = ray.intersectBox(box, new THREE.Vector3());
-
-      if (p) {
-        best = { point: p, boss: true };
-      }
+    if (!boss) {
+      return null;
     }
 
-    return best;
+    const box = new THREE.Box3().setFromObject(boss.core.group);
+    const p = ray.intersectBox(box, new THREE.Vector3());
+
+    return p ? { point: p, boss: true } : null;
   }
 
   private fireAt(point: THREE.Vector3, enemy: Enemy | null, boss: boolean) {
@@ -117,40 +130,34 @@ export class Combat {
 
     this.d.character.fire();
     this.shots++;
-
-    const p1 = this.d.player === "p1";
-
-    this.d.fx.muzzle(from, p1 ? EVENT.muzzleP1 : EVENT.muzzleP2);
-    this.d.fx.tracer(
-      from,
-      point,
-      p1 ? EVENT.tracerP1 : EVENT.tracerP2,
-      p1 ? TRACER_WIDTH_P1 : TRACER_WIDTH_P2,
-    );
-    this.d.sfx(p1 ? "shootP1" : "shoot", SHOT_VOLUME);
+    shootFx(this.d, from, point);
     if (enemy) {
-      this.d.sfx("enemyHit", ENEMY_HIT_VOLUME);
-      this.d.fx.burst(point, {
-        n: ENEMY_HIT_BURST_COUNT,
-        speed: ENEMY_HIT_BURST_SPEED,
-      });
-      if (enemy.hit()) {
-        this.kill(enemy, from);
-      }
+      this.hitEnemy(point, enemy, from);
     } else if (boss) {
-      if (p1 || this.d.boss()) {
+      if (this.d.player === "p1" || this.d.boss()) {
         bounceFx(this.d, point);
       }
     } else {
-      this.d.fx.burst(
-        point.y < GROUND_SPLASH_BELOW ? point.setY(GROUND_SPLASH_Y) : point,
-        {
-          n: MISS_BURST_COUNT,
-          speed: 2,
-          colors: EVENT.shotBurst,
-        },
-      );
+      this.missShot(point);
     }
+  }
+
+  private hitEnemy(point: THREE.Vector3, enemy: Enemy, from: THREE.Vector3) {
+    this.d.sfx("enemyHit", ENEMY_HIT_VOLUME);
+    this.d.fx.burst(point, {
+      n: ENEMY_HIT_BURST_COUNT,
+      speed: ENEMY_HIT_BURST_SPEED,
+    });
+    if (enemy.hit()) {
+      this.kill(enemy, from);
+    }
+  }
+
+  private missShot(point: THREE.Vector3) {
+    this.d.fx.burst(
+      point.y < GROUND_SPLASH_BELOW ? point.setY(GROUND_SPLASH_Y) : point,
+      { n: MISS_BURST_COUNT, speed: 2, colors: EVENT.shotBurst },
+    );
   }
 
   shootBoss() {

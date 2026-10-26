@@ -67,44 +67,69 @@ export class AutoGunner {
 
   /** Advance by dt. Returns a shot when the trigger is pulled this frame. */
   update(dt: number, target: Target | null, rest: THREE.Vector3): Shot | null {
-    const r = this.r;
-
     if (!target) {
-      // Nothing to shoot: the hand drifts back towards the middle of the road.
-      if (this.aim) {
-        this.aim.lerp(rest, 1 - Math.exp(-dt * DRIFT_BACK_RATE));
-      }
-
-      this.targetId = -1;
-      this.wait = Math.max(this.wait - dt, 0);
+      this.driftBack(dt, rest);
 
       return null;
     }
 
     if (target.id !== this.targetId) {
-      // A new target: a moment to react, and a hand that starts somewhere else.
-      this.targetId = target.id;
-      this.wait = Math.max(
-        this.wait,
-        REACTION_DELAY + r() * REACTION_DELAY_SPREAD,
-      );
-      this.speed = CLOSE_SPEED + r() * CLOSE_SPEED_SPREAD;
-      this.pickError(target);
+      this.acquire(target);
     }
 
-    const aim = (this.aim ??= rest.clone());
-    const goal = target.centre.clone().add(this.error);
+    const aim = this.steer(dt, target, rest);
 
-    aim.lerp(goal, 1 - Math.exp(-dt * this.speed));
-    // A little tremble, so even a steady aim is never perfectly still.
-    aim.x += (r() - RANDOM_CENTRE) * TREMBLE;
-    aim.y += (r() - RANDOM_CENTRE) * TREMBLE;
     this.wait -= dt;
     if (this.wait > 0) {
       return null;
     }
 
     const shot: Shot = { at: aim.clone(), target };
+
+    this.pauseAfterShot();
+    if (this.burst === 0) {
+      this.pickError(target);
+    }
+
+    return shot;
+  }
+
+  /** Nothing to shoot: the hand drifts back towards the middle of the road. */
+  private driftBack(dt: number, rest: THREE.Vector3) {
+    if (this.aim) {
+      this.aim.lerp(rest, 1 - Math.exp(-dt * DRIFT_BACK_RATE));
+    }
+
+    this.targetId = -1;
+    this.wait = Math.max(this.wait - dt, 0);
+  }
+
+  /** A new target: a moment to react, and a hand that starts somewhere else. */
+  private acquire(target: Target) {
+    this.targetId = target.id;
+    this.wait = Math.max(
+      this.wait,
+      REACTION_DELAY + this.r() * REACTION_DELAY_SPREAD,
+    );
+    this.speed = CLOSE_SPEED + this.r() * CLOSE_SPEED_SPREAD;
+    this.pickError(target);
+  }
+
+  /** Close the hand on the target, with a little tremble so even a steady aim is never perfectly still. */
+  private steer(dt: number, target: Target, rest: THREE.Vector3) {
+    const aim = (this.aim ??= rest.clone());
+    const goal = target.centre.clone().add(this.error);
+
+    aim.lerp(goal, 1 - Math.exp(-dt * this.speed));
+    aim.x += (this.r() - RANDOM_CENTRE) * TREMBLE;
+    aim.y += (this.r() - RANDOM_CENTRE) * TREMBLE;
+
+    return aim;
+  }
+
+  /** After a pull: the next shot of a burst comes fast; otherwise mostly quick, sometimes a long look. */
+  private pauseAfterShot() {
+    const r = this.r;
 
     if (this.burst > 0) {
       this.burst--;
@@ -113,15 +138,8 @@ export class AutoGunner {
       this.burst = 1 + Math.floor(r() * MAX_BURST_FOLLOW_UPS);
       this.wait = BURST_GAP + r() * BURST_GAP_SPREAD;
     } else {
-      // Mostly quick, sometimes a long look before the next pull.
       this.wait = QUICK_PAUSE + r() * r() * LONG_LOOK_SPREAD;
     }
-
-    if (this.burst === 0) {
-      this.pickError(target);
-    }
-
-    return shot;
   }
 
   private pickError(t: Target) {
