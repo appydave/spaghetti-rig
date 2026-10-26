@@ -150,8 +150,6 @@ function breakWithTool(c: StepContext, step: Step, s: State) {
 
   const boss = c.street.bossModel;
 
-  c.street.setBroken(step.part);
-
   const part = nth(c.street.playing.boss.parts, step.part, "boss parts");
   const tool = toolFor(c.game, part.beatenBy);
   const shot = {

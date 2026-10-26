@@ -77,7 +77,6 @@ function defeatBoss(c: StepContext, s: State) {
 
   const boss = c.street.bossModel;
 
-  c.street.setBroken(c.street.bossTotal);
   c.timeline.after(FINISH_FIRE_DELAY, () => {
     c.character.fire();
 
