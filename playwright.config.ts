@@ -23,6 +23,8 @@ const gpuArgs =
 
 export default defineConfig({
   testDir: "tests",
+  // Committed snapshots sit in tests/__snapshots__ with no browser or platform suffix: a colour is a colour on every machine.
+  snapshotPathTemplate: "{testDir}/__snapshots__/{arg}{ext}",
   timeout: TEST_TIMEOUT_MS,
   workers: 1,
   forbidOnly: inCI,
