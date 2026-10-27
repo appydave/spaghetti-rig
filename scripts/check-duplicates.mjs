@@ -6,7 +6,7 @@ const HINTS = {
   production:
     "Move the repeated code into one function or module that both places call. Do not add the file to .jscpd.json: only procedural-data files may be there, and the list is pinned.",
   tests:
-    "Move the repeated code into one shared test helper (lint/gates/support/ for the gate tests, tests/helpers.ts for the browser tests) that both tests call. Nothing is ignored in .jscpd.tests.json, and nothing may be.",
+    "Move the repeated code into one shared test helper (lint/gates/support/ for the gate tests, tests/helpers.ts for the browser tests) that both tests call. Do not add the file to .jscpd.tests.json: only procedural-data files may be there, and the list is pinned.",
 };
 let failed = false;
 

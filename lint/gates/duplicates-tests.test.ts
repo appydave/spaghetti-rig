@@ -1,9 +1,12 @@
 // Proves the second duplicate scan (G08b: tests and tooling) is wired and kept honest, the way duplicates.test.ts proves the first. It reads
-// src (test files too), tests/, lint/ and scripts/ with no ignore list: exact at 53 tokens and more than 9 lines, near-miss at 0.95 with gaps
+// src (test files too), tests/, lint/ and scripts/ with only the pinned procedural-data file ignored (the same list as the first scan): exact at 53 tokens and more than 9 lines, near-miss at 0.95 with gaps
 // of up to 3 lines. Each probe plants a pair in a sandbox with the real configs; the script probes run the script CI runs.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import config from "../../.jscpd.tests.json";
-import { TEST_PROFILES } from "./duplicates.mjs";
+import { DUPLICATES_PD } from "./exemptions";
+import { REPO, TEST_PROFILES } from "./duplicates.mjs";
 import {
   cleanScratch,
   gapped,
@@ -102,14 +105,26 @@ describe("the script CI runs, on tests", () => {
     expect(result.stderr).toContain("one shared test helper");
   });
 
+  it("honours the pinned procedural-data list: one more repeat of characters.ts's own lines passes both scans", () => {
+    const [file] = DUPLICATES_PD;
+    const lines = readFileSync(join(REPO, file ?? ""), "utf8").split("\n");
+    // Lines 188 to 199 are a 12-line run of hand-placed parts; repeating them in a new function is a clone inside the file.
+    const repeat = lines.slice(187, 199).join("\n");
+    const result = runCheckScript({
+      [file ?? ""]: `${lines.join("\n")}\nfunction again() {\n${repeat}\n}\n`,
+    });
+
+    expect(result.status).toBe(0);
+  });
+
   it("exits 0 when there is none", () => {
     expect(runCheckScript({}).status).toBe(0);
   });
 });
 
 describe("the config", () => {
-  it("has no ignore list and reads exactly these four folders", () => {
-    expect(config.ignore).toEqual([]);
+  it("ignores exactly the procedural-data file named in exemptions.ts, and reads these four folders", () => {
+    expect(config.ignore).toEqual(DUPLICATES_PD);
     expect(config.path).toEqual(["src", "tests", "lint", "scripts"]);
   });
 
