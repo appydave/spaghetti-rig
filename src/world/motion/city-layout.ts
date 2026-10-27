@@ -10,8 +10,8 @@ import type {
   Plaza,
   SideLayout,
   Span,
-} from "#root/src/world/city-layout-types.ts";
-import { rng } from "#root/src/world/toon.ts";
+} from "#root/src/world/motion/city-layout-types.ts";
+import { rng } from "#root/src/world/models/toon.ts";
 
 type Side = -1 | 1;
 

@@ -4,7 +4,7 @@ import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 // The characters paint their faces on a canvas; a canvas that accepts any drawing call is all they need (the stand-in the proof harnesses use).
 vi.stubGlobal("document", canvasDocument());
 
-const { Character } = await import("#root/src/world/characters.ts");
+const { Character } = await import("#root/src/world/models/characters.ts");
 
 const FRAME = 1 / 60;
 /** Long enough for the fall (about half a second) to finish. */

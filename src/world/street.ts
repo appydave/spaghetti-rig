@@ -5,12 +5,12 @@ import * as THREE from "three";
 import type { Game, PlayTier } from "#root/src/content/load.ts";
 import { nth, present } from "#root/src/nth.ts";
 import type { Player } from "#root/src/show/script.ts";
-import type { BossModel } from "#root/src/world/boss.ts";
+import type { BossModel } from "#root/src/world/models/boss.ts";
 import type { BossLayout } from "#root/src/world/bosslayout.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";
-import { buildCity, SEGMENT } from "#root/src/world/city.ts";
+import { buildCity, SEGMENT } from "#root/src/world/models/city.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
-import { Gate } from "#root/src/world/gate.ts";
+import { Gate } from "#root/src/world/models/gate.ts";
 import type { Debris } from "#root/src/world/physics.ts";
 import { makePile } from "#root/src/world/pile.ts";
 import {
@@ -18,7 +18,7 @@ import {
   makeStopWindow,
   paintStopCard,
 } from "#root/src/world/tier-content.ts";
-import { disposeTree } from "#root/src/world/toon.ts";
+import { disposeTree } from "#root/src/world/models/toon.ts";
 import {
   BOSS,
   DEBT_WINDOW_COLS,

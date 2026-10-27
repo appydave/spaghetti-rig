@@ -24,13 +24,15 @@ const fakeCanvas = () => ({
   createElement: (tag: string) => (tag === "canvas" ? fakeCanvas() : {}),
 };
 
-const { Character } = await import("../../src/world/characters");
-const { Enemy } = await import("../../src/world/enemies");
-const { buildCity } = await import("../../src/world/city");
-const { Gate } = await import("../../src/world/gate");
-const { BossModel, paintBossPanel } = await import("../../src/world/boss");
+const { Character } = await import("../../src/world/models/characters");
+const { Enemy } = await import("../../src/world/models/enemies");
+const { buildCity } = await import("../../src/world/models/city");
+const { Gate } = await import("../../src/world/models/gate");
+const { BossModel, paintBossPanel } =
+  await import("../../src/world/models/boss");
 const { bossLayout } = await import("../../src/world/bosslayout");
-const { TitleShowcase, VsShowcase } = await import("../../src/world/showcase");
+const { TitleShowcase, VsShowcase } =
+  await import("../../src/world/models/showcase");
 
 /** The full proof builds a few hundred models more than once: well past the default 5 s. */
 const TEST_TIMEOUT_MS = 120_000;

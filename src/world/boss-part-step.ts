@@ -5,13 +5,13 @@ import { toolFor } from "#root/src/content/load.ts";
 import { nth } from "#root/src/nth.ts";
 import { beforeParen } from "#root/src/ui/card.ts";
 import { healthAt, type Step } from "#root/src/show/script.ts";
-import type { BossModel } from "#root/src/world/boss.ts";
+import type { BossModel } from "#root/src/world/models/boss.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { StepContext } from "#root/src/world/step-context.ts";
 import { paintStopCard } from "#root/src/world/tier-content.ts";
 import { toolBolt } from "#root/src/world/tool-bolt.ts";
-import { ease, lerp } from "#root/src/world/toon.ts";
+import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { DEBT_WINDOW_COLS, type State } from "#root/src/world/world-shared.ts";
 
 const PART_SHOT_A_DELAY = 0.2;

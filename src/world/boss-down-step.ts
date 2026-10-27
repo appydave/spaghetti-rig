@@ -1,10 +1,10 @@
 // The boss goes down (G04 W6). Player 1 is buried under spaghetti; player 2 shoots the boss's core, which cracks, and the boss is destroyed.
 // Moved out of world.ts: enterBossDown is split into its two endings and nothing else changes.
 import * as THREE from "three";
-import type { BossModel } from "#root/src/world/boss.ts";
+import type { BossModel } from "#root/src/world/models/boss.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { StepContext } from "#root/src/world/step-context.ts";
-import { ease } from "#root/src/world/toon.ts";
+import { ease } from "#root/src/world/models/toon.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 
 const PILE_DROP_HEIGHT = 9;

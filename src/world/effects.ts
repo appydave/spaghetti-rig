@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { isDrawable, mapOf } from "#root/src/world/objects.ts";
+import { isDrawable, mapOf } from "#root/src/world/models/objects.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
 import { FX } from "#root/src/world/palette.ts";

@@ -8,11 +8,11 @@ import {
 import { nth, present } from "#root/src/nth.ts";
 import type { Player, Step } from "#root/src/show/script.ts";
 import { CameraRig, type ShotView } from "#root/src/world/camera-rig.ts";
-import { Character } from "#root/src/world/characters.ts";
+import { Character } from "#root/src/world/models/characters.ts";
 import { Combat } from "#root/src/world/combat.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
 import { Effects } from "#root/src/world/effects.ts";
-import type { EnemyKind } from "#root/src/world/enemies.ts";
+import type { EnemyKind } from "#root/src/world/models/enemies.ts";
 import { enterBoss } from "#root/src/world/boss-arrive-step.ts";
 import { enterBossDown } from "#root/src/world/boss-down-step.ts";
 import { enterBossPart } from "#root/src/world/boss-part-step.ts";
@@ -24,7 +24,7 @@ import { Timeline } from "#root/src/world/timeline.ts";
 import { advanceWalk, startWalk, type Walk } from "#root/src/world/walk.ts";
 import { stateFor } from "#root/src/world/world-state.ts";
 import { Debris } from "#root/src/world/physics.ts";
-import { ease, lerp } from "#root/src/world/toon.ts";
+import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { EVENT, WORLD } from "#root/src/world/palette.ts";
 import { State } from "#root/src/world/world-shared.ts";
 

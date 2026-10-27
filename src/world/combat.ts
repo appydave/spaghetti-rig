@@ -2,7 +2,7 @@
 // happens when one gets past. Moved out of world.ts as it was; what it needs from the world around it comes in as CombatDeps.
 import * as THREE from "three";
 import { AutoGunner } from "#root/src/world/autogunner.ts";
-import { Enemy, SCORE, type EnemyKind } from "#root/src/world/enemies.ts";
+import { Enemy, SCORE } from "#root/src/world/models/enemies.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import {
   bounceFx,
@@ -11,7 +11,7 @@ import {
   slipFx,
   type CombatDeps,
 } from "#root/src/world/shot-effects.ts";
-import { disposeTree } from "#root/src/world/toon.ts";
+import { disposeTree } from "#root/src/world/models/toon.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 const GUNNER_SEED_P1 = 11;
@@ -50,7 +50,7 @@ export class Combat {
   /** Enemies that got past player 1: bugs shipped to production. */
   shipped = 0;
   /** An enemy got past: shipped (player 1) or caught by CI (player 2). */
-  onSlip?: (kind: EnemyKind) => void;
+  onSlip?: (kind: Enemy["kind"]) => void;
   private readonly gunner: AutoGunner;
 
   constructor(private readonly d: CombatDeps) {

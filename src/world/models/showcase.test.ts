@@ -6,7 +6,7 @@ import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 vi.stubGlobal("document", canvasDocument());
 
 const { TitleShowcase, VsShowcase } =
-  await import("#root/src/world/showcase.ts");
+  await import("#root/src/world/models/showcase.ts");
 
 const FACE_OFF_X = 2.1;
 const SLIDE_IN_DISTANCE = 6;

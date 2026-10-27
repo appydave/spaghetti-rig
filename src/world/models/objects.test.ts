@@ -5,7 +5,7 @@ import {
   mapOf,
   meshNamed,
   userData,
-} from "#root/src/world/objects.ts";
+} from "#root/src/world/models/objects.ts";
 
 describe("userData", () => {
   it("returns a value of the asked-for type", () => {

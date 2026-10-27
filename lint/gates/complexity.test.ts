@@ -16,7 +16,7 @@ import { REPO, findingsWithout, readConfig, type Override } from "./sandbox";
 import { describeProbes } from "./support/probe-gate";
 
 /** The procedural-data files that still have a builder the rules would flag: the Gate constructor (cognitive 13) is hand-placed geometry written as code. */
-const COMPLEXITY_PD = ["src/world/gate.ts"];
+const COMPLEXITY_PD = ["src/world/models/gate.ts"];
 /** The files carried to tier 5 (David, scope B, 2026-10-26) that still have a complexity finding. The list may shrink, never grow. */
 const COMPLEXITY_CARRIED = [
   "lint/gates/audio-proof.test.ts",
@@ -30,7 +30,7 @@ const COMPLEXITY_CARRIED = [
   "src/world/codewindow.ts",
   "src/world/effects.ts",
   "src/world/physics.ts",
-  "src/world/toon.ts",
+  "src/world/models/toon.ts",
   "src/world/world.ts",
 ];
 const COMPLEXITY_RULES = [

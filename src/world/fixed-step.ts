@@ -7,7 +7,7 @@ import { nth } from "#root/src/nth.ts";
 import type { Step } from "#root/src/show/script.ts";
 import type { StepContext, StopWindow } from "#root/src/world/step-context.ts";
 import { makeStopWindow } from "#root/src/world/tier-content.ts";
-import { ease, lerp } from "#root/src/world/toon.ts";
+import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 

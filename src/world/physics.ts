@@ -1,6 +1,6 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
-import { disposeTree } from "#root/src/world/toon.ts";
+import { disposeTree } from "#root/src/world/models/toon.ts";
 import { nth, present } from "#root/src/nth.ts";
 import { randomSpread } from "#root/src/world/world-shared.ts";
 

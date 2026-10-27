@@ -524,12 +524,12 @@
       // (David, decisions-2026-10-25-audit.md "Unwind it"): it is the hand-placed checkpoint gate, like its five siblings.
       // lint/gates/rules.test.ts keeps this list at exactly these six.
       "files": [
-        "src/world/boss.ts",
-        "src/world/characters.ts",
-        "src/world/city.ts",
-        "src/world/enemies.ts",
-        "src/world/gate.ts",
-        "src/world/showcase.ts"
+        "src/world/models/boss.ts",
+        "src/world/models/characters.ts",
+        "src/world/models/city.ts",
+        "src/world/models/enemies.ts",
+        "src/world/models/gate.ts",
+        "src/world/models/showcase.ts"
       ],
       "rules": {
         "no-magic-numbers": "off",
@@ -585,7 +585,7 @@
         "src/world/codewindow.ts",
         "src/world/effects.ts",
         "src/world/physics.ts",
-        "src/world/toon.ts",
+        "src/world/models/toon.ts",
         "src/world/world.ts",
         "tests/show.spec.ts"
       ],
@@ -603,12 +603,12 @@
       // six files are exempt from the size rules for good (gate.ts joined on 2026-10-26, when gate.json was unwound: it is the hand-placed
       // checkpoint gate, like its five siblings). lint/gates/size.test.ts keeps this list at exactly these six.
       "files": [
-        "src/world/boss.ts",
-        "src/world/characters.ts",
-        "src/world/city.ts",
-        "src/world/enemies.ts",
-        "src/world/gate.ts",
-        "src/world/showcase.ts"
+        "src/world/models/boss.ts",
+        "src/world/models/characters.ts",
+        "src/world/models/city.ts",
+        "src/world/models/enemies.ts",
+        "src/world/models/gate.ts",
+        "src/world/models/showcase.ts"
       ],
       "rules": {
         "max-lines": "off",
@@ -623,7 +623,7 @@
       // G06 Complexity, procedural data (procedural-data.md): the Gate constructor (cognitive 13) is a named builder, hand-placed geometry
       // written as code. Any other function in this file is not a builder and has to move out. lint/gates/complexity.test.ts pins this list
       // at exactly this file and checks it still needs the exemption.
-      "files": ["src/world/gate.ts"],
+      "files": ["src/world/models/gate.ts"],
       "rules": {
         "anti-slop/cognitive-complexity": "off",
         "anti-slop/cyclomatic-complexity": "off",
@@ -646,7 +646,7 @@
         "src/world/codewindow.ts",
         "src/world/effects.ts",
         "src/world/physics.ts",
-        "src/world/toon.ts",
+        "src/world/models/toon.ts",
         "src/world/world.ts"
       ],
       "rules": {

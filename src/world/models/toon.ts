@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { isDrawable } from "#root/src/world/objects.ts";
+import { isDrawable } from "#root/src/world/models/objects.ts";
 import { INK } from "#root/src/world/palette.ts";
 
 export { INK } from "#root/src/world/palette.ts";
