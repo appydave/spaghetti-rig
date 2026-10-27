@@ -148,3 +148,21 @@ test("every declared colour and every screen's computed colours are as committed
   expect.soft(describeRules(rules)).toMatchSnapshot("colour-rules.txt");
   expect.soft(describeScreens(screens)).toMatchSnapshot("colour-screens.txt");
 });
+
+// The game's stylesheet has no @media or @supports block today, so the collector's walk into conditional rules would go untested: this
+// fixture nests one inside another and checks that both declarations are read, each keyed by the conditions around it. It reads font-size
+// rather than a colour, which the collector accepts like any property, so the fixture needs no colour literal.
+test("the rule collector reads declarations nested inside @media and @supports", async ({
+  page,
+}) => {
+  await page.setContent(
+    "<style>@media (min-width: 1px) { .outer { font-size: 11px; } @supports (display: block) { .inner { font-size: 12px; } } }</style>",
+  );
+
+  const rules = await page.evaluate(collectRules, ["font-size"]);
+
+  expect(rules).toEqual({
+    "(min-width: 1px) .outer|1": "11px",
+    "(min-width: 1px) (display: block) .inner|1": "12px",
+  });
+});
