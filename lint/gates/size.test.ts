@@ -2,24 +2,12 @@
 // plugin files, node_modules): each limit fails just over it and passes exactly on it. The guard keeps the two ways out of the gate
 // honest: the asset-data exemption is exactly six files, and the list carried to tier 5 is exactly the files named here, each of which
 // exists and still needs it.
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 import { ASSET_DATA, CARRIED_TO_TIER_5 } from "./exemptions";
-import {
-  REPO,
-  findingsWithout,
-  lintIn,
-  readConfig,
-  type Override,
-} from "./sandbox";
+import { REPO, findingsWithout, readConfig, type Override } from "./sandbox";
+import { describeProbes } from "./support/probe-gate";
 import { SIZE_CODES, SIZE_PROBES, fn, file } from "./size-probes";
 
 const OVER_FILE = file(301);
@@ -51,44 +39,10 @@ const covered = [
   ],
 ] as const;
 const PROBES = [...SIZE_PROBES, ...covered.filter((p) => p[1] !== "")];
-let found = new Map<string, string[]>();
-let sandbox = "";
 
-beforeAll(() => {
-  sandbox = mkdtempSync(join(tmpdir(), "size-sandbox-"));
-
-  for (const [, path, source] of PROBES) {
-    mkdirSync(dirname(join(sandbox, path)), { recursive: true });
-    writeFileSync(join(sandbox, path), source);
-  }
-
-  found = lintIn(
-    sandbox,
-    readConfig(),
-    PROBES.map((p) => p[1]),
-    SIZE_CODES,
-  );
-});
-
-afterAll(() => {
-  rmSync(sandbox, { recursive: true, force: true });
-});
+describeProbes("size", PROBES, SIZE_CODES);
 
 describe("size gate", () => {
-  it.each(PROBES.map((p) => [p[0], p[1], p[3]] as const))(
-    "%s",
-    (_name, path, expected) => {
-      expect([...(found.get(path) ?? [])].sort()).toEqual([...expected].sort());
-    },
-  );
-
-  it("every size rule has a probe that fails and one that passes", () => {
-    const failing = new Set(PROBES.flatMap((p) => p[3]));
-
-    expect(SIZE_CODES.filter((c) => !failing.has(c))).toEqual([]);
-    expect(PROBES.filter((p) => p[3].length === 0).length).toBeGreaterThan(0);
-  });
-
   it("the exemption is exactly the six asset files, in one block, each of which exists", () => {
     expect(exemption).toHaveLength(1);
     expect([...(exemption[0]?.files ?? [])].sort()).toEqual(

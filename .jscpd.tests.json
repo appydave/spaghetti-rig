@@ -1,0 +1,9 @@
+{
+  "path": ["src", "tests", "lint", "scripts"],
+  "format": ["typescript", "javascript"],
+  "mode": "weak",
+  "ignore": [],
+  "reporters": ["console"],
+  "exitCode": 1,
+  "failOnEmpty": true
+}

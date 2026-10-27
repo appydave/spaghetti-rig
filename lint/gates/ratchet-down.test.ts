@@ -104,6 +104,30 @@ function moved(source: string, name: string, delta: number) {
   );
 }
 
+/** Moving a constant by `delta` is refused, once, naming the constant and the ruling it needs. */
+function expectRefusal(name: string, delta: number, ruling: string) {
+  const problems = capProblems(GOOD, moved(GOOD, name, delta));
+
+  expect(problems).toHaveLength(1);
+  expect(problems[0]).toContain(name);
+  expect(problems[0]).toContain(ruling);
+}
+
+/** Moving a constant by `delta` in the allowed direction, or not at all, is accepted. */
+function expectAccepted(name: string, delta: number) {
+  expect(capProblems(GOOD, moved(GOOD, name, delta))).toEqual([]);
+  expect(capProblems(GOOD, GOOD)).toEqual([]);
+}
+
+/** Taking a constant's declaration out (its number matches `value`) is reported as missing. */
+function expectMissing(name: string, value: string) {
+  const gone = GOOD.replace(new RegExp(`^const ${name} = ${value};$`, "m"), "");
+
+  expect(capProblems(GOOD, gone)).toEqual([
+    `${name} is missing from vite.config.ts`,
+  ]);
+}
+
 describe("the coverage ratchet", () => {
   it(
     "is no looser than origin/main's: lower uncovered counts only, backstops no lower",
@@ -115,50 +139,29 @@ describe("the coverage ratchet", () => {
 
   describe.each(NAMES)("%s", (name) => {
     it("fails when raised by one, naming the cap and the ruling", () => {
-      const problems = capProblems(GOOD, moved(GOOD, name, 1));
-
-      expect(problems).toHaveLength(1);
-      expect(problems[0]).toContain(name);
-      expect(problems[0]).toContain("raising one needs a human ruling");
+      expectRefusal(name, 1, "raising one needs a human ruling");
     });
 
     it("passes when lowered, and when unchanged", () => {
-      expect(capProblems(GOOD, moved(GOOD, name, -1))).toEqual([]);
-      expect(capProblems(GOOD, GOOD)).toEqual([]);
+      expectAccepted(name, -1);
     });
 
     it("fails when it is gone", () => {
-      const gone = GOOD.replace(new RegExp(`^const ${name} = \\d+;$`, "m"), "");
-
-      expect(capProblems(GOOD, gone)).toEqual([
-        `${name} is missing from vite.config.ts`,
-      ]);
+      expectMissing(name, "\\d+");
     });
   });
 
   describe.each(BACKSTOPS)("%s", (name) => {
     it("fails when lowered, naming the backstop and the ruling", () => {
-      const problems = capProblems(GOOD, moved(GOOD, name, -BACKSTOP_STEP));
-
-      expect(problems).toHaveLength(1);
-      expect(problems[0]).toContain(name);
-      expect(problems[0]).toContain("lowering one needs a human ruling");
+      expectRefusal(name, -BACKSTOP_STEP, "lowering one needs a human ruling");
     });
 
     it("passes when raised, and when unchanged", () => {
-      expect(capProblems(GOOD, moved(GOOD, name, BACKSTOP_STEP))).toEqual([]);
-      expect(capProblems(GOOD, GOOD)).toEqual([]);
+      expectAccepted(name, BACKSTOP_STEP);
     });
 
     it("fails when it is gone", () => {
-      const gone = GOOD.replace(
-        new RegExp(`^const ${name} = [\\d.]+;$`, "m"),
-        "",
-      );
-
-      expect(capProblems(GOOD, gone)).toEqual([
-        `${name} is missing from vite.config.ts`,
-      ]);
+      expectMissing(name, "[\\d.]+");
     });
   });
 

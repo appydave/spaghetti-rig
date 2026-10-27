@@ -24,12 +24,10 @@ import {
   type Probe,
 } from "./rules-probes";
 import { COLOUR_SET_PROBES } from "./colour-set-probes";
+import { oxlintIn } from "./sandbox";
 
 const REPO = resolve(import.meta.dirname, "../..");
-const OXLINT = join(REPO, "node_modules/.bin/oxlint");
 const GLOB = "*";
-/** oxlint prints one JSON diagnostic per finding; the listed files have thousands, more than the default 1 MB pipe buffer. */
-const MAX_OUTPUT = 1 << 28;
 
 type RuleSetting = string | readonly (string | object)[];
 type Override = {
@@ -99,20 +97,14 @@ beforeAll(() => {
     writeFileSync(join(dir, path), source);
   }
 
-  const run = spawnSync(
-    OXLINT,
-    ["-c", ".oxlintrc.json", "-f", "json", ...PROBES.map((p) => p[1])],
-    { cwd: dir, encoding: "utf8" },
-  );
-  const parsed = JSON.parse(run.stdout) as {
-    diagnostics: { code: string; filename: string }[];
-  };
-
   for (const p of PROBES) {
     found.set(p[1], []);
   }
 
-  for (const d of parsed.diagnostics) {
+  for (const d of oxlintIn(
+    dir,
+    PROBES.map((p) => p[1]),
+  )) {
     if ([NUMBER, COLOUR].includes(d.code)) {
       found.get(d.filename)?.push(d.code);
     }
@@ -180,16 +172,8 @@ describe("magic numbers and colours gate", () => {
         cpSync(join(REPO, f), join(guardDir, f));
       }
 
-      const run = spawnSync(
-        OXLINT,
-        ["-c", ".oxlintrc.json", "-f", "json", ...EXEMPT],
-        { cwd: guardDir, encoding: "utf8", maxBuffer: MAX_OUTPUT },
-      );
-      const parsed = JSON.parse(run.stdout) as {
-        diagnostics: { code: string; filename: string }[];
-      };
       const hit = new Set(
-        parsed.diagnostics
+        oxlintIn(guardDir, EXEMPT)
           .filter((d) => [NUMBER, COLOUR].includes(d.code))
           .map((d) => d.filename),
       );

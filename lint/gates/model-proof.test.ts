@@ -7,15 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { fingerprint, type Print } from "./model-fingerprint";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+import { hole } from "./recording-canvas";
+import { seeded } from "./support/seeded";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 // The builders only paint label textures on a canvas; a canvas that accepts any drawing call is all they need.
-const hole: any = new Proxy(function () {}, {
-  get: (_t, p) => (p === Symbol.toPrimitive ? () => 8 : hole),
-  apply: () => hole,
-  set: () => true,
-});
 const fakeCanvas = () => ({
   width: 300,
   height: 150,
@@ -48,25 +45,11 @@ const GATE_STATES = ["idle", "alarm", "open", "broken"] as const;
 /** A built model: its scene, and how to advance its animation by dt seconds. */
 type Subject = { root: THREE.Object3D; step: (dt: number) => void };
 
-function mulberry(seed: number) {
-  let s = seed;
-
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 /** The same Math.random for every build on every tree: a fixed sequence, or one constant. */
 type StreamName = "sequence" | "constant";
 
 const STREAMS: Record<StreamName, () => () => number> = {
-  sequence: () => mulberry(12345),
+  sequence: () => seeded(12345),
   constant: () => () => 0.9,
 };
 const realRandom = Math.random;

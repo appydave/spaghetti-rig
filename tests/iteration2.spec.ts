@@ -8,6 +8,12 @@ const H = 900;
 const shots = (page: Page) =>
   rig(page, (r) => ({ p1: r.worlds.p1.shots, p2: r.worlds.p2.shots }));
 
+/** Wait until a lane's shot count passes `count`. It waits for the shots, not for a fixed time: the game clock paces autoplay, so a slow runner fires fewer in the same wall-clock span. */
+const shotsAbove = (page: Page, lane: "p1" | "p2", count: number) =>
+  expect
+    .poll(async () => (await shots(page))[lane], { timeout: 30_000 })
+    .toBeGreaterThan(count);
+
 /** Pick a mode and start walking tier 1, with keys. */
 async function walk(page: Page, modeKey: string) {
   await press(page, modeKey);
@@ -118,12 +124,8 @@ test("autoplay in B: both players fire during the same walk, each with their own
   const before = await shots(page);
 
   // Wait for the shots, not for a fixed time: autoplay fires on the game clock, so a slow runner fires fewer in the same wall-clock span.
-  await expect
-    .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
-    .toBeGreaterThan(before.p1 + 2);
-  await expect
-    .poll(async () => (await shots(page)).p2, { timeout: 30_000 })
-    .toBeGreaterThan(before.p2 + 2);
+  await shotsAbove(page, "p1", before.p1 + 2);
+  await shotsAbove(page, "p2", before.p2 + 2);
   await expect(page.locator(".lane[data-p='p1'] .reticle.auto")).toBeVisible();
   await expect(page.locator(".lane[data-p='p2'] .reticle.auto")).toBeVisible();
 });
@@ -142,9 +144,7 @@ test("mode S: player 1 plays itself, real clicks fire for player 2 only", async 
 
   // Nobody touched the mouse: wait until player 1's autopilot has fired as many shots as autoplay in B needs to show an autopilot
   // is running (more than 2), so an autopilot on player 2 would have fired too. Then player 2 must still be at its old count.
-  await expect
-    .poll(async () => (await shots(page)).p1, { timeout: 30_000 })
-    .toBeGreaterThan(before.p1 + 2);
+  await shotsAbove(page, "p1", before.p1 + 2);
 
   const mid = await shots(page);
 
