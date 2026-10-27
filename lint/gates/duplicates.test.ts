@@ -2,8 +2,7 @@
 // the exact profile fails a run of 40 tokens and passes 39, and wants a copy of more than 5 lines; the near-miss profile fails a copy that
 // only has other names and passes one with a changed statement; css is read; test files are not. The guards keep the one way out honest:
 // the ignore list is exactly the procedural-data file named in exemptions.ts, and that file still has the clone that earns it.
-import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { DUPLICATES_PD } from "./exemptions";
@@ -16,6 +15,7 @@ import {
   pair,
   readers,
   run,
+  runCheckScript,
   sandbox,
   statements,
   tiny,
@@ -104,45 +104,15 @@ describe("the near-miss profile, in the shapes only its own flags catch", () => 
 });
 
 describe("the script CI runs", () => {
-  /** A sandbox laid out like the repo for the script: the script, the gate module, both configs, node_modules, one unrelated file in tests/ (the tests scan needs its folder), and these files. */
-  function runScript(files: Record<string, string>) {
-    const root = sandbox("duplicates-script-");
-
-    for (const file of [
-      "scripts/check-duplicates.mjs",
-      "lint/gates/duplicates.mjs",
-      ".jscpd.json",
-      ".jscpd.tests.json",
-    ]) {
-      mkdirSync(dirname(join(root, file)), { recursive: true });
-      cpSync(join(REPO, file), join(root, file));
-    }
-
-    symlinkSync(join(REPO, "node_modules"), join(root, "node_modules"));
-    for (const [file, text] of Object.entries({
-      "tests/read.ts": statements(8).replaceAll("w", "z").replaceAll("t", "u"),
-      ...files,
-    })) {
-      mkdirSync(dirname(join(root, file)), { recursive: true });
-      writeFileSync(join(root, file), text);
-    }
-
-    return spawnSync(
-      process.execPath,
-      [join(root, "scripts/check-duplicates.mjs")],
-      { cwd: root, encoding: "utf8" },
-    );
-  }
-
   it("exits 1 and says what to do when there is a clone", () => {
-    const run1 = runScript(pair(names(19, 1)));
+    const run1 = runCheckScript(pair(names(19, 1)));
 
     expect(run1.status).toBe(1);
     expect(run1.stderr).toContain("Move the repeated code");
   });
 
   it("exits 0 when there is none", () => {
-    expect(runScript({ "src/other.ts": statements(8) }).status).toBe(0);
+    expect(runCheckScript({}).status).toBe(0);
   });
 });
 

@@ -1,12 +1,9 @@
 // Proves the second duplicate scan (G08b: tests and tooling) is wired and kept honest, the way duplicates.test.ts proves the first. It reads
 // src (test files too), tests/, lint/ and scripts/ with no ignore list: exact at 53 tokens and more than 9 lines, near-miss at 0.95 with gaps
 // of up to 3 lines. Each probe plants a pair in a sandbox with the real configs; the script probes run the script CI runs.
-import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, symlinkSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import config from "../../.jscpd.tests.json";
-import { REPO, TEST_PROFILES } from "./duplicates.mjs";
+import { TEST_PROFILES } from "./duplicates.mjs";
 import {
   cleanScratch,
   gapped,
@@ -14,7 +11,7 @@ import {
   pair,
   readers,
   run,
-  sandbox,
+  runCheckScript,
   statements,
 } from "./support/duplicate-probes";
 
@@ -92,52 +89,15 @@ describe("the near-miss scan of tests and tooling", () => {
 });
 
 describe("the script CI runs, on tests", () => {
-  function runScript(files: Record<string, string>) {
-    const root = sandbox("duplicates-tests-script-");
-
-    for (const file of [
-      "scripts/check-duplicates.mjs",
-      "lint/gates/duplicates.mjs",
-      ".jscpd.json",
-      ".jscpd.tests.json",
-    ]) {
-      mkdirSync(dirname(join(root, file)), { recursive: true });
-      cpSync(join(REPO, file), join(root, file));
-    }
-
-    symlinkSync(join(REPO, "node_modules"), join(root, "node_modules"));
-    for (const [file, text] of Object.entries({
-      "src/other.ts": statements(8),
-      "lint/a.ts": "",
-      "scripts/a.mjs": "",
-      ...files,
-    })) {
-      mkdirSync(dirname(join(root, file)), { recursive: true });
-      writeFileSync(join(root, file), text);
-    }
-
-    return spawnSync(
-      process.execPath,
-      [join(root, "scripts/check-duplicates.mjs")],
-      {
-        cwd: root,
-        encoding: "utf8",
-      },
-    );
-  }
-
   it("exits 1 and says to move it into a shared test helper when a test file has a copy", () => {
-    const result = runScript({
-      "tests/read.ts": statements(2),
-      ...asTests(pair(names(26))),
-    });
+    const result = runCheckScript(asTests(pair(names(26))));
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("one shared test helper");
   });
 
   it("exits 0 when there is none", () => {
-    expect(runScript({ "tests/read.ts": statements(2) }).status).toBe(0);
+    expect(runCheckScript({}).status).toBe(0);
   });
 });
 

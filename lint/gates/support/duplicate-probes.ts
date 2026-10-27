@@ -1,6 +1,14 @@
 // The planted files the duplicate gate tests share: pairs of copies of a chosen size, written to a sandbox that holds the real configs, and
 // run through one profile of one scan.
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { REPO, runProfile } from "../duplicates.mjs";
@@ -142,3 +150,36 @@ export const gapped = (
 /** A function returning an array of four numbers: over 5 lines but a tree under 20 nodes. */
 export const tiny = (name: string, first: number) =>
   `function ${name}() {\n  return [\n${Array.from({ length: TINY_LENGTH }, (_, i) => `    ${first + i},\n`).join("")}  ];\n}\n`;
+
+/** The script CI runs, in a sandbox laid out like the repo: the script, the gate module, both configs, node_modules, files that are read and match nothing, and the planted files. */
+export function runCheckScript(plants: Record<string, string>) {
+  const root = sandbox("duplicates-script-");
+
+  for (const file of [
+    "scripts/check-duplicates.mjs",
+    "lint/gates/duplicates.mjs",
+    ".jscpd.json",
+    ".jscpd.tests.json",
+  ]) {
+    mkdirSync(dirname(join(root, file)), { recursive: true });
+    cpSync(join(REPO, file), join(root, file));
+  }
+
+  symlinkSync(join(REPO, "node_modules"), join(root, "node_modules"));
+  for (const [file, text] of Object.entries({
+    "src/read-me.ts": readable(),
+    "tests/a.ts": "",
+    "lint/a.ts": "",
+    "scripts/a.mjs": "",
+    ...plants,
+  })) {
+    mkdirSync(dirname(join(root, file)), { recursive: true });
+    writeFileSync(join(root, file), text);
+  }
+
+  return spawnSync(
+    process.execPath,
+    [join(root, "scripts/check-duplicates.mjs")],
+    { cwd: root, encoding: "utf8" },
+  );
+}
