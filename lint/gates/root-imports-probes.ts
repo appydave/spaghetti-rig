@@ -95,9 +95,15 @@ export const ROOT_IMPORTS_PROBES: readonly Probe[] = [
     PASSES,
   ],
   [
-    "a relative import in a root config file passes (exempt)",
-    "probe.config.ts",
-    file('import { a } from "./src/a.ts";', "export const b = a;"),
-    PASSES,
+    "a relative import in a .config.ts file under src/ fails (no basename exemption)",
+    "src/probe.config.ts",
+    file('import { a } from "./a.ts";', "export const b = a;"),
+    FAILS,
+  ],
+  [
+    "a relative import in a .config.ts file under tests/ fails",
+    "tests/probe.config.ts",
+    file('import { a } from "./a.ts";', "export const b = a;"),
+    FAILS,
   ],
 ];

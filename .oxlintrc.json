@@ -169,8 +169,9 @@
   "overrides": [
     {
       // G10 covers src/ and tests/ only (R8). These run in Node outside the package, in temp sandboxes where #root is undefined, so they
-      // keep relative imports. lint/gates/root-imports.test.ts pins this list: a path added here fails the test.
-      "files": ["lint/**", "scripts/**", "*.config.ts"],
+      // keep relative imports. lint/gates/root-imports.test.ts pins this list: a path added here fails the test. No bare glob such as
+      // *.config.ts: oxlint matches it at any depth, so it would also exempt src/x.config.ts.
+      "files": ["lint/**", "scripts/**"],
       "rules": {
         "no-restricted-imports": "off"
       }
