@@ -12,7 +12,7 @@ import {
 } from "#root/src/show/script.ts";
 import { gatesText } from "#root/src/content/gatelabel.ts";
 import { esc } from "#root/src/ui/card.ts";
-import { initPhysics } from "#root/src/world/physics.ts";
+import { initPhysics } from "#root/src/world/combat/physics.ts";
 import { Stage } from "#root/src/world/stage.ts";
 import type { TestHooks } from "#root/src/testhooks.ts";
 import { PlayerWorld } from "#root/src/world/world.ts";

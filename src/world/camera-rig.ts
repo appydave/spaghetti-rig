@@ -2,7 +2,7 @@
 // of world.ts as it was; the world tells it what is on screen (ShotView) instead of the rig reaching into the world.
 import * as THREE from "three";
 import { present } from "#root/src/nth.ts";
-import { bossBack, bossShot } from "#root/src/world/boss-shot.ts";
+import { bossBack, bossShot } from "#root/src/world/combat/boss-shot.ts";
 import type { BossLayout } from "#root/src/world/bosslayout.ts";
 import {
   randomSpread,

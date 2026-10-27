@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import type { Step } from "#root/src/show/script.ts";
 import { Enemy, type EnemyKind } from "#root/src/world/models/enemies.ts";
-import type { StepContext } from "#root/src/world/step-context.ts";
+import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { ease, lerp, rng } from "#root/src/world/models/toon.ts";
 import { standZ } from "#root/src/world/world-shared.ts";
 

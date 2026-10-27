@@ -5,7 +5,10 @@ import * as THREE from "three";
 import { FULL_HEALTH, TIER_HEALTH_LOSS } from "#root/src/content/load.ts";
 import { nth } from "#root/src/nth.ts";
 import type { Step } from "#root/src/show/script.ts";
-import type { StepContext, StopWindow } from "#root/src/world/step-context.ts";
+import type {
+  StepContext,
+  StopWindow,
+} from "#root/src/world/steps/step-context.ts";
 import { makeStopWindow } from "#root/src/world/tier-content.ts";
 import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { EVENT } from "#root/src/world/palette.ts";

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { Layout, Line, Mark } from "#root/src/world/codelayout.ts";
-import { Debris } from "#root/src/world/physics.ts";
+import { Debris } from "#root/src/world/combat/physics.ts";
 import { INK, kit, rng, toon } from "#root/src/world/models/toon.ts";
 import {
   CARD,

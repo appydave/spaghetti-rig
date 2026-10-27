@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { AutoGunner, type Target } from "#root/src/world/autogunner.ts";
+import {
+  AutoGunner,
+  chooseAutoTarget,
+  type Target,
+} from "#root/src/world/combat/autogunner.ts";
 
 /** Play a fixed seed against a target for a while and record every trigger pull. */
 function play(seed: number, seconds = 60, dt = 1 / 60) {
@@ -82,5 +86,41 @@ describe("autoplay shoots like a person", () => {
   it("is the same with the same seed and different with another", () => {
     expect(play(7).shots).toEqual(shots);
     expect(play(8).shots).not.toEqual(shots);
+  });
+});
+
+describe("chooseAutoTarget", () => {
+  const enemyAt = (seed: number, z: number) => ({
+    seed,
+    group: { position: { z } },
+  });
+  const characterZ = 0;
+
+  it("takes the nearest enemy ahead", () => {
+    const far = enemyAt(1, -25);
+    const near = enemyAt(2, -10);
+
+    expect(chooseAutoTarget([far, near], characterZ, -1)).toBe(near);
+  });
+
+  it("stays on the current target while it is still in range ahead", () => {
+    const current = enemyAt(1, -25);
+    const nearer = enemyAt(2, -10);
+
+    expect(chooseAutoTarget([current, nearer], characterZ, 1)).toBe(current);
+  });
+
+  it("drops the current target once it is too close, and ignores enemies out of range", () => {
+    const tooClose = enemyAt(1, -2);
+    const tooFar = enemyAt(2, -40);
+    const behind = enemyAt(3, 5);
+    const inRange = enemyAt(4, -20);
+
+    expect(
+      chooseAutoTarget([tooClose, tooFar, behind, inRange], characterZ, 1),
+    ).toBe(inRange);
+    expect(
+      chooseAutoTarget([tooClose, tooFar, behind], characterZ, -1),
+    ).toBeUndefined();
   });
 });
