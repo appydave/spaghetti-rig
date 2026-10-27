@@ -2,7 +2,15 @@
 // the exact profile fails a run of 40 tokens and passes 39, and wants a copy of more than 5 lines; the near-miss profile fails a copy that
 // only has other names and passes one with a changed statement; css is read; test files are not. The guards keep the one way out honest:
 // the ignore list is exactly the procedural-data file named in exemptions.ts, and that file still has the clone that earns it.
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -75,6 +83,25 @@ const readers = (reads: number, second = {}) => ({
   "src/c.ts": `${reader("readOne", "a", reads)}\n${reader("readTwo", "b", reads, second)}`,
 });
 
+/** Top-level code in one of two files: six shared exports, a gap of thirteen lines that differ, six more shared exports. Each shared run is under the exact profile's 40 tokens, so only the gap kind joins them. */
+const gapped = (decl: "const" | "let", tag: string) => {
+  const shared = (name: string, from: string) =>
+    Array.from(
+      { length: 6 },
+      (_, i) => `export const ${name}${i + 1} = ${from}${i + 1};\n`,
+    ).join("");
+  const gap = Array.from(
+    { length: 13 },
+    (_, i) => `${decl} mid${tag}${i + 1} = ${i + 1};\n`,
+  ).join("");
+
+  return `${decl} first${tag} = 1;\n${shared("p", "a")}${gap}${shared("q", "b")}${decl} last${tag} = 5;\n`;
+};
+
+/** A function returning an array of four numbers: over 5 lines but a tree under 20 nodes. */
+const tiny = (name: string, first: number) =>
+  `function ${name}() {\n  return [\n${[0, 1, 2, 3].map((i) => `    ${first + i},\n`).join("")}  ];\n}\n`;
+
 afterAll(() => {
   for (const dir of scratch) {
     rmSync(dir, { recursive: true, force: true });
@@ -137,6 +164,67 @@ describe("the near-miss profile", () => {
 
   it("passes a copy with one statement of four changed", () => {
     expect(run("similar", readers(4, { other: 1 }))).toBe(0);
+  });
+});
+
+describe("the near-miss profile, in the shapes only its own flags catch", () => {
+  const gappedFiles = {
+    "src/a.ts": gapped("const", "A"),
+    "src/b.ts": gapped("let", "B"),
+  };
+
+  it("fails two short runs joined across a gap of changed lines (--max-gap-lines)", () => {
+    expect(run("similar", gappedFiles)).toBe(1);
+  });
+
+  it("does not fail those same runs under the exact profile", () => {
+    expect(run("exact", gappedFiles)).toBe(0);
+  });
+
+  it("fails a pair of functions under 20 tree nodes (min-nodes 1)", () => {
+    expect(
+      run("similar", { "src/c.ts": `${tiny("one", 1)}\n${tiny("two", 5)}` }),
+    ).toBe(1);
+  });
+});
+
+describe("the script CI runs", () => {
+  /** A sandbox laid out like the repo for the script: the script, the gate module, the config, node_modules, and these files in src/. */
+  function runScript(files: Record<string, string>) {
+    const root = mkdtempSync(join(tmpdir(), "duplicates-script-"));
+
+    scratch.push(root);
+    for (const file of [
+      "scripts/check-duplicates.mjs",
+      "lint/gates/duplicates.mjs",
+      ".jscpd.json",
+    ]) {
+      mkdirSync(dirname(join(root, file)), { recursive: true });
+      cpSync(join(REPO, file), join(root, file));
+    }
+
+    symlinkSync(join(REPO, "node_modules"), join(root, "node_modules"));
+    for (const [file, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, file)), { recursive: true });
+      writeFileSync(join(root, file), text);
+    }
+
+    return spawnSync(
+      process.execPath,
+      [join(root, "scripts/check-duplicates.mjs")],
+      { cwd: root, encoding: "utf8" },
+    );
+  }
+
+  it("exits 1 and says what to do when there is a clone", () => {
+    const run1 = runScript(pair(names(19, 1)));
+
+    expect(run1.status).toBe(1);
+    expect(run1.stderr).toContain("Move the repeated code");
+  });
+
+  it("exits 0 when there is none", () => {
+    expect(runScript({ "src/other.ts": statements(8) }).status).toBe(0);
   });
 });
 
