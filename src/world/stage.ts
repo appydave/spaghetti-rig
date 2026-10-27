@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import type { Mode, Player } from "../show/script";
-import type { PlayerWorld } from "./world";
-import { TitleShowcase, VsShowcase } from "./showcase";
-import { STAGE_CLEAR } from "./palette";
+import type { Mode, Player } from "#root/src/show/script.ts";
+import type { PlayerWorld } from "#root/src/world/world.ts";
+import { TitleShowcase, VsShowcase } from "#root/src/world/showcase.ts";
+import { STAGE_CLEAR } from "#root/src/world/palette.ts";
 
 /** Dense screens render at most this many pixels per CSS pixel, to keep the frame rate. */
 const MAX_PIXEL_RATIO = 1.75;

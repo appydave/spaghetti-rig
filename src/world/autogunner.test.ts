@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { AutoGunner, type Target } from "./autogunner";
+import { AutoGunner, type Target } from "#root/src/world/autogunner.ts";
 
 /** Play a fixed seed against a target for a while and record every trigger pull. */
 function play(seed: number, seconds = 60, dt = 1 / 60) {

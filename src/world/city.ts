@@ -1,11 +1,14 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { context2d } from "../dom";
-import { nth } from "../nth";
+import { context2d } from "#root/src/dom.ts";
+import { nth } from "#root/src/nth.ts";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { layoutCity } from "./city-layout";
-import type { CityLayoutTable, Placement } from "./city-layout-types";
-import { rng, toon } from "./toon";
+import { layoutCity } from "#root/src/world/city-layout.ts";
+import type {
+  CityLayoutTable,
+  Placement,
+} from "#root/src/world/city-layout-types.ts";
+import { rng, toon } from "#root/src/world/toon.ts";
 
 export const ROAD_HALF = 3.6;
 export const SEGMENT = 34; // distance between stops

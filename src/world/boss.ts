@@ -1,12 +1,16 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { bossLayout, type BossLayout } from "./bosslayout";
-import { paintPanel, type BossPanel, type BossPanelText } from "./boss-panel";
-import { CodeWindow } from "./codewindow";
-import { Debris } from "./physics";
-import { geo, INK, kit } from "./toon";
-import { userData } from "./objects";
-import { nth } from "../nth";
+import { bossLayout, type BossLayout } from "#root/src/world/bosslayout.ts";
+import {
+  paintPanel,
+  type BossPanel,
+  type BossPanelText,
+} from "#root/src/world/boss-panel.ts";
+import { CodeWindow } from "#root/src/world/codewindow.ts";
+import { Debris } from "#root/src/world/physics.ts";
+import { geo, INK, kit } from "#root/src/world/toon.ts";
+import { userData } from "#root/src/world/objects.ts";
+import { nth } from "#root/src/nth.ts";
 
 /** The numbers and colours of a boss window face: data only, read by paintPanel in boss-panel.ts. */
 const BOSS_PANEL = {

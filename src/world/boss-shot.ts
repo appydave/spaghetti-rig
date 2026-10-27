@@ -1,13 +1,13 @@
 // The boss fight's camera (G04 W2): how far behind the character the boss stands, where the camera sits over the shoulder, and what it
 // looks at. Moved out of camera-rig.ts as it was; the picture shape comes in as a number instead of the rig's own field.
 import * as THREE from "three";
-import type { BossLayout } from "./bosslayout";
+import type { BossLayout } from "#root/src/world/bosslayout.ts";
 import {
   BOSS,
   SCREEN_MIDDLE,
   TALL_ASPECT_BELOW,
   USABLE_WIDTH_FRACTION,
-} from "./world-shared";
+} from "#root/src/world/world-shared.ts";
 
 const BOSS_EYE_X_TALL = 1.7;
 const BOSS_EYE_X_WIDE = 4.3;

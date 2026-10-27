@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { beforeParen, esc, shortTool } from "./card";
+import { beforeParen, esc, shortTool } from "#root/src/ui/card.ts";
 
 describe("esc", () => {
   it("escapes the five HTML characters and leaves the rest", () => {

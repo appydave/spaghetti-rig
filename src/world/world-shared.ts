@@ -1,9 +1,9 @@
 // What the parts of a player's world share (G04 W1): the stop and stand positions along the road, the walk's length, a few tuning numbers
 // used by more than one part, and the shapes the world's steps, tweens and cues take. Moved out of world.ts as it was.
 import * as THREE from "three";
-import { SEGMENT } from "./city";
-import type { Pose } from "./characters";
-import type { GateState } from "./gate";
+import { SEGMENT } from "#root/src/world/city.ts";
+import type { Pose } from "#root/src/world/characters.ts";
+import type { GateState } from "#root/src/world/gate.ts";
 
 export type CameraMode = "follow" | "stop" | "boss" | "portrait";
 export type Shape = "wide" | "tall";

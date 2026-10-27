@@ -8,8 +8,8 @@ import type {
   Stop,
   Tier,
   Tool,
-} from "./types";
-import { isObj, str, strs } from "../loose";
+} from "#root/src/content/types.ts";
+import { isObj, str, strs } from "#root/src/loose.ts";
 
 /** A tier as the game plays it: its stops in file order, and whether it can be played yet. */
 export interface PlayTier extends Tier {

@@ -2,7 +2,7 @@
 // placements. Moved out of city.ts's buildCity as it was: the same random stream, drawn in the same order, so a seed gives the same street.
 // buildCity turns the placements into meshes. The numbers and colours are CITY_LAYOUT in city.ts (the model file); this file holds none.
 // Its types are in city-layout-types.ts.
-import { nth } from "../nth";
+import { nth } from "#root/src/nth.ts";
 import type {
   CityLayout,
   CityLayoutTable,
@@ -10,8 +10,8 @@ import type {
   Plaza,
   SideLayout,
   Span,
-} from "./city-layout-types";
-import { rng } from "./toon";
+} from "#root/src/world/city-layout-types.ts";
+import { rng } from "#root/src/world/toon.ts";
 
 type Side = -1 | 1;
 

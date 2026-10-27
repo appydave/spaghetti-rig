@@ -4,8 +4,8 @@ import {
   collectRules,
   collectScreen,
   type ScreenColours,
-} from "./colour-collectors";
-import { boot } from "./helpers";
+} from "#root/tests/colour-collectors.ts";
+import { boot } from "#root/tests/helpers.ts";
 
 // Proves a stylesheet change did not change a single colour, on every screen of the show. The result is committed as
 // tests/__snapshots__/colour-rules.txt and colour-screens.txt; an intended colour change shows as a diff of that file (`npx playwright test

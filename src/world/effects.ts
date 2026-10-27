@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { isDrawable, mapOf } from "./objects";
-import { context2d } from "../dom";
-import { nth } from "../nth";
-import { FX } from "./palette";
-import { RANDOM_CENTRE } from "./world-shared";
+import { isDrawable, mapOf } from "#root/src/world/objects.ts";
+import { context2d } from "#root/src/dom.ts";
+import { nth } from "#root/src/nth.ts";
+import { FX } from "#root/src/world/palette.ts";
+import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 interface Particle {
   pos: THREE.Vector3;

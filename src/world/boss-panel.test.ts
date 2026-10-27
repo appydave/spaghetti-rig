@@ -49,7 +49,7 @@ vi.stubGlobal("document", {
       : {},
 });
 
-const { paintBossPanel } = await import("./boss");
+const { paintBossPanel } = await import("#root/src/world/boss.ts");
 
 const PAD = 40;
 const BAR_BOTTOM = 16 + 150 + 18;

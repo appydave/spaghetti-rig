@@ -1,9 +1,9 @@
 // The tool card as a projectile (G04 W6): a small glowing yellow card. Moved out of world.ts; toolBolt is split into painting the card and
 // building its mesh and light, and nothing else changes.
 import * as THREE from "three";
-import { context2d } from "../dom";
-import { beforeParen } from "../ui/card";
-import { BOLT } from "./palette";
+import { context2d } from "#root/src/dom.ts";
+import { beforeParen } from "#root/src/ui/card.ts";
+import { BOLT } from "#root/src/world/palette.ts";
 
 const BOLT_WIDTH = 256;
 const BOLT_HEIGHT = 340;

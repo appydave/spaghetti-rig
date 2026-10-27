@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { rng } from "./toon";
-import { RANDOM_CENTRE } from "./world-shared";
+import { rng } from "#root/src/world/toon.ts";
+import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 // The hand's feel. Times are in seconds, and the "spread" values are multiplied by a random 0..1 and added to the base.
 const DEFAULT_MISS_CHANCE = 0.22;

@@ -1,18 +1,18 @@
 // A player's shooting (G04 W4): the pointer and its pick, the shot and what it hits, the autoplay hand, the enemies on the road and what
 // happens when one gets past. Moved out of world.ts as it was; what it needs from the world around it comes in as CombatDeps.
 import * as THREE from "three";
-import { AutoGunner } from "./autogunner";
-import { Enemy, SCORE, type EnemyKind } from "./enemies";
-import { EVENT } from "./palette";
+import { AutoGunner } from "#root/src/world/autogunner.ts";
+import { Enemy, SCORE, type EnemyKind } from "#root/src/world/enemies.ts";
+import { EVENT } from "#root/src/world/palette.ts";
 import {
   bounceFx,
   killFx,
   shootFx,
   slipFx,
   type CombatDeps,
-} from "./shot-effects";
-import { disposeTree } from "./toon";
-import { RANDOM_CENTRE } from "./world-shared";
+} from "#root/src/world/shot-effects.ts";
+import { disposeTree } from "#root/src/world/toon.ts";
+import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 const GUNNER_SEED_P1 = 11;
 const GUNNER_SEED_P2 = 29;

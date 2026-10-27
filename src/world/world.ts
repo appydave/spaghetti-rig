@@ -1,31 +1,35 @@
 import * as THREE from "three";
-import type { AudioEngine, Sfx } from "../audio/audio";
-import { FULL_HEALTH, type Game, type PlayTier } from "../content/load";
-import { nth, present } from "../nth";
-import type { Player, Step } from "../show/script";
-import { CameraRig, type ShotView } from "./camera-rig";
-import { Character } from "./characters";
-import { Combat } from "./combat";
-import { CodeWindow } from "./codewindow";
-import { Effects } from "./effects";
-import type { EnemyKind } from "./enemies";
-import { enterBoss } from "./boss-arrive-step";
-import { enterBossDown } from "./boss-down-step";
-import { enterBossPart } from "./boss-part-step";
-import { enterFixed } from "./fixed-step";
-import { enterProblem } from "./problem-step";
-import type { StepContext } from "./step-context";
-import { Street } from "./street";
-import { Timeline } from "./timeline";
-import { advanceWalk, startWalk, type Walk } from "./walk";
-import { stateFor } from "./world-state";
-import { Debris } from "./physics";
-import { ease, lerp } from "./toon";
-import { EVENT, WORLD } from "./palette";
-import { State } from "./world-shared";
+import type { AudioEngine, Sfx } from "#root/src/audio/audio.ts";
+import {
+  FULL_HEALTH,
+  type Game,
+  type PlayTier,
+} from "#root/src/content/load.ts";
+import { nth, present } from "#root/src/nth.ts";
+import type { Player, Step } from "#root/src/show/script.ts";
+import { CameraRig, type ShotView } from "#root/src/world/camera-rig.ts";
+import { Character } from "#root/src/world/characters.ts";
+import { Combat } from "#root/src/world/combat.ts";
+import { CodeWindow } from "#root/src/world/codewindow.ts";
+import { Effects } from "#root/src/world/effects.ts";
+import type { EnemyKind } from "#root/src/world/enemies.ts";
+import { enterBoss } from "#root/src/world/boss-arrive-step.ts";
+import { enterBossDown } from "#root/src/world/boss-down-step.ts";
+import { enterBossPart } from "#root/src/world/boss-part-step.ts";
+import { enterFixed } from "#root/src/world/fixed-step.ts";
+import { enterProblem } from "#root/src/world/problem-step.ts";
+import type { StepContext } from "#root/src/world/step-context.ts";
+import { Street } from "#root/src/world/street.ts";
+import { Timeline } from "#root/src/world/timeline.ts";
+import { advanceWalk, startWalk, type Walk } from "#root/src/world/walk.ts";
+import { stateFor } from "#root/src/world/world-state.ts";
+import { Debris } from "#root/src/world/physics.ts";
+import { ease, lerp } from "#root/src/world/toon.ts";
+import { EVENT, WORLD } from "#root/src/world/palette.ts";
+import { State } from "#root/src/world/world-shared.ts";
 
-export { walkSeconds } from "./world-shared";
-export type { CameraMode } from "./world-shared";
+export { walkSeconds } from "#root/src/world/world-shared.ts";
+export type { CameraMode } from "#root/src/world/world-shared.ts";
 
 const CAMERA_FOV = 42;
 const CAMERA_NEAR = 0.1;

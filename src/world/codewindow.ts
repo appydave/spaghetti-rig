@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import type { Layout, Line, Mark } from "./codelayout";
-import { Debris } from "./physics";
-import { INK, kit, rng, toon } from "./toon";
+import type { Layout, Line, Mark } from "#root/src/world/codelayout.ts";
+import { Debris } from "#root/src/world/physics.ts";
+import { INK, kit, rng, toon } from "#root/src/world/toon.ts";
 import {
   CARD,
   CRACK,
@@ -13,15 +13,15 @@ import {
   SLAB_TOON,
   WINDOW_DOTS,
   type Mood,
-} from "./palette";
-import { wrap as wrapProse } from "./canvas-text";
-import { meshNamed } from "./objects";
-import { context2d } from "../dom";
-import { nth } from "../nth";
-import { RANDOM_CENTRE } from "./world-shared";
+} from "#root/src/world/palette.ts";
+import { wrap as wrapProse } from "#root/src/world/canvas-text.ts";
+import { meshNamed } from "#root/src/world/objects.ts";
+import { context2d } from "#root/src/dom.ts";
+import { nth } from "#root/src/nth.ts";
+import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
-export { PALETTE } from "./palette";
-export type { Mood } from "./palette";
+export { PALETTE } from "#root/src/world/palette.ts";
+export type { Mood } from "#root/src/world/palette.ts";
 
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 const FONT = 34;

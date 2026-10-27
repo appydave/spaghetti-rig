@@ -6,7 +6,7 @@ import {
   queryAllEl,
   queryEl,
   queryElOrNull,
-} from "./dom";
+} from "#root/src/dom.ts";
 
 // Node has no DOM, so these stand in for the browser's classes while a test runs.
 class FakeElement extends EventTarget {

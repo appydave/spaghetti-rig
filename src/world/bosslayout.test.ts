@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { bossLayout, overlaps } from "./bosslayout";
+import { bossLayout, overlaps } from "#root/src/world/bosslayout.ts";
 
 describe("boss layout", () => {
   const raw = JSON.parse(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fit, wrap } from "./canvas-text";
+import { fit, wrap } from "#root/src/world/canvas-text.ts";
 
 /** A canvas context that measures text as 1 px per character per px of font size (font "20px" makes each character 20 wide). */
 function context() {

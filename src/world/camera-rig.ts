@@ -1,9 +1,9 @@
 // A player's camera (G04 W2): where it stands for each kind of shot, how it eases there, and the picture shape it is framed for. Moved out
 // of world.ts as it was; the world tells it what is on screen (ShotView) instead of the rig reaching into the world.
 import * as THREE from "three";
-import { present } from "../nth";
-import { bossBack, bossShot } from "./boss-shot";
-import type { BossLayout } from "./bosslayout";
+import { present } from "#root/src/nth.ts";
+import { bossBack, bossShot } from "#root/src/world/boss-shot.ts";
+import type { BossLayout } from "#root/src/world/bosslayout.ts";
 import {
   randomSpread,
   SCREEN_MIDDLE,
@@ -11,7 +11,7 @@ import {
   USABLE_WIDTH_FRACTION,
   type CameraMode,
   type Shape,
-} from "./world-shared";
+} from "#root/src/world/world-shared.ts";
 
 const CAM_START_X = 3;
 const CAM_START_Y = 3;

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseContent } from "../content/load";
+import { parseContent } from "#root/src/content/load.ts";
 import {
   buildScript,
   healthAt,
@@ -9,7 +9,7 @@ import {
   notesFor,
   tierStart,
   toolsEarned,
-} from "./script";
+} from "#root/src/show/script.ts";
 
 const raw = JSON.parse(
   readFileSync(

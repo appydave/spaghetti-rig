@@ -9,8 +9,8 @@ import {
   parseMelodyBar,
   parseChord,
   midiToFreq,
-} from "./tracks";
-import { TRACKS as API_TRACKS, AudioEngine } from "./audio";
+} from "#root/src/audio/tracks.ts";
+import { TRACKS as API_TRACKS, AudioEngine } from "#root/src/audio/audio.ts";
 
 const sane = (n: number) => Number.isFinite(n) && n >= 24 && n <= 108;
 

@@ -1,6 +1,11 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { isDrawable, mapOf, meshNamed, userData } from "./objects";
+import {
+  isDrawable,
+  mapOf,
+  meshNamed,
+  userData,
+} from "#root/src/world/objects.ts";
 
 describe("userData", () => {
   it("returns a value of the asked-for type", () => {

@@ -4,9 +4,9 @@ import {
   stepCharacter,
   newMotionState,
   type CharacterMotion,
-} from "./character-motion";
-import { INK, kit, toon, clamp01, lerp } from "./toon";
-import { context2d } from "../dom";
+} from "#root/src/world/character-motion.ts";
+import { INK, kit, toon, clamp01, lerp } from "#root/src/world/toon.ts";
+import { context2d } from "#root/src/dom.ts";
 
 export type Pose = "idle" | "walk" | "hurt" | "down" | "victory" | "aim";
 

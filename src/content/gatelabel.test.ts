@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { gateLabel, gatesText, gateText } from "./gatelabel";
+import { gateLabel, gatesText, gateText } from "#root/src/content/gatelabel.ts";
 
 describe("gate labels", () => {
   it("splits a gate into a number badge and a title, with no G code", () => {

@@ -1,18 +1,18 @@
 // A boss part breaks (G04 W6). Player 1's shots bounce off and, on the first part, the boss finishes them with one blow; player 2 fires the
 // tool earned at that stop at the matching part. Moved out of world.ts: enterBossPart is split into its beats and nothing else changes.
 import * as THREE from "three";
-import { toolFor } from "../content/load";
-import { nth } from "../nth";
-import { beforeParen } from "../ui/card";
-import { healthAt, type Step } from "../show/script";
-import type { BossModel } from "./boss";
-import { CodeWindow } from "./codewindow";
-import { EVENT } from "./palette";
-import type { StepContext } from "./step-context";
-import { paintStopCard } from "./tier-content";
-import { toolBolt } from "./tool-bolt";
-import { ease, lerp } from "./toon";
-import { DEBT_WINDOW_COLS, type State } from "./world-shared";
+import { toolFor } from "#root/src/content/load.ts";
+import { nth } from "#root/src/nth.ts";
+import { beforeParen } from "#root/src/ui/card.ts";
+import { healthAt, type Step } from "#root/src/show/script.ts";
+import type { BossModel } from "#root/src/world/boss.ts";
+import { CodeWindow } from "#root/src/world/codewindow.ts";
+import { EVENT } from "#root/src/world/palette.ts";
+import type { StepContext } from "#root/src/world/step-context.ts";
+import { paintStopCard } from "#root/src/world/tier-content.ts";
+import { toolBolt } from "#root/src/world/tool-bolt.ts";
+import { ease, lerp } from "#root/src/world/toon.ts";
+import { DEBT_WINDOW_COLS, type State } from "#root/src/world/world-shared.ts";
 
 const PART_SHOT_A_DELAY = 0.2;
 const PART_SHOT_B_DELAY = 0.5;

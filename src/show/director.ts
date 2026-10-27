@@ -1,13 +1,19 @@
-import { byId, closestEl, queryEl, queryElOrNull } from "../dom";
-import { nth } from "../nth";
-import { parseDirectorMessage } from "./messages";
+import { byId, closestEl, queryEl, queryElOrNull } from "#root/src/dom.ts";
+import { nth } from "#root/src/nth.ts";
+import { parseDirectorMessage } from "#root/src/show/messages.ts";
 import * as THREE from "three";
-import type { AudioEngine, Theme } from "../audio/audio";
-import { FULL_HEALTH, toolFor, type Game } from "../content/load";
-import { gateLabel, gatesText } from "../content/gatelabel";
-import { esc, gateHtml, shortTool, toolCardHtml, toolImg } from "../ui/card";
-import type { Stage } from "../world/stage";
-import { walkSeconds, type PlayerWorld } from "../world/world";
+import type { AudioEngine, Theme } from "#root/src/audio/audio.ts";
+import { FULL_HEALTH, toolFor, type Game } from "#root/src/content/load.ts";
+import { gateLabel, gatesText } from "#root/src/content/gatelabel.ts";
+import {
+  esc,
+  gateHtml,
+  shortTool,
+  toolCardHtml,
+  toolImg,
+} from "#root/src/ui/card.ts";
+import type { Stage } from "#root/src/world/stage.ts";
+import { walkSeconds, type PlayerWorld } from "#root/src/world/world.ts";
 import {
   buildScript,
   hiddenIn,
@@ -21,7 +27,7 @@ import {
   type Mode,
   type Player,
   type Step,
-} from "./script";
+} from "#root/src/show/script.ts";
 
 const $ = (id: string) => byId(id, HTMLElement);
 

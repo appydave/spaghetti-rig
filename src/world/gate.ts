@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { gateLabel } from "../content/gatelabel";
-import { ROAD_HALF } from "./city";
-import { disposeTree, kit } from "./toon";
-import { context2d } from "../dom";
-import { GATE } from "./palette";
+import { gateLabel } from "#root/src/content/gatelabel.ts";
+import { ROAD_HALF } from "#root/src/world/city.ts";
+import { disposeTree, kit } from "#root/src/world/toon.ts";
+import { context2d } from "#root/src/dom.ts";
+import { GATE } from "#root/src/world/palette.ts";
 
 const OUTLINE = 0.025;
 const SIGN_ANISOTROPY = 8;
@@ -234,4 +234,4 @@ export class Gate {
   }
 }
 
-export { toon as gateToon } from "./toon";
+export { toon as gateToon } from "#root/src/world/toon.ts";

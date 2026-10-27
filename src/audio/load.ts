@@ -5,8 +5,8 @@ import type {
   PadVoice,
   TrackDef,
   TrackMix,
-} from "./types";
-import { isObj, str, strs } from "../loose";
+} from "#root/src/audio/types.ts";
+import { isObj, str, strs } from "#root/src/loose.ts";
 
 /** The one place audio data enters the game: loose JSON in, typed values out, defaults for what is left out. */
 

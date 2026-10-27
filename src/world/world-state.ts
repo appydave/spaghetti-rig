@@ -1,15 +1,15 @@
 // What a player's world looks like once a step has fully happened (G04 W5). A pure function of the game, the player and the step: it reads
 // no world fields. Moved out of world.ts as it was, split by phase so each part stays within the function-length limit.
-import { nth } from "../nth";
-import type { Game, PlayTier } from "../content/load";
+import { nth } from "#root/src/nth.ts";
+import type { Game, PlayTier } from "#root/src/content/load.ts";
 import {
   healthAt,
   partsBroken,
   type Phase,
   type Player,
   type Step,
-} from "../show/script";
-import { standZ, type State } from "./world-shared";
+} from "#root/src/show/script.ts";
+import { standZ, type State } from "#root/src/world/world-shared.ts";
 
 /** Mark the first k gates passed: broken for player 1, open for player 2. */
 function passed(s: State, k: number, p1: boolean) {

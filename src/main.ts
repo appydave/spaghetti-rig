@@ -1,21 +1,21 @@
-import { AudioEngine, MS_PER_SECOND, TRACKS } from "./audio/audio";
-import { loadContent } from "./content/load";
-import { byId, closestEl, queryAllEl } from "./dom";
-import { Director, SCORE_DIGITS, SPLIT_PAN } from "./show/director";
-import { parsePresenterState } from "./show/messages";
+import { AudioEngine, MS_PER_SECOND, TRACKS } from "#root/src/audio/audio.ts";
+import { loadContent } from "#root/src/content/load.ts";
+import { byId, closestEl, queryAllEl } from "#root/src/dom.ts";
+import { Director, SCORE_DIGITS, SPLIT_PAN } from "#root/src/show/director.ts";
+import { parsePresenterState } from "#root/src/show/messages.ts";
 import {
   isSplit,
   MODES,
   modeInfo,
   type Mode,
   type Player,
-} from "./show/script";
-import { gatesText } from "./content/gatelabel";
-import { esc } from "./ui/card";
-import { initPhysics } from "./world/physics";
-import { Stage } from "./world/stage";
-import type { TestHooks } from "./testhooks";
-import { PlayerWorld } from "./world/world";
+} from "#root/src/show/script.ts";
+import { gatesText } from "#root/src/content/gatelabel.ts";
+import { esc } from "#root/src/ui/card.ts";
+import { initPhysics } from "#root/src/world/physics.ts";
+import { Stage } from "#root/src/world/stage.ts";
+import type { TestHooks } from "#root/src/testhooks.ts";
+import { PlayerWorld } from "#root/src/world/world.ts";
 
 const $ = (id: string) => byId(id, HTMLElement);
 
@@ -611,4 +611,4 @@ function presenter() {
   });
 }
 
-export type { Game } from "./content/load";
+export type { Game } from "#root/src/content/load.ts";
