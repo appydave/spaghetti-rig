@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import { gateLabel } from "../content/gatelabel";
 import { ROAD_HALF } from "./city";
-import { kit } from "./toon";
-import { isDrawable, mapOf } from "./objects";
+import { disposeTree, kit } from "./toon";
 import { context2d } from "../dom";
 import { GATE } from "./palette";
 
@@ -231,23 +230,7 @@ export class Gate {
   }
 
   dispose() {
-    this.group.traverse((o) => {
-      if (!isDrawable(o)) {
-        return;
-      }
-
-      if (!o.geometry.userData.shared) {
-        o.geometry.dispose();
-      }
-
-      const mat = o.material;
-
-      if (!Array.isArray(mat) && !mat.userData.shared) {
-        mapOf(mat)?.dispose();
-        mat.dispose();
-      }
-    });
-    this.group.removeFromParent();
+    disposeTree(this.group);
   }
 }
 

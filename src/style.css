@@ -1394,12 +1394,15 @@ body.muted .ico-sound {
   border: 0.18rem solid var(--yellow);
   pointer-events: none;
 }
-.tcard .head {
+.tcard .head,
+.tcard .type {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(var(--tcard-chip-light), var(--tcard-chip-deep));
   border: 0.14rem solid var(--ink);
+}
+.tcard .head {
   border-radius: 0.7rem;
   padding: 0.4rem 0.9rem;
 }
@@ -1443,11 +1446,6 @@ body.muted .ico-sound {
   display: block;
 }
 .tcard .type {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(var(--tcard-chip-light), var(--tcard-chip-deep));
-  border: 0.14rem solid var(--ink);
   border-radius: 0.5rem;
   padding: 0.35rem 0.8rem;
   font-weight: 700;

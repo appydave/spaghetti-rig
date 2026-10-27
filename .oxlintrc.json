@@ -453,6 +453,7 @@
       "files": [
         "src/content/load.ts",
         "src/audio/load.ts",
+        "src/loose.ts",
         "src/audio/sfx.ts",
         "src/world/model-load.ts",
         "src/world/schema.ts"
