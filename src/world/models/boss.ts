@@ -7,7 +7,7 @@ import {
   type BossPanelText,
 } from "#root/src/world/boss-panel.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
-import { Debris } from "#root/src/world/physics.ts";
+import { Debris } from "#root/src/world/combat/physics.ts";
 import { geo, INK, kit } from "#root/src/world/models/toon.ts";
 import { userData } from "#root/src/world/models/objects.ts";
 import { nth } from "#root/src/nth.ts";

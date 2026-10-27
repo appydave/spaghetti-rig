@@ -29,6 +29,16 @@ const MISS_DISTANCE = 1.5;
 const MISS_DISTANCE_SPREAD = 0.9;
 const HIT_SPREAD = 0.45;
 
+/** The road range autoplay aims in: an enemy this far ahead of the character along the road, nearest and farthest. */
+const AUTO_RANGE_NEAR = 3;
+const AUTO_RANGE_FAR = 30;
+
+/** What autoplay needs of an enemy to choose it: its seed, and where it stands on the road. */
+interface Candidate {
+  seed: number;
+  group: { position: { z: number } };
+}
+
 export interface Target {
   id: number;
   centre: THREE.Vector3;
@@ -37,6 +47,24 @@ export interface Target {
 export interface Shot {
   at: THREE.Vector3;
   target: Target;
+}
+
+/** Who autoplay aims at: it stays on the current target while that one is still in range ahead, otherwise it takes the nearest one ahead. */
+export function chooseAutoTarget<T extends Candidate>(
+  enemies: readonly T[],
+  characterZ: number,
+  currentSeed: number,
+): T | undefined {
+  const ahead = (e: T) =>
+    e.group.position.z < characterZ - AUTO_RANGE_NEAR &&
+    e.group.position.z > characterZ - AUTO_RANGE_FAR;
+
+  return (
+    enemies.find((e) => e.seed === currentSeed && ahead(e)) ??
+    enemies
+      .filter((e) => ahead(e))
+      .sort((a, b) => b.group.position.z - a.group.position.z)[0]
+  );
 }
 
 /**

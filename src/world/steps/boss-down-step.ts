@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import { EVENT } from "#root/src/world/palette.ts";
-import type { StepContext } from "#root/src/world/step-context.ts";
+import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { ease } from "#root/src/world/models/toon.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 

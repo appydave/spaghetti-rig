@@ -11,8 +11,8 @@ import type { CameraRig } from "#root/src/world/camera-rig.ts";
 import { buildCity, SEGMENT } from "#root/src/world/models/city.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
 import { Gate } from "#root/src/world/models/gate.ts";
-import type { Debris } from "#root/src/world/physics.ts";
-import { makePile } from "#root/src/world/pile.ts";
+import type { Debris } from "#root/src/world/combat/physics.ts";
+import { makePile } from "#root/src/world/combat/pile.ts";
 import {
   makeBossModel,
   makeStopWindow,

@@ -28,8 +28,8 @@ const COMPLEXITY_CARRIED = [
   "src/show/script.ts",
   "src/world/codelayout.ts",
   "src/world/codewindow.ts",
-  "src/world/effects.ts",
-  "src/world/physics.ts",
+  "src/world/combat/effects.ts",
+  "src/world/combat/physics.ts",
   "src/world/models/toon.ts",
   "src/world/world.ts",
 ];

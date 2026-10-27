@@ -1,8 +1,15 @@
 // A player's shooting (G04 W4): the pointer and its pick, the shot and what it hits, the autoplay hand, the enemies on the road and what
 // happens when one gets past. Moved out of world.ts as it was; what it needs from the world around it comes in as CombatDeps.
 import * as THREE from "three";
-import { AutoGunner } from "#root/src/world/autogunner.ts";
-import { Enemy, SCORE } from "#root/src/world/models/enemies.ts";
+import {
+  AutoGunner,
+  chooseAutoTarget,
+} from "#root/src/world/combat/autogunner.ts";
+import {
+  Enemy,
+  SCORE,
+  type EnemyKind,
+} from "#root/src/world/models/enemies.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import {
   bounceFx,
@@ -10,7 +17,7 @@ import {
   shootFx,
   slipFx,
   type CombatDeps,
-} from "#root/src/world/shot-effects.ts";
+} from "#root/src/world/combat/shot-effects.ts";
 import { disposeTree } from "#root/src/world/models/toon.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
@@ -28,8 +35,6 @@ const GROUND_SPLASH_Y = 0.05;
 const MISS_BURST_COUNT = 5;
 const BOSS_AIM_SPREAD_X = 3;
 const BOSS_AIM_FRONT_Z = 0.6;
-const AUTO_RANGE_NEAR = 3;
-const AUTO_RANGE_FAR = 30;
 const AUTO_REST_Y = 1.2;
 const AUTO_REST_Z = -14;
 const SLIP_PAST_CHARACTER = 4;
@@ -50,7 +55,7 @@ export class Combat {
   /** Enemies that got past player 1: bugs shipped to production. */
   shipped = 0;
   /** An enemy got past: shipped (player 1) or caught by CI (player 2). */
-  onSlip?: (kind: Enemy["kind"]) => void;
+  onSlip?: (kind: EnemyKind) => void;
   private readonly gunner: AutoGunner;
 
   constructor(private readonly d: CombatDeps) {
@@ -192,17 +197,8 @@ export class Combat {
   /** Autoplay: a seeded hand that drifts onto the nearest enemy ahead and fires like a person would. */
   autoShoot(dt: number) {
     const me = this.d.character.root.position;
-    const ahead = (e: Enemy) =>
-      e.group.position.z < me.z - AUTO_RANGE_NEAR &&
-      e.group.position.z > me.z - AUTO_RANGE_FAR;
-    // Stay on the current target while it is still there; otherwise take the nearest one ahead.
-    let target = this.enemies.find(
-      (e) => e.seed === this.autoTarget && ahead(e),
-    );
+    const target = chooseAutoTarget(this.enemies, me.z, this.autoTarget);
 
-    target ??= this.enemies
-      .filter(ahead)
-      .sort((a, b) => b.group.position.z - a.group.position.z)[0];
     this.autoTarget = target?.seed ?? -1;
 
     const rest = me.clone().add(new THREE.Vector3(0, AUTO_REST_Y, AUTO_REST_Z));
