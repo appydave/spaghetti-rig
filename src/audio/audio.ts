@@ -1387,6 +1387,19 @@ export class AudioEngine {
     }
   }
 
+  /** A source playing the noise buffer, and the filter of this type it will play through. */
+  private noiseVoice(buf: AudioBuffer, type: BiquadFilterType) {
+    const src = this.audioContext.createBufferSource();
+
+    src.buffer = buf;
+
+    const f = this.audioContext.createBiquadFilter();
+
+    f.type = type;
+
+    return { src, f };
+  }
+
   private perc(
     deck: Deck,
     t: number,
@@ -1399,13 +1412,11 @@ export class AudioEngine {
       return;
     }
 
-    const src = ctx.createBufferSource();
+    const { src, f } = this.noiseVoice(
+      this.noiseBuf,
+      kind === "s" ? "bandpass" : "highpass",
+    );
 
-    src.buffer = this.noiseBuf;
-
-    const f = ctx.createBiquadFilter();
-
-    f.type = kind === "s" ? "bandpass" : "highpass";
     f.frequency.value = kind === "s" ? PERC_SNARE_CUTOFF : PERC_CUTOFF;
     f.Q.value = kind === "s" ? PERC_SNARE_Q : PERC_Q;
 
@@ -1516,13 +1527,8 @@ export class AudioEngine {
       return;
     }
 
-    const src = ctx.createBufferSource();
+    const { src, f } = this.noiseVoice(this.noiseBuf, o.filter);
 
-    src.buffer = this.noiseBuf;
-
-    const f = ctx.createBiquadFilter();
-
-    f.type = o.filter;
     f.Q.value = o.q ?? DEFAULT_NOISE_Q;
     f.frequency.setValueAtTime(o.f, t);
     if (o.f2 !== undefined) {

@@ -70,26 +70,24 @@ function parseNotes(v: unknown): Notes | null {
   return { heading, say, presenter, extra };
 }
 
-/** Where the show is: the step number, how many there are, and whether it is paused. */
-function readPosition(fields: Fields) {
+/** Where the show is and what the step is called: its number, how many there are, whether it is paused, its label, the next label and its phase. */
+function readStatus(fields: Fields) {
   const index = read(fields, "index", isNumber);
   const total = read(fields, "total", isNumber);
   const paused = read(fields, "paused", isBoolean);
-
-  return index === undefined || total === undefined || paused === undefined
-    ? null
-    : { index, total, paused };
-}
-
-/** What the step is called: its label, the label of the next step, and its phase. */
-function readLabels(fields: Fields) {
   const label = read(fields, "label", isString);
   const next = read(fields, "next", isString);
   const phase = read(fields, "phase", isString);
 
-  return label === undefined || next === undefined || phase === undefined
-    ? null
-    : { label, next, phase };
+  if (index === undefined || total === undefined || paused === undefined) {
+    return null;
+  }
+
+  if (label === undefined || next === undefined || phase === undefined) {
+    return null;
+  }
+
+  return { index, total, paused, label, next, phase };
 }
 
 /** The game window's state as the presenter window receives it, or null if the message is not one. */
@@ -108,25 +106,24 @@ export function parsePresenterState(data: unknown): PresenterState | null {
     return null;
   }
 
-  const position = readPosition(fields);
-  const labels = readLabels(fields);
+  const status = readStatus(fields);
   const mode = MODES.find((m) => m.mode === data.mode);
   const notes = parseNotes(data.notes);
 
-  if (!position || !labels || !mode || !notes) {
+  if (!status || !mode || !notes) {
     return null;
   }
 
   return {
     type: "state",
-    index: position.index,
-    total: position.total,
-    label: labels.label,
-    next: labels.next,
+    index: status.index,
+    total: status.total,
+    label: status.label,
+    next: status.next,
     mode: mode.mode,
     notes,
-    phase: labels.phase,
-    paused: position.paused,
+    phase: status.phase,
+    paused: status.paused,
   };
 }
 

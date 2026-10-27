@@ -9,6 +9,7 @@ import type {
   Tier,
   Tool,
 } from "./types";
+import { isObj, str, strs } from "../loose";
 
 /** A tier as the game plays it: its stops in file order, and whether it can be played yet. */
 export interface PlayTier extends Tier {
@@ -21,15 +22,6 @@ export interface Game {
   content: Content;
   tiers: PlayTier[];
 }
-
-type Loose = Record<string, unknown>;
-
-const isObj = (v: unknown): v is Loose =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-const str = (v: unknown, fallback = ""): string =>
-  typeof v === "string" ? v : fallback;
-const strs = (v: unknown): string[] =>
-  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 
 const ROW_KINDS = ["c", "a", "d", "l"] as const;
 

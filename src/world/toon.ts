@@ -154,6 +154,15 @@ for (const g of Object.values(geo)) {
   g.userData.shared = true;
 }
 
+/** Lay a part along the segment a to b: its middle sits halfway between them and its long (y) axis points from a to b. */
+function placeAlong(m: THREE.Object3D, a: THREE.Vector3, b: THREE.Vector3) {
+  m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+  m.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    b.clone().sub(a).normalize(),
+  );
+}
+
 /** A small modelling kit: every part is a toon mesh with an ink outline, casting soft shadows. */
 export function kit(outline = DEFAULT_OUTLINE_THICKNESS) {
   function mesh(
@@ -188,28 +197,23 @@ export function kit(outline = DEFAULT_OUTLINE_THICKNESS) {
     return m;
   }
 
-  const box = (
-    p: THREE.Object3D,
-    c: THREE.ColorRepresentation,
-    x: number,
-    y: number,
-    z: number,
-    sx: number,
-    sy: number,
-    sz: number,
-    lined = true,
-  ) => mesh(p, geo.box, c, x, y, z, sx, sy, sz, lined);
-  const soft = (
-    p: THREE.Object3D,
-    c: THREE.ColorRepresentation,
-    x: number,
-    y: number,
-    z: number,
-    sx: number,
-    sy: number,
-    sz: number,
-    lined = true,
-  ) => mesh(p, geo.softBox, c, x, y, z, sx, sy, sz, lined);
+  /** A part that is one fixed shape, given a position and a scale on each axis. */
+  const scaledPart =
+    (g: THREE.BufferGeometry) =>
+    (
+      p: THREE.Object3D,
+      c: THREE.ColorRepresentation,
+      x: number,
+      y: number,
+      z: number,
+      sx: number,
+      sy: number,
+      sz: number,
+      lined = true,
+    ) =>
+      mesh(p, g, c, x, y, z, sx, sy, sz, lined);
+  const box = scaledPart(geo.box);
+  const soft = scaledPart(geo.softBox);
   const ball = (
     p: THREE.Object3D,
     c: THREE.ColorRepresentation,
@@ -241,21 +245,9 @@ export function kit(outline = DEFAULT_OUTLINE_THICKNESS) {
     r: number,
     lined = true,
   ) {
-    const m = cyl(
-      p,
-      c,
-      (a.x + b.x) / 2,
-      (a.y + b.y) / 2,
-      (a.z + b.z) / 2,
-      r,
-      a.distanceTo(b),
-      lined,
-    );
+    const m = cyl(p, c, 0, 0, 0, r, a.distanceTo(b), lined);
 
-    m.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      b.clone().sub(a).normalize(),
-    );
+    placeAlong(m, a, b);
 
     return m;
   }
@@ -274,22 +266,9 @@ export function kit(outline = DEFAULT_OUTLINE_THICKNESS) {
       CAPSULE_CAP_SEGMENTS,
       CAPSULE_RADIAL_SEGMENTS,
     );
-    const m = mesh(
-      p,
-      g,
-      c,
-      (a.x + b.x) / 2,
-      (a.y + b.y) / 2,
-      (a.z + b.z) / 2,
-      1,
-      1,
-      1,
-    );
+    const m = mesh(p, g, c, 0, 0, 0, 1, 1, 1);
 
-    m.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      b.clone().sub(a).normalize(),
-    );
+    placeAlong(m, a, b);
 
     return m;
   }

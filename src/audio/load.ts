@@ -6,6 +6,7 @@ import type {
   TrackDef,
   TrackMix,
 } from "./types";
+import { isObj, str, strs } from "../loose";
 
 /** The one place audio data enters the game: loose JSON in, typed values out, defaults for what is left out. */
 
@@ -19,14 +20,6 @@ const DEFAULT_BPM = 120;
 const DEFAULT_BEATS_PER_BAR = 4;
 const DEFAULT_LOOPS = 1;
 
-type Loose = Record<string, unknown>;
-
-const isObj = (v: unknown): v is Loose =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-const str = (v: unknown, fallback = ""): string =>
-  typeof v === "string" ? v : fallback;
-const strs = (v: unknown): string[] =>
-  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 const num = (v: unknown, fallback: number): number =>
   typeof v === "number" && Number.isFinite(v) ? v : fallback;
 const oneOf = <T extends string>(

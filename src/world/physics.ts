@@ -2,7 +2,7 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import { disposeTree } from "./toon";
 import { nth, present } from "../nth";
-import { RANDOM_CENTRE } from "./world-shared";
+import { randomSpread } from "./world-shared";
 
 const MAX_PIECES = 220;
 const GRAVITY_Y = -14;
@@ -233,11 +233,7 @@ export class Debris {
         null,
         half,
         v,
-        new THREE.Vector3(
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-        ),
+        randomSpread(s),
         opts.life ?? DEFAULT_BREAK_LIFE,
         offset,
       );

@@ -5,7 +5,7 @@ import { present } from "../nth";
 import { bossBack, bossShot } from "./boss-shot";
 import type { BossLayout } from "./bosslayout";
 import {
-  RANDOM_CENTRE,
+  randomSpread,
   SCREEN_MIDDLE,
   TALL_ASPECT_BELOW,
   USABLE_WIDTH_FRACTION,
@@ -141,13 +141,7 @@ export class CameraRig {
     if (shake > 0) {
       const s = shake * SHAKE_SCALE;
 
-      this.camera.position.add(
-        new THREE.Vector3(
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-          (Math.random() - RANDOM_CENTRE) * s,
-        ),
-      );
+      this.camera.position.add(randomSpread(s));
     }
 
     this.camera.lookAt(this.look);
