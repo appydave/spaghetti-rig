@@ -69,6 +69,12 @@ describe("the near-miss scan of tests and tooling", () => {
     expect(run("similar", inTests(readers(4)), "tests")).toBe(1);
   });
 
+  it("passes a copy with one statement added to thirty (a tree 0.92 alike, under 0.95)", () => {
+    expect(run("similar", inTests(readers(30, { added: true })), "tests")).toBe(
+      0,
+    );
+  });
+
   it("fails two short runs joined across a gap of 4 changed lines (the limit is 3: the lines either side count)", () => {
     const files = {
       "src/a.test.ts": gapped("const", "A", 4),
