@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "node scripts/check-no-suppressions.mjs && node lint/gates/css-colours.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json ."
+    "lint": "node scripts/check-no-suppressions.mjs && node lint/gates/css-colours.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json .",
+    "lint:duplicates": "node scripts/check-duplicates.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
@@ -26,6 +27,7 @@
     "@vitest/coverage-v8": "^5.0.5",
     "eslint-plugin-sonarjs": "4.2.0",
     "happy-dom": "21.0.4",
+    "jscpd": "5.4.2",
     "oxlint": "1.88.0",
     "oxlint-plugin-anti-slop": "github:sirknigget/anti-slop#aa6fd941330b4e73a59bff0570344cba35ff0f4d",
     "oxlint-tsgolint": "7.0.2004",

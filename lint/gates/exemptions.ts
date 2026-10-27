@@ -1,4 +1,4 @@
-// The two lists the size and complexity gates both pin. One home, so the lists the tests state cannot drift apart.
+// The lists the gate tests pin: the size and complexity gates share two, the duplicate gate has its own. One home, so the lists the tests state cannot drift apart.
 
 /** The six model files that are asset data (hand-placed geometry and materials): exempt from the size rules for good. */
 export const ASSET_DATA = [
@@ -28,3 +28,6 @@ export const CARRIED_TO_TIER_5 = [
   "src/world/world.ts",
   "tests/show.spec.ts",
 ];
+
+/** The procedural-data file the duplicate gate (G08) skips: its two characters share a 9-line run of hand-placed body parts, which is data written as code. Every other model file scans clean; `gate.ts` shares `disposeTree` instead. */
+export const DUPLICATES_PD = ["src/world/characters.ts"];

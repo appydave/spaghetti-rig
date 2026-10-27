@@ -58,6 +58,21 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  duplicates:
+    name: Duplicates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # oxlint-plugin-anti-slop builds itself with pnpm when npm installs it from git.
+      - run: npm install --global pnpm@10.33.0
+      - run: npm ci
+      - run: npm run lint:duplicates
+
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
