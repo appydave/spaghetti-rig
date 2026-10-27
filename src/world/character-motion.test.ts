@@ -1,25 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { canvasDocument } from "../../lint/gates/recording-canvas";
 
-// The characters paint their faces on a canvas; a canvas that accepts any drawing call is all they need (as in model-proof).
-/** Whatever is read from it or called on it is another one of itself. */
-interface Hole {
-  [key: string]: Hole;
-}
-
-function makeHole(): Hole {
-  return new Proxy(() => undefined, {
-    get: (_t, p) => (p === Symbol.toPrimitive ? () => 8 : makeHole()),
-    apply: () => makeHole(),
-    set: () => true,
-  }) as never;
-}
-
-vi.stubGlobal("document", {
-  createElement: (tag: string) =>
-    tag === "canvas"
-      ? { width: 300, height: 150, getContext: () => makeHole(), style: {} }
-      : {},
-});
+// The characters paint their faces on a canvas; a canvas that accepts any drawing call is all they need (the stand-in the proof harnesses use).
+vi.stubGlobal("document", canvasDocument());
 
 const { Character } = await import("./characters");
 

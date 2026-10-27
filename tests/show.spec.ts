@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
 import type { TestHooks } from "../src/testhooks";
-import { at, boot, press, rig, step, watchErrors } from "./helpers";
+import {
+  at,
+  boot,
+  press,
+  rig,
+  serveContentWithoutTier,
+  step,
+  watchErrors,
+} from "./helpers";
 
 test("the whole show runs from the keyboard alone, side by side, with no errors", async ({
   page,
@@ -198,15 +206,7 @@ test("player 1 reaches the boss on 10% and the boss finishes them; player 2 wins
 
 test("back steps, tier jumps and locked tiers", async ({ page }) => {
   // A tier with no stops in the content file is locked: take tier 6's stops away to see it.
-  await page.route("**/content/cards.json", async (route) => {
-    const res = await route.fetch();
-    const json = await res.json();
-
-    json.stops = json.stops.filter(
-      (s: { tier: string }) => s.tier !== "architecture",
-    );
-    await route.fulfill({ response: res, json });
-  });
+  await serveContentWithoutTier(page, "architecture");
   await boot(page);
   await press(page, "Shift+Digit2", 500);
   expect((await step(page)).tier).toBe(1);
@@ -292,20 +292,10 @@ test("the presenter window follows the game", async ({ page, context }) => {
 test("a stop added to the content file shows up after a reload, unlocking its tier", async ({
   page,
 }) => {
-  await page.route("**/content/cards.json", async (route) => {
-    const res = await route.fetch();
-    const json = await res.json();
-
-    json.stops = json.stops.filter(
-      (s: { tier: string }) => s.tier !== "architecture",
-    );
-    json.stops.push({
-      ...json.stops[1],
-      tier: "architecture",
-      gate: "G13 · Brand new gate",
-    });
-    await route.fulfill({ response: res, json });
-  });
+  await serveContentWithoutTier(page, "architecture", (stops) => [
+    ...stops,
+    { ...stops[1], tier: "architecture", gate: "G13 · Brand new gate" },
+  ]);
   await boot(page);
   await press(page, "Enter", 400);
   await expect(page.locator(".tier.locked")).toHaveCount(0);

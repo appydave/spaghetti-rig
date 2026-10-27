@@ -35,3 +35,20 @@ export async function press(page: Page, key: string, wait = 120) {
   await page.keyboard.press(key);
   await page.waitForTimeout(wait);
 }
+
+type Stop = { tier: string; gate?: string };
+
+/** Serve the content file without the stops of one tier (a tier with no stops is locked), then let `add` put stops back. */
+export async function serveContentWithoutTier(
+  page: Page,
+  tier: string,
+  add: (stops: Stop[]) => Stop[] = (stops) => stops,
+) {
+  await page.route("**/content/cards.json", async (route) => {
+    const res = await route.fetch();
+    const json = await res.json();
+
+    json.stops = add(json.stops.filter((s: Stop) => s.tier !== tier));
+    await route.fulfill({ response: res, json });
+  });
+}

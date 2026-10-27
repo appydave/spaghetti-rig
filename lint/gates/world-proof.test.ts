@@ -10,25 +10,21 @@ import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import type { Step } from "../../src/show/script";
 import { spyOnTemps } from "./disposal-spy";
-import { makeCanvas } from "./recording-canvas";
+import { canvasDocument } from "./recording-canvas";
 import { scenarioList, type Mode, type Scenario } from "./world-scenarios";
 import { num, sceneOf, sha, stateOf } from "./world-fingerprint";
 import { describe, expect, it, vi } from "vitest";
 import { logLines } from "./proof-lines";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+import { seeded } from "./support/seeded";
+import { loadWorld } from "./support/world-boot";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
-(globalThis as any).document = {
-  createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
-};
+(globalThis as any).document = canvasDocument();
 
-const { parseContent } = await import("../../src/content/load");
-const { buildScript } = await import("../../src/show/script");
-const { PlayerWorld, walkSeconds } = await import("../../src/world/world");
-const { initPhysics } = await import("../../src/world/physics");
-
-await initPhysics();
+const { parseContent, buildScript, PlayerWorld, walkSeconds } =
+  await loadWorld();
 
 const FRAME = 1 / 20;
 /** Frames played inside a step before the world is looked at again, per kind of step (a walk takes about nine seconds). */
@@ -55,21 +51,6 @@ const game = parseContent(
   ),
 );
 const script = buildScript(game);
-
-/** A small repeatable random number generator (mulberry32). */
-function seeded(seed: number): () => number {
-  let s = seed;
-
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /** What a scenario plays with: the world, how it is played, and how it is looked at. */
 type Run = {

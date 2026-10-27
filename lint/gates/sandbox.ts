@@ -29,7 +29,7 @@ export type Override = {
   rules?: Record<string, RuleSetting>;
 };
 export type Config = { overrides: Override[] };
-type Finding = { code: string; filename: string };
+export type Finding = { code: string; filename: string };
 
 /** The repo's lint config, read as JSON: its comments (whole lines starting with //) are dropped first. */
 export const readConfig = (): Config =>
@@ -39,6 +39,22 @@ export const readConfig = (): Config =>
       "",
     ),
   );
+
+/** Run oxlint with the .oxlintrc.json in `cwd` over these files, and give back its findings. */
+export function oxlintIn(cwd: string, files: readonly string[]): Finding[] {
+  const run = spawnSync(
+    OXLINT,
+    ["-c", ".oxlintrc.json", "-f", "json", ...files],
+    {
+      cwd,
+      encoding: "utf8",
+      maxBuffer: MAX_OUTPUT,
+    },
+  );
+  const report: { diagnostics: Finding[] } = JSON.parse(run.stdout);
+
+  return report.diagnostics;
+}
 
 /** Lint these files in a sandbox holding the given config; the findings with one of these codes, by file. */
 export function lintIn(
@@ -53,20 +69,9 @@ export function lintIn(
     recursive: true,
   });
 
-  const run = spawnSync(
-    OXLINT,
-    ["-c", ".oxlintrc.json", "-f", "json", ...files],
-    {
-      cwd: sandbox,
-      encoding: "utf8",
-      maxBuffer: MAX_OUTPUT,
-    },
-  );
   const byFile = new Map<string, string[]>(files.map((f) => [f, []]));
 
-  const report: { diagnostics: Finding[] } = JSON.parse(run.stdout);
-
-  for (const d of report.diagnostics) {
+  for (const d of oxlintIn(sandbox, files)) {
     if (codes.includes(d.code)) {
       byFile.get(d.filename)?.push(d.code);
     }

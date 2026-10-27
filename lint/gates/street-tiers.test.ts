@@ -2,18 +2,12 @@
 // so it runs the real PlayerWorld.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { makeCanvas } from "./recording-canvas";
+import { canvasDocument } from "./recording-canvas";
+import { loadWorld } from "./support/world-boot";
 
-(globalThis as any).document = {
-  createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
-};
+(globalThis as any).document = canvasDocument();
 
-const { parseContent } = await import("../../src/content/load");
-const { buildScript } = await import("../../src/show/script");
-const { PlayerWorld } = await import("../../src/world/world");
-const { initPhysics } = await import("../../src/world/physics");
-
-await initPhysics();
+const { parseContent, buildScript, PlayerWorld } = await loadWorld();
 
 const PAN = 0.25;
 const cards = JSON.parse(

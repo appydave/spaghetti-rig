@@ -4,11 +4,13 @@
 /** What a canvas call that is read as a number (a text width, say) comes out as. */
 const NUMBER_STANDIN = 8;
 const callable = () => undefined;
-const hole: any = new Proxy(callable, {
+
+export const hole: any = new Proxy(callable, {
   get: (_t, p) => (p === Symbol.toPrimitive ? () => NUMBER_STANDIN : hole),
   apply: () => hole,
   set: () => true,
 });
+
 const recorder = (log: string[]): any =>
   new Proxy(callable, {
     get: (_t, p) =>
@@ -42,3 +44,8 @@ export const makeCanvas = () => {
     log,
   };
 };
+
+/** A stand-in for `document` where every canvas is a recording canvas: all a model, a world or a showcase needs from the browser. */
+export const canvasDocument = () => ({
+  createElement: (tag: string) => (tag === "canvas" ? makeCanvas() : {}),
+});

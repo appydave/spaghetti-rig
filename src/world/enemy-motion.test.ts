@@ -1,26 +1,9 @@
 import * as THREE from "three";
 import { describe, expect, it, vi } from "vitest";
+import { canvasDocument } from "../../lint/gates/recording-canvas";
 
-// The robot paints its label on a canvas; a canvas that accepts any drawing call is all it needs (as in model-proof).
-/** Whatever is read from it or called on it is another one of itself. */
-interface Hole {
-  [key: string]: Hole;
-}
-
-function makeHole(): Hole {
-  return new Proxy(() => undefined, {
-    get: (_t, p) => (p === Symbol.toPrimitive ? () => 8 : makeHole()),
-    apply: () => makeHole(),
-    set: () => true,
-  }) as never;
-}
-
-vi.stubGlobal("document", {
-  createElement: (tag: string) =>
-    tag === "canvas"
-      ? { width: 300, height: 150, getContext: () => makeHole(), style: {} }
-      : {},
-});
+// The robot paints its label on a canvas; a canvas that accepts any drawing call is all it needs (the stand-in the proof harnesses use).
+vi.stubGlobal("document", canvasDocument());
 
 const { Enemy } = await import("./enemies");
 const { ROBOT_PAUSE_SECONDS } = await import("./enemy-motion");

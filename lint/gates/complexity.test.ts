@@ -2,16 +2,9 @@
 // the plugin files, node_modules): each limit fails just over it and passes exactly on it. The guards keep the two ways out of the gate
 // honest: the procedural-data exemption is exactly the files named here, and the list carried to tier 5 is exactly the files named here,
 // each of which exists and still needs it.
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 import {
   COGNITIVE,
   COMPLEXITY_CODES,
@@ -19,13 +12,8 @@ import {
   cognitive,
 } from "./complexity-probes";
 import { ASSET_DATA, CARRIED_TO_TIER_5 } from "./exemptions";
-import {
-  REPO,
-  findingsWithout,
-  lintIn,
-  readConfig,
-  type Override,
-} from "./sandbox";
+import { REPO, findingsWithout, readConfig, type Override } from "./sandbox";
+import { describeProbes } from "./support/probe-gate";
 
 /** The procedural-data files that still have a builder the rules would flag: the Gate constructor (cognitive 13) is hand-placed geometry written as code. */
 const COMPLEXITY_PD = ["src/world/gate.ts"];
@@ -84,44 +72,10 @@ const covered = [
   ],
 ] as const;
 const PROBES = [...COMPLEXITY_PROBES, ...covered.filter((p) => p[1] !== "")];
-let found = new Map<string, string[]>();
-let sandbox = "";
 
-beforeAll(() => {
-  sandbox = mkdtempSync(join(tmpdir(), "complexity-sandbox-"));
-
-  for (const [, path, source] of PROBES) {
-    mkdirSync(dirname(join(sandbox, path)), { recursive: true });
-    writeFileSync(join(sandbox, path), source);
-  }
-
-  found = lintIn(
-    sandbox,
-    readConfig(),
-    PROBES.map((p) => p[1]),
-    COMPLEXITY_CODES,
-  );
-});
-
-afterAll(() => {
-  rmSync(sandbox, { recursive: true, force: true });
-});
+describeProbes("complexity", PROBES, COMPLEXITY_CODES);
 
 describe("complexity gate", () => {
-  it.each(PROBES.map((p) => [p[0], p[1], p[3]] as const))(
-    "%s",
-    (_name, path, expected) => {
-      expect([...(found.get(path) ?? [])].sort()).toEqual([...expected].sort());
-    },
-  );
-
-  it("every complexity rule has a probe that fails and one that passes", () => {
-    const failing = new Set(PROBES.flatMap((p) => p[3]));
-
-    expect(COMPLEXITY_CODES.filter((c) => !failing.has(c))).toEqual([]);
-    expect(PROBES.filter((p) => p[3].length === 0).length).toBeGreaterThan(0);
-  });
-
   it("the procedural-data exemption is exactly the files named here, in one block, each of which exists", () => {
     expect(pdBlocks).toHaveLength(1);
     expect([...pd].sort()).toEqual([...COMPLEXITY_PD].sort());

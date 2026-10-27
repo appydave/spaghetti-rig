@@ -14,6 +14,8 @@ import { AudioEngine } from "../../src/audio/audio";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
 import { num } from "./world-fingerprint";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
+import { hole } from "./recording-canvas";
+import { seeded } from "./support/seeded";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
@@ -46,27 +48,6 @@ const SFX = [
   "uiSelect",
   "step",
 ] as const;
-
-const hole: any = new Proxy(function () {}, {
-  get: (_t, p) => (p === Symbol.toPrimitive ? () => 8 : hole),
-  apply: () => hole,
-  set: () => true,
-});
-
-/** A small repeatable random number generator (mulberry32). */
-function seeded(seed: number): () => number {
-  let s = seed;
-
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 type Arg = number | string | Record<string, number | string>;
 
