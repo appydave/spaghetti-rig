@@ -18,12 +18,12 @@ const PILE_LOSE_VOLUME = 0.6;
 const FINISH_FIRE_DELAY = 0.3;
 const CORE_CRACK_SEED_FIRST = 5;
 const CORE_CRACKS_DELAY = 0.7;
-const CORE_CRACK_SEED_B = 17;
-const CORE_CRACK_B_U = 0.3;
-const CORE_CRACK_B_V = 0.4;
-const CORE_CRACK_SEED_C = 23;
-const CORE_CRACK_C_U = 0.7;
-const CORE_CRACK_C_V = 0.7;
+const CORE_CRACK_SEED_SECOND = 17;
+const CORE_CRACK_SECOND_U = 0.3;
+const CORE_CRACK_SECOND_V = 0.4;
+const CORE_CRACK_SEED_THIRD = 23;
+const CORE_CRACK_THIRD_U = 0.7;
+const CORE_CRACK_THIRD_V = 0.7;
 const BOSS_DESTROY_DELAY = 1.1;
 const BOSS_DEFEAT_SHAKE = 1.5;
 const BOSS_CONFETTI_COUNT = 200;
@@ -88,8 +88,16 @@ function defeatBoss(c: StepContext, s: State) {
     c.sfx("glassCrack");
   });
   c.timeline.after(CORE_CRACKS_DELAY, () => {
-    boss.core.crack(CORE_CRACK_SEED_B, CORE_CRACK_B_U, CORE_CRACK_B_V);
-    boss.core.crack(CORE_CRACK_SEED_C, CORE_CRACK_C_U, CORE_CRACK_C_V);
+    boss.core.crack(
+      CORE_CRACK_SEED_SECOND,
+      CORE_CRACK_SECOND_U,
+      CORE_CRACK_SECOND_V,
+    );
+    boss.core.crack(
+      CORE_CRACK_SEED_THIRD,
+      CORE_CRACK_THIRD_U,
+      CORE_CRACK_THIRD_V,
+    );
     boss.shake = 1;
   });
   c.timeline.after(BOSS_DESTROY_DELAY, () => {

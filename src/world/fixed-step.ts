@@ -24,7 +24,7 @@ const THIRD_CRACK_SEED = 13;
 const THIRD_CRACK_U = 0.75;
 const THIRD_CRACK_V = 0.35;
 const SHATTER_DELAY = 1.05;
-const SHATTER_POWER = 7;
+const OLD_CARD_SHATTER_POWER = 7;
 const SHATTER_GRID_SHORT = 5;
 const SHATTER_GRID_LONG = 7;
 const SHATTER_SEED_BASE = 21;
@@ -123,7 +123,7 @@ function shatter(c: StepContext, old: OldCard, stop: number) {
   old.shatter(
     c.debris,
     from.setY(from.y - 1),
-    SHATTER_POWER,
+    OLD_CARD_SHATTER_POWER,
     c.rig.shape === "tall"
       ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
       : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],

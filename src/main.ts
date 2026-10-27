@@ -1,4 +1,4 @@
-import { AudioEngine, TRACKS } from "./audio/audio";
+import { AudioEngine, MS_PER_SECOND, TRACKS } from "./audio/audio";
 import { loadContent } from "./content/load";
 import { byId, closestEl, queryAllEl } from "./dom";
 import { Director, SCORE_DIGITS, SPLIT_PAN } from "./show/director";
@@ -21,7 +21,6 @@ const $ = (id: string) => byId(id, HTMLElement);
 
 /** An error message stays on screen this long. */
 const ERROR_TOAST_MS = 8000;
-const MS_PER_SECOND = 1000;
 /** A slow frame advances the game by at most this many seconds, so a stalled tab does not jump. */
 const MAX_FRAME_SECONDS = 0.05;
 

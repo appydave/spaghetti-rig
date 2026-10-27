@@ -12,7 +12,7 @@ export const ROBOT_PAUSE_SECONDS = 2.5;
 const ROBOT_PAUSE_AT = 0.5;
 
 /** The hit flash fades at this rate per second, and swells the enemy by this much while it lasts. */
-const FLASH_DECAY = 5;
+const HIT_FLASH_DECAY = 5;
 const FLASH_SCALE = 0.15;
 
 /** What the robot's label says while it walks. */
@@ -125,7 +125,7 @@ export function stepEnemy(
   facing: THREE.Vector3,
 ) {
   e.age += dt;
-  e.flash = Math.max(0, e.flash - dt * FLASH_DECAY);
+  e.flash = Math.max(0, e.flash - dt * HIT_FLASH_DECAY);
 
   const trip = tripOf(e);
   const dir = e.to.clone().sub(e.from).normalize();

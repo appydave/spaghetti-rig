@@ -3,6 +3,7 @@ import { isDrawable, mapOf } from "./objects";
 import { context2d } from "../dom";
 import { nth } from "../nth";
 import { FX } from "./palette";
+import { RANDOM_CENTRE } from "./world-shared";
 
 interface Particle {
   pos: THREE.Vector3;
@@ -25,9 +26,8 @@ interface Fader {
 const MAX = 900;
 
 const FLASH_DISTANCE = 9;
-const FLASH_DECAY = 2;
+const FLASH_LIGHT_DECAY = 2;
 const RGB_COMPONENTS = 3;
-const RANDOM_CENTRE = 0.5;
 const TRACER_MIDPOINT = 0.5;
 const DEFAULT_BURST_COUNT = 24;
 const DEFAULT_BURST_UP = 0.3;
@@ -117,7 +117,7 @@ export class Effects {
     FX.muzzleLight,
     0,
     FLASH_DISTANCE,
-    FLASH_DECAY,
+    FLASH_LIGHT_DECAY,
   );
   private flashT = 0;
 

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { rng } from "./toon";
+import { RANDOM_CENTRE } from "./world-shared";
 
 // The hand's feel. Times are in seconds, and the "spread" values are multiplied by a random 0..1 and added to the base.
 const DEFAULT_MISS_CHANCE = 0.22;
@@ -14,7 +15,6 @@ const REACTION_DELAY_SPREAD = 0.3;
 const CLOSE_SPEED = 3.5;
 const CLOSE_SPEED_SPREAD = 3.5;
 /** A random 0..1 minus this is an offset either side of zero. */
-const RANDOM_CENTRE = 0.5;
 /** How far a steady aim trembles. */
 const TREMBLE = 0.02;
 /** The pause between shots in a burst, and how many extra shots a burst can have. */
