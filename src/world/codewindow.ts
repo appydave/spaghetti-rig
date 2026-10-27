@@ -18,6 +18,7 @@ import { wrap as wrapProse } from "./canvas-text";
 import { meshNamed } from "./objects";
 import { context2d } from "../dom";
 import { nth } from "../nth";
+import { RANDOM_CENTRE } from "./world-shared";
 
 export { PALETTE } from "./palette";
 export type { Mood } from "./palette";
@@ -613,7 +614,6 @@ function drawMarks(
 }
 
 /** A random 0..1 minus this is an offset either side of zero. */
-const RANDOM_CENTRE = 0.5;
 /** The crack's centre lands this share of the way in, plus up to the spread, unless it is given. */
 const CRACK_ORIGIN_MIN = 0.3;
 const CRACK_ORIGIN_SPREAD = 0.4;

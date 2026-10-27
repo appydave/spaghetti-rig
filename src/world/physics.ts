@@ -2,6 +2,7 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import { disposeTree } from "./toon";
 import { nth, present } from "../nth";
+import { RANDOM_CENTRE } from "./world-shared";
 
 const MAX_PIECES = 220;
 const GRAVITY_Y = -14;
@@ -28,7 +29,6 @@ const PIECE_LIFE_JITTER = 1.5;
 const BREAK_FROM_BELOW_Y = -0.5;
 const BREAK_FROM_FRONT_Z = 1;
 const SIZE_TO_HALF_EXTENT = 0.5;
-const RANDOM_CENTRE = 0.5;
 const DEFAULT_BREAK_POWER = 5;
 const BREAK_POWER_MIN = 0.6;
 const BREAK_POWER_RANGE = 0.8;

@@ -97,7 +97,9 @@ const SCHEDULE_GUARD = 256;
 const NEXT_DECK_FADE_IN = 0.03;
 /** A sound effect's output is kept this long after its tail, and a tone or noise voice's gain behaves as follows. */
 const SFX_TAIL_SECONDS = 0.4;
-const MS_PER_SECOND = 1000;
+
+export const MS_PER_SECOND = 1000;
+
 const DEFAULT_TONE_ATTACK = 0.004;
 const DEFAULT_NOISE_ATTACK = 0.003;
 const DEFAULT_NOISE_Q = 0.8;
