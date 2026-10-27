@@ -1,20 +1,25 @@
 // What a tier's content becomes in the world (G04 W3): the painted problem and fixed cards, the stop windows made from them, and the boss
 // made from the tier's sins. Moved out of world.ts as it was; the game and the tier come in as arguments instead of the world's own fields.
-import { gateText } from "../content/gatelabel";
+import { gateText } from "#root/src/content/gatelabel.ts";
 import {
   TIER_HEALTH_LOSS,
   toolFor,
   type Game,
   type PlayTier,
-} from "../content/load";
-import type { Stop } from "../content/types";
-import { nth } from "../nth";
-import { beforeParen, shortTool } from "../ui/card";
-import { BossModel, paintBossPanel } from "./boss";
-import { bossLayout } from "./bosslayout";
-import { layoutCard, longestRow, slugFile, type Layout } from "./codelayout";
-import { CodeWindow, paintCard } from "./codewindow";
-import type { Shape } from "./world-shared";
+} from "#root/src/content/load.ts";
+import type { Stop } from "#root/src/content/types.ts";
+import { nth } from "#root/src/nth.ts";
+import { beforeParen, shortTool } from "#root/src/ui/card.ts";
+import { BossModel, paintBossPanel } from "#root/src/world/boss.ts";
+import { bossLayout } from "#root/src/world/bosslayout.ts";
+import {
+  layoutCard,
+  longestRow,
+  slugFile,
+  type Layout,
+} from "#root/src/world/codelayout.ts";
+import { CodeWindow, paintCard } from "#root/src/world/codewindow.ts";
+import type { Shape } from "#root/src/world/world-shared.ts";
 
 const TALL_CARD_COLS = 44;
 const WIDE_CARD_COLS = 60;

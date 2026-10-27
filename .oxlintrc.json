@@ -37,6 +37,18 @@
     "**/*.d.ts"
   ],
   "rules": {
+    // G10 (after Omer 76afd84): no relative import; start from the project root alias. lint/gates/root-imports.test.ts proves it fails.
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "regex": "^\\.",
+            "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+          }
+        ]
+      }
+    ],
     // G06 Complexity, after Omer (3bfcf06 -> 176a8f0). Cyclomatic is a STATED DEPARTURE from Omer's 6, ruled by David on 2026-10-26: below
     // this every cyclomatic-only finding was a flat switch over the ten-value Phase union, a guard ladder or a run of ?? defaults, where
     // fixing it changed the score and not the design. Cognitive complexity catches the real tangles. Why and what it cost: decisions.md 10-26.
@@ -155,6 +167,15 @@
     ]
   },
   "overrides": [
+    {
+      // G10 covers src/ and tests/ only (R8). These run in Node outside the package, in temp sandboxes where #root is undefined, so they
+      // keep relative imports. lint/gates/root-imports.test.ts pins this list: a path added here fails the test. No bare glob such as
+      // *.config.ts: oxlint matches it at any depth, so it would also exempt src/x.config.ts.
+      "files": ["lint/**", "scripts/**"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
     {
       "files": ["**/*"],
       "excludeFiles": ["tests/**", "src/**/*.test.ts", "lint/**/*.test.ts"],

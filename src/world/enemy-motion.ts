@@ -3,7 +3,7 @@
 // are ENEMY_MOTION in enemies.ts (next to the parts they move), and this file holds none of them; the few that change when or whether
 // something happens in play are named here.
 import type * as THREE from "three";
-import type { Enemy } from "./enemies";
+import type { Enemy } from "#root/src/world/enemies.ts";
 
 /** How long a robot stops to think, halfway along, before it walks on: decides when it reaches the player. */
 export const ROBOT_PAUSE_SECONDS = 2.5;

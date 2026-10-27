@@ -1,15 +1,15 @@
 // What a shot, a kill and a slipped enemy look and sound like (G04 W4): the bounce off the boss, the pop and debris of a kill, the
 // "BUG SHIPPED" or "CAUGHT BY CI" text. Moved out of world.ts as it was; what they need from the world comes in as CombatDeps.
 import * as THREE from "three";
-import type { Sfx } from "../audio/audio";
-import type { Player } from "../show/script";
-import type { BossModel } from "./boss";
-import type { Character } from "./characters";
-import type { Effects } from "./effects";
-import { SCORE, type Enemy } from "./enemies";
-import { EVENT } from "./palette";
-import type { Debris } from "./physics";
-import { KILL_TEXT_SIZE } from "./world-shared";
+import type { Sfx } from "#root/src/audio/audio.ts";
+import type { Player } from "#root/src/show/script.ts";
+import type { BossModel } from "#root/src/world/boss.ts";
+import type { Character } from "#root/src/world/characters.ts";
+import type { Effects } from "#root/src/world/effects.ts";
+import { SCORE, type Enemy } from "#root/src/world/enemies.ts";
+import { EVENT } from "#root/src/world/palette.ts";
+import type { Debris } from "#root/src/world/physics.ts";
+import { KILL_TEXT_SIZE } from "#root/src/world/world-shared.ts";
 
 /** What the combat reaches for in the world around it. */
 export interface CombatDeps {

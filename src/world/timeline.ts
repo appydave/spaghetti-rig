@@ -1,6 +1,6 @@
 // A player's world clock and what runs on it (G04 W5b): cues that fire at a time, tweens that run for a while, and the temporary things a
 // step makes and the next step must dispose. Moved out of world.ts as it was.
-import type { Cue, Tween } from "./world-shared";
+import type { Cue, Tween } from "#root/src/world/world-shared.ts";
 
 export class Timeline {
   clock = 0;

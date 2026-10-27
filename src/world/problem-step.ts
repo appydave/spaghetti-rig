@@ -1,12 +1,12 @@
 // The problem step of a stop (G04 W5d): the angry card flies down the road and slams into the player, who loses health. Moved out of
 // world.ts: enterProblem is split into its beats (the flight, the hit, the bounce back into the reading spot) and nothing else changes.
 import * as THREE from "three";
-import { FULL_HEALTH, TIER_HEALTH_LOSS } from "../content/load";
-import { healthAt, type Step } from "../show/script";
-import type { StepContext, StopWindow } from "./step-context";
-import { ease, lerp } from "./toon";
-import { EVENT } from "./palette";
-import type { State } from "./world-shared";
+import { FULL_HEALTH, TIER_HEALTH_LOSS } from "#root/src/content/load.ts";
+import { healthAt, type Step } from "#root/src/show/script.ts";
+import type { StepContext, StopWindow } from "#root/src/world/step-context.ts";
+import { ease, lerp } from "#root/src/world/toon.ts";
+import { EVENT } from "#root/src/world/palette.ts";
+import type { State } from "#root/src/world/world-shared.ts";
 
 const PROBLEM_ALARM_DELAY = 0.2;
 const CARD_LAUNCH_DELAY = 1.5;

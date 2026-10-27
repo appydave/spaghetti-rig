@@ -1,11 +1,11 @@
 // The walk down the road (G04 W6): where it goes, how far along it is, and the enemies that run at the player on the way. The Director drives
 // the walk, so both players stay in lockstep; the world keeps the walk it is on and these move it. Moved out of world.ts as it was.
 import * as THREE from "three";
-import type { Step } from "../show/script";
-import { Enemy, type EnemyKind } from "./enemies";
-import type { StepContext } from "./step-context";
-import { ease, lerp, rng } from "./toon";
-import { standZ } from "./world-shared";
+import type { Step } from "#root/src/show/script.ts";
+import { Enemy, type EnemyKind } from "#root/src/world/enemies.ts";
+import type { StepContext } from "#root/src/world/step-context.ts";
+import { ease, lerp, rng } from "#root/src/world/toon.ts";
+import { standZ } from "#root/src/world/world-shared.ts";
 
 const WALK_SEED_BASE = 500;
 const WALK_SEED_PER_TIER = 31;

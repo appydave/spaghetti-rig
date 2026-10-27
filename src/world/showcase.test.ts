@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { canvasDocument } from "../../lint/gates/recording-canvas";
+import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 
 // The showcases only paint label textures on a canvas; a canvas that accepts any drawing call is all they need (the stand-in the proof harnesses use).
 vi.stubGlobal("document", canvasDocument());
 
-const { TitleShowcase, VsShowcase } = await import("./showcase");
+const { TitleShowcase, VsShowcase } =
+  await import("#root/src/world/showcase.ts");
 
 const FACE_OFF_X = 2.1;
 const SLIDE_IN_DISTANCE = 6;

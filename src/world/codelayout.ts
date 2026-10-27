@@ -1,8 +1,13 @@
-import type { AnnotationKind, Card, RowKind, View } from "../content/types";
-import { present } from "../nth";
-import { LINE, SYNTAX } from "./palette";
+import type {
+  AnnotationKind,
+  Card,
+  RowKind,
+  View,
+} from "#root/src/content/types.ts";
+import { present } from "#root/src/nth.ts";
+import { LINE, SYNTAX } from "#root/src/world/palette.ts";
 
-export { SYNTAX } from "./palette";
+export { SYNTAX } from "#root/src/world/palette.ts";
 
 /** A break in a long line is searched for backwards only as far as this share of the wrap width. */
 const WRAP_SEARCH_SHARE = 0.5;

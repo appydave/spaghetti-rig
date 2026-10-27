@@ -1,8 +1,8 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
-import { disposeTree } from "./toon";
-import { nth, present } from "../nth";
-import { randomSpread } from "./world-shared";
+import { disposeTree } from "#root/src/world/toon.ts";
+import { nth, present } from "#root/src/nth.ts";
+import { randomSpread } from "#root/src/world/world-shared.ts";
 
 const MAX_PIECES = 220;
 const GRAVITY_Y = -14;

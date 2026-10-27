@@ -3,9 +3,9 @@ import {
   toolFor,
   type Game,
   type PlayTier,
-} from "../content/load";
-import { gateLabel } from "../content/gatelabel";
-import type { Stop } from "../content/types";
+} from "#root/src/content/load.ts";
+import { gateLabel } from "#root/src/content/gatelabel.ts";
+import type { Stop } from "#root/src/content/types.ts";
 
 /** A tool card shows this many lines of the tool's configuration. */
 const CONFIG_LINES_SHOWN = 6;

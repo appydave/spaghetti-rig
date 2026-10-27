@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nth, present } from "./nth";
+import { nth, present } from "#root/src/nth.ts";
 
 describe("nth", () => {
   it("returns the item at an index in range", () => {

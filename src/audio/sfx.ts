@@ -1,7 +1,14 @@
-import { nth, present } from "../nth";
-import { bool, list, num, numOr, obj, oneOf } from "../world/model-load";
-import type { NoiseOpts, ToneOpts } from "./audio";
-import { midiToFreq } from "./tracks";
+import { nth, present } from "#root/src/nth.ts";
+import {
+  bool,
+  list,
+  num,
+  numOr,
+  obj,
+  oneOf,
+} from "#root/src/world/model-load.ts";
+import type { NoiseOpts, ToneOpts } from "#root/src/audio/audio.ts";
+import { midiToFreq } from "#root/src/audio/tracks.ts";
 
 /**
  * The sound-effect recipe grammar (sfx.json). It is closed: a new shape is a ruling, not an edit. Widened once, in N6c.

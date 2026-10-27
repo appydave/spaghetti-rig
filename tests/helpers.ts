@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import type { TestHooks } from "../src/testhooks";
+import type { TestHooks } from "#root/src/testhooks.ts";
 
 /** Collect anything that would mean the show broke on stage. */
 export function watchErrors(page: Page) {

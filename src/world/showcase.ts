@@ -1,14 +1,14 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { Character } from "./characters";
-import { layoutCard } from "./codelayout";
-import { CodeWindow, paintCard } from "./codewindow";
-import { kit } from "./toon";
-import type { Player } from "../show/script";
-import type { Card } from "../content/types";
-import { userData } from "./objects";
-import { context2d } from "../dom";
-import { nth } from "../nth";
+import { Character } from "#root/src/world/characters.ts";
+import { layoutCard } from "#root/src/world/codelayout.ts";
+import { CodeWindow, paintCard } from "#root/src/world/codewindow.ts";
+import { kit } from "#root/src/world/toon.ts";
+import type { Player } from "#root/src/show/script.ts";
+import type { Card } from "#root/src/content/types.ts";
+import { userData } from "#root/src/world/objects.ts";
+import { context2d } from "#root/src/dom.ts";
+import { nth } from "#root/src/nth.ts";
 
 function lights(scene: THREE.Scene) {
   scene.add(new THREE.HemisphereLight("#e4f7ff", "#586d55", 2.3));

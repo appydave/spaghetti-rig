@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { TestHooks } from "../src/testhooks";
+import type { TestHooks } from "#root/src/testhooks.ts";
 import {
   at,
   boot,
@@ -8,7 +8,7 @@ import {
   serveContentWithoutTier,
   step,
   watchErrors,
-} from "./helpers";
+} from "#root/tests/helpers.ts";
 
 test("the whole show runs from the keyboard alone, side by side, with no errors", async ({
   page,

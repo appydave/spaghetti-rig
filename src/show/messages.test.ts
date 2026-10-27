@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseDirectorMessage, parsePresenterState } from "./messages";
+import {
+  parseDirectorMessage,
+  parsePresenterState,
+} from "#root/src/show/messages.ts";
 
 const state = {
   type: "state",

@@ -18,12 +18,12 @@ import {
   type CompiledTrack,
   type Theme,
   type LeadVoice,
-} from "./tracks";
-import { present } from "../nth";
-import rawSfx from "./sfx.json";
-import { expandSfx, parseSfx } from "./sfx";
+} from "#root/src/audio/tracks.ts";
+import { present } from "#root/src/nth.ts";
+import rawSfx from "#root/src/audio/sfx.json";
+import { expandSfx, parseSfx } from "#root/src/audio/sfx.ts";
 
-export type { Theme } from "./tracks";
+export type { Theme } from "#root/src/audio/tracks.ts";
 
 export type Sfx =
   | "shoot"

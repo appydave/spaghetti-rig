@@ -1,13 +1,13 @@
-import { nth } from "../nth";
+import { nth } from "#root/src/nth.ts";
 import {
   FULL_HEALTH,
   hitFor,
   toolFor,
   type Game,
   type PlayTier,
-} from "../content/load";
-import { gatesText, gateText } from "../content/gatelabel";
-import type { Card } from "../content/types";
+} from "#root/src/content/load.ts";
+import { gatesText, gateText } from "#root/src/content/gatelabel.ts";
+import type { Card } from "#root/src/content/types.ts";
 
 /**
  * The show is a flat list of steps built from the content file. `→` moves forward, `←` back.

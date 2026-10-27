@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { boot, press, rig, step, watchErrors } from "./helpers";
+import { boot, press, rig, step, watchErrors } from "#root/tests/helpers.ts";
 
 // Input here is real: page.mouse and page.keyboard only. __rig is used to read state, never to drive it.
 

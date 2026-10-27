@@ -4,8 +4,8 @@ import {
   collectRules,
   collectScreen,
   type ScreenColours,
-} from "./colour-collectors";
-import { boot } from "./helpers";
+} from "#root/tests/colour-collectors.ts";
+import { boot } from "#root/tests/helpers.ts";
 
 // Proves a stylesheet change did not change a single colour, on every screen of the show. The result is committed as
 // tests/__snapshots__/colour-rules.txt and colour-screens.txt; an intended colour change shows as a diff of that file (`npx playwright test
@@ -147,4 +147,22 @@ test("every declared colour and every screen's computed colours are as committed
   // Soft, so a change that moves both a rule and a screen reports both diffs.
   expect.soft(describeRules(rules)).toMatchSnapshot("colour-rules.txt");
   expect.soft(describeScreens(screens)).toMatchSnapshot("colour-screens.txt");
+});
+
+// The game's stylesheet has no @media or @supports block today, so the collector's walk into conditional rules would go untested: this
+// fixture nests one inside another and checks that both declarations are read, each keyed by the conditions around it. It reads font-size
+// rather than a colour, which the collector accepts like any property, so the fixture needs no colour literal.
+test("the rule collector reads declarations nested inside @media and @supports", async ({
+  page,
+}) => {
+  await page.setContent(
+    "<style>@media (min-width: 1px) { .outer { font-size: 11px; } @supports (display: block) { .inner { font-size: 12px; } } }</style>",
+  );
+
+  const rules = await page.evaluate(collectRules, ["font-size"]);
+
+  expect(rules).toEqual({
+    "(min-width: 1px) .outer|1": "11px",
+    "(min-width: 1px) (display: block) .inner|1": "12px",
+  });
 });

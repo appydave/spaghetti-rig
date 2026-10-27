@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { isDrawable } from "./objects";
-import { INK } from "./palette";
+import { isDrawable } from "#root/src/world/objects.ts";
+import { INK } from "#root/src/world/palette.ts";
 
-export { INK } from "./palette";
+export { INK } from "#root/src/world/palette.ts";
 
 const TONE_SHADOW = 96;
 const TONE_DIM = 150;

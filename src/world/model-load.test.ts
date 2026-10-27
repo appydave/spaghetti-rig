@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { bool, list, num, numOr, obj, oneOf, str, vec } from "./model-load";
+import {
+  bool,
+  list,
+  num,
+  numOr,
+  obj,
+  oneOf,
+  str,
+  vec,
+} from "#root/src/world/model-load.ts";
 
 describe("the model loader helpers", () => {
   it("hand back a value of the right kind unchanged", () => {

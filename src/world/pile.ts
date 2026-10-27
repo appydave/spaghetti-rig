@@ -1,9 +1,9 @@
 // The pile of spaghetti the bugs leave behind when player 1 loses (G04 W3): strands, a meatball, garnish and a white flag. Moved out of
 // world.ts as it was; it builds from fixed seeds and takes nothing from the world.
 import * as THREE from "three";
-import { PILE } from "./palette";
-import { kit, rng, toon } from "./toon";
-import { RANDOM_CENTRE } from "./world-shared";
+import { PILE } from "#root/src/world/palette.ts";
+import { kit, rng, toon } from "#root/src/world/toon.ts";
+import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 const PILE_SEED = 42;
 const PILE_STRANDS = 26;

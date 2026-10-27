@@ -1,5 +1,5 @@
-import type { PresenterState } from "./director";
-import { MODES, type Notes } from "./script";
+import type { PresenterState } from "#root/src/show/director.ts";
+import { MODES, type Notes } from "#root/src/show/script.ts";
 
 /** What the presenter window sends the game window. */
 export type DirectorMessage = { type: "hello" } | { type: "cmd"; key: string };

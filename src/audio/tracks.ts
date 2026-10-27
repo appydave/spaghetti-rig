@@ -14,11 +14,11 @@
  *      perc  't' soft tick, 'T' accented tick, 's' shaker, '.' rest
  */
 
-import { nth } from "../nth";
+import { nth } from "#root/src/nth.ts";
 
-import rawTracks from "./tracks.json";
-import { parseTrackDefs } from "./load";
-import type { MusicTheme, Theme, TrackDef } from "./types";
+import rawTracks from "#root/src/audio/tracks.json";
+import { parseTrackDefs } from "#root/src/audio/load.ts";
+import type { MusicTheme, Theme, TrackDef } from "#root/src/audio/types.ts";
 
 export type {
   ArpVoice,
@@ -28,7 +28,7 @@ export type {
   Theme,
   TrackDef,
   TrackMix,
-} from "./types";
+} from "#root/src/audio/types.ts";
 
 // ---------------------------------------------------------------------------
 // The score lives in tracks.json; the loader fills in what a track leaves out

@@ -2,14 +2,14 @@
 // health heals. Moved out of world.ts: enterFixed is split into its beats (the shot, the cracks, the shatter, the fixed card, the heal) and
 // nothing else changes.
 import * as THREE from "three";
-import { FULL_HEALTH, TIER_HEALTH_LOSS } from "../content/load";
-import { nth } from "../nth";
-import type { Step } from "../show/script";
-import type { StepContext, StopWindow } from "./step-context";
-import { makeStopWindow } from "./tier-content";
-import { ease, lerp } from "./toon";
-import { EVENT } from "./palette";
-import type { State } from "./world-shared";
+import { FULL_HEALTH, TIER_HEALTH_LOSS } from "#root/src/content/load.ts";
+import { nth } from "#root/src/nth.ts";
+import type { Step } from "#root/src/show/script.ts";
+import type { StepContext, StopWindow } from "#root/src/world/step-context.ts";
+import { makeStopWindow } from "#root/src/world/tier-content.ts";
+import { ease, lerp } from "#root/src/world/toon.ts";
+import { EVENT } from "#root/src/world/palette.ts";
+import type { State } from "#root/src/world/world-shared.ts";
 
 const AIM_TO_FIRE_DELAY = 0.45;
 const BEAM_RING_SIZE = 2.5;
