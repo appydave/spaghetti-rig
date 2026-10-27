@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CITY_LAYOUT, ROAD_HALF } from "#root/src/world/city.ts";
-import { layoutCity } from "#root/src/world/city-layout.ts";
-import type { Placement } from "#root/src/world/city-layout-types.ts";
+import { CITY_LAYOUT, ROAD_HALF } from "#root/src/world/models/city.ts";
+import { layoutCity } from "#root/src/world/motion/city-layout.ts";
+import type { Placement } from "#root/src/world/motion/city-layout-types.ts";
 
 /** Counts and first values of the street at seed 1000, 200 long, read off the original buildCity (the same counts of instances) before the layout was moved out. */
 const PINNED = {

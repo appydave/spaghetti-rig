@@ -2,7 +2,7 @@
   "path": ["src"],
   "format": ["typescript", "css"],
   "mode": "weak",
-  "ignore": ["**/*.test.ts", "src/world/characters.ts"],
+  "ignore": ["**/*.test.ts", "src/world/models/characters.ts"],
   "reporters": ["console"],
   "exitCode": 1,
   "failOnEmpty": true

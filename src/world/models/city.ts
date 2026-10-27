@@ -3,12 +3,12 @@ import * as THREE from "three";
 import { context2d } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { layoutCity } from "#root/src/world/city-layout.ts";
+import { layoutCity } from "#root/src/world/motion/city-layout.ts";
 import type {
   CityLayoutTable,
   Placement,
-} from "#root/src/world/city-layout-types.ts";
-import { rng, toon } from "#root/src/world/toon.ts";
+} from "#root/src/world/motion/city-layout-types.ts";
+import { rng, toon } from "#root/src/world/models/toon.ts";
 
 export const ROAD_HALF = 3.6;
 export const SEGMENT = 34; // distance between stops

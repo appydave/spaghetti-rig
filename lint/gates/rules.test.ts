@@ -48,12 +48,12 @@ const config = readConfig();
 
 /** The six model files that are asset data (hand-placed geometry and materials), exempt from both rules for good: R7 revised. */
 const EXEMPT = [
-  "src/world/boss.ts",
-  "src/world/characters.ts",
-  "src/world/city.ts",
-  "src/world/enemies.ts",
-  "src/world/gate.ts",
-  "src/world/showcase.ts",
+  "src/world/models/boss.ts",
+  "src/world/models/characters.ts",
+  "src/world/models/city.ts",
+  "src/world/models/enemies.ts",
+  "src/world/models/gate.ts",
+  "src/world/models/showcase.ts",
 ];
 const BAD_SOURCE =
   'export const n = Math.max(7, 1);\nexport const c = "#ffffff";\n';

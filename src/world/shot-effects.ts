@@ -3,10 +3,10 @@
 import * as THREE from "three";
 import type { Sfx } from "#root/src/audio/audio.ts";
 import type { Player } from "#root/src/show/script.ts";
-import type { BossModel } from "#root/src/world/boss.ts";
-import type { Character } from "#root/src/world/characters.ts";
+import type { BossModel } from "#root/src/world/models/boss.ts";
+import type { Character } from "#root/src/world/models/characters.ts";
 import type { Effects } from "#root/src/world/effects.ts";
-import { SCORE, type Enemy } from "#root/src/world/enemies.ts";
+import { SCORE, type Enemy } from "#root/src/world/models/enemies.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { Debris } from "#root/src/world/physics.ts";
 import { KILL_TEXT_SIZE } from "#root/src/world/world-shared.ts";

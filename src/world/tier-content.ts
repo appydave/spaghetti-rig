@@ -10,7 +10,7 @@ import {
 import type { Stop } from "#root/src/content/types.ts";
 import { nth } from "#root/src/nth.ts";
 import { beforeParen, shortTool } from "#root/src/ui/card.ts";
-import { BossModel, paintBossPanel } from "#root/src/world/boss.ts";
+import { BossModel, paintBossPanel } from "#root/src/world/models/boss.ts";
 import { bossLayout } from "#root/src/world/bosslayout.ts";
 import {
   layoutCard,

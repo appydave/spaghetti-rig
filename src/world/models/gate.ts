@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { gateLabel } from "#root/src/content/gatelabel.ts";
-import { ROAD_HALF } from "#root/src/world/city.ts";
-import { disposeTree, kit } from "#root/src/world/toon.ts";
+import { ROAD_HALF } from "#root/src/world/models/city.ts";
+import { disposeTree, kit } from "#root/src/world/models/toon.ts";
 import { context2d } from "#root/src/dom.ts";
 import { GATE } from "#root/src/world/palette.ts";
 
@@ -234,4 +234,4 @@ export class Gate {
   }
 }
 
-export { toon as gateToon } from "#root/src/world/toon.ts";
+export { toon as gateToon } from "#root/src/world/models/toon.ts";

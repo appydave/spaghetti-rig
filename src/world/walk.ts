@@ -2,9 +2,9 @@
 // the walk, so both players stay in lockstep; the world keeps the walk it is on and these move it. Moved out of world.ts as it was.
 import * as THREE from "three";
 import type { Step } from "#root/src/show/script.ts";
-import { Enemy, type EnemyKind } from "#root/src/world/enemies.ts";
+import { Enemy, type EnemyKind } from "#root/src/world/models/enemies.ts";
 import type { StepContext } from "#root/src/world/step-context.ts";
-import { ease, lerp, rng } from "#root/src/world/toon.ts";
+import { ease, lerp, rng } from "#root/src/world/models/toon.ts";
 import { standZ } from "#root/src/world/world-shared.ts";
 
 const WALK_SEED_BASE = 500;

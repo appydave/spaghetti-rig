@@ -8,8 +8,8 @@ import {
 } from "#root/src/world/boss-panel.ts";
 import { CodeWindow } from "#root/src/world/codewindow.ts";
 import { Debris } from "#root/src/world/physics.ts";
-import { geo, INK, kit } from "#root/src/world/toon.ts";
-import { userData } from "#root/src/world/objects.ts";
+import { geo, INK, kit } from "#root/src/world/models/toon.ts";
+import { userData } from "#root/src/world/models/objects.ts";
 import { nth } from "#root/src/nth.ts";
 
 /** The numbers and colours of a boss window face: data only, read by paintPanel in boss-panel.ts. */

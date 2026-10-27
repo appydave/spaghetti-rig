@@ -3,7 +3,7 @@
 import { context2d } from "#root/src/dom.ts";
 import { fit } from "#root/src/world/canvas-text.ts";
 import { PALETTE } from "#root/src/world/codewindow.ts";
-import { INK } from "#root/src/world/toon.ts";
+import { INK } from "#root/src/world/models/toon.ts";
 
 const BARLOW = "Barlow, Impact, sans-serif";
 const SPACE = "Space, Arial, sans-serif";

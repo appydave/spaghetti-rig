@@ -5,8 +5,9 @@ import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 // The robot paints its label on a canvas; a canvas that accepts any drawing call is all it needs (the stand-in the proof harnesses use).
 vi.stubGlobal("document", canvasDocument());
 
-const { Enemy } = await import("#root/src/world/enemies.ts");
-const { ROBOT_PAUSE_SECONDS } = await import("#root/src/world/enemy-motion.ts");
+const { Enemy } = await import("#root/src/world/models/enemies.ts");
+const { ROBOT_PAUSE_SECONDS } =
+  await import("#root/src/world/motion/enemy-motion.ts");
 
 const PATH = 10;
 const SPEED = 5;

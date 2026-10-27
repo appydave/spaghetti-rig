@@ -2,7 +2,7 @@
   "path": ["src", "tests", "lint", "scripts"],
   "format": ["typescript", "javascript"],
   "mode": "weak",
-  "ignore": ["src/world/characters.ts"],
+  "ignore": ["src/world/models/characters.ts"],
   "reporters": ["console"],
   "exitCode": 1,
   "failOnEmpty": true

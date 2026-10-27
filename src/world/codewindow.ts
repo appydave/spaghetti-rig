@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { Layout, Line, Mark } from "#root/src/world/codelayout.ts";
 import { Debris } from "#root/src/world/physics.ts";
-import { INK, kit, rng, toon } from "#root/src/world/toon.ts";
+import { INK, kit, rng, toon } from "#root/src/world/models/toon.ts";
 import {
   CARD,
   CRACK,
@@ -15,7 +15,7 @@ import {
   type Mood,
 } from "#root/src/world/palette.ts";
 import { wrap as wrapProse } from "#root/src/world/canvas-text.ts";
-import { meshNamed } from "#root/src/world/objects.ts";
+import { meshNamed } from "#root/src/world/models/objects.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";

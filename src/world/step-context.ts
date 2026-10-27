@@ -5,7 +5,7 @@ import type { Sfx } from "#root/src/audio/audio.ts";
 import type { Game } from "#root/src/content/load.ts";
 import type { Player } from "#root/src/show/script.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";
-import type { Character } from "#root/src/world/characters.ts";
+import type { Character } from "#root/src/world/models/characters.ts";
 import type { Combat } from "#root/src/world/combat.ts";
 import type { Effects } from "#root/src/world/effects.ts";
 import type { Debris } from "#root/src/world/physics.ts";
