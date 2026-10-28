@@ -126,14 +126,12 @@ function fireAt(c: FixedContext, old: OldCard) {
 
   c.fx.muzzle(from, EVENT.toolMuzzle);
   c.fx.beam(from, to);
-  c.fx.ring(
-    to,
-    EVENT.toolRing,
-    BEAM_RING_SIZE,
-    BEAM_RING_LIFE,
-    false,
-    c.camera.position,
-  );
+  c.fx.ring(to, {
+    color: EVENT.toolRing,
+    size: BEAM_RING_SIZE,
+    life: BEAM_RING_LIFE,
+    face: c.camera.position,
+  });
   c.sfx("cardPlay");
 }
 
@@ -189,9 +187,7 @@ function heal(c: FixedContext) {
   c.fx.text(
     c.character.chestWorld().add(new THREE.Vector3(0, HEAL_TEXT_RISE, 0)),
     "+100% HP",
-    EVENT.healText,
-    1.0,
-    HEAL_TEXT_LIFE,
+    { color: EVENT.healText, size: 1.0, life: HEAL_TEXT_LIFE },
   );
 
   const from = c.health();

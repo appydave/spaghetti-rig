@@ -1,6 +1,6 @@
 // How a PlayerWorld is looked at (G04 H1): its scene graph (every node's transform, visibility and material), the state it holds besides
 // the scene, and a hash of both. Used by world-proof.test.ts.
-// NOT fingerprinted: instanced meshes (the effects' sparks): grow this harness before effects.ts is split.
+// Instanced meshes (the effects' sparks) are fingerprinted too: how many instances are live, where, and in what colour.
 import { createHash } from "node:crypto";
 import type * as THREE from "three";
 

@@ -135,13 +135,11 @@ function blowLands(c: BossPartContext, blow: CodeWindow, path: Path) {
     colors: EVENT.bossHitBurst,
     speed: KO_BURST_SPEED,
   });
-  c.fx.text(
-    to.clone().add(new THREE.Vector3(0, KO_TEXT_RISE, 0)),
-    "K.O.",
-    EVENT.koText,
-    KO_TEXT_SIZE,
-    KO_TEXT_LIFE,
-  );
+  c.fx.text(to.clone().add(new THREE.Vector3(0, KO_TEXT_RISE, 0)), "K.O.", {
+    color: EVENT.koText,
+    size: KO_TEXT_SIZE,
+    life: KO_TEXT_LIFE,
+  });
   blow.shatter(c.debris, from, {
     power: KO_SHATTER_POWER,
     grid: [KO_SHATTER_GRID_COLS, KO_SHATTER_GRID_ROWS],
@@ -225,9 +223,7 @@ function partBreaks(
   c.fx.text(
     to.clone().add(new THREE.Vector3(0, PART_TEXT_RISE, 0)),
     beforeParen(shot.toolName).split(" ").slice(0, PART_TEXT_WORDS).join(" "),
-    EVENT.partText,
-    PART_TEXT_SIZE,
-    PART_TEXT_LIFE,
+    { color: EVENT.partText, size: PART_TEXT_SIZE, life: PART_TEXT_LIFE },
   );
   shot.boss.breakPart(shot.part, c.debris, from);
   c.sfx("bossPartBreak");

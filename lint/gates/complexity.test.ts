@@ -24,7 +24,6 @@ const COMPLEXITY_CARRIED = [
   "src/content/load.ts",
   "src/main.ts",
   "src/show/script.ts",
-  "src/world/combat/effects.ts",
   "src/world/models/toon.ts",
 ];
 const COMPLEXITY_RULES = [

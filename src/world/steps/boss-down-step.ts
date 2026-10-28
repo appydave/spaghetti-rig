@@ -128,13 +128,11 @@ function destroyBoss(c: BossDownContext, boss: BossModel) {
   c.sfx("shatter");
   c.setShake(BOSS_DEFEAT_SHAKE);
   c.fx.confetti(at, BOSS_CONFETTI_COUNT);
-  c.fx.ring(
-    at,
-    EVENT.bossDownRing,
-    BOSS_RING_SIZE,
-    BOSS_RING_LIFE,
-    false,
-    c.camera.position,
-  );
+  c.fx.ring(at, {
+    color: EVENT.bossDownRing,
+    size: BOSS_RING_SIZE,
+    life: BOSS_RING_LIFE,
+    face: c.camera.position,
+  });
   c.character.pose = "victory";
 }
