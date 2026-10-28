@@ -7,9 +7,9 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 // three.js and the game's code ship in one chunk of about this many kB, so the default 500 kB warning would always fire.
 const CHUNK_WARNING_KB = 6000;
 // Coverage: the most statements, branches and functions that may be left uncovered, and the percentage backstop. See `thresholds`.
-const MAX_UNCOVERED_STATEMENTS = 307;
-const MAX_UNCOVERED_BRANCHES = 235;
-const MAX_UNCOVERED_FUNCTIONS = 69;
+const MAX_UNCOVERED_STATEMENTS = 204;
+const MAX_UNCOVERED_BRANCHES = 205;
+const MAX_UNCOVERED_FUNCTIONS = 46;
 const BACKSTOP_STATEMENTS = 91.6;
 const BACKSTOP_BRANCHES = 82.5;
 const BACKSTOP_FUNCTIONS = 87.7;
