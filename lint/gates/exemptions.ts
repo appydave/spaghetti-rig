@@ -14,10 +14,7 @@ export const ASSET_DATA = [
 export const TOON_KIT = ["src/world/models/kit/kit.ts"];
 
 /** The files carried to tier 5 (structure) by David's option 2, 10-24: they still exceed a size limit and tier 5 splits them. The list may shrink, never grow. */
-export const CARRIED_TO_TIER_5 = [
-  "lint/gates/audio-proof.test.ts",
-  "tests/show.spec.ts",
-];
+export const CARRIED_TO_TIER_5 = ["lint/gates/audio-proof.test.ts"];
 
 /** The procedural-data file the duplicate gate (G08) skips: its two characters share a 9-line run of hand-placed body parts, which is data written as code. Every other model file scans clean; `gate.ts` shares `disposeTree` instead. */
 export const DUPLICATES_PD = ["src/world/models/characters.ts"];

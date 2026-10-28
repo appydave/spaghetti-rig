@@ -22,7 +22,7 @@ const COMPLEXITY_RULES = [
   "anti-slop/cyclomatic-complexity",
   "sonarjs/expression-complexity",
 ];
-/** A carried-for-size file with no complexity finding: it is fully under this gate. */
+/** A file the size carry held and the complexity carry never did (a probe path; the planted file has the finding): it is fully under this gate. */
 const CARRIED_FOR_SIZE_ONLY = "tests/show.spec.ts";
 const OVER = cognitive(9);
 
