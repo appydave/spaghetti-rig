@@ -1,5 +1,17 @@
-import type { PresenterState } from "#root/src/show/director.ts";
-import { MODES, type Notes } from "#root/src/show/script.ts";
+import { MODES, type Mode, type Notes } from "#root/src/show/script.ts";
+
+/** What the game window sends the presenter window: where the show is, and the notes for the step. */
+export interface PresenterState {
+  type: "state";
+  index: number;
+  total: number;
+  label: string;
+  next: string;
+  mode: Mode;
+  notes: Notes;
+  phase: string;
+  paused: boolean;
+}
 
 /** What the presenter window sends the game window. */
 export type DirectorMessage = { type: "hello" } | { type: "cmd"; key: string };
