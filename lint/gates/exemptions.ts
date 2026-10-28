@@ -20,7 +20,6 @@ export const CARRIED_TO_TIER_5 = [
   "src/show/script.ts",
   "src/world/combat/effects.ts",
   "src/world/models/toon.ts",
-  "src/world/world.ts",
   "tests/show.spec.ts",
 ];
 

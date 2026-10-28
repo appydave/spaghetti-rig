@@ -6,7 +6,10 @@ import { boot, press, rig, step, watchErrors } from "#root/tests/helpers.ts";
 const W = 1600;
 const H = 900;
 const shots = (page: Page) =>
-  rig(page, (r) => ({ p1: r.worlds.p1.shots, p2: r.worlds.p2.shots }));
+  rig(page, (r) => ({
+    p1: r.worlds.p1.combat.shots,
+    p2: r.worlds.p2.combat.shots,
+  }));
 
 /** Wait until a lane's shot count passes `count`. It waits for the shots, not for a fixed time: the game clock paces autoplay, so a slow runner fires fewer in the same wall-clock span. */
 const shotsAbove = (page: Page, lane: "p1" | "p2", count: number) =>
@@ -67,14 +70,14 @@ test("a real click on an enemy kills it and the score goes up", async ({
   for (let i = 0; i < 80 && score === 0; i++) {
     await page.waitForTimeout(80);
 
-    const e = await rig(page, (r) => r.worlds.p2.enemyScreen());
+    const e = await rig(page, (r) => r.worlds.p2.combat.enemyScreen());
 
     if (!e || Math.abs(e.x) > 0.95 || Math.abs(e.y) > 0.6) {
       continue;
     }
 
     await tap(page, ((e.x + 1) / 2) * W, ((1 - e.y) / 2) * H);
-    score = await rig(page, (r) => r.worlds.p2.score);
+    score = await rig(page, (r) => r.worlds.p2.combat.score);
   }
 
   expect(score).toBeGreaterThan(0);
@@ -176,7 +179,9 @@ test("what you miss becomes debt: bugs shipped for player 1, caught by CI for pl
   await walk(page, "b");
   // Nobody shoots; let the street walk past.
   await expect
-    .poll(() => rig(page, (r) => r.worlds.p1.shipped), { timeout: 12_000 })
+    .poll(() => rig(page, (r) => r.worlds.p1.combat.shipped), {
+      timeout: 12_000,
+    })
     .toBeGreaterThan(0);
   await expect(page.locator(".lane[data-p='p1'] .shipped")).not.toHaveText("0");
   await expect(

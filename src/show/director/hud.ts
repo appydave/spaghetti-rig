@@ -136,7 +136,7 @@ export function updateHealth(
 
 /** The cleanup score, and the bugs shipped where there is a box for them. */
 export function updateScore(el: HTMLElement, w: PlayerWorld) {
-  queryEl(el, ".score").textContent = String(w.score).padStart(
+  queryEl(el, ".score").textContent = String(w.combat.score).padStart(
     SCORE_DIGITS,
     "0",
   );
@@ -144,7 +144,7 @@ export function updateScore(el: HTMLElement, w: PlayerWorld) {
   const shipped = el.querySelector(".shipped");
 
   if (shipped) {
-    shipped.textContent = String(w.shipped);
+    shipped.textContent = String(w.combat.shipped);
   }
 }
 
@@ -155,7 +155,7 @@ export function updateAutoReticle(
   l: Lane | undefined,
 ) {
   const auto = queryEl(el, ".reticle.auto");
-  const a = w.autoAimScreen();
+  const a = w.combat.autoAimScreen();
 
   auto.hidden = !a || !l;
   if (a && l) {
@@ -172,11 +172,12 @@ export function updateBossBar(
 ) {
   const bb = queryEl(el, ".bossbar");
 
-  bb.hidden = bossName === null || w.bossTotal === 0;
+  bb.hidden = bossName === null || w.street.bossTotal === 0;
   if (!bb.hidden) {
     queryEl(bb, ".name").textContent = bossName;
-    queryEl(bb, ".count").textContent = `${w.bossLeft} / ${w.bossTotal} SINS`;
+    queryEl(bb, ".count").textContent =
+      `${w.street.bossLeft} / ${w.street.bossTotal} SINS`;
     queryEl(bb, ".bar i").style.width =
-      `${(w.bossLeft / w.bossTotal) * PERCENT}%`;
+      `${(w.street.bossLeft / w.street.bossTotal) * PERCENT}%`;
   }
 }
