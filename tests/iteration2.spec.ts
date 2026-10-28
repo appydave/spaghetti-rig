@@ -106,6 +106,9 @@ test("Space after clicking the autoplay button still means next, not the button"
   await walk(page, "2");
   await page.click('[data-chip="auto"]');
   await expect(page.locator("#hud-auto")).toHaveText("AUTOPLAY ON");
+  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe(
+    "BUTTON",
+  );
 
   const at = await rig(page, (r) => r.director.at);
 

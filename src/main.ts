@@ -1,5 +1,7 @@
 import type { AppContext, Screen } from "#root/src/app/context.ts";
 import { installErrorBanner, showError } from "#root/src/app/errors.ts";
+import { clickAction } from "#root/src/app/boot/clicks.ts";
+import { tierCards } from "#root/src/app/boot/map.ts";
 import { installKeys, key } from "#root/src/app/keys.ts";
 import { presenter } from "#root/src/app/presenter.ts";
 import { AudioEngine, MS_PER_SECOND, TRACKS } from "#root/src/audio/audio.ts";
@@ -14,8 +16,6 @@ import {
   type Mode,
   type Player,
 } from "#root/src/show/script.ts";
-import { gatesText } from "#root/src/content/gatelabel.ts";
-import { esc } from "#root/src/ui/card.ts";
 import { initPhysics } from "#root/src/world/combat/physics.ts";
 import { Stage } from "#root/src/world/stage.ts";
 import type { TestHooks } from "#root/src/testhooks.ts";
@@ -138,27 +138,7 @@ async function boot() {
     const list = $("tiers");
 
     list.style.setProperty("--n", String(game.tiers.length));
-    list.innerHTML = game.tiers
-      .map((t, i) => {
-        const art = t.playable
-          ? `/assets/tiers/${t.key}.svg`
-          : `/assets/bosses/${t.key}.svg`;
-        const fallback = t.playable
-          ? "/assets/tiers/generic.svg"
-          : "/assets/bosses/generic.svg";
-
-        return `<li class="tier${t.playable ? "" : " locked"}${i === selected ? " sel" : ""}" data-i="${i}">
-        ${t.playable ? "" : '<span class="lock">LOCKED</span>'}
-        <span class="n">${String(t.n).padStart(2, "0")}</span>
-        <img class="${t.playable ? "" : "boss-shadow"}" src="${art}" alt="" onerror="this.onerror=null;this.src='${fallback}'">
-        <h3>${esc(t.name)}</h3>
-        <span class="meta">${esc(gatesText(t.gates))} · ${t.stops.length} STOP${t.stops.length === 1 ? "" : "S"}</span>
-        <p>${esc(t.idea ?? "")}</p>
-        <div class="boss"><span class="label">BOSS</span><b>${esc(t.boss.name)}</b></div>
-        ${t.playable && i === selected ? '<span class="primary-button go">ENTER · PLAY ↗</span>' : ""}
-      </li>`;
-      })
-      .join("");
+    list.innerHTML = tierCards(game.tiers, selected);
   }
 
   function show(s: Screen) {
@@ -255,46 +235,6 @@ async function boot() {
     });
   }
 
-  document.addEventListener("click", (e) => {
-    const a = closestEl(e.target, "[data-action]");
-
-    if (!a) {
-      return;
-    }
-
-    const act = a.dataset.action;
-
-    if (act === "mute") {
-      toggleMute();
-    }
-
-    if (act === "pause") {
-      if (!$("help").hidden) {
-        $("help").hidden = true;
-      }
-
-      togglePause();
-    }
-
-    if (act === "help") {
-      toggleHelp();
-    }
-
-    if (act === "to-map") {
-      director.setPaused(false);
-      show("map");
-    }
-
-    if (act === "auto") {
-      director.toggleAutoplay();
-      audio.play("uiMove");
-    }
-
-    // A clicked button keeps focus; let it go, so Space stays "next" and never presses it again.
-    if (a instanceof HTMLButtonElement) {
-      a.blur();
-    }
-  });
   $("tiers").addEventListener("click", (e) => {
     const li = closestEl(e.target, ".tier");
 
@@ -340,6 +280,20 @@ async function boot() {
     renderMap,
   };
 
+  document.addEventListener("click", (e) => {
+    const a = closestEl(e.target, "[data-action]");
+
+    if (!a) {
+      return;
+    }
+
+    clickAction(ctx, a.dataset.action);
+
+    // A clicked button keeps focus; let it go, so Space stays "next" and never presses it again.
+    if (a instanceof HTMLButtonElement) {
+      a.blur();
+    }
+  });
   installKeys(ctx);
 
   // Frame loop.
