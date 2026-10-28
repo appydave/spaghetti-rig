@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { rng } from "#root/src/world/models/toon.ts";
+import { rng } from "#root/src/maths.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 // The hand's feel. Times are in seconds, and the "spread" values are multiplied by a random 0..1 and added to the base.
