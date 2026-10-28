@@ -13,12 +13,20 @@ import {
   TRACKS as TRACK_LIST,
   tracksForTheme,
   midiToFreq,
-  SEMITONES_PER_OCTAVE,
   type CompiledTrack,
   type Theme,
-  type LeadVoice,
 } from "#root/src/audio/tracks.ts";
-import type { Deck, Note } from "#root/src/audio/music/deck.ts";
+import type { Deck } from "#root/src/audio/music/deck.ts";
+import { leadNote } from "#root/src/audio/music/lead.ts";
+import { padChord, compStab } from "#root/src/audio/music/chords.ts";
+import { bassNote, pluck, bell, perc } from "#root/src/audio/music/hits.ts";
+import {
+  SILENCE,
+  STOP_PADDING,
+  cleanup,
+  noiseVoice,
+  rand,
+} from "#root/src/audio/voice-kit.ts";
 import {
   scheduleDeck,
   type SequencerHost,
@@ -72,8 +80,6 @@ const XFADE = 1.2;
 const MASTER_LEVEL = 0.9;
 const MUSIC_LEVEL = 0.3;
 const SFX_LEVEL = 0.8;
-/** The quietest a gain ramp may reach: an exponential ramp cannot end at 0. */
-const SILENCE = 0.0001;
 /** Seconds a gain change on the master takes to settle (mute and unmute). */
 const MUTE_FADE = 0.04;
 /** A new sound effect starts this long after it is asked for, so it is never scheduled in the past. */
@@ -106,8 +112,6 @@ const DEFAULT_NOISE_Q = 0.8;
 /** A tone ramps to at least this peak, and its decay lasts at least this long after its attack. */
 const MIN_PEAK = 0.0002;
 const MIN_DECAY = 0.01;
-/** An oscillator or noise source is stopped this long after its gain has died away. */
-const STOP_PADDING = 0.02;
 /** The shared noise buffer is two seconds long, so a noise voice may last at most this long. */
 const NOISE_MAX_SECONDS = 1.95;
 
@@ -156,114 +160,6 @@ const SFX_LIFE: Partial<Record<Sfx, number>> = {
   cardPlay: 1,
   shatter: SHATTER_LIFE,
 };
-
-/** The lead voice: its peak, how fast it speaks, how long a note holds and rings, and how it settles. */
-const LEAD_LEVEL = 0.16;
-const LEAD_ATTACK = 0.008;
-const LEAD_SAW_ATTACK = 0.012;
-const LEAD_MIN_LEN = 0.08;
-const LEAD_HOLD = 0.92;
-const LEAD_PLUCK_MAX_LEN = 0.3;
-const LEAD_TAIL = 0.2;
-const LEAD_PLUCK_TAIL = 0.25;
-const LEAD_PLUCK_FALL = 0.2;
-const LEAD_SUSTAIN = 0.7;
-const LEAD_SUSTAIN_TIME = 0.12;
-const LEAD_RELEASE = 0.05;
-/** The lead's filter opens to a multiple of the note's pitch (never past a ceiling) and closes to another over a sweep. */
-const LEAD_Q = 0.8;
-const LEAD_SAW_OPEN = 6;
-const LEAD_PLUCK_OPEN = 8;
-const LEAD_OPEN = 5;
-const LEAD_OPEN_MAX = 9000;
-const LEAD_PLUCK_CLOSE = 1.5;
-const LEAD_CLOSE = 2.5;
-const LEAD_CLOSE_MAX = 6000;
-const LEAD_PLUCK_SWEEP = 0.25;
-const LEAD_SWEEP = 0.4;
-/** Each lead voice is a main oscillator and a second one beside it: its level and, in cents, how far it is detuned. */
-const LEAD_TRIANGLE_OCTAVE = 0.12;
-const LEAD_SINE_CHORUS = 0.3;
-const LEAD_SINE_CHORUS_DETUNE = 7;
-const LEAD_SQUARE_LEVEL = 0.55;
-const LEAD_SQUARE_SUB = 0.6;
-const LEAD_SQUARE_SUB_DETUNE = 6;
-const LEAD_SAW_LEVEL = 0.5;
-const LEAD_SAW_DETUNE = 8;
-const LEAD_BUZZ = 0.25;
-/** A long lead note gets a vibrato: its rate, the shortest note that has one, and when it starts and is fully in. */
-const LEAD_VIBRATO_RATE = 5.4;
-const LEAD_VIBRATO_MIN_LEN = 0.32;
-const LEAD_VIBRATO_DELAY = 0.18;
-const LEAD_VIBRATO_FULL = 0.45;
-const LEAD_VIBRATO_DEPTH = 0.006;
-/** The pad chord: the tail it rings for, the filter's Q, how far apart the two sides sit, and each note's level. */
-const PAD_TAIL = 0.9;
-const PAD_Q = 0.5;
-const PAD_SPREAD = 0.6;
-const PAD_GLASS_LEVEL = 0.05;
-const PAD_LEVEL = 0.04;
-const PAD_RELEASE = 0.22;
-/** A glass pad opens at once and settles to a fraction of its level; the others sweep their filter up and back. */
-const PAD_GLASS_CUTOFF = 3200;
-const PAD_GLASS_RISE = 0.02;
-const PAD_GLASS_SETTLE_TIME = 0.9;
-const PAD_GLASS_SETTLE = 0.45;
-const PAD_DARK_START = 450;
-const PAD_START = 700;
-const PAD_DARK_PEAK = 800;
-const PAD_PEAK = 1500;
-const PAD_PEAK_AT = 0.5;
-const PAD_PEAK_MAX = 1.2;
-const PAD_DARK_END = 600;
-const PAD_END = 1000;
-const PAD_RISE = 0.25;
-/** The pad's oscillators are detuned in cents by side, plus a small random wander. */
-const PAD_GLASS_DETUNE = 5;
-const PAD_DETUNE = 9;
-const PAD_WANDER = 2;
-/** The bass: how long a note is held (between a floor and a ceiling), its peak, and how it settles. */
-const BASS_MIN_LEN = 0.08;
-const BASS_HOLD = 0.85;
-const BASS_MAX_LEN = 1.6;
-const BASS_LEVEL = 0.24;
-const BASS_ATTACK = 0.006;
-const BASS_SUSTAIN = 0.6;
-const BASS_SUSTAIN_TIME = 0.15;
-const BASS_RELEASE = 0.04;
-const BASS_CUTOFF = 700;
-const BASS_TAIL = 0.25;
-/** The arpeggio pluck: how fast it speaks, how long it decays and when its oscillator stops. */
-const PLUCK_ATTACK = 0.004;
-const PLUCK_DECAY = 0.24;
-const PLUCK_STOP = 0.26;
-/** The bell: a second partial a bit over three times the pitch (not an exact harmonic), loud at first and fading fast. */
-const BELL_PARTIAL = 3.01;
-const BELL_PARTIAL_LEVEL = 0.25;
-const BELL_PARTIAL_FLOOR = 0.01;
-const BELL_PARTIAL_FALL = 0.15;
-const BELL_ATTACK = 0.004;
-/** The comp stab: its level, how fast it speaks and dies, where its filter sits, and when it stops. */
-const COMP_LEVEL = 0.06;
-const COMP_ATTACK = 0.005;
-const COMP_DECAY = 0.16;
-const COMP_DARK_CUTOFF = 1400;
-const COMP_CUTOFF = 2600;
-const COMP_STOP = 0.18;
-/** The percussion: a hat (t), an accented hat (T) and a snare (s), each with its filter, level and length; the noise start wanders. */
-const PERC_SNARE_CUTOFF = 8500;
-const PERC_CUTOFF = 7000;
-const PERC_SNARE_Q = 1.2;
-const PERC_Q = 0.7;
-const PERC_ACCENT_LEVEL = 0.07;
-const PERC_SNARE_LEVEL = 0.04;
-const PERC_LEVEL = 0.04;
-const PERC_SNARE_DUR = 0.09;
-const PERC_DUR = 0.035;
-const PERC_SNARE_ATTACK = 0.03;
-const PERC_ATTACK = 0.002;
-const PERC_PAN = 0.35;
-const PERC_NOISE_START = 1.8;
 
 /** The brass note: its filter opens to a multiple of the pitch (never past a ceiling) fast, then settles lower; its gain and tail. */
 const BRASS_OPEN = 1.2;
@@ -350,7 +246,6 @@ const BOUNCE_CLICK_F = 2300;
 const BOUNCE_CLICK_DUR = 0.05;
 const BOUNCE_CLICK_VOL = 0.12;
 
-const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
 
@@ -396,16 +291,7 @@ export class AudioEngine {
   private activeSfx = 0;
   /** What the sequencer asks of this engine: the music voices, and rolling a finished deck over to the next track. */
   private readonly sequencer: SequencerHost = {
-    voices: {
-      padChord: (note, notes, len) => this.padChord(note, notes, len),
-      bassNote: (note, midi, len) => this.bassNote(note, midi, len),
-      leadNote: (note, midi, len, voice) =>
-        this.leadNote(note, midi, len, voice),
-      pluck: (note, midi, pan) => this.pluck(note, midi, pan),
-      bell: (note, midi, pan, decay) => this.bell(note, midi, pan, decay),
-      compStab: (note, notes, dark) => this.compStab(note, notes, dark),
-      perc: (note, kind) => this.perc(note, kind),
-    },
+    voices: { padChord, bassNote, leadNote, pluck, bell, compStab, perc },
     rollOver: (deck, at) => this.rollOver(deck, at),
   };
 
@@ -779,6 +665,8 @@ export class AudioEngine {
 
     const deck: Deck = {
       track,
+      ctx,
+      noise: this.noiseBuf,
       out,
       delayIn,
       fx: [delayIn, tone, dL, dR, fbL, fbR, pL, pR],
@@ -859,448 +747,6 @@ export class AudioEngine {
     return true;
   }
 
-  // ------------------------------------------------------------------ music voices
-
-  /** Wire cleanup: when the first source ends, disconnect everything. */
-  private cleanup(src: AudioScheduledSourceNode, nodes: AudioNode[]): void {
-    src.onended = () => {
-      for (const n of nodes) {
-        try {
-          n.disconnect();
-        } catch {
-          /* ignore */
-        }
-      }
-    };
-  }
-
-  private leadNote(
-    note: Note,
-    midi: number,
-    len: number,
-    voice: LeadVoice,
-  ): void {
-    const { deck, t, level: vel } = note;
-    const ctx = this.audioContext;
-    const f = midiToFreq(midi);
-    const pluck = voice === "pluck";
-    const dur = pluck
-      ? Math.min(len, LEAD_PLUCK_MAX_LEN)
-      : Math.max(LEAD_MIN_LEN, len * LEAD_HOLD);
-    const end = t + dur + (pluck ? LEAD_PLUCK_TAIL : LEAD_TAIL);
-    const g = ctx.createGain();
-    const peak = LEAD_LEVEL * vel;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(
-      peak,
-      t + (voice === "saw" ? LEAD_SAW_ATTACK : LEAD_ATTACK),
-    );
-    if (pluck) {
-      g.gain.exponentialRampToValueAtTime(SILENCE, t + dur + LEAD_PLUCK_FALL);
-    } else {
-      g.gain.exponentialRampToValueAtTime(
-        peak * LEAD_SUSTAIN,
-        t + LEAD_SUSTAIN_TIME,
-      );
-      g.gain.setValueAtTime(peak * LEAD_SUSTAIN, t + dur);
-      g.gain.setTargetAtTime(SILENCE, t + dur, LEAD_RELEASE);
-    }
-
-    const nodes: AudioNode[] = [g];
-    const srcs: OscillatorNode[] = [];
-    const osc = (
-      type: OscillatorType,
-      freq: number,
-      level: number,
-      detune = 0,
-    ): OscillatorNode => {
-      const o = ctx.createOscillator();
-
-      o.type = type;
-      o.frequency.value = freq;
-      o.detune.value = detune;
-      if (level === 1) {
-        o.connect(target);
-      } else {
-        const og = ctx.createGain();
-
-        og.gain.value = level;
-        o.connect(og).connect(target);
-        nodes.push(og);
-      }
-
-      srcs.push(o);
-      nodes.push(o);
-
-      return o;
-    };
-
-    let target: AudioNode = g;
-
-    if (voice === "square" || voice === "saw" || pluck) {
-      const lp = ctx.createBiquadFilter();
-
-      lp.type = "lowpass";
-      lp.Q.value = pluck ? 2 : LEAD_Q;
-
-      const hi =
-        voice === "saw"
-          ? f * LEAD_SAW_OPEN
-          : pluck
-            ? f * LEAD_PLUCK_OPEN
-            : f * LEAD_OPEN;
-
-      lp.frequency.setValueAtTime(Math.min(hi, LEAD_OPEN_MAX), t);
-      lp.frequency.exponentialRampToValueAtTime(
-        Math.min(f * (pluck ? LEAD_PLUCK_CLOSE : LEAD_CLOSE), LEAD_CLOSE_MAX),
-        t + (pluck ? LEAD_PLUCK_SWEEP : LEAD_SWEEP),
-      );
-      lp.connect(g);
-      nodes.push(lp);
-      target = lp;
-    }
-
-    let main: OscillatorNode;
-
-    switch (voice) {
-      case "triangle":
-        main = osc("triangle", f, 1);
-        osc("sine", f * 2, LEAD_TRIANGLE_OCTAVE);
-        break;
-      case "sine":
-        main = osc("sine", f, 1);
-        osc("triangle", f, LEAD_SINE_CHORUS, LEAD_SINE_CHORUS_DETUNE);
-        break;
-      case "square":
-        main = osc("square", f, LEAD_SQUARE_LEVEL);
-        osc("triangle", f, LEAD_SQUARE_SUB, -LEAD_SQUARE_SUB_DETUNE);
-        break;
-      case "saw":
-        main = osc("sawtooth", f, LEAD_SAW_LEVEL, -LEAD_SAW_DETUNE);
-        osc("sawtooth", f, LEAD_SAW_LEVEL, LEAD_SAW_DETUNE);
-        break;
-      default:
-        main = osc("triangle", f, 1);
-        osc("square", f, LEAD_BUZZ);
-        break;
-    }
-
-    if (!pluck && dur > LEAD_VIBRATO_MIN_LEN) {
-      const lfo = ctx.createOscillator();
-
-      lfo.frequency.value = LEAD_VIBRATO_RATE;
-
-      const depth = ctx.createGain();
-
-      depth.gain.setValueAtTime(0, t);
-      depth.gain.linearRampToValueAtTime(0, t + LEAD_VIBRATO_DELAY);
-      depth.gain.linearRampToValueAtTime(
-        f * LEAD_VIBRATO_DEPTH,
-        t + LEAD_VIBRATO_FULL,
-      );
-      lfo.connect(depth);
-      for (const s of srcs) {
-        depth.connect(s.frequency);
-      }
-
-      srcs.push(lfo);
-      nodes.push(lfo, depth);
-    }
-
-    g.connect(deck.out);
-    g.connect(deck.delayIn);
-    for (const s of srcs) {
-      s.start(t);
-      s.stop(end);
-    }
-
-    this.cleanup(main, nodes);
-  }
-
-  private padChord(note: Note, notes: number[], len: number): void {
-    const { deck, t, level } = note;
-    const ctx = this.audioContext;
-    const kind = deck.track.def.pad;
-    const end = t + len + PAD_TAIL;
-    const nodes: AudioNode[] = [];
-    let first: OscillatorNode | null = null;
-
-    for (const side of [-1, 1]) {
-      const lp = ctx.createBiquadFilter();
-
-      lp.type = "lowpass";
-      lp.Q.value = PAD_Q;
-
-      const g = ctx.createGain();
-      const pan = ctx.createStereoPanner();
-
-      pan.pan.value = side * PAD_SPREAD;
-
-      const per = (kind === "glass" ? PAD_GLASS_LEVEL : PAD_LEVEL) * level;
-      const vol = per * notes.length;
-
-      if (kind === "glass") {
-        lp.frequency.value = PAD_GLASS_CUTOFF;
-        g.gain.setValueAtTime(SILENCE, t);
-        g.gain.exponentialRampToValueAtTime(vol, t + PAD_GLASS_RISE);
-        g.gain.exponentialRampToValueAtTime(
-          vol * PAD_GLASS_SETTLE,
-          t + PAD_GLASS_SETTLE_TIME,
-        );
-      } else {
-        lp.frequency.setValueAtTime(
-          kind === "dark" ? PAD_DARK_START : PAD_START,
-          t,
-        );
-        lp.frequency.linearRampToValueAtTime(
-          kind === "dark" ? PAD_DARK_PEAK : PAD_PEAK,
-          t + Math.min(len * PAD_PEAK_AT, PAD_PEAK_MAX),
-        );
-        lp.frequency.linearRampToValueAtTime(
-          kind === "dark" ? PAD_DARK_END : PAD_END,
-          t + len,
-        );
-        g.gain.setValueAtTime(SILENCE, t);
-        g.gain.linearRampToValueAtTime(vol, t + PAD_RISE);
-      }
-
-      g.gain.setValueAtTime(
-        kind === "glass" ? vol * PAD_GLASS_SETTLE : vol,
-        t + len,
-      );
-      g.gain.setTargetAtTime(SILENCE, t + len, PAD_RELEASE);
-      lp.connect(g).connect(pan).connect(deck.out);
-      nodes.push(lp, g, pan);
-      for (const n of notes) {
-        const o = ctx.createOscillator();
-
-        o.type = kind === "glass" ? "triangle" : "sawtooth";
-        o.frequency.value = midiToFreq(n);
-        o.detune.value =
-          side * (kind === "glass" ? PAD_GLASS_DETUNE : PAD_DETUNE) +
-          rand(-PAD_WANDER, PAD_WANDER);
-
-        const og = ctx.createGain();
-
-        og.gain.value = 1 / notes.length;
-        o.connect(og).connect(lp);
-        nodes.push(o, og);
-        o.start(t);
-        o.stop(end);
-        first ??= o;
-      }
-    }
-
-    if (first) {
-      this.cleanup(first, nodes);
-    }
-  }
-
-  private bassNote(note: Note, midi: number, len: number): void {
-    const { deck, t, level } = note;
-    const ctx = this.audioContext;
-    const f = midiToFreq(midi);
-    const dur = Math.max(BASS_MIN_LEN, Math.min(len * BASS_HOLD, BASS_MAX_LEN));
-    const g = ctx.createGain();
-    const peak = BASS_LEVEL * level;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + BASS_ATTACK);
-    g.gain.exponentialRampToValueAtTime(
-      peak * BASS_SUSTAIN,
-      t + BASS_SUSTAIN_TIME,
-    );
-    g.gain.setValueAtTime(peak * BASS_SUSTAIN, t + dur);
-    g.gain.setTargetAtTime(SILENCE, t + dur, BASS_RELEASE);
-
-    const lp = ctx.createBiquadFilter();
-
-    lp.type = "lowpass";
-    lp.frequency.value = BASS_CUTOFF;
-
-    const o1 = ctx.createOscillator();
-
-    o1.type = "triangle";
-    o1.frequency.value = f;
-
-    const o2 = ctx.createOscillator();
-
-    o2.type = "sine";
-    o2.frequency.value = f;
-    o1.connect(lp);
-    o2.connect(lp);
-    lp.connect(g).connect(deck.out);
-
-    const end = t + dur + BASS_TAIL;
-
-    o1.start(t);
-    o2.start(t);
-    o1.stop(end);
-    o2.stop(end);
-    this.cleanup(o1, [o1, o2, lp, g]);
-  }
-
-  private pluck(note: Note, midi: number, pan: number): void {
-    const { deck, t, level: vol } = note;
-    const ctx = this.audioContext;
-    const o = ctx.createOscillator();
-
-    o.type = "triangle";
-    o.frequency.value = midiToFreq(midi);
-
-    const g = ctx.createGain();
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + PLUCK_ATTACK);
-    g.gain.exponentialRampToValueAtTime(SILENCE, t + PLUCK_DECAY);
-
-    const p = ctx.createStereoPanner();
-
-    p.pan.value = pan;
-    o.connect(g).connect(p).connect(deck.out);
-    g.connect(deck.delayIn);
-    o.start(t);
-    o.stop(t + PLUCK_STOP);
-    this.cleanup(o, [o, g, p]);
-  }
-
-  private bell(note: Note, midi: number, pan: number, decay: number): void {
-    const { deck, t, level: vol } = note;
-    const ctx = this.audioContext;
-    const f = midiToFreq(midi);
-    const o = ctx.createOscillator();
-
-    o.type = "sine";
-    o.frequency.value = f;
-
-    const o2 = ctx.createOscillator();
-
-    o2.type = "sine";
-    o2.frequency.value = f * BELL_PARTIAL;
-
-    const g2 = ctx.createGain();
-
-    g2.gain.setValueAtTime(BELL_PARTIAL_LEVEL, t);
-    g2.gain.exponentialRampToValueAtTime(
-      BELL_PARTIAL_FLOOR,
-      t + BELL_PARTIAL_FALL,
-    );
-
-    const g = ctx.createGain();
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + BELL_ATTACK);
-    g.gain.exponentialRampToValueAtTime(SILENCE, t + decay);
-
-    const p = ctx.createStereoPanner();
-
-    p.pan.value = pan;
-    o.connect(g);
-    o2.connect(g2).connect(g);
-    g.connect(p).connect(deck.out);
-    g.connect(deck.delayIn);
-    o.start(t);
-    o2.start(t);
-    o.stop(t + decay + STOP_PADDING);
-    o2.stop(t + decay + STOP_PADDING);
-    this.cleanup(o, [o, o2, g2, g, p]);
-  }
-
-  private compStab(note: Note, notes: number[], dark: boolean): void {
-    const { deck, t, level } = note;
-    const ctx = this.audioContext;
-    const g = ctx.createGain();
-    const vol = COMP_LEVEL * level;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + COMP_ATTACK);
-    g.gain.exponentialRampToValueAtTime(SILENCE, t + COMP_DECAY);
-
-    const lp = ctx.createBiquadFilter();
-
-    lp.type = "lowpass";
-    lp.frequency.value = dark ? COMP_DARK_CUTOFF : COMP_CUTOFF;
-    lp.connect(g).connect(deck.out);
-
-    const nodes: AudioNode[] = [g, lp];
-    let first: OscillatorNode | null = null;
-
-    for (const n of notes) {
-      const o = ctx.createOscillator();
-
-      o.type = dark ? "square" : "triangle";
-      o.frequency.value = midiToFreq(n + (dark ? 0 : SEMITONES_PER_OCTAVE));
-
-      const og = ctx.createGain();
-
-      og.gain.value = 1 / notes.length;
-      o.connect(og).connect(lp);
-      o.start(t);
-      o.stop(t + COMP_STOP);
-      nodes.push(o, og);
-      first ??= o;
-    }
-
-    if (first) {
-      this.cleanup(first, nodes);
-    }
-  }
-
-  /** A source playing the noise buffer, and the filter of this type it will play through. */
-  private noiseVoice(buf: AudioBuffer, type: BiquadFilterType) {
-    const src = this.audioContext.createBufferSource();
-
-    src.buffer = buf;
-
-    const f = this.audioContext.createBiquadFilter();
-
-    f.type = type;
-
-    return { src, f };
-  }
-
-  private perc(note: Note, kind: "t" | "T" | "s"): void {
-    const { deck, t, level } = note;
-    const ctx = this.audioContext;
-
-    if (!this.noiseBuf) {
-      return;
-    }
-
-    const { src, f } = this.noiseVoice(
-      this.noiseBuf,
-      kind === "s" ? "bandpass" : "highpass",
-    );
-
-    f.frequency.value = kind === "s" ? PERC_SNARE_CUTOFF : PERC_CUTOFF;
-    f.Q.value = kind === "s" ? PERC_SNARE_Q : PERC_Q;
-
-    const g = ctx.createGain();
-    const vol =
-      (kind === "T"
-        ? PERC_ACCENT_LEVEL
-        : kind === "s"
-          ? PERC_SNARE_LEVEL
-          : PERC_LEVEL) * level;
-    const dur = kind === "s" ? PERC_SNARE_DUR : PERC_DUR;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(
-      vol,
-      t + (kind === "s" ? PERC_SNARE_ATTACK : PERC_ATTACK),
-    );
-    g.gain.exponentialRampToValueAtTime(SILENCE, t + dur);
-
-    const p = ctx.createStereoPanner();
-
-    p.pan.value = rand(-PERC_PAN, PERC_PAN);
-    src.connect(f).connect(g).connect(p).connect(deck.out);
-    src.start(t, rand(0, PERC_NOISE_START));
-    src.stop(t + dur + STOP_PADDING);
-    this.cleanup(src, [src, f, g, p]);
-  }
-
   // ------------------------------------------------------------------ sfx helpers
 
   private sfxOut(opts: PlayOptions, life: number): GainNode {
@@ -1373,7 +819,7 @@ export class AudioEngine {
     g.connect(dest);
     osc.start(t);
     osc.stop(t + o.dur + STOP_PADDING);
-    this.cleanup(osc, nodes);
+    cleanup(osc, nodes);
   }
 
   private noise(dest: AudioNode, t: number, o: NoiseOpts): void {
@@ -1383,7 +829,7 @@ export class AudioEngine {
       return;
     }
 
-    const { src, f } = this.noiseVoice(this.noiseBuf, o.filter);
+    const { src, f } = noiseVoice(ctx, this.noiseBuf, o.filter);
 
     f.Q.value = o.q ?? DEFAULT_NOISE_Q;
     f.frequency.setValueAtTime(o.f, t);
@@ -1406,7 +852,7 @@ export class AudioEngine {
 
     src.start(t, rand(0, 2 - dur));
     src.stop(t + dur);
-    this.cleanup(src, [src, f, g]);
+    cleanup(src, [src, f, g]);
   }
 
   /** Brass-like synth note: detuned saws through an opening filter. */
@@ -1461,7 +907,7 @@ export class AudioEngine {
     b.start(t);
     a.stop(end);
     b.stop(end);
-    this.cleanup(a, [a, b, lp, g]);
+    cleanup(a, [a, b, lp, g]);
   }
 
   /** Sad trombone "wah": saw with a vowel-ish filter swell and optional wobble. */
@@ -1523,7 +969,7 @@ export class AudioEngine {
 
     o.start(t);
     o.stop(t + dur + STOP_PADDING);
-    this.cleanup(o, nodes);
+    cleanup(o, nodes);
   }
 
   // ------------------------------------------------------------------ sound effects
@@ -1659,7 +1105,7 @@ export class AudioEngine {
         lfo.start(t);
         o.stop(t + BOUNCE_STOP);
         lfo.stop(t + BOUNCE_STOP);
-        this.cleanup(o, [o, lfo, depth, g]);
+        cleanup(o, [o, lfo, depth, g]);
         this.tone(out, t, {
           type: "triangle",
           f: BOUNCE_CLICK_F,
