@@ -4,6 +4,11 @@ import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { clamp01, ease } from "#root/src/world/models/toon.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 
+type BossArriveContext = Pick<
+  StepContext,
+  "combat" | "fx" | "player" | "setShake" | "sfx" | "street" | "timeline"
+>;
+
 const BOSS_DROP_HEIGHT = 26;
 const BOSS_ARRIVE_SOUND_DELAY = 0.9;
 const BOSS_DROP_SECONDS = 1.3;
@@ -16,7 +21,7 @@ const BOSS_BOUNCE_SHOT_A = 2.6;
 const BOSS_BOUNCE_SHOT_B = 3.0;
 const BOSS_BOUNCE_SHOT_C = 3.4;
 
-export function enterBoss(c: StepContext) {
+export function enterBoss(c: BossArriveContext) {
   c.combat.clearStreet();
 
   const boss = c.street.bossModel;

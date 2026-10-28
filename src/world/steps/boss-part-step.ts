@@ -14,6 +14,25 @@ import { toolBolt } from "#root/src/world/combat/tool-bolt.ts";
 import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { DEBT_WINDOW_COLS, type State } from "#root/src/world/world-shared.ts";
 
+type BossPartContext = Pick<
+  StepContext,
+  | "character"
+  | "combat"
+  | "debris"
+  | "fx"
+  | "game"
+  | "health"
+  | "player"
+  | "reconcile"
+  | "rig"
+  | "scene"
+  | "setHealth"
+  | "setShake"
+  | "sfx"
+  | "street"
+  | "timeline"
+>;
+
 const PART_SHOT_A_DELAY = 0.2;
 const PART_SHOT_B_DELAY = 0.5;
 const KO_BLOW_DELAY = 0.9;
@@ -42,7 +61,7 @@ const PART_TEXT_LIFE = 1.6;
 const PART_BREAK_SHAKE = 0.8;
 const PART_HEALTH_SECONDS = 0.6;
 
-export function enterBossPart(c: StepContext, step: Step, s: State) {
+export function enterBossPart(c: BossPartContext, step: Step, s: State) {
   if (c.player === "p1") {
     hurtPlayerOne(c, step, s);
 
@@ -52,7 +71,7 @@ export function enterBossPart(c: StepContext, step: Step, s: State) {
   breakWithTool(c, step, s);
 }
 
-function hurtPlayerOne(c: StepContext, step: Step, s: State) {
+function hurtPlayerOne(c: BossPartContext, step: Step, s: State) {
   c.reconcile({
     ...s,
     pose: step.part === 0 ? "hurt" : "down",
@@ -69,7 +88,7 @@ function hurtPlayerOne(c: StepContext, step: Step, s: State) {
   }
 }
 
-function throwBlow(c: StepContext) {
+function throwBlow(c: BossPartContext) {
   const firstStop = nth(c.street.playing.stops, 0, "stops");
   const blow = c.timeline.track(
     new CodeWindow(
@@ -103,7 +122,7 @@ function throwBlow(c: StepContext) {
 
 type Path = { from: THREE.Vector3; to: THREE.Vector3 };
 
-function blowLands(c: StepContext, blow: CodeWindow, path: Path) {
+function blowLands(c: BossPartContext, blow: CodeWindow, path: Path) {
   const { from, to } = path;
 
   c.sfx("slam");
@@ -144,7 +163,7 @@ type ToolShot = {
   health: number;
 };
 
-function breakWithTool(c: StepContext, step: Step, s: State) {
+function breakWithTool(c: BossPartContext, step: Step, s: State) {
   // Player 2 fires the tool earned at that stop at the matching part.
   c.reconcile({ ...s, broken: step.part });
 
@@ -164,7 +183,7 @@ function breakWithTool(c: StepContext, step: Step, s: State) {
   });
 }
 
-function fireTool(c: StepContext, shot: ToolShot) {
+function fireTool(c: BossPartContext, shot: ToolShot) {
   c.character.fire();
 
   const from = c.character.muzzleWorld();
@@ -190,7 +209,7 @@ function fireTool(c: StepContext, shot: ToolShot) {
 }
 
 function partBreaks(
-  c: StepContext,
+  c: BossPartContext,
   shot: ToolShot,
   card: ReturnType<typeof toolBolt>,
   path: Path,

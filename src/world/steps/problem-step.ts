@@ -11,6 +11,24 @@ import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 
+type ProblemContext = Pick<
+  StepContext,
+  | "camera"
+  | "character"
+  | "combat"
+  | "fx"
+  | "game"
+  | "health"
+  | "player"
+  | "reconcile"
+  | "rig"
+  | "setHealth"
+  | "setShake"
+  | "sfx"
+  | "street"
+  | "timeline"
+>;
+
 const PROBLEM_ALARM_DELAY = 0.2;
 const CARD_LAUNCH_DELAY = 1.5;
 const CARD_FLIGHT_SECONDS = 0.5;
@@ -31,7 +49,7 @@ const HIT_TEXT_LIFE = 1.4;
 const HEALTH_DROP_SECONDS = 0.5;
 const CARD_BOUNCE_SECONDS = 0.55;
 
-export function enterProblem(c: StepContext, step: Step, s: State) {
+export function enterProblem(c: ProblemContext, step: Step, s: State) {
   // Arrive with no window, then the angry card flies down the road and slams in.
   const before =
     c.player === "p1"
@@ -66,7 +84,7 @@ export function enterProblem(c: StepContext, step: Step, s: State) {
   });
 }
 
-function flyCard(c: StepContext, g: THREE.Group) {
+function flyCard(c: ProblemContext, g: THREE.Group) {
   g.visible = true;
 
   const start = c.character.root.position
@@ -89,7 +107,7 @@ function flyCard(c: StepContext, g: THREE.Group) {
   });
 }
 
-function slam(c: StepContext, s: State, w: StopWindow) {
+function slam(c: ProblemContext, s: State, w: StopWindow) {
   c.sfx("slam");
   c.sfx("damage", DAMAGE_VOLUME);
   c.character.hit();
@@ -105,7 +123,7 @@ function slam(c: StepContext, s: State, w: StopWindow) {
   bounceBack(c, w);
 }
 
-function hitEffects(c: StepContext) {
+function hitEffects(c: ProblemContext) {
   const chest = c.character.chestWorld();
 
   c.fx.burst(chest, {
@@ -131,7 +149,7 @@ function hitEffects(c: StepContext) {
 }
 
 /** Bounce back into the reading spot. */
-function bounceBack(c: StepContext, w: StopWindow) {
+function bounceBack(c: ProblemContext, w: StopWindow) {
   const g = w.win.group;
   const hitPos = g.position.clone();
   const hitScale = g.scale.x;

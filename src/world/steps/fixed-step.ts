@@ -14,6 +14,25 @@ import { ease, lerp } from "#root/src/world/models/toon.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 
+type FixedContext = Pick<
+  StepContext,
+  | "camera"
+  | "character"
+  | "debris"
+  | "fx"
+  | "game"
+  | "health"
+  | "player"
+  | "reconcile"
+  | "rig"
+  | "scene"
+  | "setHealth"
+  | "setShake"
+  | "sfx"
+  | "street"
+  | "timeline"
+>;
+
 const AIM_TO_FIRE_DELAY = 0.45;
 const BEAM_RING_SIZE = 2.5;
 const BEAM_RING_LIFE = 0.5;
@@ -45,7 +64,7 @@ const VICTORY_POSE_SECONDS = 1.2;
 
 type OldCard = ReturnType<typeof makeStopWindow>;
 
-export function enterFixed(c: StepContext, step: Step, s: State) {
+export function enterFixed(c: FixedContext, step: Step, s: State) {
   c.reconcile(s);
 
   const stop = nth(c.street.playing.stops, step.stop, "stops");
@@ -99,7 +118,7 @@ export function enterFixed(c: StepContext, step: Step, s: State) {
   });
 }
 
-function fireAt(c: StepContext, old: OldCard) {
+function fireAt(c: FixedContext, old: OldCard) {
   c.character.fire();
 
   const from = c.character.muzzleWorld();
@@ -118,7 +137,7 @@ function fireAt(c: StepContext, old: OldCard) {
   c.sfx("cardPlay");
 }
 
-function shatter(c: StepContext, old: OldCard, stop: number) {
+function shatter(c: FixedContext, old: OldCard, stop: number) {
   c.sfx("shatter");
 
   const from = c.character.muzzleWorld();
@@ -136,7 +155,7 @@ function shatter(c: StepContext, old: OldCard, stop: number) {
   c.setShake(SHATTER_SHAKE);
 }
 
-function dropInFixedCard(c: StepContext, fixed: StopWindow, stop: number) {
+function dropInFixedCard(c: FixedContext, fixed: StopWindow, stop: number) {
   c.sfx("codeFix");
   fixed.win.group.visible = true;
 
@@ -163,7 +182,7 @@ function dropInFixedCard(c: StepContext, fixed: StopWindow, stop: number) {
   c.street.gateAt(stop).state = "open";
 }
 
-function heal(c: StepContext) {
+function heal(c: FixedContext) {
   c.sfx("heal");
   c.fx.heal(
     c.character.root.position.clone().add(new THREE.Vector3(0, HEAL_RISE, 0)),

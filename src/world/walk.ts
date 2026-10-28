@@ -7,6 +7,11 @@ import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { ease, lerp, rng } from "#root/src/world/models/toon.ts";
 import { standZ } from "#root/src/world/world-shared.ts";
 
+type WalkContext = Pick<
+  StepContext,
+  "character" | "combat" | "scene" | "street"
+>;
+
 const WALK_SEED_BASE = 500;
 const WALK_SEED_PER_TIER = 31;
 const WALK_SEED_PER_STOP = 7;
@@ -47,7 +52,7 @@ export type Walk = {
 };
 
 /** Plan a walk for a step and set the character walking. */
-export function startWalk(c: StepContext, step: Step): Walk {
+export function startWalk(c: WalkContext, step: Step): Walk {
   const tier = c.street.playing;
   const to =
     step.stop < tier.stops.length
@@ -83,7 +88,7 @@ export function startWalk(c: StepContext, step: Step): Walk {
 }
 
 /** Move the walk to u and send out the enemies it has reached. */
-export function advanceWalk(c: StepContext, w: Walk, u: number) {
+export function advanceWalk(c: WalkContext, w: Walk, u: number) {
   w.u = u;
   c.character.root.position.z = lerp(
     w.from,
@@ -106,7 +111,7 @@ export function advanceWalk(c: StepContext, w: Walk, u: number) {
   }
 }
 
-function spawn(c: StepContext, sp: { kind: EnemyKind; seed: number }) {
+function spawn(c: WalkContext, sp: { kind: EnemyKind; seed: number }) {
   const r = rng(sp.seed);
   const z0 =
     c.character.root.position.z -
