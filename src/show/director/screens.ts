@@ -77,8 +77,8 @@ export function resultScreen(ctx: ScreenContext) {
     next?.phase === "vs" ? vsLabel(game, next.tier) : "THE ENDING";
   const col = (p: Player) =>
     p === "p1"
-      ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(worlds.p1.score).padStart(SCORE_DIGITS, "0")} · ${worlds.p1.shipped} BUGS SHIPPED</span></div>`
-      : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(worlds.p2.score).padStart(SCORE_DIGITS, "0")}</span></div>`;
+      ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(worlds.p1.combat.score).padStart(SCORE_DIGITS, "0")} · ${worlds.p1.combat.shipped} BUGS SHIPPED</span></div>`
+      : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(worlds.p2.combat.score).padStart(SCORE_DIGITS, "0")}</span></div>`;
   const el = $("result");
 
   el.style.setProperty("--cols", String(visible(mode).length));

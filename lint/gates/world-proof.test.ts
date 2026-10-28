@@ -112,13 +112,13 @@ function movePointer({ w, mode, events }: Run, f: number): void {
   }
 
   events.push(
-    `hit:${w.pointer(
-      w.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
+    `hit:${w.combat.pointer(
+      w.combat.enemyScreen() ?? new THREE.Vector2(((f % 5) - 2) / 4, 0.1),
       true,
     )}`,
   );
   if (f % (POINTER_EVERY * POINTER_LEAVES_EVERY) === 0) {
-    events.push(`left:${w.pointer(null, false)}`);
+    events.push(`left:${w.combat.pointer(null, false)}`);
   }
 }
 
@@ -214,7 +214,7 @@ function play({
 
     w.setAspect(tall ? TALL : WIDE);
     w.autoplay = mode === "autoplay" || lingerFrames !== undefined;
-    w.onSlip = (kind: string) => events.push(`slip:${kind}`);
+    w.combat.onSlip = (kind: string) => events.push(`slip:${kind}`);
     for (const [i, step] of stepsToPlay(visit, andBack, cutAt).entries()) {
       playStep(
         { w, mode, look, events },

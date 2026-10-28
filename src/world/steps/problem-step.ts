@@ -131,20 +131,16 @@ function hitEffects(c: ProblemContext) {
     n: HIT_BURST_COUNT,
     speed: HIT_BURST_SPEED,
   });
-  c.fx.ring(
-    chest,
-    EVENT.hitRing,
-    HIT_RING_SIZE,
-    HIT_RING_LIFE,
-    false,
-    c.camera.position,
-  );
+  c.fx.ring(chest, {
+    color: EVENT.hitRing,
+    size: HIT_RING_SIZE,
+    life: HIT_RING_LIFE,
+    face: c.camera.position,
+  });
   c.fx.text(
     chest.clone().add(new THREE.Vector3(0, HIT_TEXT_RISE, 0)),
     `−${Math.round(TIER_HEALTH_LOSS / c.street.playing.stops.length)}%`,
-    EVENT.hitText,
-    1.0,
-    HIT_TEXT_LIFE,
+    { color: EVENT.hitText, size: 1.0, life: HIT_TEXT_LIFE },
   );
 }
 

@@ -91,14 +91,12 @@ export function bounceFx(d: CombatDeps, at: THREE.Vector3) {
     colors: EVENT.bounceBurst,
     speed: BOUNCE_BURST_SPEED,
   });
-  d.fx.ring(
-    at,
-    EVENT.bounceRing,
-    BOUNCE_RING_SIZE,
-    BOUNCE_RING_LIFE,
-    false,
-    d.camera.position,
-  );
+  d.fx.ring(at, {
+    color: EVENT.bounceRing,
+    size: BOUNCE_RING_SIZE,
+    life: BOUNCE_RING_LIFE,
+    face: d.camera.position,
+  });
 
   const back = at
     .clone()
@@ -112,13 +110,11 @@ export function bounceFx(d: CombatDeps, at: THREE.Vector3) {
 
   d.fx.tracer(at, back, EVENT.bounceTracer, BOUNCE_TRACER_WIDTH);
   if (Math.random() < NO_EFFECT_CHANCE) {
-    d.fx.text(
-      at.clone().add(new THREE.Vector3(0, 1, 0)),
-      "NO EFFECT",
-      EVENT.noEffectText,
-      NO_EFFECT_TEXT_SIZE,
-      NO_EFFECT_TEXT_LIFE,
-    );
+    d.fx.text(at.clone().add(new THREE.Vector3(0, 1, 0)), "NO EFFECT", {
+      color: EVENT.noEffectText,
+      size: NO_EFFECT_TEXT_SIZE,
+      life: NO_EFFECT_TEXT_LIFE,
+    });
   }
 }
 
@@ -139,21 +135,17 @@ export function killFx(
           ? EVENT.killBugBurst
           : EVENT.killRobotBurst,
   });
-  d.fx.ring(
-    at,
-    EVENT.killRing,
-    KILL_RING_SIZE,
-    KILL_RING_LIFE,
-    false,
-    d.camera.position,
-  );
-  d.fx.text(
-    at.clone().add(new THREE.Vector3(0, 1, 0)),
-    `+${SCORE[e.kind]}`,
-    EVENT.killText,
-    KILL_TEXT_SIZE,
-    1,
-  );
+  d.fx.ring(at, {
+    color: EVENT.killRing,
+    size: KILL_RING_SIZE,
+    life: KILL_RING_LIFE,
+    face: d.camera.position,
+  });
+  d.fx.text(at.clone().add(new THREE.Vector3(0, 1, 0)), `+${SCORE[e.kind]}`, {
+    color: EVENT.killText,
+    size: KILL_TEXT_SIZE,
+    life: 1,
+  });
   breakObject(d.debris, e.group, {
     from: from.clone().lerp(at, KILL_DEBRIS_ORIGIN_LERP),
     power: KILL_DEBRIS_POWER,
@@ -171,21 +163,17 @@ export function slipFx(d: CombatDeps, e: Enemy) {
   at.z = Math.min(at.z, d.character.root.position.z - SLIP_TEXT_AHEAD);
   at.x = THREE.MathUtils.clamp(at.x, -SLIP_TEXT_MAX_X, SLIP_TEXT_MAX_X);
   if (d.player === "p1") {
-    d.fx.text(
-      at,
-      "BUG SHIPPED",
-      EVENT.shippedText,
-      KILL_TEXT_SIZE,
-      SLIP_TEXT_LIFE,
-    );
+    d.fx.text(at, "BUG SHIPPED", {
+      color: EVENT.shippedText,
+      size: KILL_TEXT_SIZE,
+      life: SLIP_TEXT_LIFE,
+    });
     d.sfx("bounce", SLIP_VOLUME);
   } else {
-    d.fx.text(
-      at,
-      "CAUGHT BY CI",
-      EVENT.caughtText,
-      KILL_TEXT_SIZE,
-      SLIP_TEXT_LIFE,
-    );
+    d.fx.text(at, "CAUGHT BY CI", {
+      color: EVENT.caughtText,
+      size: KILL_TEXT_SIZE,
+      life: SLIP_TEXT_LIFE,
+    });
   }
 }

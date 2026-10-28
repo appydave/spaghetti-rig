@@ -55,8 +55,8 @@ describe("render edges", () => {
 
   it("the score reported is the higher of the two", () => {
     begin("both");
-    show.worlds.p1.score = 5;
-    show.worlds.p2.score = 9;
+    show.worlds.p1.combat.score = 5;
+    show.worlds.p2.combat.score = 9;
     show.director.onScore = (n) => show.log.push(`score ${n}`);
     stepTo("result");
     expect(show.log).toContain("score 9");
@@ -65,7 +65,7 @@ describe("render edges", () => {
   it("the boss bar stays hidden outside the boss steps", () => {
     begin("both");
     stepTo("problem");
-    show.worlds.p2.bossTotal = 3;
+    show.worlds.p2.street.bossTotal = 3;
     show.director.update(FRAME);
     expect(bossBar()?.hidden).toBe(true);
   });

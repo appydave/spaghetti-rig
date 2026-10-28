@@ -1,6 +1,6 @@
 // How a PlayerWorld is looked at (G04 H1): its scene graph (every node's transform, visibility and material), the state it holds besides
 // the scene, and a hash of both. Used by world-proof.test.ts.
-// NOT fingerprinted: instanced meshes (the effects' sparks): grow this harness before effects.ts is split.
+// Instanced meshes (the effects' sparks) are fingerprinted too: how many instances are live, where, and in what colour.
 import { createHash } from "node:crypto";
 import type * as THREE from "three";
 
@@ -122,20 +122,22 @@ export function stateOf(w: any): string {
   const t = w.timeline ?? w;
   // The street's objects (the gates, the stop window, the debt, the boss, the pile) live on the world's street when it has one, else on the world.
   const st = w.street ?? w;
+  // The score, the shots, the bugs shipped, the enemies and the aim live on the world's combat when it has one, else on the world.
+  const c = w.combat ?? w;
   const v = (p: THREE.Vector3 | null | undefined) =>
     p ? nums(p.toArray()) : "-";
 
   return JSON.stringify([
-    // Only what the Director and the e2e tests can read: the world's public surface (the enemies and the aim are seen through enemyCount,
-    // enemyScreen and autoAimScreen below, and as nodes of the scene).
-    w.score,
-    w.shots,
-    w.shipped,
-    w.enemyCount,
-    w.windowKey,
+    // Only what the Director and the e2e tests can read: the world's public surface (the enemies and the aim are seen through the enemy
+    // count, enemyScreen and autoAimScreen below, and as nodes of the scene).
+    c.score,
+    c.shots,
+    c.shipped,
+    w.combat ? w.combat.enemies.length : w.enemyCount,
+    st.windowKey,
     num(w.health),
-    w.bossTotal,
-    w.bossLeft,
+    st.bossTotal,
+    st.bossLeft,
     w.aspect,
     w.shape,
     w.camMode,
@@ -158,11 +160,11 @@ export function stateOf(w: any): string {
     nums(w.character.root.position.toArray()),
     w.fx.pool?.length ?? "",
     // What the Director asks the world each frame to draw its aim and its target: where the autogunner aims and the first enemy sits on screen.
-    w
+    c
       .autoAimScreen()
       ?.toArray()
       .map((n: number) => num(n)) ?? "-",
-    w
+    c
       .enemyScreen()
       ?.toArray()
       .map((n: number) => num(n)) ?? "-",

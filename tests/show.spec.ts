@@ -21,6 +21,10 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
   await press(page, "Enter", 400);
   await expect(page.locator("#map")).toBeVisible();
   await expect(page.locator(".tier.locked")).toHaveCount(0);
+  await press(page, "ArrowRight", 200);
+  await expect(page.locator("#tiers .tier.sel")).toHaveAttribute("data-i", "1");
+  await press(page, "ArrowLeft", 200);
+  await expect(page.locator("#tiers .tier.sel")).toHaveAttribute("data-i", "0");
   await press(page, "Enter", 600);
   await expect(page.locator("#game")).toBeVisible();
   expect((await step(page)).phase).toBe("vs");
@@ -163,7 +167,9 @@ test("the tool card flies in over player 2 only, then fixes the code and heals",
     .poll(() => rig(page, (r) => r.worlds.p2.health), { timeout: 15_000 })
     .toBeCloseTo(100, 0);
   expect(await rig(page, (r) => r.worlds.p1.health)).toBeCloseTo(77.5, 0);
-  expect(await rig(page, (r) => r.worlds.p2.windowKey)).toContain("fixed");
+  expect(await rig(page, (r) => r.worlds.p2.street.windowKey)).toContain(
+    "fixed",
+  );
   await expect(
     page.locator(".lane[data-p='p2'] .tray .slot.earned"),
   ).toHaveCount(1);
@@ -171,7 +177,7 @@ test("the tool card flies in over player 2 only, then fixes the code and heals",
     page.locator(".lane[data-p='p1'] .tray .slot.earned"),
   ).toHaveCount(0);
   // The old window shattered into physical pieces.
-  expect(await rig(page, (r) => r.worlds.p2.debrisCount)).toBeGreaterThan(10);
+  expect(await rig(page, (r) => r.worlds.p2.debris.count)).toBeGreaterThan(10);
 });
 
 test("player 1 reaches the boss on 10% and the boss finishes them; player 2 wins", async ({
@@ -197,10 +203,12 @@ test("player 1 reaches the boss on 10% and the boss finishes them; player 2 wins
     .poll(() => rig(page, (r) => r.worlds.p1.health), { timeout: 15_000 })
     .toBeLessThan(1);
   await expect
-    .poll(() => rig(page, (r) => r.worlds.p2.bossLeft), { timeout: 15_000 })
-    .toBe((await rig(page, (r) => r.worlds.p2.bossTotal)) - 1);
-  expect(await rig(page, (r) => r.worlds.p1.bossLeft)).toBe(
-    await rig(page, (r) => r.worlds.p1.bossTotal),
+    .poll(() => rig(page, (r) => r.worlds.p2.street.bossLeft), {
+      timeout: 15_000,
+    })
+    .toBe((await rig(page, (r) => r.worlds.p2.street.bossTotal)) - 1);
+  expect(await rig(page, (r) => r.worlds.p1.street.bossLeft)).toBe(
+    await rig(page, (r) => r.worlds.p1.street.bossTotal),
   );
 });
 
@@ -252,18 +260,18 @@ test("mouse shooting scores, autoplay clears the street", async ({ page }) => {
   for (let i = 0; i < 60 && !hit; i++) {
     await page.waitForTimeout(100);
 
-    const e = await rig(page, (r) => r.worlds.p2.enemyScreen());
+    const e = await rig(page, (r) => r.worlds.p2.combat.enemyScreen());
 
     if (!e) {
       continue;
     }
 
     await page.mouse.click(((e.x + 1) / 2) * 1600, ((1 - e.y) / 2) * 900);
-    hit = (await rig(page, (r) => r.worlds.p2.score)) > 0;
+    hit = (await rig(page, (r) => r.worlds.p2.combat.score)) > 0;
   }
 
   await press(page, "a", 5000);
-  expect(await rig(page, (r) => r.worlds.p2.score)).toBeGreaterThan(0);
+  expect(await rig(page, (r) => r.worlds.p2.combat.score)).toBeGreaterThan(0);
 });
 
 test("the presenter window follows the game", async ({ page, context }) => {

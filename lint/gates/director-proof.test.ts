@@ -160,8 +160,8 @@ function slipping(show: Show): void {
   }
 
   show.frames(HOLD_FRAMES);
-  show.worlds.p1.onSlip?.();
-  show.worlds.p2.onSlip?.();
+  show.worlds.p1.combat.onSlip?.();
+  show.worlds.p2.combat.onSlip?.();
   show.look("a bug on each side");
   for (let i = 0; i < SWINGS; i++) {
     show.frames(SWING_FRAMES);

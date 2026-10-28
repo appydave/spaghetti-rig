@@ -71,7 +71,7 @@ export class Director implements ShowState {
     buildLanes(this.stage, this.mode);
     applyAutoplay(this);
     for (const p of PLAYERS) {
-      this.worlds[p].onSlip = () => slipped(p);
+      this.worlds[p].combat.onSlip = () => slipped(p);
     }
 
     listen(this);

@@ -22,8 +22,6 @@ const COMPLEXITY_CARRIED = [
   "lint/gates/audio-proof.test.ts",
   "src/audio/tracks.ts",
   "src/content/load.ts",
-  "src/main.ts",
-  "src/world/combat/effects.ts",
   "src/world/models/toon.ts",
 ];
 const COMPLEXITY_RULES = [

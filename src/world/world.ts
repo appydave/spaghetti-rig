@@ -6,7 +6,6 @@ import { CameraRig } from "#root/src/world/camera-rig.ts";
 import { Character } from "#root/src/world/models/characters.ts";
 import { Combat } from "#root/src/world/combat/combat.ts";
 import { Effects } from "#root/src/world/combat/effects.ts";
-import type { EnemyKind } from "#root/src/world/models/enemies.ts";
 import {
   shotView,
   syncScenery,
@@ -54,7 +53,7 @@ export class PlayerWorld {
   private shake = 0;
   private readonly rig = new CameraRig(this.camera);
   readonly combat: Combat;
-  private readonly street: Street;
+  readonly street: Street;
   private readonly timeline = new Timeline();
   private readonly sun: THREE.DirectionalLight;
   private readonly ctx: StepContext;
@@ -132,53 +131,6 @@ export class PlayerWorld {
     };
   }
 
-  get windowKey(): string {
-    return this.street.windowKey;
-  }
-
-  get bossTotal() {
-    return this.street.bossTotal;
-  }
-
-  get bossLeft() {
-    return this.street.bossLeft;
-  }
-
-  get score() {
-    return this.combat.score;
-  }
-
-  get shots() {
-    return this.combat.shots;
-  }
-
-  get shipped() {
-    return this.combat.shipped;
-  }
-
-  get onSlip() {
-    return this.combat.onSlip;
-  }
-
-  set onSlip(f: ((kind: EnemyKind) => void) | undefined) {
-    this.combat.onSlip = f;
-  }
-
-  /** Aim at a point on screen (normalised device coords); fire if asked. Returns true when something was hit. */
-  pointer(ndc: THREE.Vector2 | null, fire: boolean): boolean {
-    return this.combat.pointer(ndc, fire);
-  }
-
-  /** Autoplay's aim on screen (normalised device coords), for its reticle. */
-  autoAimScreen(): THREE.Vector2 | null {
-    return this.combat.autoAimScreen();
-  }
-
-  /** For tests: screen-space centre of the first enemy, if any. */
-  enemyScreen(): THREE.Vector2 | null {
-    return this.combat.enemyScreen();
-  }
-
   private sfx(name: Sfx, volume = 1) {
     this.audio.play(name, { pan: this.pan(), volume });
   }
@@ -191,8 +143,6 @@ export class PlayerWorld {
     matchState(this.ctx, s);
     this.state = s;
   }
-
-  // ───────────────────────────── content → objects ─────────────────────────────
 
   // ───────────────────────────── stepping ─────────────────────────────
 
@@ -271,17 +221,5 @@ export class PlayerWorld {
     updateBoss(this.ctx, dt);
     this.debris.step(dt);
     this.fx.update(dt);
-  }
-
-  get walking() {
-    return !!this.walk;
-  }
-
-  get enemyCount() {
-    return this.combat.enemies.length;
-  }
-
-  get debrisCount() {
-    return this.debris.count;
   }
 }

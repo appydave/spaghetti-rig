@@ -61,9 +61,9 @@ describe("a tier with no boss", () => {
     const withBoss = worldOf(game);
     const without = worldOf(bossless);
 
-    expect(withBoss.bossTotal).toBeGreaterThan(0);
-    expect(without.bossTotal).toBe(0);
-    expect(without.bossLeft).toBe(0);
+    expect(withBoss.street.bossTotal).toBeGreaterThan(0);
+    expect(without.street.bossTotal).toBe(0);
+    expect(without.street.bossLeft).toBe(0);
     expect(cityInstances(without)).toBeGreaterThan(cityInstances(withBoss));
   });
 });
