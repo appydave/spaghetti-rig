@@ -176,6 +176,130 @@
         "no-restricted-imports": "off"
       }
     },
+    // G12 Boundaries (R15: oxlint, not dependency-cruiser). The layers, every arrow pointing down: app (src/app, main.ts) -> show -> world ->
+    // {ui, audio} -> content; the root utilities (nth, dom, loose, maths) import no area. One block per layer; each keeps G10's pattern,
+    // because a block's no-restricted-imports replaces the top-level one. lint/gates/boundaries.test.ts plants a crossing in every layer
+    // and every import form, and pins these blocks.
+    {
+      "files": ["src/show/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/(app/|main\\.ts)",
+                "message": "show sits under the app: it may import world, ui, audio and content, never src/app or main.ts. Move what both need down a layer, or pass it in from the app."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/world/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/(app|show)/|#root/src/main\\.ts",
+                "message": "world sits under show: it may import ui, audio and content, never show, app or main.ts. Move what both need down to content (the step model lives in src/content/script.ts), or pass it in."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/ui/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/(app|show|world|audio)/|#root/src/main\\.ts",
+                "message": "ui sits beside audio, above content: it may import content and the root utilities only. Move what it needs down to content, or pass it in."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/audio/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/(app|show|world|ui)/|#root/src/main\\.ts",
+                "message": "audio sits beside ui, above content: it may import content and the root utilities only. Move what it needs down to content, or pass it in."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/content/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/(app|show|world|ui|audio)/|#root/src/main\\.ts",
+                "message": "content is the bottom layer: it may import the root utilities only (nth, dom, loose, maths). Move the code that needs an upper layer up into that layer."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/nth.ts", "src/dom.ts", "src/loose.ts", "src/maths.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.",
+                "message": "Import from the project root, not by a relative path: write #root/src/<folder>/<file>.ts (with the .ts extension) instead of ./ or ../."
+              },
+              {
+                "regex": "#root/src/[^/]+/",
+                "message": "The root utilities (nth, dom, loose, maths) import no area: they sit under every layer. Move the code that needs an area into that area."
+              }
+            ]
+          }
+        ]
+      }
+    },
     {
       "files": ["**/*"],
       "excludeFiles": ["tests/**", "src/**/*.test.ts", "lint/**/*.test.ts"],
@@ -571,11 +695,7 @@
       // CARRIED TO TIER 5 by David's option 2, 10-24: these files still exceed a size limit; tier 5 (structure) splits them; this list may shrink,
       // never grow. G04 split the rest of the app one slice at a time, each removing its files here. lint/gates/size.test.ts pins it: every
       // name exists, still has a finding (so a name leaves the list the moment its file is clean), and the list is exactly the set it states.
-      "files": [
-        "lint/gates/audio-proof.test.ts",
-        "src/main.ts",
-        "tests/show.spec.ts"
-      ],
+      "files": ["lint/gates/audio-proof.test.ts", "tests/show.spec.ts"],
       "rules": {
         "max-lines": "off",
         "max-lines-per-function": "off",
