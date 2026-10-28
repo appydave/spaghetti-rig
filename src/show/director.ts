@@ -1,10 +1,28 @@
-import { byId, closestEl, queryEl, queryElOrNull } from "#root/src/dom.ts";
+import { closestEl, queryEl, queryElOrNull } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
-import { parseDirectorMessage } from "#root/src/show/messages.ts";
+import {
+  parseDirectorMessage,
+  type PresenterState,
+} from "#root/src/show/messages.ts";
+import {
+  renderChips,
+  renderTopBar,
+  updateAutoReticle,
+  updateBossBar,
+  updateHealth,
+  updateScore,
+} from "#root/src/show/director/hud.ts";
+import {
+  endingScreen,
+  resultScreen,
+  vsScreen,
+  type ScreenContext,
+} from "#root/src/show/director/screens.ts";
+import { $, PLAYERS, WHO } from "#root/src/show/director/shared.ts";
 import * as THREE from "three";
 import type { AudioEngine, Theme } from "#root/src/audio/audio.ts";
 import { FULL_HEALTH, toolFor, type Game } from "#root/src/content/load.ts";
-import { gateLabel, gatesText } from "#root/src/content/gatelabel.ts";
+import { gateLabel } from "#root/src/content/gatelabel.ts";
 import {
   esc,
   gateHtml,
@@ -18,7 +36,6 @@ import {
   buildScript,
   hiddenIn,
   isSplit,
-  modeInfo,
   nextIndex,
   notesFor,
   stepLabel,
@@ -29,10 +46,6 @@ import {
   type Step,
 } from "#root/src/show/script.ts";
 
-const $ = (id: string) => byId(id, HTMLElement);
-
-/** Scores are shown as this many digits, padded with zeros. */
-export const SCORE_DIGITS = 6;
 /** In a split-screen mode each player's sound sits this far left (player 1) or right (player 2), on a -1..1 scale. */
 export const SPLIT_PAN = 0.5;
 
@@ -54,31 +67,6 @@ const VS_SCREEN_SECONDS = 4.2;
 const CI_POP_LEFT = 30;
 const CI_POP_LEFT_SPREAD = 40;
 const CI_POP_MS = 1600;
-/** The health bar turns "low" at or below this, and "mid" below the second value. */
-const LOW_HEALTH = 35;
-const MID_HEALTH = 70;
-/** A health change bigger than this flashes (or heals) the bar; a drift bigger than the second is tracked quietly. */
-const HEALTH_FLASH_STEP = 5;
-const HEALTH_TRACK_STEP = 0.5;
-const PERCENT = 100;
-
-const PLAYERS: Player[] = ["p1", "p2"];
-const WHO: Record<Player, { n: string; name: string; sub: string }> = {
-  p1: { n: "PLAYER 1", name: "Vibe coder", sub: "no tools · ships fast" },
-  p2: { n: "PLAYER 2", name: "Specialist", sub: "quality gates · in CI" },
-};
-
-export interface PresenterState {
-  type: "state";
-  index: number;
-  total: number;
-  label: string;
-  next: string;
-  mode: Mode;
-  notes: ReturnType<typeof notesFor>;
-  phase: string;
-  paused: boolean;
-}
 
 /** Runs the show: one step at a time, both players in lockstep, HUD and overlays to match. */
 export class Director {
@@ -163,10 +151,6 @@ export class Director {
 
   get tier() {
     return nth(this.game.tiers, this.step.tier, "tiers");
-  }
-
-  visible(): Player[] {
-    return isSplit(this.mode) ? PLAYERS : [this.mode];
   }
 
   /** In spec mode player 1 is driven by autoplay and the mouse plays player 2 only. */
@@ -292,41 +276,11 @@ export class Director {
     }
 
     // Top bar.
-    $("hud-tier").textContent = String(tier.n).padStart(2, "0");
-    $("hud-tier-name").textContent = `/ ${tier.name.toUpperCase()}`;
-
-    const stopLabel = $("hud-stop-label");
-    const stopName = $("hud-stop");
-
-    if (step.phase === "walk") {
-      stopLabel.textContent = stop
-        ? `WALKING TO STOP ${step.stop + 1} OF ${tier.stops.length}`
-        : "WALKING TO THE BOSS";
-      if (stop) {
-        stopName.innerHTML = gateHtml(stop.gate);
-      } else {
-        stopName.textContent = tier.boss.name;
-      }
-    } else if (stop) {
-      stopLabel.textContent = `STOP ${step.stop + 1} OF ${tier.stops.length}`;
-      stopName.innerHTML = gateHtml(stop.gate);
-    } else if (["boss", "bossPart", "bossDown"].includes(step.phase)) {
-      stopLabel.textContent = "TIER BOSS";
-      stopName.textContent = tier.boss.name;
-    } else {
-      stopLabel.textContent = step.phase === "vs" ? "GATES" : "TIER";
-      stopName.textContent =
-        step.phase === "ending"
-          ? "The end of the road"
-          : gatesText(tier.gates) || tier.name;
-    }
-
-    $("hud-progress").textContent =
-      `${this.at + 1} / ${this.script.length} · ${stepLabel(this.game, step).toUpperCase()}`;
+    renderTopBar(this.game, this.script, this.at);
     this.renderChips();
 
     if (step.phase === "vs") {
-      this.renderVs();
+      vsScreen(this.screen(), this.stage.vs);
     }
 
     if (step.phase === "result") {
@@ -334,7 +288,8 @@ export class Director {
     }
 
     if (step.phase === "ending") {
-      this.renderEnding();
+      endingScreen(this.screen());
+      this.scored();
     }
 
     for (const p of PLAYERS) {
@@ -604,89 +559,34 @@ export class Director {
     }
   }
 
-  private renderVs() {
-    const t = this.tier;
-    const vs = this.game.content.screens.vs;
-    const solo = isSplit(this.mode) ? null : this.mode;
-
-    this.stage.vs.reset();
-    this.stage.vs.solo = solo;
-    $("backdrop").className = solo ? `solo-bg ${solo}` : "vs-bg";
-    $("vs").classList.toggle("solo", !!solo);
-    if (solo) {
-      // One player: just them, the tier and the boss waiting at the end of it.
-      $("vs").innerHTML = `
-        <div class="solo-card ${solo}">
-          <span class="label">TIER ${t.n} OF ${this.game.tiers.length} · ${esc(gatesText(t.gates))}</span>
-          <b class="tier-name">${esc(t.name)}</b>
-          <div class="who"><span class="label">${WHO[solo].n}</span><b>${WHO[solo].name}</b><small>${esc(solo === "p1" ? vs.p1 : vs.p2)}</small></div>
-          <div class="boss-name"><span class="label">AT THE END OF THE ROAD</span><b>${esc(t.boss.name)}</b></div>
-        </div>`;
-
-      return;
-    }
-
-    $("vs").innerHTML = `
-      <div class="tierline"><span class="label">TIER ${t.n} OF ${this.game.tiers.length} · ${esc(gatesText(t.gates))}</span><b>${esc(t.name)}</b><span>${esc(t.idea ?? "")}</span></div>
-      <div class="side p1"><div class="who"><span class="label">PLAYER 1</span><b>Vibe coder</b></div><span class="sub">${esc(vs.p1)}</span></div>
-      <div class="mid"><span class="vsword">VS</span><span class="bossline">BOSS · ${esc(t.boss.name.toUpperCase())}</span></div>
-      <div class="side p2"><div class="who"><span class="label">PLAYER 2</span><b>Specialist</b></div><span class="sub">${esc(vs.p2)}</span></div>`;
+  private screen(): ScreenContext {
+    return {
+      game: this.game,
+      tier: this.tier,
+      mode: this.mode,
+      worlds: this.worlds,
+      script: this.script,
+      at: this.at,
+    };
   }
 
   private renderResult() {
-    const t = this.tier;
-    const b = t.boss;
-    const next = this.script
-      .slice(this.at + 1)
-      .find((s) => s.phase === "vs" || s.phase === "ending");
-    const nextLabel =
-      next?.phase === "vs" ? this.vsLabel(next.tier) : "THE ENDING";
-    const col = (p: Player) =>
-      p === "p1"
-        ? `<div class="col p1"><span class="label">PLAYER 1 · TIER ${t.n}</span><div class="stamp">Down</div><p>${esc(b.p1 ?? "Buried.")}</p><span class="score">SCORE ${String(this.worlds.p1.score).padStart(SCORE_DIGITS, "0")} · ${this.worlds.p1.shipped} BUGS SHIPPED</span></div>`
-        : `<div class="col p2"><span class="label">PLAYER 2 · TIER ${t.n}</span><div class="stamp">Cleared</div><p>${esc(b.p2 ?? "All green.")}</p><span class="score">SCORE ${String(this.worlds.p2.score).padStart(SCORE_DIGITS, "0")}</span></div>`;
-    const el = $("result");
-
-    el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML = `${this.visible()
-      .map((c) => col(c))
-      .join("")}<div class="next">→ NEXT: ${esc(nextLabel)}</div>`;
+    resultScreen(this.screen());
     if (this.mode === "p1") {
       this.audio.play("lose");
     } else {
       this.audio.play("win");
     }
 
-    this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
+    this.scored();
   }
 
-  private renderEnding() {
-    const e = this.game.content.endings;
-    const el = $("ending");
-
-    el.style.setProperty("--cols", String(this.visible().length));
-    el.innerHTML = `${this.visible()
-      .map(
-        (p) =>
-          `<div class="col ${p}"><span class="label">${p === "p1" ? "PLAYER 1 · VIBE-CODED" : "PLAYER 2 · GATED"}</span><div class="stamp">${esc(e[p].big)}</div><p>${esc(e[p].sub)}</p></div>`,
-      )
-      .join("")}<div class="next">→ BACK TO THE MAP</div>`;
+  private scored() {
     this.onScore?.(Math.max(this.worlds.p1.score, this.worlds.p2.score));
-  }
-
-  private vsLabel(tierIndex: number) {
-    const tier = nth(this.game.tiers, tierIndex, "tiers");
-
-    return `TIER ${tier.n} · ${tier.name.toUpperCase()}`;
   }
 
   renderChips() {
-    $("hud-mode").textContent = modeInfo(this.mode).hud;
-    $("hud-auto").textContent = this.autoplay ? "AUTOPLAY ON" : "AUTOPLAY OFF";
-    queryEl(document, '[data-chip="auto"]').classList.toggle(
-      "on",
-      this.autoplay,
-    );
+    renderChips(this.mode, this.autoplay);
   }
 
   toggleAutoplay() {
@@ -870,6 +770,10 @@ export class Director {
   }
 
   private updateHud() {
+    const bossPhase = ["boss", "bossPart", "bossDown"].includes(
+      this.step.phase,
+    );
+
     for (const p of PLAYERS) {
       const el = this.lane(p);
 
@@ -878,68 +782,15 @@ export class Director {
       }
 
       const w = this.worlds[p];
-      const h = Math.max(0, Math.min(FULL_HEALTH, w.health));
-      const hp = queryEl(el, ".hp");
 
-      queryEl(hp, ".bar i").style.width = `${h}%`;
-      queryEl(hp, ".pct").textContent = `${Math.round(h)}%`;
-      hp.classList.toggle("low", h <= LOW_HEALTH);
-      hp.classList.toggle("mid", h > LOW_HEALTH && h < MID_HEALTH);
-
-      const last = this.lastHealth[p];
-
-      if (h < last - HEALTH_FLASH_STEP) {
-        hp.classList.remove("flash", "heal");
-        void hp.offsetWidth;
-        hp.classList.add("flash");
-        this.lastHealth[p] = h;
-      } else if (h > last + HEALTH_FLASH_STEP) {
-        hp.classList.remove("flash", "heal");
-        void hp.offsetWidth;
-        hp.classList.add("heal");
-        this.lastHealth[p] = h;
-      } else if (
-        Math.abs(h - last) > HEALTH_TRACK_STEP &&
-        !hp.classList.contains("flash")
-      ) {
-        this.lastHealth[p] = h;
-      }
-
-      queryEl(el, ".score").textContent = String(w.score).padStart(
-        SCORE_DIGITS,
-        "0",
+      this.lastHealth[p] = updateHealth(el, w, this.lastHealth[p]);
+      updateScore(el, w);
+      updateAutoReticle(
+        el,
+        w,
+        this.stage.lanes().find((x) => x.player === p),
       );
-
-      const shipped = el.querySelector(".shipped");
-
-      if (shipped) {
-        shipped.textContent = String(w.shipped);
-      }
-
-      // Autoplay's own reticle, where its hand is pointing.
-      const auto = queryEl(el, ".reticle.auto");
-      const a = w.autoAimScreen();
-      const l = this.stage.lanes().find((x) => x.player === p);
-
-      auto.hidden = !a || !l;
-      if (a && l) {
-        auto.style.left = `${((a.x + 1) / 2) * l.w}px`;
-        auto.style.top = `${((1 - a.y) / 2) * l.h}px`;
-      }
-
-      const bb = queryEl(el, ".bossbar");
-      const bossPhase = ["boss", "bossPart", "bossDown"].includes(
-        this.step.phase,
-      );
-
-      bb.hidden = !bossPhase || w.bossTotal === 0;
-      if (!bb.hidden) {
-        queryEl(bb, ".name").textContent = this.tier.boss.name;
-        queryEl(bb, ".count").textContent =
-          `${w.bossLeft} / ${w.bossTotal} SINS`;
-        queryEl(bb, ".bar i").style.width =
-          `${(w.bossLeft / w.bossTotal) * PERCENT}%`;
-      }
+      updateBossBar(el, w, bossPhase ? this.tier.boss.name : null);
     }
   }
 

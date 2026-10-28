@@ -1,7 +1,8 @@
 import { AudioEngine, MS_PER_SECOND, TRACKS } from "#root/src/audio/audio.ts";
 import { loadContent } from "#root/src/content/load.ts";
 import { byId, closestEl, queryAllEl } from "#root/src/dom.ts";
-import { Director, SCORE_DIGITS, SPLIT_PAN } from "#root/src/show/director.ts";
+import { Director, SPLIT_PAN } from "#root/src/show/director.ts";
+import { SCORE_DIGITS } from "#root/src/show/director/shared.ts";
 import { parsePresenterState } from "#root/src/show/messages.ts";
 import {
   isSplit,
