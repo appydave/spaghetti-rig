@@ -22,6 +22,90 @@ function dynamicHexColor(node, isColorReceiver) {
   );
 }
 
+/** The names this file has bound to a Color, and a test for whether a receiver is one of them. */
+function colorNames() {
+  const names = new Set();
+
+  return {
+    remember: (name) => {
+      if (name) {
+        names.add(name);
+      }
+    },
+    isColorReceiver: (receiver) => {
+      const name = memberName(receiver);
+
+      return !!name && names.has(name);
+    },
+  };
+}
+
+/** The visitors that learn which names hold a Color: `new Color(...)` assigned to them, or a `: Color` annotation. */
+function nameVisitors(remember) {
+  return {
+    VariableDeclarator(node) {
+      if (
+        isNewColor(node.init) ||
+        isColorType(node.id.typeAnnotation?.typeAnnotation)
+      ) {
+        remember(memberName(node.id));
+      }
+    },
+    AssignmentExpression(node) {
+      if (isNewColor(node.right)) {
+        remember(memberName(node.left));
+      }
+    },
+    PropertyDefinition(node) {
+      if (
+        isNewColor(node.value) ||
+        isColorType(node.typeAnnotation?.typeAnnotation)
+      ) {
+        remember(memberName(node.key));
+      }
+    },
+    Identifier(node) {
+      if (isColorType(node.typeAnnotation?.typeAnnotation)) {
+        remember(node.name);
+      }
+    },
+  };
+}
+
+/** The visitors that report a colour literal: a colour string anywhere, a named colour or a number where a colour goes, a hex template. */
+function literalVisitors(context, isColorReceiver) {
+  function check(node, value) {
+    const contextual = isColorContext(node, isColorReceiver);
+    const literal =
+      typeof value === "string"
+        ? isColorValue(value) || (contextual && isNamedColor(value))
+        : contextual;
+
+    if (literal) {
+      context.report({ node, messageId: "palette" });
+    }
+  }
+
+  return {
+    Literal(node) {
+      if (typeof node.value === "string" || typeof node.value === "number") {
+        check(node, node.value);
+      }
+    },
+    TemplateLiteral(node) {
+      if (dynamicHexColor(node, isColorReceiver)) {
+        context.report({ node, messageId: "palette" });
+
+        return;
+      }
+
+      for (const quasi of node.quasis) {
+        check(node, quasi.value.cooked ?? quasi.value.raw);
+      }
+    },
+  };
+}
+
 /** @type {import("eslint").Rule.RuleModule} */
 export const noColorLiterals = {
   meta: {
@@ -35,74 +119,11 @@ export const noColorLiterals = {
       return {};
     }
 
-    const colorNames = new Set();
-    const isColorReceiver = (receiver) => {
-      const name = memberName(receiver);
-
-      return !!name && colorNames.has(name);
-    };
-
-    const remember = (name) => {
-      if (name) {
-        colorNames.add(name);
-      }
-    };
-
-    function check(node, value) {
-      const contextual = isColorContext(node, isColorReceiver);
-      const literal =
-        typeof value === "string"
-          ? isColorValue(value) || (contextual && isNamedColor(value))
-          : contextual;
-
-      if (literal) {
-        context.report({ node, messageId: "palette" });
-      }
-    }
+    const { remember, isColorReceiver } = colorNames();
 
     return {
-      VariableDeclarator(node) {
-        if (
-          isNewColor(node.init) ||
-          isColorType(node.id.typeAnnotation?.typeAnnotation)
-        ) {
-          remember(memberName(node.id));
-        }
-      },
-      AssignmentExpression(node) {
-        if (isNewColor(node.right)) {
-          remember(memberName(node.left));
-        }
-      },
-      PropertyDefinition(node) {
-        if (
-          isNewColor(node.value) ||
-          isColorType(node.typeAnnotation?.typeAnnotation)
-        ) {
-          remember(memberName(node.key));
-        }
-      },
-      Identifier(node) {
-        if (isColorType(node.typeAnnotation?.typeAnnotation)) {
-          remember(node.name);
-        }
-      },
-      Literal(node) {
-        if (typeof node.value === "string" || typeof node.value === "number") {
-          check(node, node.value);
-        }
-      },
-      TemplateLiteral(node) {
-        if (dynamicHexColor(node, isColorReceiver)) {
-          context.report({ node, messageId: "palette" });
-
-          return;
-        }
-
-        for (const quasi of node.quasis) {
-          check(node, quasi.value.cooked ?? quasi.value.raw);
-        }
-      },
+      ...nameVisitors(remember),
+      ...literalVisitors(context, isColorReceiver),
     };
   },
 };
