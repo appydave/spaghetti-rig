@@ -1,6 +1,7 @@
 import type { Note } from "#root/src/audio/music/deck.ts";
 import { present } from "#root/src/nth.ts";
-import { midiToFreq, type LeadVoice } from "#root/src/audio/tracks.ts";
+import { type LeadVoice } from "#root/src/audio/tracks.ts";
+import { midiToFreq } from "#root/src/audio/music/notation.ts";
 import { SILENCE, cleanup } from "#root/src/audio/voice-kit.ts";
 
 /** The lead voice: its peak, how fast it speaks, how long a note holds and rings, and how it settles. */

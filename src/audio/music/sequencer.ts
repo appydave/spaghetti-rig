@@ -5,11 +5,11 @@
  */
 import type { Deck, Note } from "#root/src/audio/music/deck.ts";
 import {
-  SEMITONES_PER_OCTAVE,
   STEPS_PER_BEAT,
   type CompiledTrack,
   type LeadVoice,
 } from "#root/src/audio/tracks.ts";
+import { SEMITONES_PER_OCTAVE } from "#root/src/audio/music/notation.ts";
 import type { TrackMix } from "#root/src/audio/types.ts";
 
 /** If the scheduler falls this far behind (a hidden tab), it jumps forward instead of bursting. */

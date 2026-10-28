@@ -17,7 +17,6 @@ export const TOON_KIT = ["src/world/models/kit/kit.ts"];
 export const CARRIED_TO_TIER_5 = [
   "lint/gates/audio-proof.test.ts",
   "lint/gates/color-policy.mjs",
-  "src/audio/tracks.ts",
   "src/main.ts",
   "tests/show.spec.ts",
 ];
