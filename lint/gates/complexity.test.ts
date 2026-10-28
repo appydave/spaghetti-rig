@@ -20,7 +20,6 @@ const COMPLEXITY_PD = ["src/world/models/gate.ts"];
 /** The files carried to tier 5 (David, scope B, 2026-10-26) that still have a complexity finding. The list may shrink, never grow. */
 const COMPLEXITY_CARRIED = [
   "lint/gates/audio-proof.test.ts",
-  "src/audio/audio.ts",
   "src/audio/tracks.ts",
   "src/content/load.ts",
   "src/main.ts",

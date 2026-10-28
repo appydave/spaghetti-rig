@@ -14,7 +14,6 @@ export const ASSET_DATA = [
 export const CARRIED_TO_TIER_5 = [
   "lint/gates/audio-proof.test.ts",
   "lint/gates/color-policy.mjs",
-  "src/audio/audio.ts",
   "src/audio/tracks.ts",
   "src/content/load.ts",
   "src/main.ts",

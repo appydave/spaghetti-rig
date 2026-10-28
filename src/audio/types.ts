@@ -38,3 +38,35 @@ export interface TrackDef {
   /** Free text for whoever edits the score (chord names such as Fmaj7); the engine ignores it. */
   notes?: string;
 }
+
+export type Sfx =
+  | "shoot"
+  | "shootP1"
+  | "enemyHit"
+  | "enemyPop"
+  | "robotBreak"
+  | "slam"
+  | "damage"
+  | "glassCrack"
+  | "shatter"
+  | "debrisBounce"
+  | "cardFly"
+  | "cardPlay"
+  | "codeFix"
+  | "heal"
+  | "gateBanner"
+  | "bossArrive"
+  | "bossPartBreak"
+  | "bounce"
+  | "bossDefeat"
+  | "win"
+  | "lose"
+  | "vs"
+  | "uiMove"
+  | "uiSelect"
+  | "step";
+
+export interface PlayOptions {
+  pan?: number;
+  volume?: number;
+}

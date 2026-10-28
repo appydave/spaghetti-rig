@@ -574,7 +574,6 @@
       "files": [
         "lint/gates/audio-proof.test.ts",
         "lint/gates/color-policy.mjs",
-        "src/audio/audio.ts",
         "src/audio/tracks.ts",
         "src/content/load.ts",
         "src/main.ts",
@@ -634,7 +633,6 @@
       // tests/show.spec.ts are carried for size only). lint/gates/complexity.test.ts pins it: exactly these names, each still has a finding.
       "files": [
         "lint/gates/audio-proof.test.ts",
-        "src/audio/audio.ts",
         "src/audio/tracks.ts",
         "src/content/load.ts",
         "src/main.ts",
