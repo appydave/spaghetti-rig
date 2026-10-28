@@ -11,6 +11,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
+import { SfxPlayer } from "../../src/audio/engine/sfx-player";
 import { scheduleDeck, scheduleStep } from "../../src/audio/music/sequencer";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
 import { num } from "./world-fingerprint";
@@ -77,8 +78,9 @@ function record(sfx: string, seed: number): Arg[][] {
       calls.push([kind, ...args.slice(1).map(sorted)]);
 
   engine.ctx = hole;
-  engine.sfxOut = () => "out";
-  engine.sfxVoices = {
+  engine.sfx = new SfxPlayer(hole, hole, null);
+  engine.sfx.sfxOut = () => "out";
+  engine.sfx.sfxVoices = {
     tone: log("tone"),
     noise: log("noise"),
     brass: (dest: Arg, t: Arg, h: any) =>
@@ -86,13 +88,12 @@ function record(sfx: string, seed: number): Arg[][] {
     trombone: (dest: Arg, t: Arg, h: any) =>
       log("trombone")(dest, t, h.midi, h.dur, h.wobble),
   };
-  engine.cleanup = () => {};
 
   const real = Math.random;
 
   Math.random = seeded(seed);
   try {
-    engine.playSfx(sfx, START, {});
+    engine.sfx.playSfx(sfx, START, {});
   } finally {
     Math.random = real;
   }
@@ -260,7 +261,7 @@ const control = (e: any): void => {
       start + gap + GAP_MARGIN,
     ]) {
       at(t);
-      e.activeSfx = 0;
+      e.sfx.activeSfx = 0;
       e.play(sfx);
     }
   });
@@ -270,36 +271,41 @@ const control = (e: any): void => {
     [64.5, "enemyHit", "damage"],
   ].forEach(([busy, low, normal], i) => {
     at(2000 + i * 10);
-    e.activeSfx = busy;
+    e.sfx.activeSfx = busy;
     e.play(low);
     e.play(normal);
   });
 
-  const old = e.createDeck(COMPILED_TRACKS[0], 0, 0.03);
+  const old = e.music.createDeck(COMPILED_TRACKS[0], 0, 0.03);
 
   old.stopAt = -2.5;
   at(1);
-  e.tick();
-  e.tick();
+  e.music.tick();
+  e.music.tick();
 
   // A scheduler that is far behind jumps forward; one a hair behind drops the steps it missed.
   const [late, stalled] = [
-    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
-    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03),
   ];
 
   scheduleDeck(
     stalled,
     1 + COMPILED_TRACKS[0].stepSec * 400,
     1000,
-    e.sequencer,
+    e.music.sequencer,
   );
-  scheduleDeck(e.createDeck(COMPILED_TRACKS[0], 1, 0.03), 1.29, 2, e.sequencer);
-  scheduleDeck(late, 1.025, 1.3, e.sequencer);
+  scheduleDeck(
+    e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    1.29,
+    2,
+    e.music.sequencer,
+  );
+  scheduleDeck(late, 1.025, 1.3, e.music.sequencer);
 };
 
 const bodies = (e: any): void => {
-  const out = e.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
+  const out = e.sfx.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
 
   for (const o of [
     { f: 440, dur: 0.1, vol: 0.2 },
@@ -316,11 +322,11 @@ const bodies = (e: any): void => {
       sweep: 0.5,
     },
   ]) {
-    e.sfxVoices.tone(out, 1, o);
+    e.sfx.sfxVoices.tone(out, 1, o);
   }
 
   for (const filter of ["lowpass", "highpass", "bandpass"]) {
-    e.sfxVoices.noise(out, 1, {
+    e.sfx.sfxVoices.noise(out, 1, {
       filter,
       f: 800,
       f2: 300,
@@ -329,31 +335,41 @@ const bodies = (e: any): void => {
       vol: 0.2,
       attack: 0.05,
     });
-    e.sfxVoices.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
+    e.sfx.sfxVoices.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
   }
 
-  e.sfxVoices.noise(out, 1, { filter: "lowpass", f: 500, dur: 1.99, vol: 0.2 });
+  e.sfx.sfxVoices.noise(out, 1, {
+    filter: "lowpass",
+    f: 500,
+    dur: 1.99,
+    vol: 0.2,
+  });
 
   // Notes outside what the score uses: a very short one, a very high one, and a pad held long, to reach the voices' floors and ceilings.
-  const deck = e.createDeck(COMPILED_TRACKS[0], 1, 0.03);
+  const deck = e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03);
 
   for (const voice of ["triangle", "sine", "square", "saw", "pluck"]) {
-    e.sequencer.voices.leadNote({ deck, t: 1, level: 1 }, 100, 0.02, voice);
-    e.sequencer.voices.leadNote({ deck, t: 1, level: 1 }, 60, 3, voice);
+    e.music.sequencer.voices.leadNote(
+      { deck, t: 1, level: 1 },
+      100,
+      0.02,
+      voice,
+    );
+    e.music.sequencer.voices.leadNote({ deck, t: 1, level: 1 }, 60, 3, voice);
   }
 
-  e.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 0.02);
-  e.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 4);
+  e.music.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 0.02);
+  e.music.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 4);
 
   for (const pad of ["warm", "glass", "dark"]) {
     const [first] = COMPILED_TRACKS;
-    const held = e.createDeck(
+    const held = e.music.createDeck(
       { ...first, def: { ...first?.def, pad } },
       1,
       0.03,
     );
 
-    e.sequencer.voices.padChord(
+    e.music.sequencer.voices.padChord(
       { deck: held, t: 1, level: 1 },
       [60, 64, 67],
       5,
@@ -361,33 +377,91 @@ const bodies = (e: any): void => {
   }
 
   for (const midi of [38, 60, 84]) {
-    e.sfxVoices.brass(out, 1, { midi, dur: 0.8, vol: 0.1 });
-    e.sfxVoices.trombone(out, 1, { midi, dur: 0.8, wobble: midi > 50 });
+    e.sfx.sfxVoices.brass(out, 1, { midi, dur: 0.8, vol: 0.1 });
+    e.sfx.sfxVoices.trombone(out, 1, { midi, dur: 0.8, wobble: midi > 50 });
   }
 };
 
 /** The scheduler's edges: a step a hair late still sounds, at the clock's time; a tick schedules a live deck; a deck that has played its loops hands over to the theme's next track, and the change shows in the log as a timer as long as the new name. */
 const seams = (e: any): void => {
   scheduleDeck(
-    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03),
     1.01,
     1.3,
-    e.sequencer,
+    e.music.sequencer,
   );
   e.onTrackChange((name: string) => setTimeout(() => undefined, name.length));
-  e.createDeck(COMPILED_TRACKS[0], 1.2, 0.03);
+  e.music.createDeck(COMPILED_TRACKS[0], 1.2, 0.03);
 
   const [first] = COMPILED_TRACKS.filter(
     (t) =>
       COMPILED_TRACKS.filter((o) => o.def.theme === t.def.theme).length > 1,
   );
-  const deck = e.createDeck(first, 1, 0.03);
+  const deck = e.music.createDeck(first, 1, 0.03);
 
-  e.current = deck;
-  e._theme = first?.def.theme;
+  e.music.current = deck;
+  e.music.theme = first?.def.theme;
   deck.abs = (first?.def.loops ?? 0) * (first?.totalSteps ?? 0);
   deck.start = 1 - deck.abs * (first?.stepSec ?? 0);
-  e.tick();
+  e.music.tick();
+};
+
+/** The engine's public surface: a theme set twice and then silenced, a paused unlock, a suspended context, mute and pause around a play, an out-of-range pan and volume, a busy engine, one paused and muted before it starts, a browser with only the prefixed context, and one whose context cannot be made. */
+const surface = (e: any): void => {
+  const stateIs = (state: string): void => {
+    e.ctx.state = state;
+  };
+
+  e.onTrackChange((name: string) => setTimeout(() => undefined, name.length));
+  e.setTheme("walk");
+  e.setTheme("walk");
+  e.music.current.out.gain.value = 0;
+  e.setTheme("silent");
+  e.ctx.currentTime = 4.5;
+  e.music.tick();
+  e.music.theme = "walk";
+  stateIs("suspended");
+  e.paused = true;
+  e.unlock();
+  e.paused = false;
+  e.unlock();
+  e.music.tick();
+  e.play("slam");
+  stateIs("running");
+  e.muted = true;
+  e.play("win");
+  e.muted = false;
+  e.paused = true;
+  e.play("lose");
+  e.paused = false;
+  e.play("heal", { volume: 2, pan: -3 });
+  e.sfx.activeSfx = 30;
+  e.play("step");
+  e.sfx.activeSfx = 0;
+  vi.stubGlobal("setTimeout", (fn: () => void) => fn());
+  e.play("slam");
+  expect([e.muted, e.paused, e.theme, e.trackName]).toHaveLength(4);
+  expect(e.sfx.activeSfx).toBe(0);
+
+  const late: any = new AudioEngine();
+
+  late.paused = true;
+  late.muted = true;
+  late.init();
+  late.play("shatter");
+
+  const prefixed = vi.fn(function () {
+    return e.ctx;
+  });
+
+  vi.stubGlobal("AudioContext", undefined);
+  vi.stubGlobal("webkitAudioContext", prefixed);
+  void new AudioEngine().unlock();
+  expect(prefixed).toHaveBeenCalledWith({ latencyHint: "interactive" });
+  vi.stubGlobal("AudioContext", () => {
+    throw new Error("no context");
+  });
+  void new AudioEngine().unlock();
 };
 
 const all: Record<string, Arg[][] | [string, number]> = {};
@@ -396,34 +470,35 @@ const runs: [string, (e: any) => void][] = [
   ["engine bodies", bodies],
   ["engine control", control],
   ["engine seams", seams],
+  ["engine surface", surface],
   ...COMPILED_TRACKS.map((track): [string, (e: any) => void] => [
     `track ${track.def.name}`,
     (e: any) => {
-      const deck = e.createDeck(track, 1, 0.03);
+      const deck = e.music.createDeck(track, 1, 0.03);
 
-      e.current = deck;
-      e._theme = track.def.theme;
+      e.music.current = deck;
+      e.music.theme = track.def.theme;
       for (let loop = 0; loop < 2; loop++) {
         for (let idx = 0; idx < track.totalSteps; idx++) {
           scheduleStep(
             { deck, idx, loop, t: 1 + idx * 0.01 },
-            e.sequencer.voices,
+            e.music.sequencer.voices,
           );
         }
       }
 
       for (let n = 1; n <= 12; n++) {
-        scheduleDeck(deck, 1, 1 + track.stepSec * 200 * n, e.sequencer);
+        scheduleDeck(deck, 1, 1 + track.stepSec * 200 * n, e.music.sequencer);
       }
 
       // A call that needs more steps than the scheduler's guard allows, on a deck that is not the current one (so it cannot rotate).
-      const long = e.createDeck(track, 1, 0.03);
+      const long = e.music.createDeck(track, 1, 0.03);
 
       long.abs = 7;
-      scheduleDeck(long, 1, 1 + track.stepSec * 300, e.sequencer);
-      e.retire(long, 2, 1);
-      e.retire(deck, 2, 1);
-      e.disposeDeck(deck);
+      scheduleDeck(long, 1, 1 + track.stepSec * 300, e.music.sequencer);
+      e.music.retire(long, 2, 1);
+      e.music.retire(deck, 2, 1);
+      e.music.disposeDeck(deck);
     },
   ]),
 ];
