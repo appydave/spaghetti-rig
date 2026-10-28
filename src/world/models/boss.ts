@@ -280,7 +280,7 @@ export class BossModel {
       return;
     }
 
-    p.shatter(debris, from, 7, [5, 4], 11 + i);
+    p.shatter(debris, from, { power: 7, grid: [5, 4], seed: 11 + i });
     this.parts[i] = null;
     this.shake = 1;
   }
@@ -302,7 +302,7 @@ export class BossModel {
       this.breakPart(i, debris, from);
     }
 
-    this.core.shatter(debris, from, 9, [7, 5], 99);
+    this.core.shatter(debris, from, { power: 9, grid: [7, 5], seed: 99 });
     breakObject(debris, this.frame, { from, power: 8, up: 6 });
     breakObject(debris, this.head, { from, power: 9, up: 8 });
     this.glow.removeFromParent();
