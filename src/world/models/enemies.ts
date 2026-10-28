@@ -7,10 +7,12 @@ import { nth, present } from "#root/src/nth.ts";
 import {
   ROBOT_PAUSE_SECONDS,
   stepEnemy,
+  type EnemyKind,
   type EnemyMotion,
 } from "#root/src/world/motion/enemy-motion.ts";
 
-export type EnemyKind = "spaghetti" | "bug" | "robot";
+export type { EnemyKind } from "#root/src/world/motion/enemy-motion.ts";
+
 export const SCORE: Record<EnemyKind, number> = {
   spaghetti: 100,
   bug: 150,
