@@ -128,7 +128,11 @@ describe("folder-size limits", () => {
       readFileSync(join(REPO, "package.json"), "utf8"),
     ).scripts;
 
-    expect(scripts.lint).toContain("node scripts/check-folder-size.mjs");
+    // Whole `&&` links, never a substring: `(… || true)` or `…; true` would keep the text and drop the gate from CI.
+    expect(scripts.lint.split(" && ")).toContain(
+      "node scripts/check-folder-size.mjs",
+    );
+    expect(scripts.lint).not.toMatch(/\|\||;/);
   });
 
   it("holds for this repository", () => {
