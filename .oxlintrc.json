@@ -575,7 +575,6 @@
         "lint/gates/audio-proof.test.ts",
         "lint/gates/color-policy.mjs",
         "src/audio/tracks.ts",
-        "src/content/load.ts",
         "src/main.ts",
         "src/world/models/toon.ts",
         "tests/show.spec.ts"
@@ -628,7 +627,6 @@
       "files": [
         "lint/gates/audio-proof.test.ts",
         "src/audio/tracks.ts",
-        "src/content/load.ts",
         "src/world/models/toon.ts"
       ],
       "rules": {

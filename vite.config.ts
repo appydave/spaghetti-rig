@@ -8,7 +8,7 @@ const DEV_PORT = Number(process.env.DEV_PORT ?? DEFAULT_DEV_PORT);
 const CHUNK_WARNING_KB = 6000;
 // Coverage: the most statements, branches and functions that may be left uncovered, and the percentage backstop. See `thresholds`.
 const MAX_UNCOVERED_STATEMENTS = 307;
-const MAX_UNCOVERED_BRANCHES = 235;
+const MAX_UNCOVERED_BRANCHES = 229;
 const MAX_UNCOVERED_FUNCTIONS = 69;
 const BACKSTOP_STATEMENTS = 91.6;
 const BACKSTOP_BRANCHES = 82.5;

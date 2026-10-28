@@ -8,3 +8,5 @@ export const str = (v: unknown, fallback = ""): string =>
   typeof v === "string" ? v : fallback;
 export const strs = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+export const optStr = (v: unknown): string | undefined =>
+  typeof v === "string" ? v : undefined;
