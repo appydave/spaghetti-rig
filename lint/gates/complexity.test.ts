@@ -25,7 +25,6 @@ const COMPLEXITY_CARRIED = [
   "src/main.ts",
   "src/show/director.ts",
   "src/show/script.ts",
-  "src/world/code-window/codelayout.ts",
   "src/world/combat/effects.ts",
   "src/world/models/toon.ts",
   "src/world/world.ts",
