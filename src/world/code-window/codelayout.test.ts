@@ -1,12 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseContent } from "#root/src/content/load.ts";
-import {
-  layoutCard,
-  tokenize,
-  wrapPoints,
-  SYNTAX,
-} from "#root/src/world/code-window/codelayout.ts";
+import { layoutCard } from "#root/src/world/code-window/codelayout.ts";
+import { tokenize } from "#root/src/world/code-window/layout/tokenize.ts";
+import { wrapPoints } from "#root/src/world/code-window/layout/wrap.ts";
+import { SYNTAX } from "#root/src/world/palette.ts";
 
 const game = parseContent(
   JSON.parse(
