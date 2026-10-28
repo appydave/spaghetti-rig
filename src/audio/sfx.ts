@@ -8,7 +8,7 @@ import {
   oneOf,
 } from "#root/src/audio/load/sfx-fields.ts";
 import type { NoiseOpts, ToneOpts } from "#root/src/audio/sfx/voices.ts";
-import { midiToFreq } from "#root/src/audio/tracks.ts";
+import { midiToFreq } from "#root/src/audio/music/notation.ts";
 
 /**
  * The sound-effect recipe grammar (sfx.json). It is closed: a new shape is a ruling, not an edit. Widened once, in N6c.

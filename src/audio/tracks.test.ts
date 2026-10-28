@@ -5,11 +5,13 @@ import {
   COMPILED_TRACKS,
   MUSIC_THEMES,
   tracksForTheme,
+} from "#root/src/audio/tracks.ts";
+import {
   parseNote,
   parseMelodyBar,
   parseChord,
   midiToFreq,
-} from "#root/src/audio/tracks.ts";
+} from "#root/src/audio/music/notation.ts";
 import { TRACKS as API_TRACKS, AudioEngine } from "#root/src/audio/audio.ts";
 
 const sane = (n: number) => Number.isFinite(n) && n >= 24 && n <= 108;

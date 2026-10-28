@@ -18,6 +18,12 @@ import { nth } from "#root/src/nth.ts";
 
 import rawTracks from "#root/src/audio/tracks.json";
 import { parseTrackDefs } from "#root/src/audio/load/load.ts";
+import {
+  parseChord,
+  parseMelodyBar,
+  SEMITONES_PER_OCTAVE,
+  type Chord,
+} from "#root/src/audio/music/notation.ts";
 import type { MusicTheme, Theme, TrackDef } from "#root/src/audio/types.ts";
 
 export type {
@@ -40,100 +46,11 @@ export const TRACK_DEFS: TrackDef[] = parseTrackDefs(rawTracks);
 // Parsing / compiling
 // ---------------------------------------------------------------------------
 
-/** One octave of piano keys, a dot where a black key sits: a letter's index is its semitone above C. */
-const NATURAL_KEYS = "C.D.EF.G.A.B";
-
-export const SEMITONES_PER_OCTAVE = 12;
-
 const FIFTH_SEMITONES = 7;
-const A4_MIDI = 69;
-const A4_HZ = 440;
 
 export const STEPS_PER_BEAT = 4;
 
 const SECONDS_PER_MINUTE = 60;
-
-/** "C4" -> 60, "F#5" -> 78, "Bb1" -> 34. Throws on bad input. */
-export function parseNote(name: string): number {
-  const m = /^(?<letter>[A-G])(?<accidental>#|b)?(?<octave>-?\d)$/.exec(
-    name.trim(),
-  );
-
-  if (!m) {
-    throw new Error(`Bad note "${name}"`);
-  }
-
-  const { letter = "", accidental, octave = "" } = m.groups ?? {};
-  const pc = NATURAL_KEYS.indexOf(letter);
-
-  if (pc < 0) {
-    throw new Error(`Bad note "${name}"`);
-  }
-
-  const acc = accidental === "#" ? 1 : accidental === "b" ? -1 : 0;
-
-  return (Number(octave) + 1) * SEMITONES_PER_OCTAVE + pc + acc;
-}
-
-export function midiToFreq(midi: number): number {
-  return A4_HZ * Math.pow(2, (midi - A4_MIDI) / SEMITONES_PER_OCTAVE);
-}
-
-export interface MelodyToken {
-  midi: number | null;
-  len: number;
-}
-
-export function parseMelodyBar(bar: string): MelodyToken[] {
-  return bar
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((tok) => {
-      const [note, lenStr] = tok.split("/");
-      const len = Number(lenStr);
-
-      if (!note || !Number.isInteger(len) || len <= 0) {
-        throw new Error(`Bad melody token "${tok}"`);
-      }
-
-      return { midi: note === "r" ? null : parseNote(note), len };
-    });
-}
-
-export interface Chord {
-  bass: number;
-  pad: number[];
-  beats: number;
-}
-
-export function parseChord(entry: string, beatsPerBar: number): Chord {
-  const [bassStr, rest] = entry.split(":");
-
-  if (!bassStr || rest === undefined) {
-    throw new Error(`Bad chord "${entry}"`);
-  }
-
-  let beats = beatsPerBar;
-  const tokens = rest
-    .trim()
-    .split(/\s+/)
-    .filter((t) => {
-      if (t.startsWith("*")) {
-        beats = Number(t.slice(1));
-
-        return false;
-      }
-
-      return true;
-    });
-
-  return {
-    bass: parseNote(bassStr),
-    pad: tokens.map((token) => parseNote(token)),
-    beats,
-  };
-}
 
 export interface NoteEvent {
   midi: number;
@@ -165,15 +82,15 @@ export function trackBars(def: TrackDef): number {
   return def.melody.length;
 }
 
-export function compileTrack(def: TrackDef): CompiledTrack {
-  const stepsPerBar = def.beatsPerBar * STEPS_PER_BEAT;
-  const bars = def.melody.length;
-  const totalSteps = bars * stepsPerBar;
-  const steps: StepEvents[] = Array.from({ length: totalSteps }, () => ({}));
-  const at = (i: number): StepEvents =>
-    nth(steps, ((i % totalSteps) + totalSteps) % totalSteps, "steps");
+/** The steps of one track, looked up modulo its length (so a note may ring over the loop point). */
+type At = (i: number) => StepEvents;
 
-  // Harmony
+/** Lay the chords out over the steps: each chord's first step carries it, and every step it covers knows it. */
+function compileHarmony(
+  def: TrackDef,
+  at: At,
+  totalSteps: number,
+): (Chord | undefined)[] {
   const chordAt: (Chord | undefined)[] = Array.from<Chord | undefined>({
     length: totalSteps,
   });
@@ -194,7 +111,16 @@ export function compileTrack(def: TrackDef): CompiledTrack {
     pos += len;
   }
 
-  // Melody
+  return chordAt;
+}
+
+/** Put each bar's melody notes on the steps they start on. */
+function compileMelody(
+  def: TrackDef,
+  at: At,
+  stepsPerBar: number,
+  totalSteps: number,
+) {
   for (const [b, bar] of def.melody.entries()) {
     let s = b * stepsPerBar;
 
@@ -206,60 +132,99 @@ export function compileTrack(def: TrackDef): CompiledTrack {
       s += tok.len;
     }
   }
+}
 
-  // Per-bar patterns
-  for (let b = 0; b < bars; b++) {
-    const base = b * stepsPerBar;
+/** One step of the bass pattern: a root, fifth or octave note held until the next mark. */
+function bassNote(
+  def: TrackDef,
+  i: number,
+  chord: Chord,
+): NoteEvent | undefined {
+  const bc = def.bass[i];
 
-    for (let i = 0; i < stepsPerBar; i++) {
-      const step = base + i;
-      const chord = chordAt[step];
+  if (!bc || bc === ".") {
+    return undefined;
+  }
 
-      if (!chord) {
-        continue;
-      }
+  const stepsPerBar = def.beatsPerBar * STEPS_PER_BEAT;
+  let next = i + 1;
 
-      const bc = def.bass[i];
+  while (next < stepsPerBar && def.bass[next] === ".") {
+    next++;
+  }
 
-      if (bc && bc !== ".") {
-        let next = i + 1;
+  const off =
+    bc === "5" ? FIFTH_SEMITONES : bc === "O" ? SEMITONES_PER_OCTAVE : 0;
 
-        while (next < stepsPerBar && def.bass[next] === ".") {
-          next++;
-        }
+  return { midi: chord.bass + off, len: next - i };
+}
 
-        const off =
-          bc === "5" ? FIFTH_SEMITONES : bc === "O" ? SEMITONES_PER_OCTAVE : 0;
+/** One step of the arpeggio pattern: a pad voice an octave up, wrapping up another octave past the voicing. */
+function arpNote(def: TrackDef, i: number, chord: Chord): number | undefined {
+  const ac = def.arp[i];
 
-        at(step).bass = { midi: chord.bass + off, len: next - i };
-      }
+  if (!ac || ac === ".") {
+    return undefined;
+  }
 
-      const ac = def.arp[i];
+  const idx = Number(ac);
+  const n = chord.pad.length;
+  const note = chord.pad[idx % n];
 
-      if (ac && ac !== ".") {
-        const idx = Number(ac);
-        const n = chord.pad.length;
-        const note = chord.pad[idx % n];
+  return note === undefined
+    ? undefined
+    : note + SEMITONES_PER_OCTAVE + SEMITONES_PER_OCTAVE * Math.floor(idx / n);
+}
 
-        if (note !== undefined) {
-          at(step).arp =
-            note +
-            SEMITONES_PER_OCTAVE +
-            SEMITONES_PER_OCTAVE * Math.floor(idx / n);
-        }
-      }
+const PERC_MARKS = new Set(["t", "T", "s"]);
+const isPerc = (c: string | undefined): c is "t" | "T" | "s" =>
+  c !== undefined && PERC_MARKS.has(c);
 
-      const cc = def.comp?.[i];
+/** Play the one-bar bass, arp, comp and perc patterns on one step under its chord. */
+function compilePatternStep(
+  def: TrackDef,
+  i: number,
+  chord: Chord,
+  ev: StepEvents,
+) {
+  const bass = bassNote(def, i, chord);
 
-      if (cc === "x") {
-        at(step).comp = chord.pad;
-      }
+  if (bass) {
+    ev.bass = bass;
+  }
 
-      const pc = def.perc?.[i];
+  const arp = arpNote(def, i, chord);
 
-      if (pc === "t" || pc === "T" || pc === "s") {
-        at(step).perc = pc;
-      }
+  if (arp !== undefined) {
+    ev.arp = arp;
+  }
+
+  if (def.comp?.[i] === "x") {
+    ev.comp = chord.pad;
+  }
+
+  const pc = def.perc?.[i];
+
+  if (isPerc(pc)) {
+    ev.perc = pc;
+  }
+}
+
+export function compileTrack(def: TrackDef): CompiledTrack {
+  const stepsPerBar = def.beatsPerBar * STEPS_PER_BEAT;
+  const bars = def.melody.length;
+  const totalSteps = bars * stepsPerBar;
+  const steps: StepEvents[] = Array.from({ length: totalSteps }, () => ({}));
+  const at: At = (i) =>
+    nth(steps, ((i % totalSteps) + totalSteps) % totalSteps, "steps");
+  const chordAt = compileHarmony(def, at, totalSteps);
+
+  compileMelody(def, at, stepsPerBar, totalSteps);
+  for (let step = 0; step < bars * stepsPerBar; step++) {
+    const chord = chordAt[step];
+
+    if (chord) {
+      compilePatternStep(def, step % stepsPerBar, chord, at(step));
     }
   }
 
