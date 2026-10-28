@@ -33,7 +33,9 @@ describe("boundaries layers", () => {
 
   it("every layer block keeps G10's relative-import pattern and says what to do instead", () => {
     for (const b of blocks) {
-      const [, { patterns }] = b.rules?.["no-restricted-imports"] as Patterns;
+      const [, { patterns }] = (b.rules ?? {})[
+        "no-restricted-imports"
+      ] as Patterns;
 
       expect(patterns.map((p) => p.regex)).toContain(RELATIVE);
       expect(patterns.every((p) => p.message.length > 0)).toBe(true);
