@@ -1,9 +1,12 @@
+import type { AppContext, Screen } from "#root/src/app/context.ts";
+import { installErrorBanner, showError } from "#root/src/app/errors.ts";
+import { installKeys, key } from "#root/src/app/keys.ts";
+import { presenter } from "#root/src/app/presenter.ts";
 import { AudioEngine, MS_PER_SECOND, TRACKS } from "#root/src/audio/audio.ts";
 import { loadContent } from "#root/src/content/load.ts";
 import { byId, closestEl, queryAllEl } from "#root/src/dom.ts";
 import { Director, SPLIT_PAN } from "#root/src/show/director.ts";
 import { SCORE_DIGITS } from "#root/src/show/director/shared.ts";
-import { parsePresenterState } from "#root/src/show/messages.ts";
 import {
   isSplit,
   MODES,
@@ -20,12 +23,8 @@ import { PlayerWorld } from "#root/src/world/world.ts";
 
 const $ = (id: string) => byId(id, HTMLElement);
 
-/** An error message stays on screen this long. */
-const ERROR_TOAST_MS = 8000;
 /** A slow frame advances the game by at most this many seconds, so a stalled tab does not jump. */
 const MAX_FRAME_SECONDS = 0.05;
-
-type Screen = "prelude" | "title" | "map" | "game";
 
 const store = {
   get: (k: string) => {
@@ -44,26 +43,7 @@ const store = {
   },
 };
 
-function showError(message: string, cause?: unknown) {
-  console.error(cause ?? message);
-
-  const el = document.createElement("div");
-
-  el.className = "error";
-  el.textContent = `Something broke: ${message}`;
-  document.body.append(el);
-  setTimeout(() => el.remove(), ERROR_TOAST_MS);
-}
-
-addEventListener("error", (e) =>
-  showError(e.error instanceof Error ? e.error.message : e.message, e.error),
-);
-addEventListener("unhandledrejection", (e) =>
-  showError(
-    e.reason instanceof Error ? e.reason.message : String(e.reason),
-    e.reason,
-  ),
-);
+installErrorBanner();
 
 if (new URLSearchParams(location.search).has("presenter")) {
   presenter();
@@ -333,182 +313,34 @@ async function boot() {
     }
   });
 
-  /** Every key, so the whole show runs from the keyboard. */
-  function key(code: string, shift: boolean, k: string) {
-    if (screen === "prelude") {
-      if (["Enter", "Space", "ArrowRight"].includes(code)) {
-        void enter();
-      }
+  const ctx: AppContext = {
+    get screen() {
+      return screen;
+    },
+    get selected() {
+      return selected;
+    },
+    set selected(v: number) {
+      selected = v;
+    },
+    tiers: game.tiers,
+    director,
+    audio,
+    helpOpen: () => !$("help").hidden,
+    closeHelp: () => {
+      $("help").hidden = true;
+    },
+    show,
+    start,
+    enter,
+    toggleMute,
+    toggleHelp,
+    togglePause,
+    setMode,
+    renderMap,
+  };
 
-      return;
-    }
-
-    const digit = /^Digit([1-9])$/.exec(code)?.[1];
-
-    if (shift && digit) {
-      const n = Number(digit);
-      const t = game.tiers.find((x) => x.n === n) ?? game.tiers[n - 1];
-
-      if (t) {
-        selected = t.index;
-        start(t.index);
-      }
-
-      return;
-    }
-
-    if (code === "KeyM") {
-      return toggleMute();
-    }
-
-    if (code === "KeyH" || k === "?") {
-      return toggleHelp();
-    }
-
-    const pick = MODES.find((m) => m.code === code);
-
-    if (pick) {
-      return setMode(pick.mode);
-    }
-
-    if (code === "Escape") {
-      if (!$("help").hidden) {
-        $("help").hidden = true;
-
-        return;
-      }
-
-      if (screen === "game") {
-        if (director.paused) {
-          director.setPaused(false);
-        }
-
-        show("map");
-      } else if (screen === "map") {
-        show("title");
-      }
-
-      return;
-    }
-
-    if (screen === "title") {
-      if (["Enter", "Space", "ArrowRight"].includes(code)) {
-        show("map");
-        audio.play("uiSelect");
-      }
-
-      return;
-    }
-
-    if (screen === "map") {
-      if (code === "ArrowRight" || code === "ArrowLeft") {
-        selected =
-          (selected + (code === "ArrowRight" ? 1 : -1) + game.tiers.length) %
-          game.tiers.length;
-        renderMap();
-        audio.play("uiMove");
-      }
-
-      if (code === "Enter" || code === "Space") {
-        start(selected);
-      }
-
-      return;
-    }
-
-    // In the game.
-    if (code === "KeyP") {
-      return togglePause();
-    }
-
-    if (code === "KeyN") {
-      director.toggleNotes();
-
-      return;
-    }
-
-    if (code === "KeyA") {
-      director.toggleAutoplay();
-      audio.play("uiMove");
-
-      return;
-    }
-
-    if (director.paused) {
-      if (code === "Space" || code === "ArrowRight") {
-        togglePause();
-      }
-
-      return;
-    }
-
-    if (
-      code === "ArrowRight" ||
-      code === "Space" ||
-      code === "PageDown" ||
-      code === "Enter"
-    ) {
-      director.next();
-    }
-
-    if (code === "ArrowLeft" || code === "PageUp") {
-      director.back();
-    }
-  }
-
-  addEventListener("keydown", (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) {
-      return;
-    }
-
-    if (
-      [
-        "Space",
-        "ArrowRight",
-        "ArrowLeft",
-        "ArrowUp",
-        "ArrowDown",
-        "PageDown",
-        "PageUp",
-      ].includes(e.code)
-    ) {
-      e.preventDefault();
-    }
-
-    if (e.repeat && !["ArrowRight", "ArrowLeft"].includes(e.code)) {
-      return;
-    }
-
-    key(e.code, e.shiftKey, e.key);
-  });
-  // The presenter window can drive the show too.
-  addEventListener("rig-command", (e) => {
-    if (!(e instanceof CustomEvent)) {
-      return;
-    }
-
-    const k: unknown = e.detail;
-
-    if (typeof k !== "string") {
-      return;
-    }
-
-    const map = new Map<string, [string, boolean]>([
-      ["next", ["ArrowRight", false]],
-      ["back", ["ArrowLeft", false]],
-      ["pause", ["KeyP", false]],
-      ["p1", ["Digit1", false]],
-      ["p2", ["Digit2", false]],
-      ["both", ["KeyB", false]],
-      ["spec", ["KeyS", false]],
-      ["auto", ["KeyA", false]],
-    ]);
-    const m = map.get(k);
-
-    if (m) {
-      key(m[0], m[1], "");
-    }
-  });
+  installKeys(ctx);
 
   // Frame loop.
   let last = performance.now();
@@ -538,7 +370,8 @@ async function boot() {
       audio,
       show,
       start,
-      key,
+      key: (code: string, shift: boolean, k: string) =>
+        key(ctx, code, shift, k),
       get screen() {
         return screen;
       },
@@ -549,67 +382,6 @@ async function boot() {
 
   show("prelude");
   $("enter").focus();
-}
-
-/** ?presenter: a second window that follows the game and shows the notes for the current card. */
-function presenter() {
-  document.body.classList.add("presenter-mode");
-
-  const root = $("presenter");
-
-  root.hidden = false;
-  root.innerHTML =
-    '<p class="status">Waiting for the game window… open the game in another window or tab.</p>';
-
-  const ch = new BroadcastChannel("spaghetti-rig");
-  const send = (key: string) => ch.postMessage({ type: "cmd", key });
-
-  ch.postMessage({ type: "hello" });
-  ch.addEventListener("message", (e) => {
-    const s = parsePresenterState(e.data);
-
-    if (!s) {
-      return;
-    }
-
-    const n = s.notes;
-
-    root.innerHTML = `
-      <div class="top"><div><span class="status">STEP ${s.index + 1} / ${s.total} · ${esc(s.mode.toUpperCase())}${s.paused ? " · PAUSED" : ""}</span><br><b>${esc(n.heading)}</b></div>
-        <div class="ctl"><button data-k="back">← Back</button><button data-k="next">Next →</button><button data-k="pause">Pause</button></div></div>
-      <div class="status">${esc(s.label)}</div>
-      <div class="say">${esc(n.say)}</div>
-      ${n.presenter.length ? `<ul>${n.presenter.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
-      ${n.extra.map((x) => `<h3>${esc(x.label.toUpperCase())}</h3><table>${x.rows.map((r) => `<tr>${r.map((c, i) => `<td>${i === 0 ? `<code>${esc(c)}</code>` : esc(c)}</td>`).join("")}</tr>`).join("")}</table>`).join("")}
-      <p class="next">Next: ${esc(s.next)}</p>`;
-  });
-  root.addEventListener("click", (e) => {
-    const k = e.target instanceof HTMLElement ? e.target.dataset.k : undefined;
-
-    if (k) {
-      send(k);
-    }
-  });
-  addEventListener("keydown", (e) => {
-    const k = new Map([
-      ["ArrowRight", "next"],
-      ["Space", "next"],
-      ["PageDown", "next"],
-      ["ArrowLeft", "back"],
-      ["PageUp", "back"],
-      ["KeyP", "pause"],
-      ["Digit1", "p1"],
-      ["Digit2", "p2"],
-      ["KeyB", "both"],
-      ["KeyS", "spec"],
-      ["KeyA", "auto"],
-    ]).get(e.code);
-
-    if (k) {
-      e.preventDefault();
-      send(k);
-    }
-  });
 }
 
 export type { Game } from "#root/src/content/load.ts";
