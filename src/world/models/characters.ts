@@ -4,13 +4,14 @@ import {
   stepCharacter,
   newMotionState,
   type CharacterMotion,
+  type Pose,
 } from "#root/src/world/motion/character-motion.ts";
 import { INK, toon } from "#root/src/world/models/toon.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { clamp01, lerp } from "#root/src/maths.ts";
 import { context2d } from "#root/src/dom.ts";
 
-export type Pose = "idle" | "walk" | "hurt" | "down" | "victory" | "aim";
+export type { Pose } from "#root/src/world/motion/character-motion.ts";
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
