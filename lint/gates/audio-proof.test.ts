@@ -334,12 +334,12 @@ const bodies = (e: any): void => {
   const deck = e.createDeck(COMPILED_TRACKS[0], 1, 0.03);
 
   for (const voice of ["triangle", "sine", "square", "saw", "pluck"]) {
-    e.leadNote({ deck, t: 1, level: 1 }, 100, 0.02, voice);
-    e.leadNote({ deck, t: 1, level: 1 }, 60, 3, voice);
+    e.sequencer.voices.leadNote({ deck, t: 1, level: 1 }, 100, 0.02, voice);
+    e.sequencer.voices.leadNote({ deck, t: 1, level: 1 }, 60, 3, voice);
   }
 
-  e.bassNote({ deck, t: 1, level: 1 }, 40, 0.02);
-  e.bassNote({ deck, t: 1, level: 1 }, 40, 4);
+  e.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 0.02);
+  e.sequencer.voices.bassNote({ deck, t: 1, level: 1 }, 40, 4);
 
   for (const pad of ["warm", "glass", "dark"]) {
     const [first] = COMPILED_TRACKS;
@@ -349,7 +349,11 @@ const bodies = (e: any): void => {
       0.03,
     );
 
-    e.padChord({ deck: held, t: 1, level: 1 }, [60, 64, 67], 5);
+    e.sequencer.voices.padChord(
+      { deck: held, t: 1, level: 1 },
+      [60, 64, 67],
+      5,
+    );
   }
 
   for (const midi of [38, 60, 84]) {
