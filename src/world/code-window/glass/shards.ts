@@ -7,7 +7,7 @@ import {
 } from "#root/src/world/code-window/glass/slab.ts";
 import { nth } from "#root/src/nth.ts";
 import { meshNamed } from "#root/src/world/models/objects.ts";
-import { rng } from "#root/src/world/models/toon.ts";
+import { rng } from "#root/src/maths.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 /** Shattering: the default push, the default grid (columns, rows) and the default seed. */

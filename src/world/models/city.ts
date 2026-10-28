@@ -8,7 +8,8 @@ import type {
   CityLayoutTable,
   Placement,
 } from "#root/src/world/motion/city-layout-types.ts";
-import { rng, toon } from "#root/src/world/models/toon.ts";
+import { toon } from "#root/src/world/models/toon.ts";
+import { rng } from "#root/src/maths.ts";
 
 export const ROAD_HALF = 3.6;
 export const SEGMENT = 34; // distance between stops

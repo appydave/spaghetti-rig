@@ -576,7 +576,6 @@
         "lint/gates/color-policy.mjs",
         "src/audio/tracks.ts",
         "src/main.ts",
-        "src/world/models/toon.ts",
         "tests/show.spec.ts"
       ],
       "rules": {
@@ -610,6 +609,15 @@
       }
     },
     {
+      // R14, option A (David, 10-27): the toon kit's part helpers take a position and a scale as separate numbers, the same hand-placed
+      // values an asset file stores (ball(group, SKIN, 0, 1.62, 0.02, 0.21)), so this one file is exempt from max-params by name and from
+      // nothing else. lint/gates/size.test.ts pins this block at exactly this file and checks it still needs it.
+      "files": ["src/world/models/kit/kit.ts"],
+      "rules": {
+        "max-params": "off"
+      }
+    },
+    {
       // G06 Complexity, procedural data (procedural-data.md): the Gate constructor (cognitive 13) is a named builder, hand-placed geometry
       // written as code. Any other function in this file is not a builder and has to move out. lint/gates/complexity.test.ts pins this list
       // at exactly this file and checks it still needs the exemption.
@@ -624,11 +632,7 @@
       // CARRIED TO TIER 5 for complexity too (David, scope B, 2026-10-26): tier 5 (structure) splits these files, and each slice takes its file
       // out of this list. It may shrink, never grow. These are the carried files that still have a complexity finding (color-policy.mjs and
       // tests/show.spec.ts are carried for size only). lint/gates/complexity.test.ts pins it: exactly these names, each still has a finding.
-      "files": [
-        "lint/gates/audio-proof.test.ts",
-        "src/audio/tracks.ts",
-        "src/world/models/toon.ts"
-      ],
+      "files": ["lint/gates/audio-proof.test.ts", "src/audio/tracks.ts"],
       "rules": {
         "anti-slop/cognitive-complexity": "off",
         "anti-slop/cyclomatic-complexity": "off",

@@ -4,7 +4,7 @@ import { Character } from "#root/src/world/models/characters.ts";
 import { layoutCard } from "#root/src/world/code-window/codelayout.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { paintCard } from "#root/src/world/code-window/paint/card-painter.ts";
-import { kit } from "#root/src/world/models/toon.ts";
+import { kit } from "#root/src/world/models/kit/kit.ts";
 import type { Player } from "#root/src/content/script.ts";
 import type { Card } from "#root/src/content/types.ts";
 import { userData } from "#root/src/world/models/objects.ts";
