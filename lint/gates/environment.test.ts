@@ -29,7 +29,7 @@ function testFiles(dir: string): string[] {
 }
 
 describe("test environment", () => {
-  it("only the Director harness opts in to a DOM", () => {
+  it("only the three Director harness test files opt in to a DOM", () => {
     const carrying = testFiles(REPO).filter((f) =>
       HEADER.test(readFileSync(join(REPO, f), "utf8")),
     );
