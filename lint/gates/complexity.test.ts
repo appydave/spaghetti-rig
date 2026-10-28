@@ -26,7 +26,6 @@ const COMPLEXITY_CARRIED = [
   "src/show/script.ts",
   "src/world/combat/effects.ts",
   "src/world/models/toon.ts",
-  "src/world/world.ts",
 ];
 const COMPLEXITY_RULES = [
   "anti-slop/cognitive-complexity",
