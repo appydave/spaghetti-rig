@@ -223,7 +223,7 @@ const overLane = (ptr: Pointer | null, l: Lane) =>
 /** A lane the pointer is not aiming in lets go of its crosshair, unless autoplay holds it. */
 function releaseAim(ctx: LaneContext, p: Player) {
   if (!ctx.worlds[p].autoplay) {
-    ctx.worlds[p].pointer(null, false);
+    ctx.worlds[p].combat.pointer(null, false);
   }
 }
 
@@ -239,7 +239,7 @@ function aimInLane(
     -((ptr.y - l.y) / l.h) * 2 + 1,
   );
 
-  ctx.worlds[l.player].pointer(ndc, shot.fire);
+  ctx.worlds[l.player].combat.pointer(ndc, shot.fire);
 
   const ret = el ? queryElOrNull(el, ".reticle") : null;
 

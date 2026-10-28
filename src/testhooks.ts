@@ -10,18 +10,7 @@ export interface TestHooks {
   director: Pick<Director, "at" | "step" | "script" | "go">;
   worlds: Record<
     Player,
-    Pick<
-      PlayerWorld,
-      | "shots"
-      | "score"
-      | "shipped"
-      | "health"
-      | "bossLeft"
-      | "bossTotal"
-      | "debrisCount"
-      | "enemyScreen"
-      | "windowKey"
-    >
+    Pick<PlayerWorld, "health" | "combat" | "street" | "debris">
   >;
   game: Game;
   audio: Pick<AudioEngine, "muted">;

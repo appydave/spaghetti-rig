@@ -47,7 +47,7 @@ const theme = (s: ShowState): Theme => {
 };
 
 const scored = (s: ShowState) => {
-  s.onScore?.(Math.max(s.worlds.p1.score, s.worlds.p2.score));
+  s.onScore?.(Math.max(s.worlds.p1.combat.score, s.worlds.p2.combat.score));
 };
 
 const renderResult = (s: ShowState) => {

@@ -99,16 +99,34 @@ export class FakeStage {
   }
 }
 
+/** A world's combat as the Director sees it: the score, the bugs shipped, the slip hook, the pointer it records and autoplay's aim. */
+class FakeCombat {
+  score = 0;
+  shipped = 0;
+  aimOn = false;
+  onSlip?: () => void;
+
+  constructor(private readonly note: (what: string) => void) {}
+
+  pointer(ndc: { x: number; y: number } | null, fire: boolean): void {
+    const at = ndc
+      ? `${ndc.x.toFixed(DECIMALS)},${ndc.y.toFixed(DECIMALS)}`
+      : "null";
+
+    this.note(`pointer ${at} ${fire}`);
+  }
+
+  autoAimScreen(): { x: number; y: number } | null {
+    return this.aimOn ? AIM : null;
+  }
+}
+
 /** A world that records what the Director asks of it and holds numbers the harness scripts. */
 export class FakeWorld {
   health = FULL;
-  score = 0;
-  shipped = 0;
-  bossTotal = 0;
-  bossLeft = 0;
   autoplay = false;
-  aimOn = false;
-  onSlip?: () => void;
+  readonly combat = new FakeCombat((what) => this.note(what));
+  readonly street = { bossTotal: 0, bossLeft: 0 };
 
   constructor(
     readonly player: Player,
@@ -138,18 +156,6 @@ export class FakeWorld {
   snapCamera(): void {
     this.note("snapCamera");
   }
-
-  pointer(ndc: { x: number; y: number } | null, fire: boolean): void {
-    const at = ndc
-      ? `${ndc.x.toFixed(DECIMALS)},${ndc.y.toFixed(DECIMALS)}`
-      : "null";
-
-    this.note(`pointer ${at} ${fire}`);
-  }
-
-  autoAimScreen(): { x: number; y: number } | null {
-    return this.aimOn ? AIM : null;
-  }
 }
 
 /** Script the numbers a world would hold at this clock: health that falls and heals, a score that climbs, a boss that loses parts. */
@@ -165,9 +171,11 @@ export function script(
   const boss = ["boss", "bossPart", "bossDown"].includes(step.phase);
 
   w.health = FULL - (t % HEALTH_PERIOD);
-  w.score += SCORE_STEP;
-  w.shipped = Math.floor(w.score / (SCORE_STEP * SHIPPED_EVERY));
-  w.bossTotal = boss ? parts : 0;
-  w.bossLeft = boss ? Math.max(0, parts - Math.max(0, step.part + 1)) : 0;
-  w.aimOn = Math.floor(clock * HEALTH_SPEED) % AIM_PERIOD < AIM_ON;
+  w.combat.score += SCORE_STEP;
+  w.combat.shipped = Math.floor(w.combat.score / (SCORE_STEP * SHIPPED_EVERY));
+  w.street.bossTotal = boss ? parts : 0;
+  w.street.bossLeft = boss
+    ? Math.max(0, parts - Math.max(0, step.part + 1))
+    : 0;
+  w.combat.aimOn = Math.floor(clock * HEALTH_SPEED) % AIM_PERIOD < AIM_ON;
 }
