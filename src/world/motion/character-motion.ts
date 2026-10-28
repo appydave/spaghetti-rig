@@ -1,6 +1,6 @@
 // A character's per-frame animation (After-G04 A2a): the pose's gait, the fall, the aim easing and the recoil. Moved out of characters.ts as it was;
 // the numbers it reads are CHARACTER_MOTION in characters.ts (the model file, where the model's other numbers live), and this file holds none.
-import type { Character, Pose } from "#root/src/world/models/characters.ts";
+import type * as THREE from "three";
 import { lerp } from "#root/src/maths.ts";
 
 /** How fast a shot's kick dies away, per second. */
@@ -9,6 +9,22 @@ const RECOIL_DECAY = 6;
 const HURT_DECAY = 2.2;
 /** How quickly the aim eases towards its target, per second. */
 const AIM_EASE = 10;
+
+/** What a character is doing; each pose has its own gait. */
+export type Pose = "idle" | "walk" | "hurt" | "down" | "victory" | "aim";
+
+/** The parts of a character the animation moves, its pose and the state it keeps: the Character class is one. */
+export interface Animated {
+  readonly root: THREE.Object3D;
+  readonly hips: THREE.Object3D;
+  readonly upper: THREE.Object3D;
+  readonly head: THREE.Object3D;
+  readonly legL: THREE.Object3D;
+  readonly legR: THREE.Object3D;
+  readonly weapon: THREE.Object3D;
+  readonly pose: Pose;
+  readonly motion: MotionState;
+}
 
 /** The pose-independent state the animation keeps between frames. */
 export interface MotionState {
@@ -122,7 +138,7 @@ function gaitOf(pose: Pose, t: number, m: CharacterMotion): Gait {
 }
 
 /** The fall onto the back: how far down the character is (0 to 1), and the tilt and height that gives the root. */
-function fallOf(c: Character, dt: number, m: CharacterMotion) {
+function fallOf(c: Animated, dt: number, m: CharacterMotion) {
   const s = c.motion;
 
   s.downT =
@@ -141,7 +157,7 @@ function fallOf(c: Character, dt: number, m: CharacterMotion) {
 }
 
 /** Put the upper body, head and weapon where the gait, the aim and the kicks say. */
-function poseUpper(c: Character, g: Gait, m: CharacterMotion) {
+function poseUpper(c: Animated, g: Gait, m: CharacterMotion) {
   const s = c.motion;
   const b = m.body;
   const hurt = s.hurtKick;
@@ -165,7 +181,7 @@ function poseUpper(c: Character, g: Gait, m: CharacterMotion) {
 }
 
 /** One frame of a character's animation. */
-export function stepCharacter(c: Character, dt: number, m: CharacterMotion) {
+export function stepCharacter(c: Animated, dt: number, m: CharacterMotion) {
   const s = c.motion;
 
   s.t += dt;

@@ -3,7 +3,6 @@
 // are ENEMY_MOTION in enemies.ts (next to the parts they move), and this file holds none of them; the few that change when or whether
 // something happens in play are named here.
 import type * as THREE from "three";
-import type { Enemy } from "#root/src/world/models/enemies.ts";
 
 /** How long a robot stops to think, halfway along, before it walks on: decides when it reaches the player. */
 export const ROBOT_PAUSE_SECONDS = 2.5;
@@ -17,6 +16,24 @@ const FLASH_SCALE = 0.15;
 
 /** What the robot's label says while it walks. */
 const ARMORED = "ARMORED";
+
+/** The three kinds of enemy; each moves its own way. */
+export type EnemyKind = "spaghetti" | "bug" | "robot";
+
+/** What the animation reads and moves on an enemy: the Enemy class is one. */
+export interface Walker {
+  readonly group: THREE.Object3D;
+  readonly kind: EnemyKind;
+  readonly from: THREE.Vector3;
+  readonly to: THREE.Vector3;
+  readonly speed: number;
+  readonly parts: Record<string, THREE.Object3D>;
+  age: number;
+  flash: number;
+  part(name: string): THREE.Object3D;
+  drawLabel(state: string): void;
+  thinking(t: number): string;
+}
 
 /** The numbers of each kind's animation: data only, read by stepEnemy. */
 export interface EnemyMotion {
@@ -49,7 +66,7 @@ interface Trip {
 }
 
 /** Robots stop halfway to think (and generate spaghetti) before walking on; the others never stop. */
-function tripOf(e: Enemy): Trip {
+function tripOf(e: Walker): Trip {
   const t = e.age;
   const total = e.from.distanceTo(e.to);
 
@@ -64,7 +81,7 @@ function tripOf(e: Enemy): Trip {
   return { t, pause, travelled: Math.min(total, moving * e.speed), total };
 }
 
-function hop(e: Enemy, m: EnemyMotion, trip: Trip) {
+function hop(e: Walker, m: EnemyMotion, trip: Trip) {
   const k = m.spaghetti;
   const h = Math.abs(Math.sin(trip.t * k.hopRate));
 
@@ -77,7 +94,7 @@ function hop(e: Enemy, m: EnemyMotion, trip: Trip) {
   e.part("body").rotation.y = Math.sin(trip.t * k.swayRate) * k.swayAmount;
 }
 
-function flutter(e: Enemy, m: EnemyMotion, trip: Trip) {
+function flutter(e: Walker, m: EnemyMotion, trip: Trip) {
   const k = m.bug;
 
   for (const [name, leg] of Object.entries(e.parts)) {
@@ -90,7 +107,7 @@ function flutter(e: Enemy, m: EnemyMotion, trip: Trip) {
 }
 
 /** Legs and arms swing while the robot walks; standing, its arms are raised and it generates. */
-function swingLimbs(e: Enemy, m: EnemyMotion, trip: Trip) {
+function swingLimbs(e: Walker, m: EnemyMotion, trip: Trip) {
   const k = m.robot;
   const walking = !trip.pause && trip.travelled < trip.total;
 
@@ -105,7 +122,7 @@ function swingLimbs(e: Enemy, m: EnemyMotion, trip: Trip) {
   }
 }
 
-function march(e: Enemy, m: EnemyMotion, trip: Trip) {
+function march(e: Walker, m: EnemyMotion, trip: Trip) {
   const k = m.robot;
 
   swingLimbs(e, m, trip);
@@ -119,7 +136,7 @@ const MOVES = { spaghetti: hop, bug: flutter, robot: march };
 
 /** One frame of an enemy: advance along its path, animate its kind, face the player, and swell while it flashes. */
 export function stepEnemy(
-  e: Enemy,
+  e: Walker,
   m: EnemyMotion,
   dt: number,
   facing: THREE.Vector3,

@@ -573,7 +573,6 @@
       // name exists, still has a finding (so a name leaves the list the moment its file is clean), and the list is exactly the set it states.
       "files": [
         "lint/gates/audio-proof.test.ts",
-        "src/content/load.ts",
         "src/main.ts",
         "tests/show.spec.ts"
       ],
@@ -621,17 +620,6 @@
       // written as code. Any other function in this file is not a builder and has to move out. lint/gates/complexity.test.ts pins this list
       // at exactly this file and checks it still needs the exemption.
       "files": ["src/world/models/gate.ts"],
-      "rules": {
-        "anti-slop/cognitive-complexity": "off",
-        "anti-slop/cyclomatic-complexity": "off",
-        "sonarjs/expression-complexity": "off"
-      }
-    },
-    {
-      // CARRIED TO TIER 5 for complexity too (David, scope B, 2026-10-26): tier 5 (structure) splits these files, and each slice takes its file
-      // out of this list. It may shrink, never grow. These are the carried files that still have a complexity finding (color-policy.mjs and
-      // tests/show.spec.ts are carried for size only). lint/gates/complexity.test.ts pins it: exactly these names, each still has a finding.
-      "files": ["src/content/load.ts"],
       "rules": {
         "anti-slop/cognitive-complexity": "off",
         "anti-slop/cyclomatic-complexity": "off",
