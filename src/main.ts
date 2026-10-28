@@ -82,7 +82,7 @@ async function boot() {
   stage.setMode(mode);
   stage.attach(worlds);
 
-  const director = new Director(game, stage, worlds, audio, mode);
+  const director = new Director({ game, stage, worlds, audio }, mode);
   let screen: Screen = "prelude";
   let selected = Math.max(
     0,
