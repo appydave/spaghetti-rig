@@ -31,8 +31,9 @@ function ruleMessage(): string {
 describeProbes("root-imports", ROOT_IMPORTS_PROBES, [ROOT_IMPORTS_CODE]);
 
 describe("root-imports exemption", () => {
+  // The G12 layer blocks set the rule too, with G10's pattern kept (boundaries.test.ts pins that); only a block that turns it off is an exemption.
   const blocks = readConfig().overrides.filter(
-    (o) => o.rules && "no-restricted-imports" in o.rules,
+    (o) => o.rules?.["no-restricted-imports"] === "off",
   );
 
   it("is exactly the files named here, and nothing else turns the rule off", () => {
