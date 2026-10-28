@@ -10,7 +10,7 @@ import type { Player, Step } from "#root/src/show/script.ts";
 import { CameraRig, type ShotView } from "#root/src/world/camera-rig.ts";
 import { Character } from "#root/src/world/models/characters.ts";
 import { Combat } from "#root/src/world/combat/combat.ts";
-import { CodeWindow } from "#root/src/world/codewindow.ts";
+import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { Effects } from "#root/src/world/combat/effects.ts";
 import type { EnemyKind } from "#root/src/world/models/enemies.ts";
 import { enterBoss } from "#root/src/world/steps/boss-arrive-step.ts";

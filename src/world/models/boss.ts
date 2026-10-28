@@ -1,12 +1,15 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { bossLayout, type BossLayout } from "#root/src/world/bosslayout.ts";
+import {
+  bossLayout,
+  type BossLayout,
+} from "#root/src/world/code-window/bosslayout.ts";
 import {
   paintPanel,
   type BossPanel,
   type BossPanelText,
-} from "#root/src/world/boss-panel.ts";
-import { CodeWindow } from "#root/src/world/codewindow.ts";
+} from "#root/src/world/code-window/boss-panel.ts";
+import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
 import { geo, INK, kit } from "#root/src/world/models/toon.ts";
 import { userData } from "#root/src/world/models/objects.ts";

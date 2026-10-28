@@ -1,8 +1,11 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
 import { Character } from "#root/src/world/models/characters.ts";
-import { layoutCard } from "#root/src/world/codelayout.ts";
-import { CodeWindow, paintCard } from "#root/src/world/codewindow.ts";
+import { layoutCard } from "#root/src/world/code-window/codelayout.ts";
+import {
+  CodeWindow,
+  paintCard,
+} from "#root/src/world/code-window/codewindow.ts";
 import { kit } from "#root/src/world/models/toon.ts";
 import type { Player } from "#root/src/show/script.ts";
 import type { Card } from "#root/src/content/types.ts";

@@ -6,7 +6,7 @@ import {
   tokenize,
   wrapPoints,
   SYNTAX,
-} from "#root/src/world/codelayout.ts";
+} from "#root/src/world/code-window/codelayout.ts";
 
 const game = parseContent(
   JSON.parse(

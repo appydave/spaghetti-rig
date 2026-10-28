@@ -473,11 +473,10 @@
     {
       "files": [
         "src/content/load.ts",
-        "src/audio/load.ts",
+        "src/audio/load/load.ts",
         "src/loose.ts",
         "src/audio/sfx.ts",
-        "src/world/model-load.ts",
-        "src/world/schema.ts"
+        "src/audio/load/sfx-fields.ts"
       ],
       "rules": {
         "anti-slop/no-unknown-parameters": "off",
@@ -581,8 +580,8 @@
         "src/main.ts",
         "src/show/director.ts",
         "src/show/script.ts",
-        "src/world/codelayout.ts",
-        "src/world/codewindow.ts",
+        "src/world/code-window/codelayout.ts",
+        "src/world/code-window/codewindow.ts",
         "src/world/combat/effects.ts",
         "src/world/combat/physics.ts",
         "src/world/models/toon.ts",
@@ -642,8 +641,8 @@
         "src/main.ts",
         "src/show/director.ts",
         "src/show/script.ts",
-        "src/world/codelayout.ts",
-        "src/world/codewindow.ts",
+        "src/world/code-window/codelayout.ts",
+        "src/world/code-window/codewindow.ts",
         "src/world/combat/effects.ts",
         "src/world/combat/physics.ts",
         "src/world/models/toon.ts",

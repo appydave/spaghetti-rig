@@ -30,7 +30,7 @@ const { buildCity } = await import("../../src/world/models/city");
 const { Gate } = await import("../../src/world/models/gate");
 const { BossModel, paintBossPanel } =
   await import("../../src/world/models/boss");
-const { bossLayout } = await import("../../src/world/bosslayout");
+const { bossLayout } = await import("../../src/world/code-window/bosslayout");
 const { TitleShowcase, VsShowcase } =
   await import("../../src/world/models/showcase");
 

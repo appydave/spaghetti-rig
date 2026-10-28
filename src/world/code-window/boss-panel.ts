@@ -1,8 +1,8 @@
 // A boss window face (After-G04 A2c): a few words painted to fill the window so they read from the back of the room. Moved out of boss.ts as it
 // was, split into its parts; every draw call is made in the same order. The numbers and colours are BOSS_PANEL in boss.ts (the model file).
 import { context2d } from "#root/src/dom.ts";
-import { fit } from "#root/src/world/canvas-text.ts";
-import { PALETTE } from "#root/src/world/codewindow.ts";
+import { fit } from "#root/src/world/code-window/canvas-text.ts";
+import { PALETTE } from "#root/src/world/code-window/codewindow.ts";
 import { INK } from "#root/src/world/models/toon.ts";
 
 const BARLOW = "Barlow, Impact, sans-serif";

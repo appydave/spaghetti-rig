@@ -6,7 +6,7 @@ import {
   numOr,
   obj,
   oneOf,
-} from "#root/src/world/model-load.ts";
+} from "#root/src/audio/load/sfx-fields.ts";
 import type { NoiseOpts, ToneOpts } from "#root/src/audio/audio.ts";
 import { midiToFreq } from "#root/src/audio/tracks.ts";
 

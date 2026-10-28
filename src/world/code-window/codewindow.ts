@@ -1,5 +1,9 @@
 import * as THREE from "three";
-import type { Layout, Line, Mark } from "#root/src/world/codelayout.ts";
+import type {
+  Layout,
+  Line,
+  Mark,
+} from "#root/src/world/code-window/codelayout.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
 import { INK, kit, rng, toon } from "#root/src/world/models/toon.ts";
 import {
@@ -14,7 +18,7 @@ import {
   WINDOW_DOTS,
   type Mood,
 } from "#root/src/world/palette.ts";
-import { wrap as wrapProse } from "#root/src/world/canvas-text.ts";
+import { wrap as wrapProse } from "#root/src/world/code-window/canvas-text.ts";
 import { meshNamed } from "#root/src/world/models/objects.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
