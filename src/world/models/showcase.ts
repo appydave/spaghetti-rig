@@ -2,10 +2,8 @@
 import * as THREE from "three";
 import { Character } from "#root/src/world/models/characters.ts";
 import { layoutCard } from "#root/src/world/code-window/codelayout.ts";
-import {
-  CodeWindow,
-  paintCard,
-} from "#root/src/world/code-window/codewindow.ts";
+import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
+import { paintCard } from "#root/src/world/code-window/paint/card-painter.ts";
 import { kit } from "#root/src/world/models/toon.ts";
 import type { Player } from "#root/src/show/script.ts";
 import type { Card } from "#root/src/content/types.ts";

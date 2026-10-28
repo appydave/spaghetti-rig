@@ -18,10 +18,8 @@ import {
   slugFile,
   type Layout,
 } from "#root/src/world/code-window/codelayout.ts";
-import {
-  CodeWindow,
-  paintCard,
-} from "#root/src/world/code-window/codewindow.ts";
+import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
+import { paintCard } from "#root/src/world/code-window/paint/card-painter.ts";
 import type { Shape } from "#root/src/world/world-shared.ts";
 
 const TALL_CARD_COLS = 44;
