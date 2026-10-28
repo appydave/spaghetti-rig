@@ -18,7 +18,6 @@ export const CARRIED_TO_TIER_5 = [
   "lint/gates/audio-proof.test.ts",
   "lint/gates/color-policy.mjs",
   "src/main.ts",
-  "tests/show.spec.ts",
 ];
 
 /** The procedural-data file the duplicate gate (G08) skips: its two characters share a 9-line run of hand-placed body parts, which is data written as code. Every other model file scans clean; `gate.ts` shares `disposeTree` instead. */
