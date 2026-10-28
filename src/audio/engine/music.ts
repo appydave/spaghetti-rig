@@ -68,10 +68,6 @@ export class Music {
     }
 
     this.theme = theme;
-    if (!this.rig) {
-      return;
-    }
-
     try {
       this.applyTheme();
     } catch {

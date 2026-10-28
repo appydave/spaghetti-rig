@@ -406,38 +406,62 @@ const seams = (e: any): void => {
   e.music.tick();
 };
 
-/** The engine's public surface: a theme set twice and then silenced, an unlock after a pause, a suspended context, an engine whose context cannot be made, and one paused and muted before it starts. */
+/** The engine's public surface: a theme set twice and then silenced, a paused unlock, a suspended context, mute and pause around a play, an out-of-range pan and volume, a busy engine, one paused and muted before it starts, a browser with only the prefixed context, and one whose context cannot be made. */
 const surface = (e: any): void => {
   const stateIs = (state: string): void => {
     e.ctx.state = state;
   };
 
+  e.onTrackChange((name: string) => setTimeout(() => undefined, name.length));
   e.setTheme("walk");
   e.setTheme("walk");
   e.music.current.out.gain.value = 0;
   e.setTheme("silent");
-  e.paused = true;
-  e.paused = false;
+  e.ctx.currentTime = 4.5;
+  e.music.tick();
   e.music.theme = "walk";
   stateIs("suspended");
+  e.paused = true;
+  e.unlock();
+  e.paused = false;
   e.unlock();
   e.music.tick();
   e.play("slam");
   stateIs("running");
+  e.muted = true;
+  e.play("win");
+  e.muted = false;
+  e.paused = true;
+  e.play("lose");
+  e.paused = false;
+  e.play("heal", { volume: 2, pan: -3 });
+  e.sfx.activeSfx = 30;
+  e.play("step");
+  e.sfx.activeSfx = 0;
   vi.stubGlobal("setTimeout", (fn: () => void) => fn());
   e.play("slam");
-  vi.stubGlobal("AudioContext", () => {
-    throw new Error("no context");
-  });
-  e.unlock();
   expect([e.muted, e.paused, e.theme, e.trackName]).toHaveLength(4);
+  expect(e.sfx.activeSfx).toBe(0);
 
   const late: any = new AudioEngine();
 
   late.paused = true;
   late.muted = true;
   late.init();
-  late.play("slam");
+  late.play("shatter");
+
+  const prefixed = vi.fn(function () {
+    return e.ctx;
+  });
+
+  vi.stubGlobal("AudioContext", undefined);
+  vi.stubGlobal("webkitAudioContext", prefixed);
+  void new AudioEngine().unlock();
+  expect(prefixed).toHaveBeenCalledWith({ latencyHint: "interactive" });
+  vi.stubGlobal("AudioContext", () => {
+    throw new Error("no context");
+  });
+  void new AudioEngine().unlock();
 };
 
 const all: Record<string, Arg[][] | [string, number]> = {};
