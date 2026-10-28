@@ -10,6 +10,7 @@ import {
   type BossPanelText,
 } from "#root/src/world/code-window/boss-panel.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
+import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
 import { geo, INK, kit } from "#root/src/world/models/toon.ts";
 import { userData } from "#root/src/world/models/objects.ts";
@@ -302,8 +303,8 @@ export class BossModel {
     }
 
     this.core.shatter(debris, from, 9, [7, 5], 99);
-    debris.breakObject(this.frame, { from, power: 8, up: 6 });
-    debris.breakObject(this.head, { from, power: 9, up: 8 });
+    breakObject(debris, this.frame, { from, power: 8, up: 6 });
+    breakObject(debris, this.head, { from, power: 9, up: 8 });
     this.glow.removeFromParent();
     this.group.removeFromParent();
   }

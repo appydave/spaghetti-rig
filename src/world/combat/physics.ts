@@ -1,8 +1,7 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import * as THREE from "three";
 import { disposeTree } from "#root/src/world/models/toon.ts";
-import { nth, present } from "#root/src/nth.ts";
-import { randomSpread } from "#root/src/world/world-shared.ts";
+import { nth } from "#root/src/nth.ts";
 
 const MAX_PIECES = 220;
 const GRAVITY_Y = -14;
@@ -24,18 +23,7 @@ const PIECE_ANGULAR_DAMPING = 0.25;
 const PIECE_RESTITUTION = 0.42;
 const PIECE_FRICTION = 0.7;
 const MIN_COLLIDER_HALF_EXTENT = 0.02;
-const DEFAULT_PIECE_LIFE = 6;
 const PIECE_LIFE_JITTER = 1.5;
-const BREAK_FROM_BELOW_Y = -0.5;
-const BREAK_FROM_FRONT_Z = 1;
-const SIZE_TO_HALF_EXTENT = 0.5;
-const DEFAULT_BREAK_POWER = 5;
-const BREAK_POWER_MIN = 0.6;
-const BREAK_POWER_RANGE = 0.8;
-const DEFAULT_BREAK_UP = 4;
-const BREAK_UP_MIN = 0.5;
-const DEFAULT_BREAK_SPIN = 8;
-const DEFAULT_BREAK_LIFE = 5;
 const BOUNCE_MIN_FALL_SPEED = -2.5;
 const BOUNCE_MAX_REBOUND_SPEED = -0.5;
 const BOUNCE_STRENGTH_SPEED = 10;
@@ -58,13 +46,15 @@ interface Piece {
   base: THREE.Vector3;
 }
 
-export interface BreakOptions {
-  /** Where the blow came from; pieces fly away from it. */
-  from?: THREE.Vector3;
-  power?: number;
-  life?: number;
-  spin?: number;
-  up?: number;
+/** One ready-made piece: geometry centred on its origin, at its current world transform. */
+export interface PieceSpec {
+  object: THREE.Object3D;
+  hull: Float32Array | null;
+  half: THREE.Vector3;
+  velocity: THREE.Vector3;
+  spin: THREE.Vector3;
+  life: number;
+  offset?: THREE.Vector3;
 }
 
 /**
@@ -117,15 +107,9 @@ export class Debris {
   }
 
   /** Add one ready-made piece (its geometry centred on its origin) at its current world transform. */
-  add(
-    object: THREE.Object3D,
-    hull: Float32Array | null,
-    half: THREE.Vector3,
-    velocity: THREE.Vector3,
-    spin: THREE.Vector3,
-    life = DEFAULT_PIECE_LIFE,
-    offset?: THREE.Vector3,
-  ) {
+  add(spec: PieceSpec) {
+    const { object, velocity, spin } = spec;
+
     object.updateMatrixWorld(true);
 
     const pos = new THREE.Vector3();
@@ -144,102 +128,19 @@ export class Debris {
         .setLinearDamping(PIECE_LINEAR_DAMPING)
         .setAngularDamping(PIECE_ANGULAR_DAMPING),
     );
-    let desc: RAPIER.ColliderDesc | null = hull
-      ? RAPIER.ColliderDesc.convexHull(scaleHull(hull, scale))
-      : null;
 
-    desc ??= RAPIER.ColliderDesc.cuboid(
-      Math.max(MIN_COLLIDER_HALF_EXTENT, half.x * scale.x),
-      Math.max(MIN_COLLIDER_HALF_EXTENT, half.y * scale.y),
-      Math.max(MIN_COLLIDER_HALF_EXTENT, half.z * scale.z),
-    );
-    if (offset) {
-      desc.setTranslation(
-        offset.x * scale.x,
-        offset.y * scale.y,
-        offset.z * scale.z,
-      );
-    }
-
-    this.world.createCollider(
-      desc
-        .setRestitution(PIECE_RESTITUTION)
-        .setFriction(PIECE_FRICTION)
-        .setDensity(1),
-      body,
-    );
+    this.world.createCollider(pieceCollider(spec, scale), body);
     this.pieces.push({
       object,
       body,
       age: 0,
-      life: life + Math.random() * PIECE_LIFE_JITTER,
+      life: spec.life + Math.random() * PIECE_LIFE_JITTER,
       lastVy: velocity.y,
       base: scale.clone(),
     });
     while (this.pieces.length > this.max) {
       this.remove(nth(this.pieces, 0, "pieces"));
     }
-  }
-
-  /** Break a model into its parts: every mesh flies off as its own body with a box collider. */
-  breakObject(root: THREE.Object3D, opts: BreakOptions = {}) {
-    root.updateMatrixWorld(true);
-
-    const meshes: THREE.Mesh[] = [];
-
-    root.traverse((o) => {
-      if (o instanceof THREE.Mesh && !o.userData.outline) {
-        meshes.push(o);
-      }
-    });
-
-    const centre = new THREE.Box3()
-      .setFromObject(root)
-      .getCenter(new THREE.Vector3());
-    const from =
-      opts.from ??
-      centre
-        .clone()
-        .add(new THREE.Vector3(0, BREAK_FROM_BELOW_Y, BREAK_FROM_FRONT_Z));
-
-    for (const m of meshes) {
-      if (!m.geometry.boundingBox) {
-        m.geometry.computeBoundingBox();
-      }
-
-      const bb = present(m.geometry.boundingBox, "the mesh bounding box");
-      const half = bb
-        .getSize(new THREE.Vector3())
-        .multiplyScalar(SIZE_TO_HALF_EXTENT);
-      const at = m.getWorldPosition(new THREE.Vector3());
-      const dir = at.clone().sub(from).normalize();
-      const power =
-        (opts.power ?? DEFAULT_BREAK_POWER) *
-        (BREAK_POWER_MIN + Math.random() * BREAK_POWER_RANGE);
-      const v = dir
-        .multiplyScalar(power)
-        .add(
-          new THREE.Vector3(
-            0,
-            (opts.up ?? DEFAULT_BREAK_UP) * (BREAK_UP_MIN + Math.random()),
-            0,
-          ),
-        );
-      const s = opts.spin ?? DEFAULT_BREAK_SPIN;
-      const offset = bb.getCenter(new THREE.Vector3());
-
-      this.add(
-        m,
-        null,
-        half,
-        v,
-        randomSpread(s),
-        opts.life ?? DEFAULT_BREAK_LIFE,
-        offset,
-      );
-    }
-
-    disposeTree(root);
   }
 
   step(dt: number) {
@@ -276,17 +177,7 @@ export class Debris {
 
       piece.lastVy = v.y;
 
-      const fade = piece.age - piece.life;
-
-      if (fade > 0) {
-        piece.object.scale
-          .copy(piece.base)
-          .multiplyScalar(
-            Math.max(MIN_FADE_SCALE, 1 - fade * FADE_SHRINK_RATE),
-          );
-      }
-
-      if (fade > FADE_REMOVE_AFTER || t.y < FELL_OUT_OF_WORLD_Y) {
+      if (fadePiece(piece) || t.y < FELL_OUT_OF_WORLD_Y) {
         this.remove(piece);
       }
     }
@@ -319,4 +210,43 @@ function scaleHull(h: Float32Array, s: THREE.Vector3) {
     h,
     (v, i) => v * nth(axes, i % AXIS_COUNT, "hull axes"),
   );
+}
+
+function pieceCollider(
+  { hull, half, offset }: PieceSpec,
+  scale: THREE.Vector3,
+) {
+  const desc =
+    (hull && RAPIER.ColliderDesc.convexHull(scaleHull(hull, scale))) ??
+    RAPIER.ColliderDesc.cuboid(
+      Math.max(MIN_COLLIDER_HALF_EXTENT, half.x * scale.x),
+      Math.max(MIN_COLLIDER_HALF_EXTENT, half.y * scale.y),
+      Math.max(MIN_COLLIDER_HALF_EXTENT, half.z * scale.z),
+    );
+
+  if (offset) {
+    desc.setTranslation(
+      offset.x * scale.x,
+      offset.y * scale.y,
+      offset.z * scale.z,
+    );
+  }
+
+  return desc
+    .setRestitution(PIECE_RESTITUTION)
+    .setFriction(PIECE_FRICTION)
+    .setDensity(1);
+}
+
+/** Shrink a piece past its life; true once it has shrunk away and should be removed. */
+function fadePiece(piece: Piece) {
+  const fade = piece.age - piece.life;
+
+  if (fade > 0) {
+    piece.object.scale
+      .copy(piece.base)
+      .multiplyScalar(Math.max(MIN_FADE_SCALE, 1 - fade * FADE_SHRINK_RATE));
+  }
+
+  return fade > FADE_REMOVE_AFTER;
 }

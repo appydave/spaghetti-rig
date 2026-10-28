@@ -4,6 +4,7 @@ import type {
   Line,
   Mark,
 } from "#root/src/world/code-window/codelayout.ts";
+import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
 import { INK, kit, rng, toon } from "#root/src/world/models/toon.ts";
 import {
@@ -1102,14 +1103,14 @@ export class CodeWindow {
         this.face.userData.refs++;
         this.side.userData.refs++;
         refs.n++;
-        debris.add(
-          mesh,
+        debris.add({
+          object: mesh,
           hull,
-          new THREE.Vector3(),
-          away,
+          half: new THREE.Vector3(),
+          velocity: away,
           spin,
-          SHARD_LIFE_MIN + r() * SHARD_LIFE_SPREAD,
-        );
+          life: SHARD_LIFE_MIN + r() * SHARD_LIFE_SPREAD,
+        });
       }
     }
 
@@ -1119,7 +1120,7 @@ export class CodeWindow {
     slab.geometry.dispose();
     slab.removeFromParent();
     if (this.eyes) {
-      debris.breakObject(this.eyes, { from, power: power * EYE_PUSH_SHARE });
+      breakObject(debris, this.eyes, { from, power: power * EYE_PUSH_SHARE });
     }
 
     this.group.removeFromParent();
