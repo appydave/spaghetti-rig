@@ -9,7 +9,7 @@ import type {
   Tier,
   Tool,
 } from "#root/src/content/types.ts";
-import { isObj, str, strs } from "#root/src/loose.ts";
+import { isObj, optStr, str, strs, type Loose } from "#root/src/loose.ts";
 
 /** A tier as the game plays it: its stops in file order, and whether it can be played yet. */
 export interface PlayTier extends Tier {
@@ -41,41 +41,61 @@ function rows(v: unknown): Row[] {
   });
 }
 
-function blocks(v: unknown): Block[] {
-  if (!Array.isArray(v)) {
-    return [];
-  }
+/** The objects in a list, or none when it is not a list. */
+const objs = (v: unknown): Loose[] =>
+  Array.isArray(v) ? v.filter((o) => isObj(o)) : [];
 
-  return v
-    .filter((o) => isObj(o))
-    .map((b) => ({
-      view: b.view === "diff" || b.view === "output" ? b.view : "code",
-      rows: rows(b.rows),
-    }));
+function blocks(v: unknown): Block[] {
+  return objs(v).map((b) => ({
+    view: b.view === "diff" || b.view === "output" ? b.view : "code",
+    rows: rows(b.rows),
+  }));
 }
 
 function annotations(v: unknown, bs: Block[]): Annotation[] {
-  if (!Array.isArray(v)) {
-    return [];
-  }
+  return objs(v).flatMap((a): Annotation[] => {
+    const block = Number(a.block ?? 0);
+    const row = Number(a.row ?? 0);
 
-  return v
-    .filter((o) => isObj(o))
-    .flatMap((a): Annotation[] => {
-      const block = Number(a.block ?? 0);
-      const row = Number(a.row ?? 0);
+    if (!bs[block]?.rows[row]) {
+      return [];
+    }
 
-      if (!bs[block]?.rows[row]) {
-        return [];
-      }
+    const kind =
+      a.kind === "fix" || a.kind === "note" || a.kind === "number"
+        ? a.kind
+        : "problem";
 
-      const kind =
-        a.kind === "fix" || a.kind === "note" || a.kind === "number"
-          ? a.kind
-          : "problem";
+    return [{ block, row, match: str(a.match), kind, note: str(a.note) }];
+  });
+}
 
-      return [{ block, row, match: str(a.match), kind, note: str(a.note) }];
-    });
+/** A card's failure modes: each an input, where it goes and what happens. */
+function failureModes(v: unknown): Card["failureModes"] {
+  return Array.isArray(v)
+    ? objs(v).map((m) => ({
+        input: str(m.input),
+        where: str(m.where),
+        result: str(m.result),
+      }))
+    : undefined;
+}
+
+/** A card's evidence: its status and, when known, its source. */
+function evidence(v: unknown): Card["evidence"] {
+  return isObj(v)
+    ? { status: str(v.status), source: optStr(v.source) }
+    : undefined;
+}
+
+/** A card's walk-through steps, each pointing at a block or at none. */
+function steps(v: unknown): Card["steps"] {
+  return Array.isArray(v)
+    ? objs(v).map((s) => ({
+        text: str(s.text),
+        block: typeof s.block === "number" ? s.block : null,
+      }))
+    : undefined;
 }
 
 function card(v: unknown, fallbackTitle: string): Card {
@@ -87,61 +107,34 @@ function card(v: unknown, fallbackTitle: string): Card {
     title: str(c.title, fallbackTitle),
     blocks: bs,
     annotations: annotations(c.annotations, bs),
-    text: typeof c.text === "string" ? c.text : undefined,
-    say: typeof c.say === "string" ? c.say : undefined,
+    text: optStr(c.text),
+    say: optStr(c.say),
     presenter: strs(c.presenter),
-    num: typeof c.num === "string" ? c.num : undefined,
-    tool: typeof c.tool === "string" ? c.tool : undefined,
-    answers: typeof c.answers === "string" ? c.answers : undefined,
+    num: optStr(c.num),
+    tool: optStr(c.tool),
+    answers: optStr(c.answers),
     showConfig: typeof c.showConfig === "boolean" ? c.showConfig : undefined,
-    failureModes: Array.isArray(c.failureModes)
-      ? c.failureModes
-          .filter((o) => isObj(o))
-          .map((m) => ({
-            input: str(m.input),
-            where: str(m.where),
-            result: str(m.result),
-          }))
-      : undefined,
-    evidence: isObj(c.evidence)
-      ? {
-          status: str(c.evidence.status),
-          source:
-            typeof c.evidence.source === "string"
-              ? c.evidence.source
-              : undefined,
-        }
-      : undefined,
-    steps: Array.isArray(c.steps)
-      ? c.steps
-          .filter((o) => isObj(o))
-          .map((s) => ({
-            text: str(s.text),
-            block: typeof s.block === "number" ? s.block : null,
-          }))
-      : undefined,
+    failureModes: failureModes(c.failureModes),
+    evidence: evidence(c.evidence),
+    steps: steps(c.steps),
   };
 }
 
 function boss(v: unknown, tierName: string): Boss {
   const b = isObj(v) ? v : {};
-  const parts = Array.isArray(b.parts)
-    ? b.parts
-        .filter((o) => isObj(o))
-        .map((p) => ({
-          part: str(p.part, "a part"),
-          from: str(p.from),
-          beatenBy: str(p.beatenBy),
-        }))
-    : [];
+  const parts = objs(b.parts).map((p) => ({
+    part: str(p.part, "a part"),
+    from: str(p.from),
+    beatenBy: str(p.beatenBy),
+  }));
 
   return {
-    id: typeof b.id === "string" ? b.id : null,
-    idea: typeof b.idea === "string" ? b.idea : undefined,
-    attack: typeof b.attack === "string" ? b.attack : undefined,
-    p1: typeof b.p1 === "string" ? b.p1 : undefined,
-    p2: typeof b.p2 === "string" ? b.p2 : undefined,
-    say: typeof b.say === "string" ? b.say : undefined,
+    id: optStr(b.id) ?? null,
+    idea: optStr(b.idea),
+    attack: optStr(b.attack),
+    p1: optStr(b.p1),
+    p2: optStr(b.p2),
+    say: optStr(b.say),
     playable: typeof b.playable === "boolean" ? b.playable : undefined,
     name: str(b.name, `${tierName} boss`),
     parts,
@@ -149,55 +142,49 @@ function boss(v: unknown, tierName: string): Boss {
   };
 }
 
-/** Turn the raw JSON into a game. Tolerant: missing fields get defaults, so new cards never crash the show. */
-export function parseContent(raw: unknown): Game {
-  const r = isObj(raw) ? raw : {};
-  const screens = isObj(r.screens) ? r.screens : {};
-  const title = isObj(screens.title) ? screens.title : {};
-  const vs = isObj(screens.vs) ? screens.vs : {};
-  const endings = isObj(r.endings) ? r.endings : {};
-  const ending = (e: unknown, big: string) => ({
-    big: str(isObj(e) ? e.big : undefined, big),
-    sub: str(isObj(e) ? e.sub : undefined),
-  });
-
-  const tools: Record<string, Tool> = {};
-
-  if (isObj(r.tools)) {
-    for (const [key, t] of Object.entries(r.tools)) {
-      if (!isObj(t)) {
-        continue;
+/** A tool's config file: its name, status, source and the lines shown. */
+function toolConfig(v: unknown): Tool["config"] {
+  return isObj(v)
+    ? {
+        file: str(v.file),
+        status: str(v.status),
+        source: str(v.source),
+        lines: Array.isArray(v.lines)
+          ? v.lines
+              .filter(Array.isArray)
+              .map((l): [string, string] => [
+                String(l[0] ?? ""),
+                String(l[1] ?? ""),
+              ])
+          : [],
       }
+    : undefined;
+}
 
-      const cfg = isObj(t.config) ? t.config : undefined;
+/** The tools by key; an entry that is not an object is skipped. */
+function tools(v: unknown) {
+  const out: Record<string, Tool> = {};
 
-      tools[key] = {
-        name: str(t.name, key),
-        what: str(t.what),
-        why: str(t.why),
-        how: str(t.how),
-        config: cfg
-          ? {
-              file: str(cfg.file),
-              status: str(cfg.status),
-              source: str(cfg.source),
-              lines: Array.isArray(cfg.lines)
-                ? cfg.lines
-                    .filter(Array.isArray)
-                    .map((l): [string, string] => [
-                      String(l[0] ?? ""),
-                      String(l[1] ?? ""),
-                    ])
-                : [],
-            }
-          : undefined,
-      };
+  for (const [key, t] of Object.entries(isObj(v) ? v : {})) {
+    if (!isObj(t)) {
+      continue;
     }
+
+    out[key] = {
+      name: str(t.name, key),
+      what: str(t.what),
+      why: str(t.why),
+      how: str(t.how),
+      config: toolConfig(t.config),
+    };
   }
 
-  const tierList: Tier[] = (
-    Array.isArray(r.tiers) ? r.tiers.filter((o) => isObj(o)) : []
-  ).map((t, i) => {
+  return out;
+}
+
+/** The tiers in file order, numbered and keyed from their place when the file leaves it out. */
+function tierList(v: unknown): Tier[] {
+  return objs(v).map((t, i) => {
     const name = str(t.name, `Tier ${i + 1}`);
 
     return {
@@ -209,31 +196,51 @@ export function parseContent(raw: unknown): Game {
       boss: boss(t.boss, name),
     };
   });
+}
 
-  const stops: Stop[] = (
-    Array.isArray(r.stops) ? r.stops.filter((o) => isObj(o)) : []
-  ).map((s) => ({
+function stopList(v: unknown): Stop[] {
+  return objs(v).map((s) => ({
     tier: str(s.tier),
     gate: str(s.gate, "Gate"),
     p1: card(s.p1, "Bad code"),
     p2: card(s.p2, "Tool"),
   }));
+}
 
+const ending = (e: unknown, big: string) => ({
+  big: str(isObj(e) ? e.big : undefined, big),
+  sub: str(isObj(e) ? e.sub : undefined),
+});
+
+/** The title and face-off screens' words. */
+function screens(v: unknown): Content["screens"] {
+  const sc = isObj(v) ? v : {};
+  const title = isObj(sc.title) ? sc.title : {};
+  const vs = isObj(sc.vs) ? sc.vs : {};
+
+  return {
+    title: { big: str(title.big, "Spaghetti Rig"), sub: str(title.sub) },
+    vs: { p1: str(vs.p1, "No gates"), p2: str(vs.p2, "Gated") },
+  };
+}
+
+/** Turn the raw JSON into a game. Tolerant: missing fields get defaults, so new cards never crash the show. */
+export function parseContent(raw: unknown): Game {
+  const r = isObj(raw) ? raw : {};
+  const endings = isObj(r.endings) ? r.endings : {};
+  const tiersInFile = tierList(r.tiers);
+  const stops = stopList(r.stops);
   const content: Content = {
-    screens: {
-      title: { big: str(title.big, "Spaghetti Rig"), sub: str(title.sub) },
-      vs: { p1: str(vs.p1, "No gates"), p2: str(vs.p2, "Gated") },
-    },
-    tiers: tierList,
-    tools,
+    screens: screens(r.screens),
+    tiers: tiersInFile,
+    tools: tools(r.tools),
     stops,
     endings: {
       p1: ending(endings.p1, "Buried in spaghetti"),
       p2: ending(endings.p2, "Shipped"),
     },
   };
-
-  const tiers: PlayTier[] = tierList.map((t, index) => {
+  const tiers: PlayTier[] = tiersInFile.map((t, index) => {
     const own = stops.filter((s) => s.tier === t.key);
 
     return {
