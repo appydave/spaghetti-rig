@@ -577,7 +577,6 @@
         "src/audio/tracks.ts",
         "src/content/load.ts",
         "src/main.ts",
-        "src/show/script.ts",
         "src/world/models/toon.ts",
         "tests/show.spec.ts"
       ],
@@ -630,7 +629,6 @@
         "lint/gates/audio-proof.test.ts",
         "src/audio/tracks.ts",
         "src/content/load.ts",
-        "src/show/script.ts",
         "src/world/models/toon.ts"
       ],
       "rules": {

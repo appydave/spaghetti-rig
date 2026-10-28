@@ -1,4 +1,4 @@
-import type { Phase } from "../../../src/show/script";
+import type { Phase } from "../../../src/content/script";
 import type { Show } from "../director-show";
 
 const FRAMES_PER_SECOND = 20;

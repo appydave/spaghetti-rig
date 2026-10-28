@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { AudioEngine, Sfx } from "#root/src/audio/audio.ts";
 import { FULL_HEALTH, type Game } from "#root/src/content/load.ts";
-import type { Player, Step } from "#root/src/show/script.ts";
+import type { Player, Step } from "#root/src/content/script.ts";
 import { CameraRig } from "#root/src/world/camera-rig.ts";
 import { Character } from "#root/src/world/models/characters.ts";
 import { Combat } from "#root/src/world/combat/combat.ts";

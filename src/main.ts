@@ -15,7 +15,7 @@ import {
   modeInfo,
   type Mode,
   type Player,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 import { initPhysics } from "#root/src/world/combat/physics.ts";
 import { Stage } from "#root/src/world/stage.ts";
 import type { TestHooks } from "#root/src/testhooks.ts";

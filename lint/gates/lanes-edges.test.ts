@@ -3,7 +3,7 @@
 // played card is due, a lane exactly at a width or a pointer exactly on a lane's edge, and a step entered without animation. Each test
 // stands just either side of a threshold, so a number moved or changed in the lane code shows here.
 import { afterEach, describe, expect, it } from "vitest";
-import type { Mode, Phase } from "../../src/show/script";
+import type { Mode, Phase } from "../../src/content/script";
 import type { Lane } from "./director-dom";
 import { Show } from "./director-show";
 import { framesFor, stepTo } from "./support/show-steps";

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Mode, Player } from "#root/src/show/script.ts";
+import type { Mode, Player } from "#root/src/content/script.ts";
 import type { PlayerWorld } from "#root/src/world/world.ts";
 import { TitleShowcase, VsShowcase } from "#root/src/world/models/showcase.ts";
 import { STAGE_CLEAR } from "#root/src/world/palette.ts";

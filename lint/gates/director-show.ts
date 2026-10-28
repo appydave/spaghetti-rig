@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { vi } from "vitest";
 import { parseContent } from "../../src/content/load";
 import { Director } from "../../src/show/director";
-import type { Mode } from "../../src/show/script";
+import type { Mode } from "../../src/content/script";
 import {
   FakeChannel,
   FakeStage,

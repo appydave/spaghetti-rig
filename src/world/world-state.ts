@@ -8,7 +8,7 @@ import {
   type Phase,
   type Player,
   type Step,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 import { standZ, type State } from "#root/src/world/world-shared.ts";
 
 /** Mark the first k gates passed: broken for player 1, open for player 2. */

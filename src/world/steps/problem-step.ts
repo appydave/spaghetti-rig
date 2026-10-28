@@ -2,7 +2,7 @@
 // world.ts: enterProblem is split into its beats (the flight, the hit, the bounce back into the reading spot) and nothing else changes.
 import * as THREE from "three";
 import { FULL_HEALTH, TIER_HEALTH_LOSS } from "#root/src/content/load.ts";
-import { healthAt, type Step } from "#root/src/show/script.ts";
+import { healthAt, type Step } from "#root/src/content/script.ts";
 import type {
   StepContext,
   StopWindow,

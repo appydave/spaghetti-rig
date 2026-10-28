@@ -1,4 +1,5 @@
-import { MODES, type Mode, type Notes } from "#root/src/show/script.ts";
+import { MODES, type Mode } from "#root/src/content/script.ts";
+import { type Notes } from "#root/src/show/notes.ts";
 
 /** What the game window sends the presenter window: where the show is, and the notes for the step. */
 export interface PresenterState {
