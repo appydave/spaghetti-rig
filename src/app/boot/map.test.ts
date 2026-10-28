@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { tierCards } from "#root/src/app/boot/map.ts";
+import { gatesText } from "#root/src/content/gatelabel.ts";
 import { parseContent } from "#root/src/content/load.ts";
 
 const game = parseContent(
@@ -61,5 +62,21 @@ describe("the tier map", () => {
     expect(tierCards([open], 1)).not.toContain("ENTER");
     expect(tierCards([locked], 0)).toContain('class="tier locked sel"');
     expect(tierCards([locked], 0)).not.toContain("ENTER");
+  });
+
+  it("numbers the tier in two digits, labels its gates, escapes its text and joins the cards with nothing between", () => {
+    const odd = {
+      ...open,
+      n: 3,
+      gates: "G01",
+      stops: [],
+      boss: { ...open.boss, name: "A<B" },
+    };
+    const html = tierCards([odd, locked], 0);
+
+    expect(html).toContain('<span class="n">03</span>');
+    expect(html).toContain(`${gatesText("G01")} · 0 STOPS<`);
+    expect(html).toContain("<b>A&lt;B</b>");
+    expect(html).toContain("</li><li ");
   });
 });
