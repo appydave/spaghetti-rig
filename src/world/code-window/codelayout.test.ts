@@ -11,7 +11,7 @@ import {
 const game = parseContent(
   JSON.parse(
     readFileSync(
-      new URL("../../public/content/cards.json", import.meta.url),
+      new URL("../../../public/content/cards.json", import.meta.url),
       "utf8",
     ),
   ),

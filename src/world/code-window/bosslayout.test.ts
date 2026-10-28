@@ -8,7 +8,7 @@ import {
 describe("boss layout", () => {
   const raw = JSON.parse(
     readFileSync(
-      new URL("../../public/content/cards.json", import.meta.url),
+      new URL("../../../public/content/cards.json", import.meta.url),
       "utf8",
     ),
   );
