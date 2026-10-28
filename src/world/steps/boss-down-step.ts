@@ -7,6 +7,20 @@ import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { ease } from "#root/src/world/models/toon.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 
+type BossDownContext = Pick<
+  StepContext,
+  | "camera"
+  | "character"
+  | "debris"
+  | "fx"
+  | "player"
+  | "reconcile"
+  | "setShake"
+  | "sfx"
+  | "street"
+  | "timeline"
+>;
+
 const PILE_DROP_HEIGHT = 9;
 const PILE_DROP_SECONDS = 0.9;
 const PILE_LANDING_SHAKE = 0.7;
@@ -31,7 +45,7 @@ const BOSS_RING_SIZE = 6;
 const BOSS_RING_LIFE = 0.8;
 const WIN_SOUND_DELAY = 1.6;
 
-export function enterBossDown(c: StepContext, s: State) {
+export function enterBossDown(c: BossDownContext, s: State) {
   if (c.player === "p1") {
     buryPlayerOne(c, s);
 
@@ -41,7 +55,7 @@ export function enterBossDown(c: StepContext, s: State) {
   defeatBoss(c, s);
 }
 
-function buryPlayerOne(c: StepContext, s: State) {
+function buryPlayerOne(c: BossDownContext, s: State) {
   c.reconcile({ ...s, pile: false });
 
   // Spaghetti rains down and buries them.
@@ -67,7 +81,7 @@ function buryPlayerOne(c: StepContext, s: State) {
   );
 }
 
-function defeatBoss(c: StepContext, s: State) {
+function defeatBoss(c: BossDownContext, s: State) {
   c.reconcile({
     ...s,
     boss: "alive",
@@ -106,7 +120,7 @@ function defeatBoss(c: StepContext, s: State) {
   c.timeline.after(WIN_SOUND_DELAY, () => c.sfx("win"));
 }
 
-function destroyBoss(c: StepContext, boss: BossModel) {
+function destroyBoss(c: BossDownContext, boss: BossModel) {
   const at = boss.core.group.getWorldPosition(new THREE.Vector3());
 
   c.street.defeat(c.debris, c.character.muzzleWorld().setY(0));
