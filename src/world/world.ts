@@ -1,87 +1,39 @@
 import * as THREE from "three";
 import type { AudioEngine, Sfx } from "#root/src/audio/audio.ts";
-import {
-  FULL_HEALTH,
-  type Game,
-  type PlayTier,
-} from "#root/src/content/load.ts";
-import { nth, present } from "#root/src/nth.ts";
+import { FULL_HEALTH, type Game } from "#root/src/content/load.ts";
 import type { Player, Step } from "#root/src/show/script.ts";
-import { CameraRig, type ShotView } from "#root/src/world/camera-rig.ts";
+import { CameraRig } from "#root/src/world/camera-rig.ts";
 import { Character } from "#root/src/world/models/characters.ts";
 import { Combat } from "#root/src/world/combat/combat.ts";
-import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { Effects } from "#root/src/world/combat/effects.ts";
 import type { EnemyKind } from "#root/src/world/models/enemies.ts";
-import { enterBoss } from "#root/src/world/steps/boss-arrive-step.ts";
-import { enterBossDown } from "#root/src/world/steps/boss-down-step.ts";
-import { enterBossPart } from "#root/src/world/steps/boss-part-step.ts";
-import { enterFixed } from "#root/src/world/steps/fixed-step.ts";
-import { enterProblem } from "#root/src/world/steps/problem-step.ts";
+import {
+  shotView,
+  syncScenery,
+  updateBoss,
+  updateDebt,
+  updateStopWindow,
+} from "#root/src/world/scene/frame.ts";
+import { makeCamera } from "#root/src/world/scene/camera.ts";
+import { lightScene } from "#root/src/world/scene/lighting.ts";
+import { applyAspect, matchState } from "#root/src/world/scene/match-state.ts";
+import { enterStep } from "#root/src/world/steps/enter-step.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { Street } from "#root/src/world/street.ts";
 import { Timeline } from "#root/src/world/timeline.ts";
-import { advanceWalk, startWalk, type Walk } from "#root/src/world/walk.ts";
+import { advanceWalk, type Walk } from "#root/src/world/walk.ts";
 import { stateFor } from "#root/src/world/world-state.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
-import { ease, lerp } from "#root/src/world/models/toon.ts";
-import { EVENT, WORLD } from "#root/src/world/palette.ts";
 import { State } from "#root/src/world/world-shared.ts";
 
 export { walkSeconds } from "#root/src/world/world-shared.ts";
 export type { CameraMode } from "#root/src/world/world-shared.ts";
 
-const CAMERA_FOV = 42;
-const CAMERA_NEAR = 0.1;
-const CAMERA_FAR = 400;
-const WIDESCREEN_WIDTH = 16;
-const WIDESCREEN_HEIGHT = 9;
-/** The picture shape a player lane starts with, before the real window size is known. */
-const WIDESCREEN = WIDESCREEN_WIDTH / WIDESCREEN_HEIGHT;
-const FOG_NEAR = 40;
-const FOG_FAR = 120;
-const HEMISPHERE_INTENSITY = 2.2;
-const SUN_INTENSITY = 2.9;
-const SHADOW_MAP_SIZE = 2048;
-const SHADOW_EXTENT = 28;
-const SHADOW_CAMERA_FAR = 120;
-const SHADOW_BIAS = -0.0004;
-const SHADOW_NORMAL_BIAS = 0.04;
-const SHADOW_BLUR_RADIUS = 3;
-const RIM_INTENSITY = 1.1;
-const RIM_X = -30;
-const RIM_Y = 20;
-const RIM_Z = -40;
 const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
-const EXIT_WINDOW_SECONDS = 0.7;
-const EXIT_SCALE_DEBT = 0.2;
-const EXIT_SCALE_MUZZLE = 0.02;
-const EXIT_SPIN_DEBT = 0.3;
-const EXIT_SPIN_MUZZLE = 4;
-const EXIT_BURST_COUNT = 18;
-const EXIT_BURST_SPEED = 3;
-const DEBT_SLOT_X = -1.1;
-const DEBT_SLOT_SPACING_X = 0.7;
-const DEBT_SLOT_Y = 2.8;
-const DEBT_SLOT_ROW_RISE = 0.5;
-const DEBT_BOB_HEIGHT = 0.1;
-const DEBT_SLOT_Z = 0.3;
-const DEBT_DEPTH_STEPS = 3;
-const DEBT_SLOT_DEPTH_SPACING = 0.35;
-const SUN_OFFSET_X = 14;
-const SUN_HEIGHT = 30;
-const SUN_OFFSET_Z = 16;
-const SUN_TARGET_AHEAD = 8;
 const SHAKE_DECAY = 2.5;
 const STEP_RATE = 4.2;
 const STEP_VOLUME = 0.25;
-const READING_EASE_RATE = 6;
-const READING_BOB_SPEED = 1.6;
-const READING_BOB_HEIGHT = 0.004;
-const DEBT_EASE_RATE = 4;
-const DEBT_WOBBLE_SPEED = 3;
-const DEBT_WOBBLE = 0.08;
 
 /**
  * One player's world: street, gates, character, enemies, the stop's code window and the boss.
@@ -89,12 +41,7 @@ const DEBT_WOBBLE = 0.08;
  */
 export class PlayerWorld {
   readonly scene = new THREE.Scene();
-  readonly camera = new THREE.PerspectiveCamera(
-    CAMERA_FOV,
-    WIDESCREEN,
-    CAMERA_NEAR,
-    CAMERA_FAR,
-  );
+  readonly camera = makeCamera();
   readonly character: Character;
   readonly fx: Effects;
   readonly debris: Debris;
@@ -110,6 +57,7 @@ export class PlayerWorld {
   private readonly street: Street;
   private readonly timeline = new Timeline();
   private readonly sun: THREE.DirectionalLight;
+  private readonly ctx: StepContext;
   private stepRef: Step | null = null;
 
   get aspect() {
@@ -130,36 +78,7 @@ export class PlayerWorld {
     private readonly audio: AudioEngine,
     private readonly pan: () => number,
   ) {
-    this.scene.background = new THREE.Color(WORLD.sky);
-    this.scene.fog = new THREE.Fog(WORLD.fog, FOG_NEAR, FOG_FAR);
-    this.scene.add(
-      new THREE.HemisphereLight(
-        WORLD.hemisphereSky,
-        WORLD.hemisphereGround,
-        HEMISPHERE_INTENSITY,
-      ),
-    );
-    this.sun = new THREE.DirectionalLight(WORLD.sun, SUN_INTENSITY);
-    this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-
-    const sc = this.sun.shadow.camera;
-
-    sc.left = -SHADOW_EXTENT;
-    sc.right = SHADOW_EXTENT;
-    sc.top = SHADOW_EXTENT;
-    sc.bottom = -SHADOW_EXTENT;
-    sc.near = 1;
-    sc.far = SHADOW_CAMERA_FAR;
-    this.sun.shadow.bias = SHADOW_BIAS;
-    this.sun.shadow.normalBias = SHADOW_NORMAL_BIAS;
-    this.sun.shadow.radius = SHADOW_BLUR_RADIUS;
-    this.scene.add(this.sun, this.sun.target);
-
-    const rim = new THREE.DirectionalLight(WORLD.rim, RIM_INTENSITY);
-
-    rim.position.set(RIM_X, RIM_Y, RIM_Z);
-    this.scene.add(rim);
+    this.sun = lightScene(this.scene);
     this.character = new Character(player);
     this.scene.add(this.character.root);
     this.fx = new Effects(this.scene);
@@ -184,6 +103,7 @@ export class PlayerWorld {
       autoplay: () => this.autoplay,
       walking: () => this.walk !== null,
     });
+    this.ctx = this.makeStepContext();
   }
 
   /** What the step handlers get of this world. */
@@ -267,34 +187,9 @@ export class PlayerWorld {
 
   /** Make the world match a state, reusing whatever already matches. */
   private reconcile(s: State) {
-    this.clearAnimations();
-
-    const tier = nth(this.game.tiers, s.tier, "tiers");
-
-    if (this.street.tier !== tier) {
-      this.buildTier(tier);
-    }
-
-    this.character.root.position.set(0, 0, s.z);
-    this.character.root.rotation.y = 0;
-    this.character.pose = s.pose;
-    this.street.sync(s, tier);
-    this.health = s.health;
-    this.rig.mode = s.camera;
-    this.state = s;
-  }
-
-  private clearAnimations() {
-    this.timeline.clear();
     this.walk = null;
-  }
-
-  private buildTier(tier: PlayTier) {
-    this.street.clear();
-    this.combat.clear();
-    this.debris.clear();
-    this.fx.clear();
-    this.street.build(tier);
+    matchState(this.ctx, s);
+    this.state = s;
   }
 
   // ───────────────────────────── content → objects ─────────────────────────────
@@ -314,173 +209,30 @@ export class PlayerWorld {
   enter(step: Step) {
     this.stepRef = step;
 
-    const keepWin =
-      this.street.window !== null &&
-      (step.phase === "walk" || step.phase === "boss");
-    // A window that is leaving is kept alive for its exit animation.
-    const prevWindow = keepWin ? this.street.releaseWindow() : null;
+    const walk = enterStep(this.ctx, step);
 
-    const s = stateFor(this.game, this.player, step);
-
-    switch (step.phase) {
-      case "walk":
-        this.reconcile(s);
-        this.exitWindow(prevWindow);
-        this.walk = startWalk(this.makeStepContext(), step);
-        break;
-      case "problem":
-        enterProblem(this.makeStepContext(), step, s);
-        break;
-      case "fixed":
-        enterFixed(this.makeStepContext(), step, s);
-        break;
-      case "boss":
-        this.reconcile(s);
-        if (keepWin) {
-          this.exitWindow(prevWindow);
-        }
-
-        enterBoss(this.makeStepContext());
-        break;
-      case "bossPart":
-        enterBossPart(this.makeStepContext(), step, s);
-        break;
-      case "bossDown":
-        enterBossDown(this.makeStepContext(), s);
-        break;
-      case "tool":
-        this.reconcile(s);
-        if (this.player === "p2") {
-          this.character.fire();
-        }
-
-        break;
-      default:
-        this.reconcile(s);
+    if (walk) {
+      this.walk = walk;
     }
-  }
-
-  private exitWindow(w: { win: CodeWindow } | null) {
-    if (!w) {
-      return;
-    }
-
-    const win = w.win;
-    const entry = this.timeline.track({ dispose: () => win.dispose() });
-    const from = win.group.position.clone();
-    const s0 = win.group.scale.x;
-    const p1 = this.player === "p1";
-
-    this.timeline.tween(
-      EXIT_WINDOW_SECONDS,
-      (k) => {
-        const e = ease.inOutCubic(k);
-        const to = p1
-          ? this.debtSlot(this.street.debt.length - 1)
-          : this.character.muzzleWorld();
-
-        win.group.position.lerpVectors(from, to, e);
-        win.group.scale.setScalar(
-          lerp(s0, p1 ? EXIT_SCALE_DEBT : EXIT_SCALE_MUZZLE, e),
-        );
-        win.group.rotation.z = e * (p1 ? EXIT_SPIN_DEBT : EXIT_SPIN_MUZZLE);
-      },
-      () => {
-        if (!p1) {
-          this.fx.burst(this.character.muzzleWorld(), {
-            colors: EVENT.windowExitBurst,
-            n: EXIT_BURST_COUNT,
-            speed: EXIT_BURST_SPEED,
-          });
-        }
-
-        win.dispose();
-        this.timeline.untrack(entry);
-      },
-    );
   }
 
   /** Director drives walking so both players stay in lockstep. u: 0 → 1. */
   setWalk(u: number) {
     if (this.walk) {
-      advanceWalk(this.makeStepContext(), this.walk, u);
+      advanceWalk(this.ctx, this.walk, u);
     }
   }
 
   // ───────────────────────────── per frame ─────────────────────────────
 
-  private debtSlot(i: number) {
-    const c = this.character.root.position;
-    const t = this.timeline.clock;
-
-    // Above and beside player 1's far shoulder: off the follow camera's lens, behind the stop window in side views.
-    return new THREE.Vector3(
-      DEBT_SLOT_X - (i % 2) * DEBT_SLOT_SPACING_X,
-      DEBT_SLOT_Y +
-        Math.floor(i / 2) * DEBT_SLOT_ROW_RISE +
-        Math.sin(t * 2 + i) * DEBT_BOB_HEIGHT,
-      c.z - DEBT_SLOT_Z - (i % DEBT_DEPTH_STEPS) * DEBT_SLOT_DEPTH_SPACING,
-    );
-  }
-
   setAspect(aspect: number) {
-    const changed = this.rig.setAspect(aspect);
-
-    if (this.street.boss && this.state) {
-      this.street.boss.group.position.z =
-        this.state.z -
-        this.rig.bossBack(present(this.street.bossLayout, "boss layout"));
-    }
-
-    // Re-lay the stop window for the new shape.
-    if (changed && this.state && this.stepRef) {
-      const keep = this.health;
-
-      this.reconcile(this.state);
-      this.health = keep;
-    }
-  }
-
-  private shotView(): ShotView {
-    return {
-      layout: this.street.bossLayout,
-      window: this.street.window?.win ?? null,
-      pile: this.street.pile !== null,
-    };
-  }
-
-  private updateCamera(dt: number) {
-    const c = this.character.root.position;
-
-    this.rig.step(dt, c, this.shotView(), this.shake);
-    this.syncScenery();
-  }
-
-  /** What the camera's position decides about the scenery. */
-  private syncScenery() {
-    const c = this.character.root.position;
-
-    // Side-on views look across the street, so the near side's buildings step out of the way.
-    const right = this.street.city?.getObjectByName("city-right");
-    const ahead = this.rig.mode === "follow" || this.rig.mode === "boss";
-
-    if (right) {
-      right.visible = ahead;
-    }
-
-    for (const g of this.street.gates) {
-      g.near.visible = ahead;
-    }
-
-    // Keep the sun's shadow box centred on the action.
-    this.sun.position.set(c.x - SUN_OFFSET_X, SUN_HEIGHT, c.z + SUN_OFFSET_Z);
-    this.sun.target.position.set(c.x, 0, c.z - SUN_TARGET_AHEAD);
+    applyAspect(this.ctx, aspect, this.state, this.stepRef);
   }
 
   /** Jump the camera to its target at once (after a cut). */
   snapCamera() {
-    this.rig.snap(this.character.root.position, this.shotView(), this.shake);
-    this.syncScenery();
+    this.rig.snap(this.character.root.position, shotView(this.ctx), this.shake);
+    syncScenery(this.ctx, this.sun);
   }
 
   update(dt: number) {
@@ -507,54 +259,16 @@ export class PlayerWorld {
       g.update(dt);
     }
 
-    this.updateCamera(dt);
-    if (this.street.window) {
-      const w = this.street.window;
-
-      if (w.reading) {
-        const t = this.rig.readingPose(w.win, this.character.root.position.z);
-
-        w.win.group.position.lerp(t.pos, 1 - Math.exp(-dt * READING_EASE_RATE));
-        w.win.group.scale.setScalar(
-          lerp(
-            w.win.group.scale.x,
-            t.scale,
-            1 - Math.exp(-dt * READING_EASE_RATE),
-          ),
-        );
-        this.rig.face(w.win.group);
-        w.win.group.position.y +=
-          Math.sin(this.timeline.clock * READING_BOB_SPEED) *
-          READING_BOB_HEIGHT;
-      }
-
-      w.win.update(dt);
-    }
-
-    for (const [i, d] of this.street.debt.entries()) {
-      // The result shot shows the spaghetti pile instead; the trailing cards would cover the stamp.
-      d.win.group.visible =
-        this.rig.mode !== "portrait" && this.rig.mode !== "boss";
-      d.win.group.position.lerp(
-        this.debtSlot(i),
-        1 - Math.exp(-dt * DEBT_EASE_RATE),
-      );
-      this.rig.face(d.win.group);
-      d.win.group.rotateZ(
-        Math.sin(this.timeline.clock * DEBT_WOBBLE_SPEED + i) * DEBT_WOBBLE,
-      );
-      d.win.update(dt);
-    }
-
-    if (this.street.boss) {
-      this.street.boss.update(dt);
-      this.street.boss.group.lookAt(
-        this.camera.position.x,
-        this.street.boss.group.position.y,
-        this.camera.position.z,
-      );
-    }
-
+    this.rig.step(
+      dt,
+      this.character.root.position,
+      shotView(this.ctx),
+      this.shake,
+    );
+    syncScenery(this.ctx, this.sun);
+    updateStopWindow(this.ctx, dt);
+    updateDebt(this.ctx, dt);
+    updateBoss(this.ctx, dt);
     this.debris.step(dt);
     this.fx.update(dt);
   }
