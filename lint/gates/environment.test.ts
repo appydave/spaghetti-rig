@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const REPO = resolve(import.meta.dirname, "../..");
 const OPTED_IN = [
+  "lint/gates/director-edges.test.ts",
   "lint/gates/director-proof.test.ts",
   "lint/gates/lanes-edges.test.ts",
 ];
