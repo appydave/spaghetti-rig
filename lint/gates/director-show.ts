@@ -92,10 +92,7 @@ export class Show {
     };
 
     this.director = Reflect.construct(Director, [
-      game,
-      this.stage,
-      this.worlds,
-      audio,
+      { game, stage: this.stage, worlds: this.worlds, audio },
       mode,
     ]);
     this.director.active = true;

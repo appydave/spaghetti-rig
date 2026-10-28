@@ -1,5 +1,9 @@
 import type { AudioEngine } from "#root/src/audio/audio.ts";
-import type { Game, PlayTier } from "#root/src/content/load.ts";
+import {
+  FULL_HEALTH,
+  type Game,
+  type PlayTier,
+} from "#root/src/content/load.ts";
 import { byId, queryElOrNull } from "#root/src/dom.ts";
 import type { Mode, Player, Step } from "#root/src/show/script.ts";
 import type { Stage } from "#root/src/world/stage.ts";
@@ -35,3 +39,59 @@ export const isMachine = (mode: Mode, p: Player) =>
 
 export const laneEl = (p: Player) =>
   queryElOrNull(document, `.lane[data-p='${p}']`);
+
+/** What the clock, the cues and the pointer have been doing since the show began. */
+export interface Run {
+  walkT: number;
+  vsT: number;
+  cues: { at: number; fn: () => void }[];
+  clock: number;
+  lastHealth: Record<Player, number>;
+  pointer: { x: number; y: number } | null;
+  readonly channel: BroadcastChannel | null;
+}
+
+export const newRun = (): Run => ({
+  walkT: -1,
+  vsT: -1,
+  cues: [],
+  clock: 0,
+  lastHealth: { p1: FULL_HEALTH, p2: FULL_HEALTH },
+  pointer: null,
+  channel:
+    "BroadcastChannel" in window ? new BroadcastChannel("spaghetti-rig") : null,
+});
+
+/** What the show's parts read and change: the Director, seen from outside. */
+export interface ShowState {
+  readonly game: Game;
+  readonly stage: Stage;
+  readonly worlds: Record<Player, PlayerWorld>;
+  readonly audio: AudioEngine;
+  readonly script: Step[];
+  readonly run: Run;
+  readonly step: Step;
+  readonly tier: PlayTier;
+  at: number;
+  mode: Mode;
+  paused: boolean;
+  autoplay: boolean;
+  notesOn: boolean;
+  active: boolean;
+  onScore?: (score: number) => void;
+  next: () => void;
+}
+
+export const laneContext = (s: ShowState): LaneContext => ({
+  game: s.game,
+  tier: s.tier,
+  step: s.step,
+  mode: s.mode,
+  paused: s.paused,
+  audio: s.audio,
+  stage: s.stage,
+  worlds: s.worlds,
+  after: (seconds, fn) => {
+    s.run.cues.push({ at: s.run.clock + seconds, fn });
+  },
+});
