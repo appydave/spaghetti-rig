@@ -9,6 +9,8 @@ const REPO = resolve(import.meta.dirname, "../..");
 const OPTED_IN = [
   "lint/gates/director-proof.test.ts",
   "lint/gates/lanes-edges.test.ts",
+  "src/app/errors.test.ts",
+  "src/app/key-listeners.test.ts",
 ];
 /** A header comment: a line that starts with the comment, not text that merely mentions it. */
 const HEADER = /^\s*\/\/\s*@vitest-environment\b/m;
