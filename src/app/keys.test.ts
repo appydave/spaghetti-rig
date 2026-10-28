@@ -50,6 +50,13 @@ describe("keys that work on every screen after the prelude", () => {
     expect(press("Digit0", true)).toEqual(NOTHING);
   });
 
+  it("the ? character opens the help even where the key code is a screen key", () => {
+    state.screen = "game";
+    expect(press("KeyP", false, "?")).toEqual(["help"]);
+    state.screen = "map";
+    expect(press("Enter", false, "?")).toEqual(["help"]);
+  });
+
   it("a digit without shift picks a mode, never a tier", () => {
     expect(press("Digit3")).toEqual(NOTHING);
     expect(press("Digit7")).toEqual(NOTHING);
