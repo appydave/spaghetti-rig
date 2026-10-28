@@ -11,6 +11,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
+import { scheduleDeck, scheduleStep } from "../../src/audio/music/sequencer";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
 import { num } from "./world-fingerprint";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
@@ -283,9 +284,14 @@ const control = (e: any): void => {
     e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
   ];
 
-  e.scheduleDeck(stalled, 1 + COMPILED_TRACKS[0].stepSec * 400, 1000);
-  e.scheduleDeck(e.createDeck(COMPILED_TRACKS[0], 1, 0.03), 1.29, 2);
-  e.scheduleDeck(late, 1.025, 1.3);
+  scheduleDeck(
+    stalled,
+    1 + COMPILED_TRACKS[0].stepSec * 400,
+    1000,
+    e.sequencer,
+  );
+  scheduleDeck(e.createDeck(COMPILED_TRACKS[0], 1, 0.03), 1.29, 2, e.sequencer);
+  scheduleDeck(late, 1.025, 1.3, e.sequencer);
 };
 
 const bodies = (e: any): void => {
@@ -328,12 +334,12 @@ const bodies = (e: any): void => {
   const deck = e.createDeck(COMPILED_TRACKS[0], 1, 0.03);
 
   for (const voice of ["triangle", "sine", "square", "saw", "pluck"]) {
-    e.leadNote(deck, 1, 100, 0.02, 1, voice);
-    e.leadNote(deck, 1, 60, 3, 1, voice);
+    e.leadNote({ deck, t: 1, level: 1 }, 100, 0.02, voice);
+    e.leadNote({ deck, t: 1, level: 1 }, 60, 3, voice);
   }
 
-  e.bassNote(deck, 1, 40, 0.02, 1);
-  e.bassNote(deck, 1, 40, 4, 1);
+  e.bassNote({ deck, t: 1, level: 1 }, 40, 0.02);
+  e.bassNote({ deck, t: 1, level: 1 }, 40, 4);
 
   for (const pad of ["warm", "glass", "dark"]) {
     const [first] = COMPILED_TRACKS;
@@ -343,7 +349,7 @@ const bodies = (e: any): void => {
       0.03,
     );
 
-    e.padChord(held, 1, [60, 64, 67], 5, 1);
+    e.padChord({ deck: held, t: 1, level: 1 }, [60, 64, 67], 5);
   }
 
   for (const midi of [38, 60, 84]) {
@@ -352,11 +358,36 @@ const bodies = (e: any): void => {
   }
 };
 
+/** The scheduler's edges: a step a hair late still sounds, at the clock's time; a tick schedules a live deck; a deck that has played its loops hands over to the theme's next track, and the change shows in the log as a timer as long as the new name. */
+const seams = (e: any): void => {
+  scheduleDeck(
+    e.createDeck(COMPILED_TRACKS[0], 1, 0.03),
+    1.01,
+    1.3,
+    e.sequencer,
+  );
+  e.onTrackChange((name: string) => setTimeout(() => undefined, name.length));
+  e.createDeck(COMPILED_TRACKS[0], 1.2, 0.03);
+
+  const [first] = COMPILED_TRACKS.filter(
+    (t) =>
+      COMPILED_TRACKS.filter((o) => o.def.theme === t.def.theme).length > 1,
+  );
+  const deck = e.createDeck(first, 1, 0.03);
+
+  e.current = deck;
+  e._theme = first?.def.theme;
+  deck.abs = (first?.def.loops ?? 0) * (first?.totalSteps ?? 0);
+  deck.start = 1 - deck.abs * (first?.stepSec ?? 0);
+  e.tick();
+};
+
 const all: Record<string, Arg[][] | [string, number]> = {};
 
 const runs: [string, (e: any) => void][] = [
   ["engine bodies", bodies],
   ["engine control", control],
+  ["engine seams", seams],
   ...COMPILED_TRACKS.map((track): [string, (e: any) => void] => [
     `track ${track.def.name}`,
     (e: any) => {
@@ -366,19 +397,22 @@ const runs: [string, (e: any) => void][] = [
       e._theme = track.def.theme;
       for (let loop = 0; loop < 2; loop++) {
         for (let idx = 0; idx < track.totalSteps; idx++) {
-          e.scheduleStep(deck, idx, loop, 1 + idx * 0.01);
+          scheduleStep(
+            { deck, idx, loop, t: 1 + idx * 0.01 },
+            e.sequencer.voices,
+          );
         }
       }
 
       for (let n = 1; n <= 12; n++) {
-        e.scheduleDeck(deck, 1, 1 + track.stepSec * 200 * n);
+        scheduleDeck(deck, 1, 1 + track.stepSec * 200 * n, e.sequencer);
       }
 
       // A call that needs more steps than the scheduler's guard allows, on a deck that is not the current one (so it cannot rotate).
       const long = e.createDeck(track, 1, 0.03);
 
       long.abs = 7;
-      e.scheduleDeck(long, 1, 1 + track.stepSec * 300);
+      scheduleDeck(long, 1, 1 + track.stepSec * 300, e.sequencer);
       e.retire(long, 2, 1);
       e.retire(deck, 2, 1);
       e.disposeDeck(deck);

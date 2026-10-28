@@ -14,11 +14,15 @@ import {
   tracksForTheme,
   midiToFreq,
   SEMITONES_PER_OCTAVE,
-  STEPS_PER_BEAT,
   type CompiledTrack,
   type Theme,
   type LeadVoice,
 } from "#root/src/audio/tracks.ts";
+import type { Deck, Note } from "#root/src/audio/music/deck.ts";
+import {
+  scheduleDeck,
+  type SequencerHost,
+} from "#root/src/audio/music/sequencer.ts";
 import { present } from "#root/src/nth.ts";
 import rawSfx from "#root/src/audio/sfx.json";
 import { expandSfx, parseSfx } from "#root/src/audio/sfx.ts";
@@ -89,10 +93,6 @@ const DELAY_MAX_SECONDS = 1.5;
 const DELAY_STEPS = 3;
 /** A deck that has stopped scheduling is kept this long for its tails to ring out, then disposed. */
 const DECK_TAIL_SECONDS = 3;
-/** If the scheduler falls this far behind (a hidden tab), it jumps forward instead of bursting. */
-const STALL_SECONDS = 0.25;
-/** The scheduler plays at most this many steps in one tick. */
-const SCHEDULE_GUARD = 256;
 /** The next track of a theme fades in this fast. */
 const NEXT_DECK_FADE_IN = 0.03;
 /** A sound effect's output is kept this long after its tail, and a tone or noise voice's gain behaves as follows. */
@@ -110,19 +110,6 @@ const MIN_DECAY = 0.01;
 const STOP_PADDING = 0.02;
 /** The shared noise buffer is two seconds long, so a noise voice may last at most this long. */
 const NOISE_MAX_SECONDS = 1.95;
-/** A step this far in the past is still played. */
-const LATE_STEP_SECONDS = 0.02;
-/** Off the beat the bass and the lead play this much softer. */
-const OFFBEAT_BASS = 0.85;
-const OFFBEAT_LEAD = 0.86;
-/** The second time round a quiet bell doubles the hook an octave up. */
-const HOOK_BELL_LEVEL = 0.1;
-const HOOK_BELL_DECAY = 0.9;
-/** The arpeggio swings between the speakers, and plays as a bell or a pluck. */
-const ARP_PAN = 0.45;
-const ARP_BELL_LEVEL = 0.06;
-const ARP_BELL_DECAY = 0.7;
-const ARP_PLUCK_LEVEL = 0.075;
 
 /** Minimum seconds between two plays of the same effect: the chattiest effects, shots, crackles, steps, damage and bounces. */
 const CHATTY_GAP = 0.03;
@@ -363,16 +350,6 @@ const BOUNCE_CLICK_F = 2300;
 const BOUNCE_CLICK_DUR = 0.05;
 const BOUNCE_CLICK_VOL = 0.12;
 
-interface Deck {
-  track: CompiledTrack;
-  out: GainNode;
-  delayIn: GainNode;
-  fx: AudioNode[];
-  start: number;
-  abs: number;
-  stopAt: number | null;
-}
-
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
@@ -417,6 +394,20 @@ export class AudioEngine {
   private readonly listeners: ((name: string) => void)[] = [];
   private readonly lastPlayed = new Map<Sfx, number>();
   private activeSfx = 0;
+  /** What the sequencer asks of this engine: the music voices, and rolling a finished deck over to the next track. */
+  private readonly sequencer: SequencerHost = {
+    voices: {
+      padChord: (note, notes, len) => this.padChord(note, notes, len),
+      bassNote: (note, midi, len) => this.bassNote(note, midi, len),
+      leadNote: (note, midi, len, voice) =>
+        this.leadNote(note, midi, len, voice),
+      pluck: (note, midi, pan) => this.pluck(note, midi, pan),
+      bell: (note, midi, pan, decay) => this.bell(note, midi, pan, decay),
+      compStab: (note, notes, dark) => this.compStab(note, notes, dark),
+      perc: (note, kind) => this.perc(note, kind),
+    },
+    rollOver: (deck, at) => this.rollOver(deck, at),
+  };
 
   // ------------------------------------------------------------------ public API
 
@@ -831,7 +822,7 @@ export class AudioEngine {
       const decksAtTickStart = this.decks.slice();
 
       for (const deck of decksAtTickStart) {
-        this.scheduleDeck(deck, now, horizon);
+        scheduleDeck(deck, now, horizon, this.sequencer);
       }
 
       this.decks = this.decks.filter((d) => {
@@ -848,128 +839,24 @@ export class AudioEngine {
     }
   }
 
-  private scheduleDeck(deck: Deck, now: number, horizon: number): void {
-    const tr = deck.track;
-
-    // After a long stall (hidden tab), jump forward instead of bursting.
-    if (deck.start + deck.abs * tr.stepSec < now - STALL_SECONDS) {
-      deck.abs = Math.ceil((now - deck.start) / tr.stepSec);
+  /** The deck has played its loops: if its theme has another track, fade this deck out and start that one at `at`. */
+  private rollOver(deck: Deck, at: number): boolean {
+    if (deck !== this.current || tracksForTheme(this._theme).length < 2) {
+      return false;
     }
 
-    for (let guard = 0; guard < SCHEDULE_GUARD; guard++) {
-      const base = deck.start + deck.abs * tr.stepSec;
+    const next = this.nextTrackFor(this._theme);
 
-      if (base >= horizon) {
-        return;
-      }
-
-      if (deck.stopAt !== null && base >= deck.stopAt) {
-        return;
-      }
-
-      const idx = deck.abs % tr.totalSteps;
-      const loop = Math.floor(deck.abs / tr.totalSteps);
-
-      if (
-        idx === 0 &&
-        loop > 0 &&
-        deck === this.current &&
-        loop >= tr.def.loops
-      ) {
-        const list = tracksForTheme(this._theme);
-
-        if (list.length > 1) {
-          const next = this.nextTrackFor(this._theme);
-
-          if (next) {
-            this.retire(deck, base, 1.0);
-            deck.stopAt = base; // hard stop scheduling; tails fade
-            this.current = this.createDeck(next, base, NEXT_DECK_FADE_IN);
-            this.setTrackName(next.def.name);
-
-            return;
-          }
-        }
-      }
-
-      const swing = deck.abs % 2 === 1 ? (tr.def.swing ?? 0) * tr.stepSec : 0;
-
-      if (base >= now - LATE_STEP_SECONDS) {
-        this.scheduleStep(deck, idx, loop, Math.max(now, base + swing));
-      }
-
-      deck.abs++;
-    }
-  }
-
-  private scheduleStep(deck: Deck, idx: number, loop: number, t: number): void {
-    const tr = deck.track;
-    const def = tr.def;
-    const ev = tr.steps[idx];
-
-    if (!ev) {
-      return;
+    if (!next) {
+      return false;
     }
 
-    const mix = def.mix ?? {};
-    const sp = tr.stepSec;
-    const onBeat = idx % STEPS_PER_BEAT === 0;
+    this.retire(deck, at, 1.0);
+    deck.stopAt = at; // hard stop scheduling; tails fade
+    this.current = this.createDeck(next, at, NEXT_DECK_FADE_IN);
+    this.setTrackName(next.def.name);
 
-    if (ev.chord) {
-      this.padChord(deck, t, ev.chord.pad, ev.chord.len * sp, mix.pad ?? 1);
-    }
-
-    if (ev.bass) {
-      this.bassNote(
-        deck,
-        t,
-        ev.bass.midi,
-        ev.bass.len * sp,
-        (mix.bass ?? 1) * (onBeat ? 1 : OFFBEAT_BASS),
-      );
-    }
-
-    if (ev.lead) {
-      const vel = (mix.lead ?? 1) * (onBeat ? 1 : OFFBEAT_LEAD);
-
-      this.leadNote(deck, t, ev.lead.midi, ev.lead.len * sp, vel, def.lead);
-      // Second time round, a quiet bell doubles the hook an octave up.
-      if (loop % 2 === 1 && def.theme !== "stop") {
-        this.bell(
-          deck,
-          t,
-          ev.lead.midi + SEMITONES_PER_OCTAVE,
-          HOOK_BELL_LEVEL * vel,
-          0,
-          HOOK_BELL_DECAY,
-        );
-      }
-    }
-
-    if (ev.arp !== undefined) {
-      const pan = idx % 2 === 0 ? -ARP_PAN : ARP_PAN;
-
-      if (def.arpVoice === "bell") {
-        this.bell(
-          deck,
-          t,
-          ev.arp,
-          ARP_BELL_LEVEL * (mix.arp ?? 1),
-          pan,
-          ARP_BELL_DECAY,
-        );
-      } else {
-        this.pluck(deck, t, ev.arp, ARP_PLUCK_LEVEL * (mix.arp ?? 1), pan);
-      }
-    }
-
-    if (ev.comp) {
-      this.compStab(deck, t, ev.comp, mix.comp ?? 1, def.theme === "boss");
-    }
-
-    if (ev.perc) {
-      this.perc(deck, t, ev.perc, mix.perc ?? 1);
-    }
+    return true;
   }
 
   // ------------------------------------------------------------------ music voices
@@ -988,13 +875,12 @@ export class AudioEngine {
   }
 
   private leadNote(
-    deck: Deck,
-    t: number,
+    note: Note,
     midi: number,
     len: number,
-    vel: number,
     voice: LeadVoice,
   ): void {
+    const { deck, t, level: vel } = note;
     const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const pluck = voice === "pluck";
@@ -1132,13 +1018,8 @@ export class AudioEngine {
     this.cleanup(main, nodes);
   }
 
-  private padChord(
-    deck: Deck,
-    t: number,
-    notes: number[],
-    len: number,
-    level: number,
-  ): void {
+  private padChord(note: Note, notes: number[], len: number): void {
+    const { deck, t, level } = note;
     const ctx = this.audioContext;
     const kind = deck.track.def.pad;
     const end = t + len + PAD_TAIL;
@@ -1216,13 +1097,8 @@ export class AudioEngine {
     }
   }
 
-  private bassNote(
-    deck: Deck,
-    t: number,
-    midi: number,
-    len: number,
-    level: number,
-  ): void {
+  private bassNote(note: Note, midi: number, len: number): void {
+    const { deck, t, level } = note;
     const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const dur = Math.max(BASS_MIN_LEN, Math.min(len * BASS_HOLD, BASS_MAX_LEN));
@@ -1265,13 +1141,8 @@ export class AudioEngine {
     this.cleanup(o1, [o1, o2, lp, g]);
   }
 
-  private pluck(
-    deck: Deck,
-    t: number,
-    midi: number,
-    vol: number,
-    pan: number,
-  ): void {
+  private pluck(note: Note, midi: number, pan: number): void {
+    const { deck, t, level: vol } = note;
     const ctx = this.audioContext;
     const o = ctx.createOscillator();
 
@@ -1294,14 +1165,8 @@ export class AudioEngine {
     this.cleanup(o, [o, g, p]);
   }
 
-  private bell(
-    deck: Deck,
-    t: number,
-    midi: number,
-    vol: number,
-    pan: number,
-    decay: number,
-  ): void {
+  private bell(note: Note, midi: number, pan: number, decay: number): void {
+    const { deck, t, level: vol } = note;
     const ctx = this.audioContext;
     const f = midiToFreq(midi);
     const o = ctx.createOscillator();
@@ -1342,13 +1207,8 @@ export class AudioEngine {
     this.cleanup(o, [o, o2, g2, g, p]);
   }
 
-  private compStab(
-    deck: Deck,
-    t: number,
-    notes: number[],
-    level: number,
-    dark: boolean,
-  ): void {
+  private compStab(note: Note, notes: number[], dark: boolean): void {
+    const { deck, t, level } = note;
     const ctx = this.audioContext;
     const g = ctx.createGain();
     const vol = COMP_LEVEL * level;
@@ -1400,12 +1260,8 @@ export class AudioEngine {
     return { src, f };
   }
 
-  private perc(
-    deck: Deck,
-    t: number,
-    kind: "t" | "T" | "s",
-    level: number,
-  ): void {
+  private perc(note: Note, kind: "t" | "T" | "s"): void {
+    const { deck, t, level } = note;
     const ctx = this.audioContext;
 
     if (!this.noiseBuf) {
