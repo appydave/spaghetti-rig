@@ -8,21 +8,16 @@
 // tone, noise, brass and trombone bodies. Those logs are long, so they are written as a hash and an entry count per scenario.
 //
 // It also guards the effects: the same seed gives the same log, and no effect is silent.
-import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
-import { SfxPlayer } from "../../src/audio/engine/sfx-player";
 import { scheduleDeck, scheduleStep } from "../../src/audio/music/sequencer";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
-import { num } from "./world-fingerprint";
 import { PROOF_TEST_TIMEOUT_MS } from "./proof-timeout";
-import { hole } from "./recording-canvas";
-import { seeded } from "./support/seeded";
+import { json, record, scenario, type Arg } from "./support/audio-recorder";
 
 vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 const SEEDS = 20;
-const START = 1;
 const SFX = [
   "shoot",
   "shootP1",
@@ -51,177 +46,6 @@ const SFX = [
   "step",
 ] as const;
 
-type Arg = number | string | Record<string, number | string>;
-
-/** JSON.stringify's replacer: every number is rounded the way the world fingerprint rounds (four decimals), because the synth's maths
- * differs in the last bits between macOS arm64 and Linux x64, and a hash or a committed log must be the same on both. */
-type Loggable = Arg | readonly Loggable[];
-
-const stable = (_key: string, v: Loggable) =>
-  typeof v === "number" ? Number(num(v)) : v;
-const json = (v: Loggable) => JSON.stringify(v, stable);
-
-/** An object with its keys in order, so the order a call happened to list them in cannot show. */
-const sorted = (v: Arg): Arg =>
-  typeof v === "object"
-    ? Object.fromEntries(
-        Object.entries(v).sort(([a], [b]) => a.localeCompare(b)),
-      )
-    : v;
-
-function record(sfx: string, seed: number): Arg[][] {
-  const calls: Arg[][] = [];
-  const engine: any = new AudioEngine();
-  const log =
-    (kind: string) =>
-    (...args: Arg[]) =>
-      calls.push([kind, ...args.slice(1).map(sorted)]);
-
-  engine.ctx = hole;
-  engine.sfx = new SfxPlayer(hole, hole, null);
-  engine.sfx.sfxOut = () => "out";
-  engine.sfx.sfxVoices = {
-    tone: log("tone"),
-    noise: log("noise"),
-    brass: (dest: Arg, t: Arg, h: any) =>
-      log("brass")(dest, t, h.midi, h.dur, h.vol),
-    trombone: (dest: Arg, t: Arg, h: any) =>
-      log("trombone")(dest, t, h.midi, h.dur, h.wobble),
-  };
-
-  const real = Math.random;
-
-  Math.random = seeded(seed);
-  try {
-    engine.sfx.playSfx(sfx, START, {});
-  } finally {
-    Math.random = real;
-  }
-
-  return calls;
-}
-
-const PATH = Symbol("path");
-const WORLD = new Map<string, number | string>([
-  ["currentTime", 1],
-  ["sampleRate", 44100],
-  ["state", "running"],
-]);
-
-/** Anything an engine method may touch on an AudioContext, recording what it does (log) and handing back more of the same. */
-function recorder(log: Arg[][], buffers: Float32Array[][]) {
-  const made = new Map<string, number>();
-  const name = (what: string): string => {
-    const n = made.get(what) ?? 0;
-
-    made.set(what, n + 1);
-
-    return `${what}#${n}`;
-  };
-
-  const show = (v: any): Arg =>
-    typeof v === "function"
-      ? String(v[PATH])
-      : typeof v === "object"
-        ? json(v)
-        : v;
-  const node = (
-    path: string,
-    own?: Record<string, number | ((c: number) => Float32Array)>,
-  ): any => {
-    const store = new Map<string, Arg>();
-
-    return new Proxy(function () {}, {
-      get(_t, p) {
-        const key = String(p);
-
-        return p === PATH
-          ? path
-          : p === Symbol.toPrimitive
-            ? () => 1
-            : typeof p === "symbol"
-              ? undefined
-              : own && key in own
-                ? own[key]
-                : store.has(key)
-                  ? store.get(key)
-                  : WORLD.has(key)
-                    ? WORLD.get(key)
-                    : node(`${path}.${key}`);
-      },
-      set(_t, p, v) {
-        log.push([path, String(p), show(v)]);
-        store.set(String(p), v);
-
-        return true;
-      },
-      apply(_t, _this, args) {
-        log.push([path, "()", ...args.map(show)]);
-
-        if (path.endsWith(".connect")) {
-          return args[0];
-        }
-
-        const method = path.slice(path.lastIndexOf(".") + 1);
-
-        if (method === "createBuffer") {
-          const [channels, length] = args;
-          const data = Array.from(
-            { length: channels },
-            () => new Float32Array(length),
-          );
-
-          buffers.push(data);
-
-          return node(name("buffer"), {
-            length,
-            getChannelData: (c: number) => data[c],
-          });
-        }
-
-        return node(
-          method.startsWith("create")
-            ? name(method.slice(6).toLowerCase())
-            : `${path}()`,
-        );
-      },
-      construct: () => node("ctx"),
-    });
-  };
-
-  return node("ctx");
-}
-
-/** One scenario: a fresh engine on a recording context and a seeded Math.random; returns a hash and the entry count of its log. */
-function scenario(seed: number, run: (engine: any) => void): [string, number] {
-  const log: Arg[][] = [];
-  const buffers: Float32Array[][] = [];
-  const engine: any = new AudioEngine();
-  const root = recorder(log, buffers);
-
-  const random = Math.random;
-
-  Math.random = seeded(seed);
-  vi.stubGlobal("setInterval", () => 0);
-  vi.stubGlobal("setTimeout", (_fn: () => void, ms: number) =>
-    log.push(["setTimeout", ms]),
-  );
-  vi.stubGlobal("AudioContext", root);
-  try {
-    engine.init();
-    run(engine);
-  } finally {
-    Math.random = random;
-    vi.unstubAllGlobals();
-  }
-
-  for (const data of buffers) {
-    log.push(["buffer sum", ...data.map((d) => d.reduce((a, b) => a + b, 0))]);
-  }
-
-  return [createHash("sha1").update(json(log)).digest("hex"), log.length];
-}
-
 /** How long apart an effect may be played again, and what the engine does when it is too busy: each is tried just either side of its limit. */
 const GAPS: [string, number][] = [
   ["debrisBounce", 0.04],
@@ -238,15 +62,8 @@ const GAPS: [string, number][] = [
 ];
 const GAP_MARGIN = 0.0003;
 
-const control = (e: any): void => {
-  const at = (t: number): void => {
-    e.ctx.currentTime = t;
-  };
-
-  e.muted = true;
-  e.muted = false;
-  e.setTheme("walk");
-
+/** Every effect once, then each rate-limited effect just either side of its gap, then the low-priority ones on a busy engine. */
+const controlSfx = (e: any, at: (t: number) => void): void => {
   SFX.forEach((sfx, i) => {
     at(100 + i * 10);
     e.play(sfx, { volume: 0.5, pan: 0.2 });
@@ -275,7 +92,10 @@ const control = (e: any): void => {
     e.play(low);
     e.play(normal);
   });
+};
 
+/** The music scheduler: a deck that has stopped, then one far behind that jumps forward and one a hair behind that drops the steps it missed. */
+const controlMusic = (e: any, at: (t: number) => void): void => {
   const old = e.music.createDeck(COMPILED_TRACKS[0], 0, 0.03);
 
   old.stopAt = -2.5;
@@ -304,9 +124,20 @@ const control = (e: any): void => {
   scheduleDeck(late, 1.025, 1.3, e.music.sequencer);
 };
 
-const bodies = (e: any): void => {
-  const out = e.sfx.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
+const control = (e: any): void => {
+  const at = (t: number): void => {
+    e.ctx.currentTime = t;
+  };
 
+  e.muted = true;
+  e.muted = false;
+  e.setTheme("walk");
+  controlSfx(e, at);
+  controlMusic(e, at);
+};
+
+/** The sound effects' tone and noise bodies at their edges. */
+const toneBodies = (e: any, out: any): void => {
   for (const o of [
     { f: 440, dur: 0.1, vol: 0.2 },
     { f: 440, dur: 0.001, vol: 0.00001 },
@@ -344,7 +175,18 @@ const bodies = (e: any): void => {
     dur: 1.99,
     vol: 0.2,
   });
+};
 
+/** Brass and trombone, low, middle and high. */
+const hornBodies = (e: any, out: any): void => {
+  for (const midi of [38, 60, 84]) {
+    e.sfx.sfxVoices.brass(out, 1, { midi, dur: 0.8, vol: 0.1 });
+    e.sfx.sfxVoices.trombone(out, 1, { midi, dur: 0.8, wobble: midi > 50 });
+  }
+};
+
+/** The music voices at their floors and ceilings. */
+const musicBodies = (e: any): void => {
   // Notes outside what the score uses: a very short one, a very high one, and a pad held long, to reach the voices' floors and ceilings.
   const deck = e.music.createDeck(COMPILED_TRACKS[0], 1, 0.03);
 
@@ -375,11 +217,14 @@ const bodies = (e: any): void => {
       5,
     );
   }
+};
 
-  for (const midi of [38, 60, 84]) {
-    e.sfx.sfxVoices.brass(out, 1, { midi, dur: 0.8, vol: 0.1 });
-    e.sfx.sfxVoices.trombone(out, 1, { midi, dur: 0.8, wobble: midi > 50 });
-  }
+const bodies = (e: any): void => {
+  const out = e.sfx.sfxOut({ volume: 0.7, pan: -0.3 }, 1);
+
+  toneBodies(e, out);
+  musicBodies(e);
+  hornBodies(e, out);
 };
 
 /** The scheduler's edges: a step a hair late still sounds, at the clock's time; a tick schedules a live deck; a deck that has played its loops hands over to the theme's next track, and the change shows in the log as a timer as long as the new name. */
