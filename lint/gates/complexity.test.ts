@@ -18,11 +18,7 @@ import { describeProbes } from "./support/probe-gate";
 /** The procedural-data files that still have a builder the rules would flag: the Gate constructor (cognitive 13) is hand-placed geometry written as code. */
 const COMPLEXITY_PD = ["src/world/models/gate.ts"];
 /** The files carried to tier 5 (David, scope B, 2026-10-26) that still have a complexity finding. The list may shrink, never grow. */
-const COMPLEXITY_CARRIED = [
-  "lint/gates/audio-proof.test.ts",
-  "src/audio/tracks.ts",
-  "src/content/load.ts",
-];
+const COMPLEXITY_CARRIED = ["src/audio/tracks.ts", "src/content/load.ts"];
 const COMPLEXITY_RULES = [
   "anti-slop/cognitive-complexity",
   "anti-slop/cyclomatic-complexity",
