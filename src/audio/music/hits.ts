@@ -1,5 +1,5 @@
 import type { Note } from "#root/src/audio/music/deck.ts";
-import { midiToFreq } from "#root/src/audio/tracks.ts";
+import { midiToFreq } from "#root/src/audio/music/notation.ts";
 import {
   STOP_PADDING,
   SILENCE,

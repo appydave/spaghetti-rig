@@ -1,4 +1,4 @@
-import { midiToFreq } from "#root/src/audio/tracks.ts";
+import { midiToFreq } from "#root/src/audio/music/notation.ts";
 import type {
   HornNote,
   SfxKit,

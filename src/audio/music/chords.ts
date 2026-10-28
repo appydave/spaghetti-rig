@@ -1,5 +1,8 @@
 import type { Note } from "#root/src/audio/music/deck.ts";
-import { SEMITONES_PER_OCTAVE, midiToFreq } from "#root/src/audio/tracks.ts";
+import {
+  SEMITONES_PER_OCTAVE,
+  midiToFreq,
+} from "#root/src/audio/music/notation.ts";
 import { SILENCE, cleanup, rand } from "#root/src/audio/voice-kit.ts";
 
 /** The pad chord: the tail it rings for, the filter's Q, how far apart the two sides sit, and each note's level. */
