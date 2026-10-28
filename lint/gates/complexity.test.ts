@@ -23,7 +23,6 @@ const COMPLEXITY_CARRIED = [
   "src/audio/tracks.ts",
   "src/content/load.ts",
   "src/main.ts",
-  "src/show/director.ts",
   "src/show/script.ts",
   "src/world/combat/effects.ts",
   "src/world/models/toon.ts",

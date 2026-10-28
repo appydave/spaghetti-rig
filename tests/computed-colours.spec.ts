@@ -58,13 +58,13 @@ async function ready(page: Page) {
 async function readScreens(page: Page) {
   const screens = new Map<string, ScreenColours>();
   const gameClock = async () =>
-    Number(await page.evaluate("window.__rig?.director.clock ?? 0"));
+    Number(await page.evaluate("window.__rig?.director.run.clock ?? 0"));
   // Read a screen once SETTLE_MS of wall time AND SETTLE_GAME_SECONDS of game time have passed since `since` (a gameClock() reading taken
   // before the action), and the frame that applies the game's HUD has run. A director that is not running has no game time to wait for.
   const grab = async (name: string, since = 0) => {
     await page.waitForTimeout(SETTLE_MS);
     await page.waitForFunction(
-      `(() => { const d = window.__rig?.director; return !d || !d.active || d.paused || d.clock - ${since} >= ${SETTLE_GAME_SECONDS}; })()`,
+      `(() => { const d = window.__rig?.director; return !d || !d.active || d.paused || d.run.clock - ${since} >= ${SETTLE_GAME_SECONDS}; })()`,
     );
     await page.evaluate(
       "new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))",

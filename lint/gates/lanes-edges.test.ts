@@ -6,9 +6,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Mode, Phase } from "../../src/show/script";
 import type { Lane } from "./director-dom";
 import { Show } from "./director-show";
+import { framesFor, stepTo } from "./support/show-steps";
 
 const FRAMES_PER_SECOND = 20;
-const LIMIT = 1000;
 /** The fake stage is 1600 wide, so player 2's lane in a split starts here. */
 const SPLIT_X = 800;
 const MID_Y = 450;
@@ -20,20 +20,12 @@ afterEach(() => show.close());
 
 /** A show in `mode`, stepped (not run) to the first step in `phase`. */
 function startAt(mode: Mode, phase: Phase): Show {
-  show = new Show(mode, 1);
-
-  const d = show.director;
-
-  d.startTier(0);
-  for (let guard = 0; guard < LIMIT && d.step.phase !== phase; guard++) {
-    d.next();
-  }
+  show = stepTo(new Show(mode, 1), phase);
 
   return show;
 }
 
-const frames = (seconds: number) =>
-  show.frames(Math.round(seconds * FRAMES_PER_SECOND));
+const frames = (seconds: number) => framesFor(show, seconds);
 const html = (selector: string) =>
   document.querySelector<HTMLElement>(selector);
 
