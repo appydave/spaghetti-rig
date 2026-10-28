@@ -21,6 +21,10 @@ test("the whole show runs from the keyboard alone, side by side, with no errors"
   await press(page, "Enter", 400);
   await expect(page.locator("#map")).toBeVisible();
   await expect(page.locator(".tier.locked")).toHaveCount(0);
+  await press(page, "ArrowRight", 200);
+  await expect(page.locator("#tiers .tier.sel")).toHaveAttribute("data-i", "1");
+  await press(page, "ArrowLeft", 200);
+  await expect(page.locator("#tiers .tier.sel")).toHaveAttribute("data-i", "0");
   await press(page, "Enter", 600);
   await expect(page.locator("#game")).toBeVisible();
   expect((await step(page)).phase).toBe("vs");
