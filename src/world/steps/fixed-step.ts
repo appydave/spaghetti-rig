@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { FULL_HEALTH, TIER_HEALTH_LOSS } from "#root/src/content/load.ts";
 import { nth } from "#root/src/nth.ts";
-import type { Step } from "#root/src/show/script.ts";
+import type { Step } from "#root/src/content/script.ts";
 import type {
   StepContext,
   StopWindow,

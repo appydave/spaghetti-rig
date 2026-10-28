@@ -1,6 +1,6 @@
 import type { AudioEngine } from "#root/src/audio/audio.ts";
 import type { Director } from "#root/src/show/director.ts";
-import type { Mode } from "#root/src/show/script.ts";
+import type { Mode } from "#root/src/content/script.ts";
 
 export type Screen = "prelude" | "title" | "map" | "game";
 

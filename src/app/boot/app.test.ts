@@ -10,7 +10,7 @@ import { wireButtons } from "#root/src/app/boot/buttons.ts";
 import { store } from "#root/src/app/boot/store.ts";
 import { fillTitle, followTracks, showBest } from "#root/src/app/boot/title.ts";
 import { TRACKS } from "#root/src/audio/audio.ts";
-import type { Mode } from "#root/src/show/script.ts";
+import type { Mode } from "#root/src/content/script.ts";
 import type { Stage } from "#root/src/world/stage.ts";
 import { pageBody } from "#root/lint/gates/director-dom.ts";
 import { game } from "#root/lint/gates/director-show.ts";

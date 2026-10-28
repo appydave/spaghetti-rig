@@ -5,7 +5,7 @@ import { tierCards } from "#root/src/app/boot/map.ts";
 import type { Store } from "#root/src/app/boot/store.ts";
 import type { AudioEngine } from "#root/src/audio/audio.ts";
 import type { Game } from "#root/src/content/load.ts";
-import { modeInfo, type Mode } from "#root/src/show/script.ts";
+import { modeInfo, type Mode } from "#root/src/content/script.ts";
 import type { Director } from "#root/src/show/director.ts";
 import { byId, queryAllEl } from "#root/src/dom.ts";
 import type { Stage } from "#root/src/world/stage.ts";

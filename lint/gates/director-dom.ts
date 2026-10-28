@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Game } from "../../src/content/load";
 import type { DirectorMessage, PresenterState } from "../../src/show/messages";
-import type { Mode, Player, Step } from "../../src/show/script";
+import type { Mode, Player, Step } from "../../src/content/script";
 
 const WIDTH = 1600;
 const HEIGHT = 900;

@@ -1,5 +1,5 @@
 import { nth, present } from "#root/src/nth.ts";
-import type { Step } from "#root/src/show/script.ts";
+import type { Step } from "#root/src/content/script.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 

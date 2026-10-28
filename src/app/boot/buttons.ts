@@ -2,7 +2,7 @@
 import type { App } from "#root/src/app/boot/app.ts";
 import { clickAction } from "#root/src/app/boot/clicks.ts";
 import { byId, closestEl, queryAllEl } from "#root/src/dom.ts";
-import { MODES } from "#root/src/show/script.ts";
+import { MODES } from "#root/src/content/script.ts";
 
 const $ = (id: string) => byId(id, HTMLElement);
 

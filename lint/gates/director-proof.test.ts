@@ -7,7 +7,7 @@
 // What it cannot see: layout, the CSS cascade and rendering (happy-dom has none), so a style that only works through a stylesheet is invisible.
 // This is the ONLY test file that opts in to a DOM; the default test environment stays node.
 import { describe, expect, it, vi } from "vitest";
-import type { Mode } from "../../src/show/script";
+import type { Mode } from "../../src/content/script";
 import { FakeChannel } from "./director-dom";
 import { Show } from "./director-show";
 import { logLines } from "./proof-lines";

@@ -32,7 +32,7 @@ import {
   type Mode,
   type Player,
   type Step,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 
 export { SPLIT_PAN } from "#root/src/show/director/lanes.ts";
 

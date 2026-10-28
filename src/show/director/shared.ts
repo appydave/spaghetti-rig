@@ -5,7 +5,7 @@ import {
   type PlayTier,
 } from "#root/src/content/load.ts";
 import { byId, queryElOrNull } from "#root/src/dom.ts";
-import type { Mode, Player, Step } from "#root/src/show/script.ts";
+import type { Mode, Player, Step } from "#root/src/content/script.ts";
 import type { Stage } from "#root/src/world/stage.ts";
 import type { PlayerWorld } from "#root/src/world/world.ts";
 

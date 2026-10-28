@@ -8,7 +8,7 @@
 // warms module-level caches, so a second run in the same process draws differently by design.)
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
-import type { Step } from "../../src/show/script";
+import type { Step } from "../../src/content/script";
 import { spyOnTemps } from "./disposal-spy";
 import { canvasDocument } from "./recording-canvas";
 import { scenarioList, type Mode, type Scenario } from "./world-scenarios";

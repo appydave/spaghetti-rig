@@ -1,5 +1,5 @@
 import type { AppContext } from "#root/src/app/context.ts";
-import { MODES } from "#root/src/show/script.ts";
+import { MODES } from "#root/src/content/script.ts";
 
 type Action = (c: AppContext) => void;
 type Table = Map<string, Action>;
