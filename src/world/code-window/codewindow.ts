@@ -1,9 +1,5 @@
 import * as THREE from "three";
-import type {
-  Layout,
-  Line,
-  Mark,
-} from "#root/src/world/code-window/codelayout.ts";
+import type { Layout, Line } from "#root/src/world/code-window/codelayout.ts";
 import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
 import { INK, kit, rng, toon } from "#root/src/world/models/toon.ts";
@@ -11,8 +7,6 @@ import {
   CARD,
   CRACK,
   EYE_WHITE,
-  LINE,
-  MARK,
   PALETTE,
   PIN,
   SLAB_TOON,
@@ -20,6 +14,13 @@ import {
   type Mood,
 } from "#root/src/world/palette.ts";
 import { wrap as wrapProse } from "#root/src/world/code-window/canvas-text.ts";
+import { drawLine } from "#root/src/world/code-window/paint/line-painter.ts";
+import {
+  FONT,
+  MONO,
+  pin,
+  roundRect,
+} from "#root/src/world/code-window/paint/shapes.ts";
 import { meshNamed } from "#root/src/world/models/objects.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
@@ -28,8 +29,6 @@ import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 export { PALETTE } from "#root/src/world/palette.ts";
 export type { Mood } from "#root/src/world/palette.ts";
 
-const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-const FONT = 34;
 const LH = 50;
 const PAD = 44;
 const HEADER = 74;
@@ -107,18 +106,6 @@ export interface Paint {
   badge?: string;
 }
 
-function roundRect(
-  g: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-) {
-  g.beginPath();
-  g.roundRect(x, y, w, h, r);
-}
-
 /** Paint a card as an editor window. The canvas size follows the content. */
 export function paintCard(
   layout: Layout,
@@ -180,16 +167,18 @@ export function paintCard(
 
   // Body with a bright inner edge (the slab's front lip).
   g.fillStyle = p.body;
-  roundRect(g, 0, 0, width, height, SLAB_RADIUS);
+  roundRect(g, { x: 0, y: 0, w: width, h: height }, SLAB_RADIUS);
   g.fill();
   g.lineWidth = EDGE_WIDTH;
   g.strokeStyle = p.edge;
   roundRect(
     g,
-    EDGE_INSET,
-    EDGE_INSET,
-    width - EDGE_WIDTH,
-    height - EDGE_WIDTH,
+    {
+      x: EDGE_INSET,
+      y: EDGE_INSET,
+      w: width - EDGE_WIDTH,
+      h: height - EDGE_WIDTH,
+    },
     EDGE_RADIUS,
   );
   g.stroke();
@@ -197,10 +186,12 @@ export function paintCard(
   g.save();
   roundRect(
     g,
-    BAR_INSET,
-    BAR_INSET,
-    width - BAR_WIDTH_TRIM,
-    HEADER - BAR_HEIGHT_TRIM,
+    {
+      x: BAR_INSET,
+      y: BAR_INSET,
+      w: width - BAR_WIDTH_TRIM,
+      h: HEADER - BAR_HEIGHT_TRIM,
+    },
     BAR_RADIUS,
   );
   g.clip();
@@ -249,10 +240,7 @@ export function paintCard(
     g.fillStyle = mood === "angry" ? CARD.badgeAngry : CARD.badgeCalm;
     roundRect(
       g,
-      width - PAD - bw,
-      y - BADGE_RISE,
-      bw,
-      BADGE_HEIGHT,
+      { x: width - PAD - bw, y: y - BADGE_RISE, w: bw, h: BADGE_HEIGHT },
       BADGE_RADIUS,
     );
     g.fill();
@@ -275,7 +263,7 @@ export function paintCard(
   for (const line of layout.lines) {
     const h = lineH(line);
 
-    drawLine(g, line, PAD, y, h, cw, gutter, inner, p);
+    drawLine(g, { line, x0: PAD, y, h, cw, gutter, inner, p });
     y += h;
   }
 
@@ -296,7 +284,12 @@ export function paintCard(
     for (const [i, n] of layout.notes.entries()) {
       const ls = nth(noteLines, i, "note lines");
 
-      pin(g, PAD + NOTE_PIN_OFFSET, y + NOTE_PIN_OFFSET, n.pin, PIN[n.kind]);
+      pin(
+        g,
+        { x: PAD + NOTE_PIN_OFFSET, y: y + NOTE_PIN_OFFSET },
+        n.pin,
+        PIN[n.kind],
+      );
       g.font = `500 30px Space, Arial, sans-serif`;
       g.fillStyle = CARD.note;
       for (const [j, l] of ls.entries()) {
@@ -334,287 +327,6 @@ function spaced(
   for (const ch of s) {
     g.fillText(ch, x, y);
     x += g.measureText(ch).width + tracking;
-  }
-}
-
-/** A pin: its radius, and how far below its centre the number's baseline sits. */
-const PIN_RADIUS = 16;
-const PIN_DIGIT_DROP = 7;
-
-function pin(
-  g: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  n: number,
-  color: string,
-) {
-  g.fillStyle = color;
-  g.beginPath();
-  g.arc(x, y, PIN_RADIUS, 0, Math.PI * 2);
-  g.fill();
-  g.lineWidth = 3;
-  g.strokeStyle = CARD.pinInk;
-  g.stroke();
-  g.fillStyle = CARD.pinInk;
-  g.font = `700 21px Space, Arial, sans-serif`;
-  g.textAlign = "center";
-  g.fillText(String(n), x, y + PIN_DIGIT_DROP);
-  g.textAlign = "left";
-}
-
-/** A caption line's text baseline below the top of the line. */
-const CAPTION_BASELINE = 32;
-/** The text baseline sits this share of the way down a code line. */
-const BASELINE_SHARE = 0.7;
-/** A line's middle is this share of its height down (strike-throughs and rules are drawn there). */
-const LINE_MIDDLE = 0.5;
-/** An output or diff panel bleeds past the text on each side, then on both sides together; a diff tint is this much shorter. */
-const PANEL_BLEED = 14;
-const PANEL_BLEED_BOTH = 28;
-const DIFF_TINT_TRIM = 4;
-/** A continuation arrow and a label line are drawn at these shares of the code font size. */
-const CONT_FONT_SHARE = 0.8;
-const LABEL_FONT_SHARE = 0.85;
-/** A removed line is drawn at this opacity. */
-const REMOVED_OPACITY = 0.78;
-/** The strike-through runs this far past the text at each end. */
-const STRIKE_OVERHANG = 4;
-/** The box round an added line: padding each side (then both), top offset, minimum width in characters, height trim, corner radius. */
-const ADDED_BOX_PAD = 7;
-const ADDED_BOX_PAD_BOTH = ADDED_BOX_PAD * 2;
-const ADDED_BOX_TOP = 5;
-const ADDED_BOX_MIN_COLUMNS = 3;
-const ADDED_BOX_TRIM = 10;
-const ADDED_BOX_RADIUS = 7;
-
-function drawLine(
-  g: CanvasRenderingContext2D,
-  line: Line,
-  x0: number,
-  y: number,
-  h: number,
-  cw: number,
-  gutter: number,
-  inner: number,
-  p: (typeof PALETTE)[Mood],
-) {
-  if (line.type === "rule") {
-    g.strokeStyle = CARD.codeRule;
-    g.lineWidth = 2;
-    g.beginPath();
-    g.moveTo(x0, y + h / 2);
-    g.lineTo(x0 + inner, y + h / 2);
-    g.stroke();
-
-    return;
-  }
-
-  if (line.type === "caption") {
-    g.font = `500 31px Space, Arial, sans-serif`;
-    g.fillStyle = CARD.caption;
-    g.fillText(line.text, x0, y + CAPTION_BASELINE);
-
-    return;
-  }
-
-  const base = y + h * BASELINE_SHARE;
-  const tx = x0 + gutter;
-
-  if (line.view === "output") {
-    g.fillStyle = p.output;
-    g.fillRect(x0 - PANEL_BLEED, y, inner + PANEL_BLEED_BOTH, h);
-  }
-
-  if (line.view === "diff" && (line.diff === "a" || line.diff === "d")) {
-    g.fillStyle = line.diff === "a" ? LINE.addedTint : LINE.removedTint;
-    g.fillRect(
-      x0 - PANEL_BLEED,
-      y + 2,
-      inner + PANEL_BLEED_BOTH,
-      h - DIFF_TINT_TRIM,
-    );
-    if (!line.cont) {
-      g.font = `700 ${FONT}px ${MONO}`;
-      g.fillStyle = line.diff === "a" ? LINE.addedSign : LINE.removedSign;
-      g.fillText(line.diff === "a" ? "+" : "−", x0, base);
-    }
-  }
-
-  if (line.cont) {
-    g.fillStyle = LINE.continuationArrow;
-    g.font = `600 ${FONT * CONT_FONT_SHARE}px ${MONO}`;
-    g.fillText("↳", x0 + (line.view === "diff" ? cw : 0), base);
-  }
-
-  if (line.diff === "l") {
-    g.font = `600 ${FONT * LABEL_FONT_SHARE}px ${MONO}`;
-    g.fillStyle = line.view === "output" ? LINE.outputLabel : p.label;
-    g.fillText((line.view === "output" ? "▸ " : "") + line.text, x0, base);
-    drawMarks(
-      g,
-      line.marks,
-      x0 + (line.view === "output" ? cw * LABEL_FONT_SHARE * 2 : 0),
-      y,
-      h,
-      cw * LABEL_FONT_SHARE,
-      line,
-    );
-
-    return;
-  }
-
-  g.font = `600 ${FONT}px ${MONO}`;
-
-  let x = tx;
-
-  g.globalAlpha = line.diff === "d" ? REMOVED_OPACITY : 1;
-  for (const t of line.tokens) {
-    g.fillStyle = t.color;
-    g.fillText(t.text, x, base);
-    x += t.text.length * cw;
-  }
-
-  g.globalAlpha = 1;
-
-  const textW = Math.max(cw * 2, line.text.trimEnd().length * cw);
-  const lead = (line.text.match(/^\s*/)?.[0].length ?? 0) * cw;
-
-  if (line.diff === "d" && line.view === "diff") {
-    // Removed: red strike-through.
-    g.strokeStyle = LINE.strikeThrough;
-    g.lineWidth = 4;
-    g.beginPath();
-    g.moveTo(tx + lead - STRIKE_OVERHANG, y + h * LINE_MIDDLE);
-    g.lineTo(tx + textW + STRIKE_OVERHANG, y + h * LINE_MIDDLE);
-    g.stroke();
-  }
-
-  if (line.diff === "a" && line.view === "diff") {
-    // Added: green box.
-    g.strokeStyle = LINE.addedBoxOutline;
-    g.lineWidth = 2.5;
-    roundRect(
-      g,
-      tx + lead - ADDED_BOX_PAD,
-      y + ADDED_BOX_TOP,
-      Math.max(cw * ADDED_BOX_MIN_COLUMNS, textW - lead + ADDED_BOX_PAD_BOTH),
-      h - ADDED_BOX_TRIM,
-      ADDED_BOX_RADIUS,
-    );
-    g.stroke();
-  }
-
-  drawMarks(g, line.marks, tx, y, h, cw, line);
-}
-
-/** Pins sit this far after the end of the line's text (and of a mark), then step this far apart. */
-const PIN_GAP = 24;
-const PIN_STEP = 36;
-/** A mark on an empty line spans this many characters. */
-const EMPTY_MARK_COLUMNS = 10;
-/** A strike-through mark runs this far past the code at each end. */
-const MARK_OVERHANG = 3;
-/** The red squiggle: how far above the line's bottom it runs, its wavelength and its height. */
-const SQUIGGLE_RISE = 7;
-const SQUIGGLE_WAVELENGTH = 5;
-const SQUIGGLE_AMPLITUDE = 4.5;
-/** The dashed underline of a note: dash length, gap, and how far above the line's bottom it runs. */
-const NOTE_DASH = 10;
-const NOTE_DASH_GAP = 6;
-const NOTE_UNDERLINE_RISE = 6;
-/** The rounded box round a fix or number mark: padding each side (then both), top offset, height trim, corner radius. */
-const MARK_BOX_PAD = 6;
-const MARK_BOX_PAD_BOTH = MARK_BOX_PAD * 2;
-const MARK_BOX_TOP = 3;
-const MARK_BOX_TRIM = 6;
-const MARK_BOX_RADIUS = 7;
-/** A mark's pin sits this far below the top of the line. */
-const MARK_PIN_DROP = 14;
-
-function drawMarks(
-  g: CanvasRenderingContext2D,
-  marks: Mark[],
-  tx: number,
-  y: number,
-  h: number,
-  cw: number,
-  line: Line,
-) {
-  // Pins sit after the line's last character, so they never cover the code that follows a mark.
-  let pinX = tx + Math.max(line.text.trimEnd().length * cw, 0) + PIN_GAP;
-
-  for (const m of marks) {
-    const empty = line.text.trim() === "";
-    const x1 = tx + (empty ? 0 : m.from * cw);
-    const x2 = tx + (empty ? cw * EMPTY_MARK_COLUMNS : m.to * cw);
-    const col = MARK[m.kind];
-
-    if (m.kind === "problem") {
-      if (line.view === "diff") {
-        g.strokeStyle = col;
-        g.lineWidth = 6;
-        g.beginPath();
-        g.moveTo(x1 - MARK_OVERHANG, y + h * LINE_MIDDLE);
-        g.lineTo(x2 + MARK_OVERHANG, y + h * LINE_MIDDLE);
-        g.stroke();
-      } else {
-        // Editor-style red squiggle.
-        g.strokeStyle = col;
-        g.lineWidth = 4;
-        g.beginPath();
-
-        const yy = y + h - SQUIGGLE_RISE;
-
-        for (let x = x1; x <= x2; x += 2) {
-          g.lineTo(
-            x,
-            yy + Math.sin((x - x1) / SQUIGGLE_WAVELENGTH) * SQUIGGLE_AMPLITUDE,
-          );
-        }
-
-        g.stroke();
-      }
-    } else if (m.kind === "note") {
-      g.strokeStyle = col;
-      g.lineWidth = 5;
-      g.setLineDash([NOTE_DASH, NOTE_DASH_GAP]);
-      g.beginPath();
-      g.moveTo(x1, y + h - NOTE_UNDERLINE_RISE);
-      g.lineTo(x2, y + h - NOTE_UNDERLINE_RISE);
-      g.stroke();
-      g.setLineDash([]);
-    } else {
-      g.strokeStyle = col;
-      g.lineWidth = 4.5;
-      if (m.kind === "fix") {
-        g.fillStyle = LINE.fixMarkFill;
-        roundRect(
-          g,
-          x1 - MARK_BOX_PAD,
-          y + MARK_BOX_TOP,
-          x2 - x1 + MARK_BOX_PAD_BOTH,
-          h - MARK_BOX_TRIM,
-          MARK_BOX_RADIUS,
-        );
-        g.fill();
-      }
-
-      roundRect(
-        g,
-        x1 - MARK_BOX_PAD,
-        y + MARK_BOX_TOP,
-        x2 - x1 + MARK_BOX_PAD_BOTH,
-        h - MARK_BOX_TRIM,
-        MARK_BOX_RADIUS,
-      );
-      g.stroke();
-    }
-
-    if (m.pin) {
-      pinX = Math.max(pinX, x2 + PIN_GAP);
-      pin(g, pinX, y + MARK_PIN_DROP, m.pin, PIN[m.kind]);
-      pinX += PIN_STEP;
-    }
   }
 }
 
