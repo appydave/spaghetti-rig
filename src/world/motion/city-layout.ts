@@ -11,7 +11,7 @@ import type {
   SideLayout,
   Span,
 } from "#root/src/world/motion/city-layout-types.ts";
-import { rng } from "#root/src/world/models/toon.ts";
+import { rng } from "#root/src/maths.ts";
 
 type Side = -1 | 1;
 

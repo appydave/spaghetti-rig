@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Debris } from "#root/src/world/combat/physics.ts";
-import { INK, kit, toon } from "#root/src/world/models/toon.ts";
+import { INK, toon } from "#root/src/world/models/toon.ts";
+import { kit } from "#root/src/world/models/kit/kit.ts";
 import {
   EYE_WHITE,
   PALETTE,

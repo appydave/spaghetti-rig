@@ -5,10 +5,10 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ASSET_DATA, CARRIED_TO_TIER_5 } from "./exemptions";
+import { ASSET_DATA, CARRIED_TO_TIER_5, TOON_KIT } from "./exemptions";
 import { REPO, findingsWithout, readConfig, type Override } from "./sandbox";
 import { describeProbes } from "./support/probe-gate";
-import { SIZE_CODES, SIZE_PROBES, fn, file } from "./size-probes";
+import { PARAMS, SIZE_CODES, SIZE_PROBES, fn, file } from "./size-probes";
 
 const OVER_FILE = file(301);
 
@@ -17,6 +17,9 @@ const turnsSizeOff = (o: Override): boolean =>
   (o.files ?? []).length > 0 && o.rules?.["max-lines"] === "off";
 const exemption = config.overrides.filter(
   (o) => turnsSizeOff(o) && (o.files ?? []).some((f) => ASSET_DATA.includes(f)),
+);
+const kitBlocks = config.overrides.filter(
+  (o) => o.rules?.["max-params"] === "off" && !turnsSizeOff(o),
 );
 const notYetEnforced = config.overrides
   .filter((o) => turnsSizeOff(o) && !exemption.includes(o))
@@ -80,5 +83,15 @@ describe("size gate", () => {
     );
 
     expect(notYetEnforced.filter((f) => hit.get(f)?.length === 0)).toEqual([]);
+  });
+
+  it("the toon kit's max-params exemption is one block, exactly the kit, turning off only max-params, and the kit still needs it", () => {
+    expect(kitBlocks).toHaveLength(1);
+    expect(kitBlocks[0]?.files).toEqual(TOON_KIT);
+    expect(Object.keys(kitBlocks[0]?.rules ?? {})).toEqual(["max-params"]);
+
+    const hit = findingsWithout(kitBlocks, TOON_KIT, [PARAMS]);
+
+    expect(TOON_KIT.filter((f) => hit.get(f)?.length === 0)).toEqual([]);
   });
 });

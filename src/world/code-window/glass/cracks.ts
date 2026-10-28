@@ -1,5 +1,5 @@
 import { context2d } from "#root/src/dom.ts";
-import { rng } from "#root/src/world/models/toon.ts";
+import { rng } from "#root/src/maths.ts";
 import { CRACK } from "#root/src/world/palette.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
-import { ease, lerp } from "#root/src/world/models/toon.ts";
+import { ease, lerp } from "#root/src/maths.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 
 const EXIT_WINDOW_SECONDS = 0.7;

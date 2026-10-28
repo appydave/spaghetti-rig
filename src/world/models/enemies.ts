@@ -1,6 +1,7 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { INK, kit, toon } from "#root/src/world/models/toon.ts";
+import { INK, toon } from "#root/src/world/models/toon.ts";
+import { kit } from "#root/src/world/models/kit/kit.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth, present } from "#root/src/nth.ts";
 import {
