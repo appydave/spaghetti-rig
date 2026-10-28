@@ -12,7 +12,6 @@
 import {
   TRACKS as TRACK_LIST,
   tracksForTheme,
-  midiToFreq,
   type CompiledTrack,
   type Theme,
 } from "#root/src/audio/tracks.ts";
@@ -20,20 +19,20 @@ import type { Deck } from "#root/src/audio/music/deck.ts";
 import { leadNote } from "#root/src/audio/music/lead.ts";
 import { padChord, compStab } from "#root/src/audio/music/chords.ts";
 import { bassNote, pluck, bell, perc } from "#root/src/audio/music/hits.ts";
-import {
-  SILENCE,
-  STOP_PADDING,
-  cleanup,
-  noiseVoice,
-  rand,
-} from "#root/src/audio/voice-kit.ts";
+import { SILENCE } from "#root/src/audio/voice-kit.ts";
 import {
   scheduleDeck,
   type SequencerHost,
 } from "#root/src/audio/music/sequencer.ts";
 import { present } from "#root/src/nth.ts";
-import rawSfx from "#root/src/audio/sfx.json";
-import { expandSfx, parseSfx } from "#root/src/audio/sfx.ts";
+import { playRecipe } from "#root/src/audio/sfx/play.ts";
+import { brass, trombone } from "#root/src/audio/sfx/horns.ts";
+import {
+  noise,
+  tone,
+  type SfxKit,
+  type SfxVoices,
+} from "#root/src/audio/sfx/voices.ts";
 
 export type { Theme } from "#root/src/audio/tracks.ts";
 
@@ -70,8 +69,6 @@ export interface PlayOptions {
 }
 
 /** The effects whose voices are written as data in sfx.json; the rest are still played by playSfx below. */
-const RECIPES = parseSfx(rawSfx);
-
 export const TRACKS: { name: string; theme: Theme; bpm: number }[] = TRACK_LIST;
 
 const TICK_MS = 25;
@@ -105,15 +102,6 @@ const NEXT_DECK_FADE_IN = 0.03;
 const SFX_TAIL_SECONDS = 0.4;
 
 export const MS_PER_SECOND = 1000;
-
-const DEFAULT_TONE_ATTACK = 0.004;
-const DEFAULT_NOISE_ATTACK = 0.003;
-const DEFAULT_NOISE_Q = 0.8;
-/** A tone ramps to at least this peak, and its decay lasts at least this long after its attack. */
-const MIN_PEAK = 0.0002;
-const MIN_DECAY = 0.01;
-/** The shared noise buffer is two seconds long, so a noise voice may last at most this long. */
-const NOISE_MAX_SECONDS = 1.95;
 
 /** Minimum seconds between two plays of the same effect: the chattiest effects, shots, crackles, steps, damage and bounces. */
 const CHATTY_GAP = 0.03;
@@ -161,114 +149,11 @@ const SFX_LIFE: Partial<Record<Sfx, number>> = {
   shatter: SHATTER_LIFE,
 };
 
-/** The brass note: its filter opens to a multiple of the pitch (never past a ceiling) fast, then settles lower; its gain and tail. */
-const BRASS_OPEN = 1.2;
-const BRASS_PEAK_OPEN = 7;
-const BRASS_PEAK_OPEN_MAX = 8000;
-const BRASS_PEAK_AT = 0.07;
-const BRASS_SETTLE_OPEN = 3;
-const BRASS_SETTLE_OPEN_MAX = 5000;
-const BRASS_SETTLE_AT = 0.35;
-const BRASS_ATTACK = 0.03;
-const BRASS_SUSTAIN = 0.85;
-const BRASS_RELEASE = 0.08;
-const BRASS_TAIL = 0.5;
-/** The sad trombone: a scoop up into the pitch, a droop at the end, a filter swell, and an optional wobble. */
-const TROMBONE_SCOOP = 1.02;
-const TROMBONE_SCOOP_TIME = 0.06;
-const TROMBONE_DROOP_AT = 0.8;
-const TROMBONE_DROOP = 0.96;
-const TROMBONE_CLOSED = 350;
-const TROMBONE_OPEN = 1500;
-const TROMBONE_OPEN_AT = 0.15;
-const TROMBONE_END = 500;
-const TROMBONE_PEAK = 0.2;
-const TROMBONE_ATTACK = 0.04;
-const TROMBONE_HOLD = 0.18;
-const TROMBONE_FALL = 0.06;
-const TROMBONE_WOBBLE_DEPTH = 0.035;
-const TROMBONE_WOBBLE_FULL = 0.6;
 /** An effect with no entry in the life table keeps its output this long. */
 const DEFAULT_LIFE = 0.6;
-/** The player-one shot: its pitch varies by this ratio, and it is a zap, a chirp and a thump (each: pitch, slide, length, level). */
-const SHOOT_P1_PITCH_MIN = 0.93;
-const SHOOT_P1_PITCH_MAX = 1.07;
-const SHOOT_P1_ZAP_F = 2400;
-const SHOOT_P1_ZAP_F2 = 650;
-const SHOOT_P1_ZAP_DUR = 0.14;
-const SHOOT_P1_ZAP_VOL = 0.09;
-const SHOOT_P1_ZAP_LP = 5000;
-const SHOOT_P1_CHIRP_F = 1500;
-const SHOOT_P1_CHIRP_F2 = 3300;
-const SHOOT_P1_CHIRP_DUR = 0.06;
-const SHOOT_P1_CHIRP_VOL = 0.08;
-const SHOOT_P1_THUMP_DELAY = 0.01;
-const SHOOT_P1_THUMP_F = 320;
-const SHOOT_P1_THUMP_F2 = 150;
-const SHOOT_P1_THUMP_DUR = 0.1;
-const SHOOT_P1_THUMP_VOL = 0.05;
-const SHOOT_P1_THUMP_LP = 1300;
-/** A robot breaking: a clunk, then a burst of sparks (each a square blip and a noise zap, a random gap apart), then a rumble. */
-const ROBOT_CLUNK_F = 170;
-const ROBOT_CLUNK_F2 = 55;
-const ROBOT_CLUNK_DUR = 0.22;
-const ROBOT_CLUNK_VOL = 0.4;
-const ROBOT_SPARKS = 6;
-const ROBOT_SPARK_MIN_F = 900;
-const ROBOT_SPARK_MAX_F = 3400;
-const ROBOT_SPARK_SLIDE = 0.96;
-const ROBOT_SPARK_MIN_DUR = 0.05;
-const ROBOT_SPARK_MAX_DUR = 0.13;
-const ROBOT_SPARK_VOL = 0.06;
-const ROBOT_SPARK_LP = 6500;
-const ROBOT_ZAP_RATIO = 1.5;
-const ROBOT_ZAP_Q = 9;
-const ROBOT_ZAP_DUR = 0.07;
-const ROBOT_ZAP_VOL = 0.35;
-const ROBOT_SPARK_MIN_GAP = 0.03;
-const ROBOT_SPARK_MAX_GAP = 0.07;
-const ROBOT_RUMBLE_DELAY = 0.08;
-const ROBOT_RUMBLE_F = 650;
-const ROBOT_RUMBLE_F2 = 180;
-const ROBOT_RUMBLE_DUR = 0.32;
-const ROBOT_RUMBLE_VOL = 0.06;
-/** The bounce: a sine that rises with a wobble that dies away, a short gain envelope, and a high click. */
-const BOUNCE_F = 240;
-const BOUNCE_F_END = 430;
-const BOUNCE_SWEEP = 0.42;
-const BOUNCE_WOBBLE_DEPTH = 150;
-const BOUNCE_WOBBLE_END = 4;
-const BOUNCE_PEAK = 0.28;
-const BOUNCE_ATTACK = 0.01;
-const BOUNCE_DECAY = 0.45;
-const BOUNCE_STOP = 0.47;
-const BOUNCE_CLICK_F = 2300;
-const BOUNCE_CLICK_DUR = 0.05;
-const BOUNCE_CLICK_VOL = 0.12;
 
 const clamp = (v: number, a: number, b: number): number =>
   Math.min(b, Math.max(a, v));
-
-export interface ToneOpts {
-  type?: OscillatorType;
-  f: number;
-  f2?: number;
-  dur: number;
-  vol: number;
-  attack?: number;
-  lp?: number;
-  detune?: number;
-  sweep?: number;
-}
-export interface NoiseOpts {
-  filter: BiquadFilterType;
-  f: number;
-  f2?: number;
-  q?: number;
-  dur: number;
-  vol: number;
-  attack?: number;
-}
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -290,6 +175,12 @@ export class AudioEngine {
   private readonly lastPlayed = new Map<Sfx, number>();
   private activeSfx = 0;
   /** What the sequencer asks of this engine: the music voices, and rolling a finished deck over to the next track. */
+  private readonly sfxVoices: SfxVoices = {
+    tone: (dest, t, o) => tone(this.kit, dest, t, o),
+    noise: (dest, t, o) => noise(this.kit, dest, t, o),
+    brass: (dest, t, h) => brass(this.kit, dest, t, h),
+    trombone: (dest, t, h) => trombone(this.kit, dest, t, h),
+  };
   private readonly sequencer: SequencerHost = {
     voices: { padChord, bassNote, leadNote, pluck, bell, compStab, perc },
     rollOver: (deck, at) => this.rollOver(deck, at),
@@ -430,6 +321,11 @@ export class AudioEngine {
 
   private get musicBusNode(): GainNode {
     return present(this.musicBus, "the music bus");
+  }
+
+  /** What the effect voices draw on. */
+  private get kit(): SfxKit {
+    return { ctx: this.audioContext, noise: this.noiseBuf };
   }
 
   private get sfxBusNode(): GainNode {
@@ -776,344 +672,11 @@ export class AudioEngine {
     return g;
   }
 
-  private tone(dest: AudioNode, t: number, o: ToneOpts): void {
-    const ctx = this.audioContext;
-    const osc = ctx.createOscillator();
-
-    osc.type = o.type ?? "sine";
-    osc.frequency.setValueAtTime(o.f, t);
-    if (o.f2 !== undefined) {
-      osc.frequency.exponentialRampToValueAtTime(
-        Math.max(1, o.f2),
-        t + o.dur * (o.sweep ?? 1),
-      );
-    }
-
-    if (o.detune) {
-      osc.detune.value = o.detune;
-    }
-
-    const g = ctx.createGain();
-    const a = o.attack ?? DEFAULT_TONE_ATTACK;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(Math.max(MIN_PEAK, o.vol), t + a);
-    g.gain.exponentialRampToValueAtTime(
-      SILENCE,
-      t + Math.max(a + MIN_DECAY, o.dur),
-    );
-
-    const nodes: AudioNode[] = [osc, g];
-
-    if (o.lp) {
-      const lp = ctx.createBiquadFilter();
-
-      lp.type = "lowpass";
-      lp.frequency.value = o.lp;
-      osc.connect(lp).connect(g);
-      nodes.push(lp);
-    } else {
-      osc.connect(g);
-    }
-
-    g.connect(dest);
-    osc.start(t);
-    osc.stop(t + o.dur + STOP_PADDING);
-    cleanup(osc, nodes);
-  }
-
-  private noise(dest: AudioNode, t: number, o: NoiseOpts): void {
-    const ctx = this.audioContext;
-
-    if (!this.noiseBuf) {
-      return;
-    }
-
-    const { src, f } = noiseVoice(ctx, this.noiseBuf, o.filter);
-
-    f.Q.value = o.q ?? DEFAULT_NOISE_Q;
-    f.frequency.setValueAtTime(o.f, t);
-    if (o.f2 !== undefined) {
-      f.frequency.exponentialRampToValueAtTime(o.f2, t + o.dur);
-    }
-
-    const g = ctx.createGain();
-    const a = o.attack ?? DEFAULT_NOISE_ATTACK;
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(o.vol, t + a);
-    g.gain.exponentialRampToValueAtTime(
-      SILENCE,
-      t + Math.max(a + MIN_DECAY, o.dur),
-    );
-    src.connect(f).connect(g).connect(dest);
-
-    const dur = Math.min(o.dur + STOP_PADDING, NOISE_MAX_SECONDS);
-
-    src.start(t, rand(0, 2 - dur));
-    src.stop(t + dur);
-    cleanup(src, [src, f, g]);
-  }
-
-  /** Brass-like synth note: detuned saws through an opening filter. */
-  private brass(
-    dest: AudioNode,
-    t: number,
-    midi: number,
-    dur: number,
-    vol: number,
-  ): void {
-    const ctx = this.audioContext;
-    const f = midiToFreq(midi);
-    const lp = ctx.createBiquadFilter();
-
-    lp.type = "lowpass";
-    lp.Q.value = 1.2;
-    lp.frequency.setValueAtTime(f * BRASS_OPEN, t);
-    lp.frequency.exponentialRampToValueAtTime(
-      Math.min(f * BRASS_PEAK_OPEN, BRASS_PEAK_OPEN_MAX),
-      t + BRASS_PEAK_AT,
-    );
-    lp.frequency.exponentialRampToValueAtTime(
-      Math.min(f * BRASS_SETTLE_OPEN, BRASS_SETTLE_OPEN_MAX),
-      t + BRASS_SETTLE_AT,
-    );
-
-    const g = ctx.createGain();
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + BRASS_ATTACK);
-    g.gain.setValueAtTime(vol * BRASS_SUSTAIN, t + dur);
-    g.gain.setTargetAtTime(SILENCE, t + dur, BRASS_RELEASE);
-    lp.connect(g).connect(dest);
-
-    const a = ctx.createOscillator();
-
-    a.type = "sawtooth";
-    a.frequency.value = f;
-    a.detune.value = -9;
-
-    const b = ctx.createOscillator();
-
-    b.type = "sawtooth";
-    b.frequency.value = f;
-    b.detune.value = 9;
-    a.connect(lp);
-    b.connect(lp);
-
-    const end = t + dur + BRASS_TAIL;
-
-    a.start(t);
-    b.start(t);
-    a.stop(end);
-    b.stop(end);
-    cleanup(a, [a, b, lp, g]);
-  }
-
-  /** Sad trombone "wah": saw with a vowel-ish filter swell and optional wobble. */
-  private trombone(
-    dest: AudioNode,
-    t: number,
-    midi: number,
-    dur: number,
-    wobble: boolean,
-  ): void {
-    const ctx = this.audioContext;
-    const f = midiToFreq(midi);
-    const o = ctx.createOscillator();
-
-    o.type = "sawtooth";
-    o.frequency.setValueAtTime(f * TROMBONE_SCOOP, t);
-    o.frequency.exponentialRampToValueAtTime(f, t + TROMBONE_SCOOP_TIME);
-    o.frequency.setValueAtTime(f, t + dur * TROMBONE_DROOP_AT);
-    o.frequency.exponentialRampToValueAtTime(f * TROMBONE_DROOP, t + dur);
-
-    const lp = ctx.createBiquadFilter();
-
-    lp.type = "lowpass";
-    lp.Q.value = 4;
-    lp.frequency.setValueAtTime(TROMBONE_CLOSED, t);
-    lp.frequency.exponentialRampToValueAtTime(
-      TROMBONE_OPEN,
-      t + TROMBONE_OPEN_AT,
-    );
-    lp.frequency.exponentialRampToValueAtTime(TROMBONE_END, t + dur);
-
-    const g = ctx.createGain();
-
-    g.gain.setValueAtTime(SILENCE, t);
-    g.gain.exponentialRampToValueAtTime(TROMBONE_PEAK, t + TROMBONE_ATTACK);
-    g.gain.setValueAtTime(TROMBONE_HOLD, t + dur - TROMBONE_FALL);
-    g.gain.exponentialRampToValueAtTime(SILENCE, t + dur);
-    o.connect(lp).connect(g).connect(dest);
-
-    const nodes: AudioNode[] = [o, lp, g];
-
-    if (wobble) {
-      const lfo = ctx.createOscillator();
-
-      lfo.frequency.value = 6.5;
-
-      const d = ctx.createGain();
-
-      d.gain.setValueAtTime(0, t);
-      d.gain.linearRampToValueAtTime(
-        f * TROMBONE_WOBBLE_DEPTH,
-        t + dur * TROMBONE_WOBBLE_FULL,
-      );
-      lfo.connect(d).connect(o.frequency);
-      lfo.start(t);
-      lfo.stop(t + dur + STOP_PADDING);
-      nodes.push(lfo, d);
-    }
-
-    o.start(t);
-    o.stop(t + dur + STOP_PADDING);
-    cleanup(o, nodes);
-  }
-
   // ------------------------------------------------------------------ sound effects
 
   private playSfx(sfx: Sfx, t: number, opts: PlayOptions): void {
     const out = this.sfxOut(opts, SFX_LIFE[sfx] ?? DEFAULT_LIFE);
-    const layers = RECIPES.get(sfx);
 
-    if (layers) {
-      for (const v of expandSfx(layers, t)) {
-        switch (v.kind) {
-          case "tone":
-            this.tone(out, v.at, v.opts);
-            break;
-          case "noise":
-            this.noise(out, v.at, v.opts);
-            break;
-          case "brass":
-            this.brass(out, v.at, v.midi, v.dur, v.vol);
-            break;
-          case "trombone":
-            this.trombone(out, v.at, v.midi, v.dur, v.wobble);
-            break;
-        }
-      }
-
-      return;
-    }
-
-    switch (sfx) {
-      case "shootP1": {
-        const p = rand(SHOOT_P1_PITCH_MIN, SHOOT_P1_PITCH_MAX);
-
-        this.tone(out, t, {
-          type: "square",
-          f: SHOOT_P1_ZAP_F * p,
-          f2: SHOOT_P1_ZAP_F2 * p,
-          dur: SHOOT_P1_ZAP_DUR,
-          vol: SHOOT_P1_ZAP_VOL,
-          lp: SHOOT_P1_ZAP_LP,
-        });
-        this.tone(out, t, {
-          type: "triangle",
-          f: SHOOT_P1_CHIRP_F * p,
-          f2: SHOOT_P1_CHIRP_F2 * p,
-          dur: SHOOT_P1_CHIRP_DUR,
-          vol: SHOOT_P1_CHIRP_VOL,
-        });
-        this.tone(out, t + SHOOT_P1_THUMP_DELAY, {
-          type: "sawtooth",
-          f: SHOOT_P1_THUMP_F * p,
-          f2: SHOOT_P1_THUMP_F2 * p,
-          dur: SHOOT_P1_THUMP_DUR,
-          vol: SHOOT_P1_THUMP_VOL,
-          lp: SHOOT_P1_THUMP_LP,
-        });
-        break;
-      }
-
-      case "robotBreak": {
-        this.tone(out, t, {
-          type: "sine",
-          f: ROBOT_CLUNK_F,
-          f2: ROBOT_CLUNK_F2,
-          dur: ROBOT_CLUNK_DUR,
-          vol: ROBOT_CLUNK_VOL,
-        });
-
-        let ti = t;
-
-        for (let i = 0; i < ROBOT_SPARKS; i++) {
-          const f = rand(ROBOT_SPARK_MIN_F, ROBOT_SPARK_MAX_F);
-
-          this.tone(out, ti, {
-            type: "square",
-            f,
-            f2: f * ROBOT_SPARK_SLIDE,
-            dur: rand(ROBOT_SPARK_MIN_DUR, ROBOT_SPARK_MAX_DUR),
-            vol: ROBOT_SPARK_VOL,
-            lp: ROBOT_SPARK_LP,
-          });
-          this.noise(out, ti, {
-            filter: "bandpass",
-            f: f * ROBOT_ZAP_RATIO,
-            q: ROBOT_ZAP_Q,
-            dur: ROBOT_ZAP_DUR,
-            vol: ROBOT_ZAP_VOL,
-          });
-          ti += rand(ROBOT_SPARK_MIN_GAP, ROBOT_SPARK_MAX_GAP);
-        }
-
-        this.tone(out, t + ROBOT_RUMBLE_DELAY, {
-          type: "triangle",
-          f: ROBOT_RUMBLE_F,
-          f2: ROBOT_RUMBLE_F2,
-          dur: ROBOT_RUMBLE_DUR,
-          vol: ROBOT_RUMBLE_VOL,
-        });
-        break;
-      }
-
-      case "bounce": {
-        const ctx = this.audioContext;
-        const o = ctx.createOscillator();
-
-        o.type = "sine";
-        o.frequency.setValueAtTime(BOUNCE_F, t);
-        o.frequency.exponentialRampToValueAtTime(
-          BOUNCE_F_END,
-          t + BOUNCE_SWEEP,
-        );
-
-        const lfo = ctx.createOscillator();
-
-        lfo.frequency.value = 17;
-
-        const depth = ctx.createGain();
-
-        depth.gain.setValueAtTime(BOUNCE_WOBBLE_DEPTH, t);
-        depth.gain.exponentialRampToValueAtTime(
-          BOUNCE_WOBBLE_END,
-          t + BOUNCE_SWEEP,
-        );
-        lfo.connect(depth).connect(o.frequency);
-
-        const g = ctx.createGain();
-
-        g.gain.setValueAtTime(SILENCE, t);
-        g.gain.exponentialRampToValueAtTime(BOUNCE_PEAK, t + BOUNCE_ATTACK);
-        g.gain.exponentialRampToValueAtTime(SILENCE, t + BOUNCE_DECAY);
-        o.connect(g).connect(out);
-        o.start(t);
-        lfo.start(t);
-        o.stop(t + BOUNCE_STOP);
-        lfo.stop(t + BOUNCE_STOP);
-        cleanup(o, [o, lfo, depth, g]);
-        this.tone(out, t, {
-          type: "triangle",
-          f: BOUNCE_CLICK_F,
-          dur: BOUNCE_CLICK_DUR,
-          vol: BOUNCE_CLICK_VOL,
-        });
-        break;
-      }
-    }
+    playRecipe({ kit: this.kit, voices: this.sfxVoices }, out, sfx, t);
   }
 }

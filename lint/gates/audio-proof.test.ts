@@ -78,10 +78,14 @@ function record(sfx: string, seed: number): Arg[][] {
 
   engine.ctx = hole;
   engine.sfxOut = () => "out";
-  engine.tone = log("tone");
-  engine.noise = log("noise");
-  engine.brass = log("brass");
-  engine.trombone = log("trombone");
+  engine.sfxVoices = {
+    tone: log("tone"),
+    noise: log("noise"),
+    brass: (dest: Arg, t: Arg, h: any) =>
+      log("brass")(dest, t, h.midi, h.dur, h.vol),
+    trombone: (dest: Arg, t: Arg, h: any) =>
+      log("trombone")(dest, t, h.midi, h.dur, h.wobble),
+  };
   engine.cleanup = () => {};
 
   const real = Math.random;
@@ -312,11 +316,11 @@ const bodies = (e: any): void => {
       sweep: 0.5,
     },
   ]) {
-    e.tone(out, 1, o);
+    e.sfxVoices.tone(out, 1, o);
   }
 
   for (const filter of ["lowpass", "highpass", "bandpass"]) {
-    e.noise(out, 1, {
+    e.sfxVoices.noise(out, 1, {
       filter,
       f: 800,
       f2: 300,
@@ -325,10 +329,10 @@ const bodies = (e: any): void => {
       vol: 0.2,
       attack: 0.05,
     });
-    e.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
+    e.sfxVoices.noise(out, 1, { filter, f: 800, dur: 0.1, vol: 0.2 });
   }
 
-  e.noise(out, 1, { filter: "lowpass", f: 500, dur: 1.99, vol: 0.2 });
+  e.sfxVoices.noise(out, 1, { filter: "lowpass", f: 500, dur: 1.99, vol: 0.2 });
 
   // Notes outside what the score uses: a very short one, a very high one, and a pad held long, to reach the voices' floors and ceilings.
   const deck = e.createDeck(COMPILED_TRACKS[0], 1, 0.03);
@@ -357,8 +361,8 @@ const bodies = (e: any): void => {
   }
 
   for (const midi of [38, 60, 84]) {
-    e.brass(out, 1, midi, 0.8, 0.1);
-    e.trombone(out, 1, midi, 0.8, midi > 50);
+    e.sfxVoices.brass(out, 1, { midi, dur: 0.8, vol: 0.1 });
+    e.sfxVoices.trombone(out, 1, { midi, dur: 0.8, wobble: midi > 50 });
   }
 };
 
