@@ -37,6 +37,9 @@
     "**/*.d.ts"
   ],
   "rules": {
+    // G11 Cycles (R15: oxlint, not dependency-cruiser; R9: type-only cycles count). ignoreTypes: false is the setting that acts: with the
+    // default, the four type-only cycles tier 5 cleared were invisible. lint/gates/cycles.test.ts plants a value and a type-only cycle.
+    "import/no-cycle": ["error", { "ignoreTypes": false }],
     // G10 (after Omer 76afd84): no relative import; start from the project root alias. lint/gates/root-imports.test.ts proves it fails.
     "no-restricted-imports": [
       "error",
