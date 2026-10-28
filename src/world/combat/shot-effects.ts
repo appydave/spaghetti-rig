@@ -8,6 +8,7 @@ import type { Character } from "#root/src/world/models/characters.ts";
 import type { Effects } from "#root/src/world/combat/effects.ts";
 import { SCORE, type Enemy } from "#root/src/world/models/enemies.ts";
 import { EVENT } from "#root/src/world/palette.ts";
+import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import type { Debris } from "#root/src/world/combat/physics.ts";
 import { KILL_TEXT_SIZE } from "#root/src/world/world-shared.ts";
 
@@ -153,7 +154,7 @@ export function killFx(
     KILL_TEXT_SIZE,
     1,
   );
-  d.debris.breakObject(e.group, {
+  breakObject(d.debris, e.group, {
     from: from.clone().lerp(at, KILL_DEBRIS_ORIGIN_LERP),
     power: KILL_DEBRIS_POWER,
     up: KILL_DEBRIS_UP,
