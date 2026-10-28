@@ -1,11 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { bossLayout, overlaps } from "#root/src/world/bosslayout.ts";
+import {
+  bossLayout,
+  overlaps,
+} from "#root/src/world/code-window/bosslayout.ts";
 
 describe("boss layout", () => {
   const raw = JSON.parse(
     readFileSync(
-      new URL("../../public/content/cards.json", import.meta.url),
+      new URL("../../../public/content/cards.json", import.meta.url),
       "utf8",
     ),
   );

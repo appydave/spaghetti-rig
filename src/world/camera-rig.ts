@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { present } from "#root/src/nth.ts";
 import { bossBack, bossShot } from "#root/src/world/combat/boss-shot.ts";
-import type { BossLayout } from "#root/src/world/bosslayout.ts";
+import type { BossLayout } from "#root/src/world/code-window/bosslayout.ts";
 import {
   randomSpread,
   SCREEN_MIDDLE,

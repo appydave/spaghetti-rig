@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseTrackDefs } from "#root/src/audio/load.ts";
+import { parseTrackDefs } from "#root/src/audio/load/load.ts";
 
 const minimal = { name: "T", theme: "walk", melody: ["C4/16"], harmony: [] };
 

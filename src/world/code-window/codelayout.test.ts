@@ -6,12 +6,12 @@ import {
   tokenize,
   wrapPoints,
   SYNTAX,
-} from "#root/src/world/codelayout.ts";
+} from "#root/src/world/code-window/codelayout.ts";
 
 const game = parseContent(
   JSON.parse(
     readFileSync(
-      new URL("../../public/content/cards.json", import.meta.url),
+      new URL("../../../public/content/cards.json", import.meta.url),
       "utf8",
     ),
   ),

@@ -11,14 +11,17 @@ import type { Stop } from "#root/src/content/types.ts";
 import { nth } from "#root/src/nth.ts";
 import { beforeParen, shortTool } from "#root/src/ui/card.ts";
 import { BossModel, paintBossPanel } from "#root/src/world/models/boss.ts";
-import { bossLayout } from "#root/src/world/bosslayout.ts";
+import { bossLayout } from "#root/src/world/code-window/bosslayout.ts";
 import {
   layoutCard,
   longestRow,
   slugFile,
   type Layout,
-} from "#root/src/world/codelayout.ts";
-import { CodeWindow, paintCard } from "#root/src/world/codewindow.ts";
+} from "#root/src/world/code-window/codelayout.ts";
+import {
+  CodeWindow,
+  paintCard,
+} from "#root/src/world/code-window/codewindow.ts";
 import type { Shape } from "#root/src/world/world-shared.ts";
 
 const TALL_CARD_COLS = 44;

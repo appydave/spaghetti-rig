@@ -17,7 +17,7 @@
 import { nth } from "#root/src/nth.ts";
 
 import rawTracks from "#root/src/audio/tracks.json";
-import { parseTrackDefs } from "#root/src/audio/load.ts";
+import { parseTrackDefs } from "#root/src/audio/load/load.ts";
 import type { MusicTheme, Theme, TrackDef } from "#root/src/audio/types.ts";
 
 export type {
