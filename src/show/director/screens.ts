@@ -12,7 +12,7 @@ import {
   type Mode,
   type Player,
   type Step,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 import { esc } from "#root/src/ui/card.ts";
 import type { Stage } from "#root/src/world/stage.ts";
 import type { PlayerWorld } from "#root/src/world/world.ts";

@@ -3,7 +3,7 @@
 // entered without animation, the cue and the face-off timers at the moment they are due, and the pointer press over an overlay. Each test
 // stands just either side of a threshold, so a number or a guard changed in view.ts, frame.ts or input.ts shows here.
 import { afterEach, describe, expect, it } from "vitest";
-import type { Mode, Phase } from "../../src/show/script";
+import type { Mode, Phase } from "../../src/content/script";
 import { FRAME, Show } from "./director-show";
 import { framesFor, stepTo as stepToPhase } from "./support/show-steps";
 

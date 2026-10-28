@@ -6,10 +6,9 @@ import {
   healthAt,
   modeInfo,
   nextIndex,
-  notesFor,
   tierStart,
   toolsEarned,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 
 const raw = JSON.parse(
   readFileSync(
@@ -181,19 +180,6 @@ describe("health", () => {
     expect(toolsEarned(game, at("walk", 0))).toEqual([]);
     expect(toolsEarned(game, at("fixed", 0))).toEqual([tier.stops[0]!.p2.tool]);
     expect(toolsEarned(game, at("boss"))).toHaveLength(4);
-  });
-});
-
-describe("notes", () => {
-  it("every step has notes, and card steps carry the line to say", () => {
-    for (const s of script) {
-      const n = notesFor(game, s, "both");
-
-      expect(n.heading).toBeTruthy();
-      if (s.phase === "problem" || s.phase === "tool") {
-        expect(n.say).toBeTruthy();
-      }
-    }
   });
 });
 

@@ -1,4 +1,4 @@
-import type { Step } from "#root/src/show/script.ts";
+import type { Step } from "#root/src/content/script.ts";
 import { enterBoss } from "#root/src/world/steps/boss-arrive-step.ts";
 import { enterBossDown } from "#root/src/world/steps/boss-down-step.ts";
 import { enterBossPart } from "#root/src/world/steps/boss-part-step.ts";

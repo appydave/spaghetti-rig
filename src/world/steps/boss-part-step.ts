@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { toolFor } from "#root/src/content/load.ts";
 import { nth } from "#root/src/nth.ts";
 import { beforeParen } from "#root/src/ui/card.ts";
-import { healthAt, type Step } from "#root/src/show/script.ts";
+import { healthAt, type Step } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { EVENT } from "#root/src/world/palette.ts";

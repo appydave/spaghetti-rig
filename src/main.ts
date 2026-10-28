@@ -13,7 +13,7 @@ import {
   modeInfo,
   type Mode,
   type Player,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 import { gatesText } from "#root/src/content/gatelabel.ts";
 import { esc } from "#root/src/ui/card.ts";
 import { initPhysics } from "#root/src/world/combat/physics.ts";

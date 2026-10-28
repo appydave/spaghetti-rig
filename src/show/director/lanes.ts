@@ -16,7 +16,7 @@ import {
   toolsEarned,
   type Mode,
   type Player,
-} from "#root/src/show/script.ts";
+} from "#root/src/content/script.ts";
 import { esc, shortTool, toolCardHtml, toolImg } from "#root/src/ui/card.ts";
 import type { Game } from "#root/src/content/load.ts";
 import type { Lane, Stage } from "#root/src/world/stage.ts";

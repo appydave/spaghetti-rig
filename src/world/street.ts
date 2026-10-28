@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import type { Game, PlayTier } from "#root/src/content/load.ts";
 import { nth, present } from "#root/src/nth.ts";
-import type { Player } from "#root/src/show/script.ts";
+import type { Player } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import type { BossLayout } from "#root/src/world/code-window/bosslayout.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";

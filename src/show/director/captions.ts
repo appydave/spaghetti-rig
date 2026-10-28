@@ -3,7 +3,7 @@ import type { Stop } from "#root/src/content/types.ts";
 import { queryElOrNull } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
 import { $, laneEl, type LaneContext } from "#root/src/show/director/shared.ts";
-import type { Player } from "#root/src/show/script.ts";
+import type { Player } from "#root/src/content/script.ts";
 import { esc, shortTool } from "#root/src/ui/card.ts";
 
 /** A banner takes this long to fade out before it is hidden. */

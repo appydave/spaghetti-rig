@@ -3,7 +3,7 @@
 import type { AudioEngine } from "#root/src/audio/audio.ts";
 import type { Game } from "#root/src/content/load.ts";
 import type { Director } from "#root/src/show/director.ts";
-import type { Player } from "#root/src/show/script.ts";
+import type { Player } from "#root/src/content/script.ts";
 import type { PlayerWorld } from "#root/src/world/world.ts";
 
 export interface TestHooks {

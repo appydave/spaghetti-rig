@@ -17,12 +17,8 @@ import {
   type ShowState,
 } from "#root/src/show/director/shared.ts";
 import type { PresenterState } from "#root/src/show/messages.ts";
-import {
-  nextIndex,
-  notesFor,
-  stepLabel,
-  type Step,
-} from "#root/src/show/script.ts";
+import { nextIndex, type Step } from "#root/src/content/script.ts";
+import { notesFor, stepLabel } from "#root/src/show/notes.ts";
 import { esc, gateHtml } from "#root/src/ui/card.ts";
 
 /** How long a banner stays: the gate banner, and the boss banner. */

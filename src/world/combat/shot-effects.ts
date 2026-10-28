@@ -2,7 +2,7 @@
 // "BUG SHIPPED" or "CAUGHT BY CI" text. Moved out of world.ts as it was; what they need from the world comes in as CombatDeps.
 import * as THREE from "three";
 import type { Sfx } from "#root/src/audio/audio.ts";
-import type { Player } from "#root/src/show/script.ts";
+import type { Player } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import type { Character } from "#root/src/world/models/characters.ts";
 import type { Effects } from "#root/src/world/combat/effects.ts";

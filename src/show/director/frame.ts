@@ -12,7 +12,7 @@ import {
   laneEl,
   type ShowState,
 } from "#root/src/show/director/shared.ts";
-import type { Mode, Step } from "#root/src/show/script.ts";
+import type { Mode, Step } from "#root/src/content/script.ts";
 import { walkSeconds } from "#root/src/world/world.ts";
 
 /** How long the face-off screen stays before the game moves on. */

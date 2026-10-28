@@ -7,12 +7,8 @@ import {
 import { queryEl } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
 import { $, SCORE_DIGITS } from "#root/src/show/director/shared.ts";
-import {
-  modeInfo,
-  stepLabel,
-  type Mode,
-  type Step,
-} from "#root/src/show/script.ts";
+import { modeInfo, type Mode, type Step } from "#root/src/content/script.ts";
+import { stepLabel } from "#root/src/show/notes.ts";
 import { gateHtml } from "#root/src/ui/card.ts";
 import type { Lane } from "#root/src/world/stage.ts";
 import type { PlayerWorld } from "#root/src/world/world.ts";
