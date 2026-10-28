@@ -142,15 +142,14 @@ function shatter(c: FixedContext, old: OldCard, stop: number) {
 
   const from = c.character.muzzleWorld();
 
-  old.shatter(
-    c.debris,
-    from.setY(from.y - 1),
-    OLD_CARD_SHATTER_POWER,
-    c.rig.shape === "tall"
-      ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
-      : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
-    SHATTER_SEED_BASE + stop,
-  );
+  old.shatter(c.debris, from.setY(from.y - 1), {
+    power: OLD_CARD_SHATTER_POWER,
+    grid:
+      c.rig.shape === "tall"
+        ? [SHATTER_GRID_SHORT, SHATTER_GRID_LONG]
+        : [SHATTER_GRID_LONG, SHATTER_GRID_SHORT],
+    seed: SHATTER_SEED_BASE + stop,
+  });
   c.timeline.untrack(old);
   c.setShake(SHATTER_SHAKE);
 }

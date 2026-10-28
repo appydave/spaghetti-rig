@@ -142,10 +142,10 @@ function blowLands(c: BossPartContext, blow: CodeWindow, path: Path) {
     KO_TEXT_SIZE,
     KO_TEXT_LIFE,
   );
-  blow.shatter(c.debris, from, KO_SHATTER_POWER, [
-    KO_SHATTER_GRID_COLS,
-    KO_SHATTER_GRID_ROWS,
-  ]);
+  blow.shatter(c.debris, from, {
+    power: KO_SHATTER_POWER,
+    grid: [KO_SHATTER_GRID_COLS, KO_SHATTER_GRID_ROWS],
+  });
   c.timeline.untrack(blow);
 
   const h0 = c.health();
