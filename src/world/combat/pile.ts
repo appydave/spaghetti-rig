@@ -2,7 +2,9 @@
 // world.ts as it was; it builds from fixed seeds and takes nothing from the world.
 import * as THREE from "three";
 import { PILE } from "#root/src/world/palette.ts";
-import { kit, rng, toon } from "#root/src/world/models/toon.ts";
+import { toon } from "#root/src/world/models/toon.ts";
+import { kit } from "#root/src/world/models/kit/kit.ts";
+import { rng } from "#root/src/maths.ts";
 import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
 
 const PILE_SEED = 42;

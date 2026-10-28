@@ -1,7 +1,7 @@
 // A character's per-frame animation (After-G04 A2a): the pose's gait, the fall, the aim easing and the recoil. Moved out of characters.ts as it was;
 // the numbers it reads are CHARACTER_MOTION in characters.ts (the model file, where the model's other numbers live), and this file holds none.
 import type { Character, Pose } from "#root/src/world/models/characters.ts";
-import { lerp } from "#root/src/world/models/toon.ts";
+import { lerp } from "#root/src/maths.ts";
 
 /** How fast a shot's kick dies away, per second. */
 const RECOIL_DECAY = 6;

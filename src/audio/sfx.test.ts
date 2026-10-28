@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { expandSfx, parseSfx } from "#root/src/audio/sfx.ts";
-import { midiToFreq } from "#root/src/audio/tracks.ts";
+import { midiToFreq } from "#root/src/audio/music/notation.ts";
 
 type Item =
   | number

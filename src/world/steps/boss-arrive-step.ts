@@ -1,7 +1,7 @@
 // The boss arrives (G04 W6): it drops from the sky, lands with dust and a shake, and player 1's shots bounce off it. Moved out of world.ts
 // as it was, over the step context.
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
-import { clamp01, ease } from "#root/src/world/models/toon.ts";
+import { clamp01, ease } from "#root/src/maths.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 
 type BossArriveContext = Pick<

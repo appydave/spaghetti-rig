@@ -1,6 +1,6 @@
 import type * as THREE from "three";
 import type { ShotView } from "#root/src/world/camera-rig.ts";
-import { lerp } from "#root/src/world/models/toon.ts";
+import { lerp } from "#root/src/maths.ts";
 import { followWithSun } from "#root/src/world/scene/lighting.ts";
 import { debtSlot } from "#root/src/world/steps/exit-window.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";

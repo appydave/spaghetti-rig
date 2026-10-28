@@ -10,13 +10,13 @@ export const ASSET_DATA = [
   "src/world/models/showcase.ts",
 ];
 
+/** The toon kit (R14, option A, 10-27): its part helpers take hand-placed positions and scales as separate numbers, so it is exempt from max-params by name. */
+export const TOON_KIT = ["src/world/models/kit/kit.ts"];
+
 /** The files carried to tier 5 (structure) by David's option 2, 10-24: they still exceed a size limit and tier 5 splits them. The list may shrink, never grow. */
 export const CARRIED_TO_TIER_5 = [
   "lint/gates/audio-proof.test.ts",
   "lint/gates/color-policy.mjs",
-  "src/audio/tracks.ts",
-  "src/content/load.ts",
-  "src/world/models/toon.ts",
   "tests/show.spec.ts",
 ];
 

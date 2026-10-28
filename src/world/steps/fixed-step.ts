@@ -10,7 +10,7 @@ import type {
   StopWindow,
 } from "#root/src/world/steps/step-context.ts";
 import { makeStopWindow } from "#root/src/world/tier-content.ts";
-import { ease, lerp } from "#root/src/world/models/toon.ts";
+import { ease, lerp } from "#root/src/maths.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { State } from "#root/src/world/world-shared.ts";
 
