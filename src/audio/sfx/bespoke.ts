@@ -1,4 +1,4 @@
-import type { SfxRig } from "#root/src/audio/sfx/voices.ts";
+import type { SfxRig } from "#root/src/audio/sfx/rig.ts";
 import { SILENCE, cleanup } from "#root/src/audio/voice-kit.ts";
 import { rand } from "#root/src/maths.ts";
 

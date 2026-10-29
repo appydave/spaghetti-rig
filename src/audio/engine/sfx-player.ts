@@ -1,12 +1,8 @@
 import type { PlayOptions, Sfx } from "#root/src/audio/types.ts";
 import { playRecipe } from "#root/src/audio/sfx/play.ts";
 import { brass, trombone } from "#root/src/audio/sfx/horns.ts";
-import {
-  noise,
-  tone,
-  type SfxKit,
-  type SfxVoices,
-} from "#root/src/audio/sfx/voices.ts";
+import type { SfxVoices } from "#root/src/audio/sfx/rig.ts";
+import { noise, tone, type SfxKit } from "#root/src/audio/sfx/voices.ts";
 
 /** Plays the sound effects: which are too soon or too many to start, and the output each one gets. */
 
