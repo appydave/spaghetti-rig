@@ -1,4 +1,4 @@
-// Proves the no-reexport gate (the F1 ruling, 10-29) is wired: every barrel shape and the import-then-export dodge fail, the shapes that are
+// Proves the no-reexport gate (the F1 ruling, 10-29) is wired: every barrel shape, the import-then-export dodge and `export default` of an import fail, the shapes that are
 // not re-exports pass, the config names exactly the files it covers, and `src` itself reads zero findings. The probes run in a sandbox
 // that mirrors the repo (the real .oxlintrc.json, the plugin files in lint/gates, node_modules).
 import {
