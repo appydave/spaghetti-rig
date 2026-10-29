@@ -108,7 +108,10 @@ describe("module cohesion", () => {
   });
 });
 
-describe("what the graph does not see (barrels)", () => {
+// archlint's graph does not see a module of `export … from` lines, so G13 and G14 cannot flag a barrel or the hub behind one. That stays
+// true and is pinned here; what catches the barrel is the exports/no-reexport oxlint rule (lint/gates/export-policy.mjs, proved by
+// reexport.test.ts), which fails the re-export itself in production src.
+describe("what the graph does not see (barrels; exports/no-reexport catches them instead)", () => {
   const BARREL_SIZE = 6;
   const barrelOf = (count: number) =>
     Array.from(
@@ -122,7 +125,7 @@ describe("what the graph does not see (barrels)", () => {
     ).toEqual([]);
   });
 
-  it("does not flag a hub whose importers reach it through a barrel (G14 blind spot)", () => {
+  it("does not flag a hub whose importers reach it through a barrel: the graph is blind there, and the no-reexport rule fails the barrel", () => {
     const files = hubOf(0, HUB_LIMIT);
     const users = Object.fromEntries(
       Array.from({ length: HUB_LIMIT }, (_, i) => [

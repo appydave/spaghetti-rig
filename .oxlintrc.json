@@ -19,6 +19,10 @@
       "specifier": "./lint/gates/size-limits.mjs"
     },
     {
+      "name": "exports",
+      "specifier": "./lint/gates/export-policy.mjs"
+    },
+    {
       "name": "sonarjs",
       "specifier": "eslint-plugin-sonarjs"
     }
@@ -509,7 +513,8 @@
         "unicorn/prefer-date-now": ["error"],
         "unicorn/prefer-default-parameters": ["error"],
         "unicorn/prefer-dom-node-remove": ["error"],
-        "unicorn/prefer-export-from": ["error"],
+        // Off: it pushes code toward `export … from`, which exports/no-reexport fails.
+        "unicorn/prefer-export-from": ["off"],
         "unicorn/prefer-includes": ["error"],
         "unicorn/prefer-math-min-max": ["error"],
         "unicorn/prefer-math-trunc": ["error"],
@@ -642,6 +647,20 @@
       "files": ["**/*"],
       "rules": {
         "strict-colors/no-color-literals": "error"
+      }
+    },
+    {
+      // No re-exports in production src (F1 ruling, 10-29): src had none after #132, so there is no baseline and no exemption. Tests and
+      // lint/ are out of scope. lint/gates/reexport.test.ts pins this block and the test-file block after it.
+      "files": ["src/**"],
+      "rules": {
+        "exports/no-reexport": "error"
+      }
+    },
+    {
+      "files": ["src/**/*.test.ts"],
+      "rules": {
+        "exports/no-reexport": "off"
       }
     },
     {
