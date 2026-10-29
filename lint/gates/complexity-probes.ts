@@ -4,8 +4,10 @@
 import type { Probe } from "./size-probes";
 
 export const COGNITIVE = "anti-slop(cognitive-complexity)";
-export const CYCLOMATIC = "anti-slop(cyclomatic-complexity)";
-export const EXPRESSION = "sonarjs(expression-complexity)";
+
+const CYCLOMATIC = "anti-slop(cyclomatic-complexity)";
+const EXPRESSION = "sonarjs(expression-complexity)";
+
 export const COMPLEXITY_CODES = [COGNITIVE, CYCLOMATIC, EXPRESSION];
 
 const MAX_COGNITIVE = 8;
@@ -31,7 +33,7 @@ export const cognitive = (score: number): string =>
   ].join("\n");
 
 /** A function whose cyclomatic complexity is exactly this much: one switch case for every point after the first. */
-export const cyclomatic = (score: number): string =>
+const cyclomatic = (score: number): string =>
   [
     "export function f(k: string): number {\n  switch (k) {",
     each(score - 1, (i) => `    case "k${i}":\n      return ${i};`),
@@ -39,7 +41,7 @@ export const cyclomatic = (score: number): string =>
   ].join("\n");
 
 /** One expression with exactly this many conditional operators, five terms for four of them. */
-export const expression = (operators: number): string => {
+const expression = (operators: number): string => {
   const terms = each(operators + 1, (i) => `x${i}`).split("\n");
 
   return `export const g = (${terms.map((t) => `${t}: boolean`).join(", ")}): boolean => ${terms.join(" && ")};\n`;

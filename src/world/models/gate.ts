@@ -234,5 +234,3 @@ export class Gate {
     disposeTree(this.group);
   }
 }
-
-export { toon as gateToon } from "#root/src/world/models/toon.ts";

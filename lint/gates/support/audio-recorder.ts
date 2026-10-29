@@ -22,7 +22,7 @@ type Loggable = Arg | readonly Loggable[];
 const stable = (_key: string, v: Loggable) =>
   typeof v === "number" ? Number(num(v)) : v;
 
-export const json = (v: Loggable) => JSON.stringify(v, stable);
+const json = (v: Loggable) => JSON.stringify(v, stable);
 
 /** When the sound effects start, in context seconds. */
 const START = 1;
@@ -194,10 +194,7 @@ function node(r: Recording, path: string, own?: Own): any {
 }
 
 /** One scenario: a fresh engine on a recording context and a seeded Math.random; returns a hash and the entry count of its log. */
-export function scenario(
-  seed: number,
-  run: (engine: any) => void,
-): [string, number] {
+function scenario(seed: number, run: (engine: any) => void): [string, number] {
   const r: Recording = { log: [], buffers: [], made: new Map() };
   const { log } = r;
   const engine: any = new AudioEngine();

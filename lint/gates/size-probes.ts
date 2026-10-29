@@ -1,11 +1,14 @@
 // The planted violations for the size gate (G04): each probe is [name, path, source, the codes it must raise]. Every limit has a probe
 // that fails just over it and a twin that passes exactly on it, so a changed limit breaks a test.
-export const LINES = "eslint(max-lines)";
-export const FUNCTION = "eslint(max-lines-per-function)";
+const LINES = "eslint(max-lines)";
+const FUNCTION = "eslint(max-lines-per-function)";
+
 export const PARAMS = "eslint(max-params)";
-export const MEMBERS = "size(max-members)";
-export const SIGNATURE = "size(max-signature-params)";
-export const TEST_FUNCTION = "size(max-test-function-lines)";
+
+const MEMBERS = "size(max-members)";
+const SIGNATURE = "size(max-signature-params)";
+const TEST_FUNCTION = "size(max-test-function-lines)";
+
 export const SIZE_CODES = [
   LINES,
   FUNCTION,
@@ -41,7 +44,7 @@ export const file = (lines: number): string =>
   `export const a = 1;\n${filler(lines - 1)}\n`;
 
 /** A function whose braces, and so whose lines, span exactly this many lines (the filler is comments and blank lines: they count). */
-export const fn = (lines: number, head = "export function f() {"): string =>
+const fn = (lines: number, head = "export function f() {"): string =>
   `${head}\n${filler(lines - 2)}\n}\n`;
 
 const members = (count: number, each: (i: number) => string): string =>

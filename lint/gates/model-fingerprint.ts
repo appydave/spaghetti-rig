@@ -9,7 +9,7 @@ const DECIMALS = 1e4;
 const NODE_HASH_CHARS = 12;
 const MODEL_HASH_CHARS = 16;
 
-export type Part = { path: string; hash: string };
+type Part = { path: string; hash: string };
 export type Print = { hash: string; parts: Part[] };
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");

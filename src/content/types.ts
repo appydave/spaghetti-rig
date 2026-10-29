@@ -16,16 +16,16 @@ export interface Annotation {
   kind: AnnotationKind;
   note: string;
 }
-export interface FailureMode {
+interface FailureMode {
   input: string;
   where: string;
   result: string;
 }
-export interface Evidence {
+interface Evidence {
   status: string;
   source?: string;
 }
-export interface Step {
+interface Step {
   text: string;
   block: number | null;
 }
@@ -54,7 +54,7 @@ export interface Stop {
   p2: Card;
 }
 
-export interface BossPart {
+interface BossPart {
   part: string;
   from: string;
   beatenBy: string;
@@ -81,7 +81,7 @@ export interface Tier {
   boss: Boss;
 }
 
-export interface ToolConfig {
+interface ToolConfig {
   file: string;
   status?: string;
   source?: string;
@@ -95,7 +95,7 @@ export interface Tool {
   config?: ToolConfig;
 }
 
-export interface Ending {
+interface Ending {
   id?: string;
   big: string;
   sub: string;

@@ -31,7 +31,7 @@ export const DEFAULT_OUTLINE_THICKNESS = 0.022;
 /** Five soft bands: cel-shaded, but gentle enough to keep the daylight toy look. */
 let gradient: THREE.DataTexture | undefined;
 
-export function toonGradient(): THREE.DataTexture {
+function toonGradient(): THREE.DataTexture {
   if (gradient) {
     return gradient;
   }

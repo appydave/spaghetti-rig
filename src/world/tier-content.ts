@@ -31,7 +31,7 @@ const TALL_WINDOW_MAX_HEIGHT = 8.6;
 const WIDE_WINDOW_MAX_HEIGHT = 6.2;
 const BOSS_TOOL_MAX_CHARS = 18;
 
-export const cardCols = (shape: Shape) =>
+const cardCols = (shape: Shape) =>
   shape === "tall" ? TALL_CARD_COLS : WIDE_CARD_COLS;
 
 /** The game and the tier a card is made for. */

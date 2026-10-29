@@ -26,7 +26,7 @@ export interface BurstOptions {
   up?: number;
 }
 
-export const MAX = 900;
+const MAX = 900;
 
 const RGB_COMPONENTS = 3;
 const DEFAULT_BURST_COUNT = 24;

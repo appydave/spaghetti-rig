@@ -20,7 +20,7 @@ export interface BossLayout {
 const CORE_WIDTH = 6.4;
 const CORE_HEIGHT = 4.6;
 
-export const CORE = { w: CORE_WIDTH, h: CORE_HEIGHT };
+const CORE = { w: CORE_WIDTH, h: CORE_HEIGHT };
 
 const PART_W = 4.5;
 const GAP = 0.4;

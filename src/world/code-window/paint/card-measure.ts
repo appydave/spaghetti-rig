@@ -2,7 +2,8 @@ import type { Layout, Line } from "#root/src/world/code-window/codelayout.ts";
 import { wrap as wrapProse } from "#root/src/world/code-window/canvas-text.ts";
 import { FONT, MONO } from "#root/src/world/code-window/paint/shapes.ts";
 
-export const LH = 50;
+const LH = 50;
+
 export const PAD = 44;
 export const HEADER = 74;
 

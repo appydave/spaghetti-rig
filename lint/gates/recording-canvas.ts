@@ -32,7 +32,7 @@ const recorder = (log: string[]): any =>
 const DEFAULT_WIDTH = 300;
 const DEFAULT_HEIGHT = 150;
 
-export const makeCanvas = () => {
+const makeCanvas = () => {
   const log: string[] = [];
   const ctx = recorder(log);
 

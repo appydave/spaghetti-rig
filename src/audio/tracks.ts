@@ -27,13 +27,10 @@ import {
 import type { MusicTheme, Theme, TrackDef } from "#root/src/audio/types.ts";
 
 export type {
-  ArpVoice,
   LeadVoice,
   MusicTheme,
-  PadVoice,
   Theme,
   TrackDef,
-  TrackMix,
 } from "#root/src/audio/types.ts";
 
 // ---------------------------------------------------------------------------
@@ -52,11 +49,11 @@ export const STEPS_PER_BEAT = 4;
 
 const SECONDS_PER_MINUTE = 60;
 
-export interface NoteEvent {
+interface NoteEvent {
   midi: number;
   len: number;
 }
-export interface StepEvents {
+interface StepEvents {
   lead?: NoteEvent;
   bass?: NoteEvent;
   arp?: number;
@@ -76,10 +73,6 @@ export interface CompiledTrack {
   /** Loop length in seconds. */
   loopSec: number;
   steps: StepEvents[];
-}
-
-export function trackBars(def: TrackDef): number {
-  return def.melody.length;
 }
 
 /** The steps of one track, looked up modulo its length (so a note may ring over the loop point). */
@@ -210,7 +203,7 @@ function compilePatternStep(
   }
 }
 
-export function compileTrack(def: TrackDef): CompiledTrack {
+function compileTrack(def: TrackDef): CompiledTrack {
   const stepsPerBar = def.beatsPerBar * STEPS_PER_BEAT;
   const bars = def.melody.length;
   const totalSteps = bars * stepsPerBar;

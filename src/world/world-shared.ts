@@ -9,9 +9,11 @@ export type CameraMode = "follow" | "stop" | "boss" | "portrait";
 export type Shape = "wide" | "tall";
 export const stopZ = (k: number) => -(k + 1) * SEGMENT;
 export const standZ = (k: number) => stopZ(k) + STAND_PAST_GATE;
-export const WALK_SECONDS = 9;
-export const STAND_PAST_GATE = 4;
-export const BOSS_HEIGHT = 6.2;
+
+const WALK_SECONDS = 9;
+const STAND_PAST_GATE = 4;
+const BOSS_HEIGHT = 6.2;
+
 export const DEBT_WINDOW_COLS = 30;
 export const RANDOM_CENTRE = 0.5;
 /** A random vector with each component within half of `size` either side of zero (a camera shake, a debris spin). */

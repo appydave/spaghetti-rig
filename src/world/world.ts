@@ -26,7 +26,6 @@ import { Debris } from "#root/src/world/combat/physics.ts";
 import { State } from "#root/src/world/world-shared.ts";
 
 export { walkSeconds } from "#root/src/world/world-shared.ts";
-export type { CameraMode } from "#root/src/world/world-shared.ts";
 
 const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
