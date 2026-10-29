@@ -44,7 +44,7 @@ export const file = (lines: number): string =>
   `export const a = 1;\n${filler(lines - 1)}\n`;
 
 /** A function whose braces, and so whose lines, span exactly this many lines (the filler is comments and blank lines: they count). */
-export const fn = (lines: number, head = "export function f() {"): string =>
+const fn = (lines: number, head = "export function f() {"): string =>
   `${head}\n${filler(lines - 2)}\n}\n`;
 
 const members = (count: number, each: (i: number) => string): string =>
