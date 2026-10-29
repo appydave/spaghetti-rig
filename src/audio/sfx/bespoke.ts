@@ -1,5 +1,6 @@
 import type { SfxRig } from "#root/src/audio/sfx/rig.ts";
-import { SILENCE, cleanup, rand } from "#root/src/audio/voice-kit.ts";
+import { SILENCE, cleanup } from "#root/src/audio/voice-kit.ts";
+import { rand } from "#root/src/maths.ts";
 
 /** The player-one shot: its pitch varies by this ratio, and it is a zap, a chirp and a thump (each: pitch, slide, length, level). */
 const SHOOT_P1_PITCH_MIN = 0.93;

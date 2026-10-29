@@ -3,8 +3,8 @@ import {
   STOP_PADDING,
   cleanup,
   noiseVoice,
-  rand,
 } from "#root/src/audio/voice-kit.ts";
+import { rand } from "#root/src/maths.ts";
 
 /** What the effect voices draw on: the audio context and the shared noise buffer. */
 export interface SfxKit {

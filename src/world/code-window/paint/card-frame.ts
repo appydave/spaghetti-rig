@@ -1,6 +1,7 @@
-import type { Layout } from "#root/src/world/code-window/codelayout.ts";
+import type { Layout } from "#root/src/world/code-window/layout/types.ts";
 import { HEADER } from "#root/src/world/code-window/paint/card-measure.ts";
-import { MONO, roundRect } from "#root/src/world/code-window/paint/shapes.ts";
+import { MONO } from "#root/src/world/code-window/paint/card-font.ts";
+import { roundRect } from "#root/src/world/code-window/paint/shapes.ts";
 import {
   CARD,
   PALETTE,

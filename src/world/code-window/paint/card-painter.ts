@@ -1,5 +1,5 @@
 import { context2d } from "#root/src/dom.ts";
-import type { Layout } from "#root/src/world/code-window/codelayout.ts";
+import type { Layout } from "#root/src/world/code-window/layout/types.ts";
 import {
   CODE_BOTTOM,
   lineHeight,

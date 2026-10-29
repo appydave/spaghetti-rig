@@ -1,11 +1,10 @@
-import type { Line } from "#root/src/world/code-window/codelayout.ts";
+import type { Line } from "#root/src/world/code-window/layout/types.ts";
 import {
   drawMarks,
   LINE_MIDDLE,
 } from "#root/src/world/code-window/paint/mark-painter.ts";
+import { FONT, MONO } from "#root/src/world/code-window/paint/card-font.ts";
 import {
-  FONT,
-  MONO,
   roundRect,
   type Box,
 } from "#root/src/world/code-window/paint/shapes.ts";

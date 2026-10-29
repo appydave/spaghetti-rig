@@ -1,8 +1,5 @@
 import { CARD } from "#root/src/world/palette.ts";
 
-export const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-export const FONT = 34;
-
 export interface Point {
   x: number;
   y: number;
