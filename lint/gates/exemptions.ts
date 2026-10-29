@@ -13,8 +13,8 @@ export const ASSET_DATA = [
 /** The toon kit (R14, option A, 10-27): its part helpers take hand-placed positions and scales as separate numbers, so it is exempt from max-params by name. */
 export const TOON_KIT = ["src/world/models/kit/kit.ts"];
 
-/** The files carried to tier 5 (structure) by David's option 2, 10-24: they still exceed a size limit and tier 5 splits them. The list may shrink, never grow. */
-export const CARRIED_TO_TIER_5 = ["lint/gates/audio-proof.test.ts"];
+/** The files carried to tier 5 (structure) by David's option 2, 10-24. Tier 5 split every one of them, so the list is empty, and it may never grow. */
+export const CARRIED_TO_TIER_5: string[] = [];
 
 /** The procedural-data file the duplicate gate (G08) skips: its two characters share a 9-line run of hand-placed body parts, which is data written as code. Every other model file scans clean; `gate.ts` shares `disposeTree` instead. */
 export const DUPLICATES_PD = ["src/world/models/characters.ts"];

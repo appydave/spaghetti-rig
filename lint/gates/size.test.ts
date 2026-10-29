@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { ASSET_DATA, CARRIED_TO_TIER_5, TOON_KIT } from "./exemptions";
 import { REPO, findingsWithout, readConfig, type Override } from "./sandbox";
 import { describeProbes } from "./support/probe-gate";
-import { PARAMS, SIZE_CODES, SIZE_PROBES, fn, file } from "./size-probes";
+import { PARAMS, SIZE_CODES, SIZE_PROBES, file } from "./size-probes";
 
 const OVER_FILE = file(301);
 
@@ -25,23 +25,15 @@ const notYetEnforced = config.overrides
   .filter((o) => turnsSizeOff(o) && !exemption.includes(o))
   .flatMap((o) => o.files ?? []);
 
-const covered = [
-  ...ASSET_DATA.map(
-    (path): readonly [string, string, string, readonly string[]] => [
-      `the exemption covers ${path}`,
-      path,
-      OVER_FILE,
-      [],
-    ],
-  ),
-  [
-    "a file on the carried list is skipped",
-    notYetEnforced[0] ?? "",
-    fn(61),
+const covered = ASSET_DATA.map(
+  (path): readonly [string, string, string, readonly string[]] => [
+    `the exemption covers ${path}`,
+    path,
+    OVER_FILE,
     [],
   ],
-] as const;
-const PROBES = [...SIZE_PROBES, ...covered.filter((p) => p[1] !== "")];
+);
+const PROBES = [...SIZE_PROBES, ...covered];
 
 describeProbes("size", PROBES, SIZE_CODES);
 
@@ -60,29 +52,9 @@ describe("size gate", () => {
     expect(ASSET_DATA.filter((f) => hit.get(f)?.length === 0)).toEqual([]);
   });
 
-  it("the list carried to tier 5 is exactly the files named in this test, so no file can join it", () => {
-    expect([...notYetEnforced].sort()).toEqual([...CARRIED_TO_TIER_5].sort());
-  });
-
-  it("the carried list names real files, never a pattern and never an asset file", () => {
-    expect(
-      notYetEnforced.filter(
-        (f) =>
-          f.includes("*") ||
-          !existsSync(join(REPO, f)) ||
-          ASSET_DATA.includes(f),
-      ),
-    ).toEqual([]);
-  });
-
-  it("every file on the carried list still has a size finding, so a name leaves the list the moment its file is clean", () => {
-    const hit = findingsWithout(
-      config.overrides.filter((o) => turnsSizeOff(o) && !exemption.includes(o)),
-      notYetEnforced,
-      SIZE_CODES,
-    );
-
-    expect(notYetEnforced.filter((f) => hit.get(f)?.length === 0)).toEqual([]);
+  it("the size carry to tier 5 is closed: no block outside the asset data switches the size rules off, and none may again", () => {
+    expect(notYetEnforced).toEqual([]);
+    expect(CARRIED_TO_TIER_5).toEqual([]);
   });
 
   it("the toon kit's max-params exemption is one block, exactly the kit, turning off only max-params, and the kit still needs it", () => {

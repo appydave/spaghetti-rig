@@ -2,12 +2,16 @@
 // returns the voices it asked for; `scenario` runs the engine on a recording AudioContext that logs every node made, every parameter set and
 // every connection, and returns a hash and an entry count of that log.
 import { createHash } from "node:crypto";
-import { vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { AudioEngine } from "../../../src/audio/audio";
 import { SfxPlayer } from "../../../src/audio/engine/sfx-player";
 import { num } from "../world-fingerprint";
 import { hole } from "../recording-canvas";
+import { PROOF_TEST_TIMEOUT_MS } from "../proof-timeout";
 import { seeded } from "./seeded";
+
+// Every audio proof file imports this module, so each one gets the proof timeout: the scenarios play whole tracks.
+vi.setConfig({ testTimeout: PROOF_TEST_TIMEOUT_MS });
 
 export type Arg = number | string | Record<string, number | string>;
 
@@ -220,4 +224,66 @@ export function scenario(
   }
 
   return [createHash("sha1").update(json(log)).digest("hex"), log.length];
+}
+
+/** Every sound effect the game can play, by name. */
+export const SFX = [
+  "shoot",
+  "shootP1",
+  "enemyHit",
+  "enemyPop",
+  "robotBreak",
+  "slam",
+  "damage",
+  "glassCrack",
+  "shatter",
+  "debrisBounce",
+  "cardFly",
+  "cardPlay",
+  "codeFix",
+  "heal",
+  "gateBanner",
+  "bossArrive",
+  "bossPartBreak",
+  "bounce",
+  "bossDefeat",
+  "win",
+  "lose",
+  "vs",
+  "uiMove",
+  "uiSelect",
+  "step",
+] as const;
+
+/** How many seeds each scenario is played from (each one twice). */
+const SCENARIO_SEEDS = 2;
+
+/** What a proof file collects, by run name: an effect's voice log, or a scenario's hash and entry count. */
+export type Runs = Record<string, Arg[][] | [string, number]>;
+
+/** Register one test per scenario: it is played the same way twice, from each of two seeds, and its log is collected under its name. */
+export function playsTwice(runs: [string, (e: any) => void][], all: Runs) {
+  it.each(runs)(
+    "%s: played the same way twice, from two seeds",
+    (what, run) => {
+      for (let seed = 0; seed < SCENARIO_SEEDS; seed++) {
+        const result = scenario(seed, run);
+
+        expect(scenario(seed, run)).toEqual(result);
+        expect(result[1]).toBeGreaterThan(0);
+        all[`${what} seed ${seed}`] = result;
+      }
+    },
+  );
+}
+
+/** Register the test that holds what the file collected against its committed log, one run per line, so a changed voice shows as a changed line. */
+export function matchesCommittedLog(all: Runs, path: string) {
+  it("plays the same voices as the committed log", async () => {
+    const lines = Object.entries(all).map(
+      ([run, voices]) => `${JSON.stringify(run)}: ${json(voices)}`,
+    );
+
+    await expect(`{\n${lines.join(",\n")}\n}\n`).toMatchFileSnapshot(path);
+  });
 }
