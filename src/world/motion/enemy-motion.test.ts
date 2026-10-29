@@ -6,9 +6,9 @@ import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 vi.stubGlobal("document", canvasDocument());
 
 const { Enemy } = await import("#root/src/world/models/enemies.ts");
-const { ROBOT_PAUSE_SECONDS } =
-  await import("#root/src/world/motion/enemy-motion.ts");
 
+/** How long a robot stops to think, halfway along: the figure the game plays with, pinned here. */
+const ROBOT_PAUSE_SECONDS = 2.5;
 const PATH = 10;
 const SPEED = 5;
 const HALFWAY_AT = PATH / 2 / SPEED;

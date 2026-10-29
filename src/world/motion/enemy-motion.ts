@@ -5,7 +5,7 @@
 import type * as THREE from "three";
 
 /** How long a robot stops to think, halfway along, before it walks on: decides when it reaches the player. */
-export const ROBOT_PAUSE_SECONDS = 2.5;
+const ROBOT_PAUSE_SECONDS = 2.5;
 
 /** The share of its path at which a robot stops to think. */
 const ROBOT_PAUSE_AT = 0.5;
@@ -79,6 +79,13 @@ function tripOf(e: Walker): Trip {
   const moving = t < half ? t : Math.max(half, t - ROBOT_PAUSE_SECONDS);
 
   return { t, pause, travelled: Math.min(total, moving * e.speed), total };
+}
+
+/** True once the enemy has walked its whole path, a robot's think pause included. */
+export function hasArrived(e: Walker): boolean {
+  const trip = tripOf(e);
+
+  return trip.travelled >= trip.total;
 }
 
 function hop(e: Walker, m: EnemyMotion, trip: Trip) {

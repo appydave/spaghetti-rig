@@ -5,7 +5,7 @@ import { kit } from "#root/src/world/models/kit/kit.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth, present } from "#root/src/nth.ts";
 import {
-  ROBOT_PAUSE_SECONDS,
+  hasArrived,
   stepEnemy,
   type EnemyKind,
   type EnemyMotion,
@@ -361,10 +361,6 @@ export class Enemy {
   }
 
   get finished() {
-    return (
-      (this.age - (this.kind === "robot" ? ROBOT_PAUSE_SECONDS : 0)) *
-        this.speed >=
-      this.from.distanceTo(this.to)
-    );
+    return hasArrived(this);
   }
 }
