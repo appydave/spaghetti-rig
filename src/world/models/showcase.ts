@@ -331,3 +331,9 @@ export class VsShowcase {
     this.camera.updateProjectionMatrix();
   }
 }
+
+/** The title screen and the face-off, made once at boot and handed to the Stage (G15): the stage draws them but does not construct them. */
+export const makeShowcases = () => ({
+  title: new TitleShowcase(),
+  vs: new VsShowcase(),
+});
