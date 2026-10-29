@@ -3,7 +3,7 @@ import type { AudioEngine } from "#root/src/audio/audio.ts";
 import { TRACKS } from "#root/src/audio/audio.ts";
 import type { Game } from "#root/src/content/load.ts";
 import { byId } from "#root/src/dom.ts";
-import { SCORE_DIGITS } from "#root/src/show/director/shared.ts";
+import { SCORE_DIGITS } from "#root/src/show/director/page.ts";
 
 const $ = (id: string) => byId(id, HTMLElement);
 

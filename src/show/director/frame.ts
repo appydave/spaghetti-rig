@@ -5,13 +5,12 @@ import {
   updateScore,
 } from "#root/src/show/director/hud.ts";
 import { aim } from "#root/src/show/director/lanes.ts";
+import { laneEl } from "#root/src/show/director/page.ts";
+import { PLAYERS, isMachine } from "#root/src/show/director/players.ts";
 import {
-  PLAYERS,
-  isMachine,
   laneContext,
-  laneEl,
   type ShowState,
-} from "#root/src/show/director/shared.ts";
+} from "#root/src/show/director/show-state.ts";
 import type { Mode, Step } from "#root/src/content/script.ts";
 import { walkSeconds } from "#root/src/world/world.ts";
 

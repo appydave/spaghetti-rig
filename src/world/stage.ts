@@ -1,11 +1,17 @@
 import * as THREE from "three";
 import type { Mode, Player } from "#root/src/content/script.ts";
-import type { PlayerWorld } from "#root/src/world/world.ts";
 import { TitleShowcase, VsShowcase } from "#root/src/world/models/showcase.ts";
 import { STAGE_CLEAR } from "#root/src/world/palette.ts";
 
 /** Dense screens render at most this many pixels per CSS pixel, to keep the frame rate. */
 const MAX_PIXEL_RATIO = 1.75;
+
+/** The part of a player's world the stage draws: its scene and camera, and the aspect to cut the picture to. */
+export interface StagedWorld {
+  readonly scene: THREE.Scene;
+  readonly camera: THREE.Camera;
+  setAspect(aspect: number): void;
+}
 
 export type View = "title" | "vs" | "game" | "none";
 export interface Lane {
@@ -23,7 +29,7 @@ export class Stage {
   mode: Mode = "both";
   readonly title = new TitleShowcase();
   readonly vs = new VsShowcase();
-  private worlds: Record<Player, PlayerWorld> | null = null;
+  private worlds: Record<Player, StagedWorld> | null = null;
   private readonly size = new THREE.Vector2();
 
   constructor(readonly canvas: HTMLCanvasElement) {
@@ -46,7 +52,7 @@ export class Stage {
     addEventListener("resize", () => this.resize());
   }
 
-  attach(worlds: Record<Player, PlayerWorld>) {
+  attach(worlds: Record<Player, StagedWorld>) {
     this.worlds = worlds;
     this.layout();
   }

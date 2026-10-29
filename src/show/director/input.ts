@@ -1,6 +1,9 @@
 import { closestEl } from "#root/src/dom.ts";
 import { aim } from "#root/src/show/director/lanes.ts";
-import { laneContext, type ShowState } from "#root/src/show/director/shared.ts";
+import {
+  laneContext,
+  type ShowState,
+} from "#root/src/show/director/show-state.ts";
 import { broadcast } from "#root/src/show/director/view.ts";
 import { parseDirectorMessage } from "#root/src/show/messages.ts";
 
