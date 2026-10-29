@@ -29,10 +29,10 @@ const noReexport = {
       },
       ExportAllDeclaration: report,
       ExportNamedDeclaration: (node) => {
+        // A declaration (`export const y = x`) has no specifiers, so only `export { … }` lists reach the import check.
         const reexported =
           node.source !== null ||
-          (node.declaration === null &&
-            node.specifiers.some((s) => imported.has(s.local.name)));
+          node.specifiers.some((s) => imported.has(s.local.name));
 
         if (reexported) {
           report(node);
