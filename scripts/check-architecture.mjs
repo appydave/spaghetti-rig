@@ -1,4 +1,4 @@
-// Fails when the code breaks an architecture rule (G13 module cohesion, G14 coupling and hubs). Run by `npm run lint:architecture` and the Architecture job in CI.
+// Fails when the code breaks an architecture rule (G13 module cohesion, G14 coupling and hubs, G15 stable dependencies). Run by `npm run lint:architecture` and the Architecture job in CI.
 import { describe, scan } from "../lint/gates/architecture.mjs";
 
 // An optional folder named src to scan instead of the real one: the gate's probes use it.

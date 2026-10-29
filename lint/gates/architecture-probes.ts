@@ -1,9 +1,10 @@
 // What the architecture gate's tests share: planting a small project in a scratch folder, scanning it with the real config, and the
 // shapes the probes plant (leaves, an importer, a hub, a leaf with importers, independent exports).
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { scan } from "./architecture.mjs";
+import { REPO, scan } from "./architecture.mjs";
 
 const scratch: string[] = [];
 
@@ -80,3 +81,27 @@ export const independent = (count: number) =>
   Array.from({ length: count }, (_, i) => `export const k${i} = ${i};`).join(
     "\n",
   );
+
+/** Run the check script the CI job runs over a planted src folder. */
+export const checkScript = (src: string) =>
+  spawnSync(process.execPath, ["scripts/check-architecture.mjs", src], {
+    cwd: REPO,
+    encoding: "utf8",
+  });
+
+/**
+ * A `parent` that `users` files import and that imports one `part`, which imports `partImports` leaves of its own: the shape of a facade that
+ * constructs its own part. The parent's instability is 1/(users+1); the part's is partImports/(partImports+1).
+ */
+export const parentOfPart = (users: number, partImports: number) => ({
+  ...leaves(partImports, "l"),
+  "part.ts": `${Array.from({ length: partImports }, (_, i) => `import { v${i} } from "./l${i}.ts";`).join("\n")}\nexport const part = ${Array.from({ length: partImports }, (_, i) => `v${i}`).join(" + ") || "0"};\n`,
+  "parent.ts":
+    'import { part } from "./part.ts";\nexport const parent = part;\n',
+  ...Object.fromEntries(
+    Array.from({ length: users }, (_, i) => [
+      `user${i}.ts`,
+      `import { parent } from "./parent.ts";\nexport const u${i} = parent;\n`,
+    ]),
+  ),
+});
