@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "lint": "node scripts/check-no-suppressions.mjs && node scripts/check-folder-size.mjs && node lint/gates/css-colours.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json .",
     "lint:duplicates": "node scripts/check-duplicates.mjs",
+    "lint:architecture": "node scripts/check-architecture.mjs",
     "lint:deadcode": "knip --no-progress && knip --no-progress --production --files --dependencies"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@archlinter/cli": "0.17.1",
     "@playwright/test": "^1.64.1",
     "@stylistic/eslint-plugin": "5.10.0",
     "@types/node": "22.20.5",
