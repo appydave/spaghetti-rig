@@ -21,3 +21,21 @@ export const DUPLICATES_PD = ["src/world/models/characters.ts"];
 
 /** The leaf helper the coupling gate (G14) skips: `nth.ts` holds two ten-line guards, has no imports of its own and 31 importers, so its coupling is all fan-in. Exempt by name; the list is pinned and may never grow. */
 export const COUPLING_EXEMPT = ["src/nth.ts"];
+
+/**
+ * The files the module-cohesion gate (G13) skips, by path and each with its reason; the list is pinned and may never grow. archlint 0.17.1 links two exports
+ * only through a function's parameter or return type or one export calling another, so a field type inside an interface is invisible to it. A new `types.ts`
+ * or `*-types.ts` file gets no pass: it must pass or be added here with a ruling.
+ */
+export const COHESION_EXEMPT = {
+  "src/audio/types.ts":
+    "type-only module: the audio contracts, linked by field types the tool cannot see",
+  "src/content/types.ts":
+    "type-only module: the content shapes, linked by field types the tool cannot see",
+  "src/world/motion/city-layout-types.ts":
+    "type-only module: the street layout, Placement used by SideLayout and CityLayout through field types",
+  "src/world/palette.ts":
+    "colour tables: one concern, a table per kind (Omer's *-settings case)",
+  "src/world/motion/character-motion.ts":
+    "one concern: Animated holds pose and motion through field types; every split moves a reader to more places (ruled 10-29, consults/2026-10-29-g13-b2-three-files.md)",
+} satisfies Record<string, string>;

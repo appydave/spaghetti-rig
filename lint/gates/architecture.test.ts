@@ -1,94 +1,33 @@
-// Proves the architecture gate (G14: coupling and hubs, archlint) is wired and kept honest. The probes plant a small project and run the
-// real config over it: a module with 31 neighbours fails and one with 30 passes; a module with 8 importers and 8 imports of its own is a
-// hub and 7 or 7 is not. The guards keep the ways out honest: the one coupling exemption is exactly the leaf named in exemptions.ts, it
-// still earns it (no imports of its own), and a same-named file elsewhere gets no pass; `lcom` stays in the detector list with every file
-// excluded from its findings, because dropping it changes what the cohesion rule (G13) sees.
+// Proves the coupling and hub gates (G14, archlint) are wired and kept honest, and that the one config also states G13's thresholds and exemptions
+// (cohesion.test.ts holds the cohesion probes). The probes plant a small project and run the real config over it: a module with 31 neighbours fails
+// and one with 30 passes; a module with 8 importers and 8 imports of its own is a hub and 7 or 7 is not. The guards keep the ways out honest: the
+// exemptions are exactly the files named in exemptions.ts, the coupling exemption still earns it (no imports of its own), a same-named file
+// elsewhere gets no pass, and `lcom` stays in the detector list with every file excluded from its findings.
 import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { COUPLING_EXEMPT } from "./exemptions";
+import { COHESION_EXEMPT, COUPLING_EXEMPT } from "./exemptions";
 import { CONFIG, REPO, detectors, scan } from "./architecture.mjs";
+import {
+  COUPLING_LIMIT,
+  HUB_COMPLEXITY_CEILING,
+  HUB_LIMIT,
+  cleanScratch,
+  hubOf,
+  importer,
+  leafWithImporters,
+  leaves,
+  plant,
+  plantDir,
+} from "./architecture-probes";
 
-const scratch: string[] = [];
-const COUPLING_LIMIT = 30;
-const HUB_LIMIT = 8;
-/** A hub is a pass-through module: more complex than this and it is left to the size and complexity gates. */
-const HUB_COMPLEXITY_CEILING = 5;
 const NTH_IMPORTERS = 31;
 
-afterAll(() => {
-  for (const dir of scratch) {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-/** Plant these files in a fresh folder and give back its path. */
-function plantDir(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), "architecture-probe-"));
-
-  scratch.push(root);
-
-  for (const [path, source] of Object.entries(files)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true });
-    writeFileSync(join(root, path), source);
-  }
-
-  return root;
-}
-
-/** Plant these files (path inside src → source), scan them with the real config and give back the finding for each rule by file. */
-const plant = (files: Record<string, string>): string[] =>
-  scan(plantDir(files)).map((f) => `${f.rule}:${f.file}`);
-
-/** `count` leaf files, each exporting one value. */
-const leaves = (count: number, prefix = "leaf") =>
-  Object.fromEntries(
-    Array.from({ length: count }, (_, i) => [
-      `${prefix}${i}.ts`,
-      `export const v${i} = ${i};\n`,
-    ]),
-  );
-
-/** One module that imports `count` leaves and so is coupled to all of them. */
-const importer = (count: number) => ({
-  ...leaves(count),
-  "big.ts": `${Array.from({ length: count }, (_, i) => `import { v${i} } from "./leaf${i}.ts";`).join("\n")}\nexport const sum = ${Array.from({ length: count }, (_, i) => `v${i}`).join(" + ")};\n`,
-});
-
-/** One module `hub.ts` with `inCount` importers, `outCount` imports of its own and a function with `branches` decisions in it (complexity 1 + branches). */
-const hubOf = (inCount: number, outCount: number, branches = 0) => ({
-  ...leaves(outCount, "out"),
-  ...Object.fromEntries(
-    Array.from({ length: inCount }, (_, i) => [
-      `in${i}.ts`,
-      `import { hub } from "./hub.ts";\nexport const i${i} = hub();\n`,
-    ]),
-  ),
-  "hub.ts": `${Array.from({ length: outCount }, (_, i) => `import { v${i} } from "./out${i}.ts";`).join("\n")}\nexport const hub = () => {\n  let total = 0;\n${Array.from({ length: branches }, (_, i) => `  if (v${i % outCount} > ${i}) {\n    total += ${i};\n  }`).join("\n")}\n  return total + v0;\n};\n`,
-});
-
-/** A module `file` that nothing imports and that imports nothing, with `count` files importing it. */
-const leafWithImporters = (file: string, count: number) => ({
-  [file]: "export const guard = 1;\n",
-  ...Object.fromEntries(
-    Array.from({ length: count }, (_, i) => [
-      `user${i}.ts`,
-      `import { guard } from "./${file}";\nexport const u${i} = guard;\n`,
-    ]),
-  ),
-});
+afterAll(cleanScratch);
 
 describe("the real code", () => {
-  it("has no coupling or hub finding", () => {
+  it("has no cohesion, coupling or hub finding", () => {
     expect(scan(join(REPO, "src"))).toEqual([]);
   });
 });
@@ -104,15 +43,18 @@ describe("coupling", () => {
     expect(plant(importer(COUPLING_LIMIT))).toEqual([]);
   });
 
-  it("counts a re-export as a neighbour", () => {
+  it("counts a re-export as a neighbour (and, mixed with an export of its own, as an unrelated export too)", () => {
     const count = COUPLING_LIMIT + 1;
 
     expect(
       plant({
         ...leaves(count),
         "reexports.ts": `export const own = 1;\n${Array.from({ length: count }, (_, i) => `export { v${i} } from "./leaf${i}.ts";`).join("\n")}\n`,
-      }),
-    ).toEqual(["high-coupling:src/reexports.ts"]);
+      }).sort(),
+    ).toEqual([
+      "high-coupling:src/reexports.ts",
+      "module-cohesion:src/reexports.ts",
+    ]);
   });
 
   it("leaves the tests that import a module out of its count", () => {
@@ -203,12 +145,35 @@ describe("the wiring", () => {
   });
 
   it("sets the thresholds the gate states", () => {
+    expect(config.rules.module_cohesion).toMatchObject({
+      min_exports: 5,
+      max_components: 2,
+    });
     expect(config.rules.high_coupling.max_cbo).toBe(COUPLING_LIMIT);
     expect(config.rules.hub_module).toMatchObject({
       min_fan_in: HUB_LIMIT,
       min_fan_out: HUB_LIMIT,
       max_complexity: HUB_COMPLEXITY_CEILING,
     });
+  });
+
+  it("exempts exactly the files named in exemptions.ts from cohesion, by path, with a reason each", () => {
+    expect(config.rules.module_cohesion.exclude).toEqual(
+      Object.keys(COHESION_EXEMPT).sort(),
+    );
+    expect(Object.keys(COHESION_EXEMPT).sort()).toEqual([
+      "src/audio/types.ts",
+      "src/content/types.ts",
+      "src/world/motion/character-motion.ts",
+      "src/world/motion/city-layout-types.ts",
+      "src/world/palette.ts",
+    ]);
+    expect(Object.values(COHESION_EXEMPT).every((why) => why.length > 0)).toBe(
+      true,
+    );
+    expect(
+      Object.keys(COHESION_EXEMPT).every((f) => existsSync(join(REPO, f))),
+    ).toBe(true);
   });
 
   it("exempts exactly the leaf named in exemptions.ts, by path and not by pattern", () => {
