@@ -695,20 +695,6 @@
       }
     },
     {
-      // CARRIED TO TIER 5 by David's option 2, 10-24: these files still exceed a size limit; tier 5 (structure) splits them; this list may shrink,
-      // never grow. G04 split the rest of the app one slice at a time, each removing its files here. lint/gates/size.test.ts pins it: every
-      // name exists, still has a finding (so a name leaves the list the moment its file is clean), and the list is exactly the set it states.
-      "files": ["lint/gates/audio-proof.test.ts"],
-      "rules": {
-        "max-lines": "off",
-        "max-lines-per-function": "off",
-        "max-params": "off",
-        "size/max-members": "off",
-        "size/max-signature-params": "off",
-        "size/max-test-function-lines": "off"
-      }
-    },
-    {
       // R7 revised (David, 2026-10-23), applied to size: hand-placed model geometry and materials are asset data, like Omer's GLB files, so these
       // six files are exempt from the size rules for good (gate.ts joined on 2026-10-26, when gate.json was unwound: it is the hand-placed
       // checkpoint gate, like its five siblings). lint/gates/size.test.ts keeps this list at exactly these six.
