@@ -18,3 +18,6 @@ export const CARRIED_TO_TIER_5: string[] = [];
 
 /** The procedural-data file the duplicate gate (G08) skips: its two characters share a 9-line run of hand-placed body parts, which is data written as code. Every other model file scans clean; `gate.ts` shares `disposeTree` instead. */
 export const DUPLICATES_PD = ["src/world/models/characters.ts"];
+
+/** The leaf helper the coupling gate (G14) skips: `nth.ts` holds two ten-line guards, has no imports of its own and 31 importers, so its coupling is all fan-in. Exempt by name; the list is pinned and may never grow. */
+export const COUPLING_EXEMPT = ["src/nth.ts"];

@@ -8,5 +8,5 @@
     "tests/**/*.ts",
     "*.config.ts"
   ],
-  "ignoreDependencies": ["jscpd"]
+  "ignoreDependencies": ["jscpd", "@archlinter/cli"]
 }
