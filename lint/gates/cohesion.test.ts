@@ -6,6 +6,7 @@ import { COHESION_EXEMPT } from "./exemptions";
 import { REPO, detectors, scan } from "./architecture.mjs";
 import {
   HUB_LIMIT,
+  checkScript,
   cleanScratch,
   hubOf,
   independent,
@@ -34,6 +35,14 @@ describe("module cohesion", () => {
           "export const b = () => 1;\nexport const a = () => b();\nexport const d = () => 2;\nexport const c = () => d();\nexport const e = () => d();\n",
       }),
     ).toEqual([]);
+  });
+
+  it("tells the next agent what to do (the check script's message)", () => {
+    const run = checkScript(plantDir({ "scattered.ts": independent(5) }));
+
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain("src/scattered.ts: module-cohesion");
+    expect(run.stderr).toContain("Move each group to the module named for it");
   });
 
   it("fails 5 exports in 3 groups", () => {

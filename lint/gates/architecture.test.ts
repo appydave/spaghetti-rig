@@ -3,7 +3,6 @@
 // and one with 30 passes; a module with 8 importers and 8 imports of its own is a hub and 7 or 7 is not. The guards keep the ways out honest: the
 // exemptions are exactly the files named in exemptions.ts, the coupling exemption still earns it (no imports of its own), a same-named file
 // elsewhere gets no pass, and `lcom` stays in the detector list with every file excluded from its findings.
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -13,6 +12,7 @@ import {
   COUPLING_LIMIT,
   HUB_COMPLEXITY_CEILING,
   HUB_LIMIT,
+  checkScript,
   cleanScratch,
   hubOf,
   importer,
@@ -87,14 +87,8 @@ describe("coupling", () => {
 });
 
 describe("the check script", () => {
-  const check = (src: string) =>
-    spawnSync(process.execPath, ["scripts/check-architecture.mjs", src], {
-      cwd: REPO,
-      encoding: "utf8",
-    });
-
   it("exits 1 and says what to do when a rule is broken", () => {
-    const run = check(plantDir(importer(COUPLING_LIMIT + 1)));
+    const run = checkScript(plantDir(importer(COUPLING_LIMIT + 1)));
 
     expect(run.status).toBe(1);
     expect(run.stderr).toContain("src/big.ts: high-coupling");
@@ -102,7 +96,7 @@ describe("the check script", () => {
   });
 
   it("exits 0 when nothing is broken", () => {
-    expect(check(plantDir(importer(COUPLING_LIMIT))).status).toBe(0);
+    expect(checkScript(plantDir(importer(COUPLING_LIMIT))).status).toBe(0);
   });
 });
 
@@ -148,6 +142,10 @@ describe("the wiring", () => {
     expect(config.rules.module_cohesion).toMatchObject({
       min_exports: 5,
       max_components: 2,
+    });
+    expect(config.rules.sdp_violation).toMatchObject({
+      min_fan_total: 5,
+      instability_diff: 0.3,
     });
     expect(config.rules.high_coupling.max_cbo).toBe(COUPLING_LIMIT);
     expect(config.rules.hub_module).toMatchObject({

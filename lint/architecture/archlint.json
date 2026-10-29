@@ -28,6 +28,11 @@
       "min_fan_in": 8,
       "min_fan_out": 8,
       "max_complexity": 5
+    },
+    "sdp_violation": {
+      "severity": "high",
+      "min_fan_total": 5,
+      "instability_diff": 0.3
     }
   },
   "tsconfig": false
