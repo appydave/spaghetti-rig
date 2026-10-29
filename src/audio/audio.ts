@@ -13,14 +13,18 @@ import {
   openContext,
   MASTER_LEVEL,
 } from "#root/src/audio/engine/graph.ts";
-import { Music } from "#root/src/audio/engine/music.ts";
-import { SfxPlayer } from "#root/src/audio/engine/sfx-player.ts";
 import { TRACKS as TRACK_LIST } from "#root/src/audio/tracks.ts";
 import { present } from "#root/src/nth.ts";
-import type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
+import type {
+  AudioParts,
+  MusicPlayer,
+  PlayOptions,
+  Sfx,
+  SfxOutput,
+  Theme,
+} from "#root/src/audio/types.ts";
 
 export type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
-export { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
 
 /** Every track's name, theme and tempo, for the track list. */
 export const TRACKS: { name: string; theme: Theme; bpm: number }[] = TRACK_LIST;
@@ -31,10 +35,14 @@ const MUTE_FADE = 0.04;
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private sfx: SfxPlayer | null = null;
-  private readonly music = new Music();
+  private sfx: SfxOutput | null = null;
+  private readonly music: MusicPlayer;
   private _muted = false;
   private _paused = false;
+
+  constructor(private readonly parts: AudioParts) {
+    this.music = parts.music;
+  }
 
   // ------------------------------------------------------------------ public API
 
@@ -134,7 +142,7 @@ export class AudioEngine {
     const graph = buildGraph(ctx, this._muted);
 
     this.master = graph.master;
-    this.sfx = new SfxPlayer(ctx, graph.sfxBus, graph.noise);
+    this.sfx = this.parts.makeSfx(ctx, graph.sfxBus, graph.noise);
     if (this._paused) {
       ctx.suspend().catch(() => undefined);
     }

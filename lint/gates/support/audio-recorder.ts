@@ -4,6 +4,7 @@
 import { createHash } from "node:crypto";
 import { expect, it, vi } from "vitest";
 import { AudioEngine } from "../../../src/audio/audio";
+import { audioParts } from "../../../src/audio/engine/parts";
 import { SfxPlayer } from "../../../src/audio/engine/sfx-player";
 import { num } from "../world-fingerprint";
 import { hole } from "../recording-canvas";
@@ -41,7 +42,7 @@ const sorted = (v: Arg): Arg =>
 /** Play one sound effect on an engine whose voices only write down what they are asked, under a seeded Math.random. */
 export function record(sfx: string, seed: number): Arg[][] {
   const calls: Arg[][] = [];
-  const engine: any = new AudioEngine();
+  const engine: any = new AudioEngine(audioParts());
   const log =
     (kind: string) =>
     (...args: Arg[]) =>
@@ -197,7 +198,7 @@ function node(r: Recording, path: string, own?: Own): any {
 function scenario(seed: number, run: (engine: any) => void): [string, number] {
   const r: Recording = { log: [], buffers: [], made: new Map() };
   const { log } = r;
-  const engine: any = new AudioEngine();
+  const engine: any = new AudioEngine(audioParts());
   const root = node(r, "ctx");
 
   const random = Math.random;

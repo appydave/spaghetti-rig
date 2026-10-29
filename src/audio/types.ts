@@ -70,3 +70,35 @@ export interface PlayOptions {
   pan?: number;
   volume?: number;
 }
+
+/** What the music plays through: the audio context, the music bus and the shared noise buffer. */
+export interface MusicRig {
+  ctx: AudioContext;
+  bus: GainNode;
+  noise: AudioBuffer | null;
+}
+
+/** What the audio facade asks of the music: which theme is wanted and its track, and being given the rig once the context exists. */
+export interface MusicPlayer {
+  readonly theme: Theme;
+  readonly trackName: string;
+  onTrackChange(cb: (name: string) => void): void;
+  wake(): void;
+  setTheme(theme: Theme): void;
+  attach(rig: MusicRig): void;
+}
+
+/** What the audio facade asks of the sound-effect player: to play an effect. */
+export interface SfxOutput {
+  play(sfx: Sfx, opts: PlayOptions): void;
+}
+
+/** The engines the audio facade drives: made at boot and handed in, so the facade does not construct them. */
+export interface AudioParts {
+  music: MusicPlayer;
+  makeSfx(
+    ctx: AudioContext,
+    bus: GainNode,
+    noise: AudioBuffer | null,
+  ): SfxOutput;
+}

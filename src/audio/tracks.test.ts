@@ -13,6 +13,7 @@ import {
   midiToFreq,
 } from "#root/src/audio/music/notation.ts";
 import { TRACKS as API_TRACKS, AudioEngine } from "#root/src/audio/audio.ts";
+import { audioParts } from "#root/src/audio/engine/parts.ts";
 
 const sane = (n: number) => Number.isFinite(n) && n >= 24 && n <= 108;
 
@@ -145,7 +146,7 @@ describe("soundtrack", () => {
 
 describe("AudioEngine without Web Audio", () => {
   it("is a harmless no-op in Node", async () => {
-    const a = new AudioEngine();
+    const a = new AudioEngine(audioParts());
 
     a.setTheme("walk");
     expect(a.theme).toBe("walk");
