@@ -5,6 +5,8 @@
 const NATURAL_KEYS = "C.D.EF.G.A.B";
 
 export const SEMITONES_PER_OCTAVE = 12;
+/** The score is cut into sixteenths: this many steps make a beat. */
+export const STEPS_PER_BEAT = 4;
 
 const A4_MIDI = 69;
 const A4_HZ = 440;

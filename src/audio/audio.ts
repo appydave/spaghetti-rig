@@ -15,12 +15,11 @@ import {
 } from "#root/src/audio/engine/graph.ts";
 import { Music } from "#root/src/audio/engine/music.ts";
 import { SfxPlayer } from "#root/src/audio/engine/sfx-player.ts";
-import { TRACKS as TRACK_LIST, type Theme } from "#root/src/audio/tracks.ts";
+import { TRACKS as TRACK_LIST } from "#root/src/audio/tracks.ts";
 import { present } from "#root/src/nth.ts";
-import type { PlayOptions, Sfx } from "#root/src/audio/types.ts";
+import type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
 
-export type { Theme } from "#root/src/audio/tracks.ts";
-export type { PlayOptions, Sfx } from "#root/src/audio/types.ts";
+export type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
 export { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
 
 /** Every track's name, theme and tempo, for the track list. */

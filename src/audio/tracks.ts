@@ -22,16 +22,10 @@ import {
   parseChord,
   parseMelodyBar,
   SEMITONES_PER_OCTAVE,
+  STEPS_PER_BEAT,
   type Chord,
 } from "#root/src/audio/music/notation.ts";
 import type { MusicTheme, Theme, TrackDef } from "#root/src/audio/types.ts";
-
-export type {
-  LeadVoice,
-  MusicTheme,
-  Theme,
-  TrackDef,
-} from "#root/src/audio/types.ts";
 
 // ---------------------------------------------------------------------------
 // The score lives in tracks.json; the loader fills in what a track leaves out
@@ -44,8 +38,6 @@ export const TRACK_DEFS: TrackDef[] = parseTrackDefs(rawTracks);
 // ---------------------------------------------------------------------------
 
 const FIFTH_SEMITONES = 7;
-
-export const STEPS_PER_BEAT = 4;
 
 const SECONDS_PER_MINUTE = 60;
 

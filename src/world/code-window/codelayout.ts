@@ -8,17 +8,6 @@ import {
 } from "#root/src/world/code-window/layout/rows.ts";
 import type { Layout, Line } from "#root/src/world/code-window/layout/types.ts";
 
-export type {
-  Layout,
-  Line,
-  Mark,
-} from "#root/src/world/code-window/layout/types.ts";
-
-/** A file name made from a card title is cut to this many characters (before the extension). */
-const MAX_FILE_STEM = 28;
-/** The narrowest wrap width longestRow reports. */
-const MIN_ROW_WIDTH = 10;
-
 /** The first plain label row of the first block names the file; a pinned row or an output row never does. */
 function namesFile(kind: RowKind, view: View, pinned: boolean): boolean {
   return kind === "l" && view !== "output" && !pinned;
@@ -97,26 +86,4 @@ export function layoutCard(
   }));
 
   return { lines, notes, cols, filename: name.value || fallbackName };
-}
-
-/** Turn a card title into a plausible filename for its window header. */
-export function slugFile(title: string, ext = ".ts") {
-  return (
-    title
-      .toLowerCase()
-      .replace(/^tool:\s*/, "")
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/^-|-$/g, "")
-      .slice(0, MAX_FILE_STEM) + ext
-  );
-}
-
-/** Longest row in a card, in characters (to pick a wrap width). */
-export function longestRow(card: Card) {
-  return Math.max(
-    MIN_ROW_WIDTH,
-    ...card.blocks.flatMap((b) =>
-      b.rows.map(([, t]) => t.length + (b.view === "diff" ? 2 : 0)),
-    ),
-  );
 }
