@@ -6,11 +6,10 @@ import {
   type CharacterMotion,
   type Pose,
 } from "#root/src/world/motion/character-motion.ts";
-import { INK, toon } from "#root/src/world/models/toon.ts";
+import { toon } from "#root/src/world/models/toon.ts";
+import { INK } from "#root/src/world/palette.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { context2d } from "#root/src/dom.ts";
-
-export type { Pose } from "#root/src/world/motion/character-motion.ts";
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 

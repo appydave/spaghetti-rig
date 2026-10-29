@@ -19,9 +19,6 @@ import { TRACKS as TRACK_LIST } from "#root/src/audio/tracks.ts";
 import { present } from "#root/src/nth.ts";
 import type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
 
-export type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
-export { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
-
 /** Every track's name, theme and tempo, for the track list. */
 export const TRACKS: { name: string; theme: Theme; bpm: number }[] = TRACK_LIST;
 

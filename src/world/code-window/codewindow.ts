@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import { Debris } from "#root/src/world/combat/physics.ts";
-import { INK, toon } from "#root/src/world/models/toon.ts";
+import { toon } from "#root/src/world/models/toon.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import {
   EYE_WHITE,
   PALETTE,
   SLAB_TOON,
   type Mood,
+  INK,
 } from "#root/src/world/palette.ts";
 import { HEADER } from "#root/src/world/code-window/paint/card-measure.ts";
 import { paintCracks } from "#root/src/world/code-window/glass/cracks.ts";
@@ -20,9 +21,6 @@ import {
 } from "#root/src/world/code-window/glass/slab.ts";
 import { nth } from "#root/src/nth.ts";
 import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
-
-export { PALETTE } from "#root/src/world/palette.ts";
-export type { Mood } from "#root/src/world/palette.ts";
 
 /** The blink clock starts at a random time up to this many seconds in, so windows do not blink together. */
 const BLINK_PHASE_RANGE = 10;

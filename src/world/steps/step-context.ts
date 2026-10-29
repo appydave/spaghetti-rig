@@ -1,7 +1,7 @@
 // What a step handler may touch of the world it plays in (G04 W5d): the parts it animates, the player's health and the camera shake,
 // and the two things only the world can do (play a sound, and make the world match a state). The world builds one and hands it to the handlers.
 import type * as THREE from "three";
-import type { Sfx } from "#root/src/audio/audio.ts";
+import type { Sfx } from "#root/src/audio/types.ts";
 import type { Game } from "#root/src/content/load.ts";
 import type { Player } from "#root/src/content/script.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";

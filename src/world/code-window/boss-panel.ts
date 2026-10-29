@@ -2,8 +2,7 @@
 // was, split into its parts; every draw call is made in the same order. The numbers and colours are BOSS_PANEL in boss.ts (the model file).
 import { context2d } from "#root/src/dom.ts";
 import { fit } from "#root/src/world/code-window/canvas-text.ts";
-import { PALETTE } from "#root/src/world/code-window/codewindow.ts";
-import { INK } from "#root/src/world/models/toon.ts";
+import { INK, PALETTE } from "#root/src/world/palette.ts";
 
 const BARLOW = "Barlow, Impact, sans-serif";
 const SPACE = "Space, Arial, sans-serif";

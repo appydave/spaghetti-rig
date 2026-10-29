@@ -1,6 +1,7 @@
 // Hand-placed model geometry and materials: asset data, exempt from the magic-number and colour gates (R7 revised, David 2026-10-23).
 import * as THREE from "three";
-import { INK, toon } from "#root/src/world/models/toon.ts";
+import { toon } from "#root/src/world/models/toon.ts";
+import { INK } from "#root/src/world/palette.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { context2d } from "#root/src/dom.ts";
 import { nth, present } from "#root/src/nth.ts";
@@ -10,8 +11,6 @@ import {
   type EnemyKind,
   type EnemyMotion,
 } from "#root/src/world/motion/enemy-motion.ts";
-
-export type { EnemyKind } from "#root/src/world/motion/enemy-motion.ts";
 
 export const SCORE: Record<EnemyKind, number> = {
   spaghetti: 100,

@@ -6,10 +6,12 @@ import { fillTitle, followTracks, showBest } from "#root/src/app/boot/title.ts";
 import { installErrorBanner, showError } from "#root/src/app/errors.ts";
 import { installKeys, key } from "#root/src/app/keys.ts";
 import { presenter } from "#root/src/app/presenter.ts";
-import { AudioEngine, MS_PER_SECOND } from "#root/src/audio/audio.ts";
+import { AudioEngine } from "#root/src/audio/audio.ts";
+import { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
 import { loadContent } from "#root/src/content/load.ts";
 import { byId } from "#root/src/dom.ts";
-import { Director, SPLIT_PAN } from "#root/src/show/director.ts";
+import { Director } from "#root/src/show/director.ts";
+import { SPLIT_PAN } from "#root/src/show/director/lanes.ts";
 import {
   isSplit,
   MODES,
@@ -129,5 +131,3 @@ async function boot() {
   app.show("prelude");
   byId("enter", HTMLElement).focus();
 }
-
-export type { Game } from "#root/src/content/load.ts";

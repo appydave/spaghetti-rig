@@ -5,11 +5,8 @@ import {
   AutoGunner,
   chooseAutoTarget,
 } from "#root/src/world/combat/autogunner.ts";
-import {
-  Enemy,
-  SCORE,
-  type EnemyKind,
-} from "#root/src/world/models/enemies.ts";
+import { Enemy, SCORE } from "#root/src/world/models/enemies.ts";
+import { type EnemyKind } from "#root/src/world/motion/enemy-motion.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import {
   bounceFx,

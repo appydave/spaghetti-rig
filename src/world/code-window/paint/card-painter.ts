@@ -19,8 +19,6 @@ import {
 } from "#root/src/world/code-window/paint/card-text.ts";
 import { PALETTE, type Mood } from "#root/src/world/palette.ts";
 
-export type { Paint } from "#root/src/world/code-window/paint/card-measure.ts";
-
 /** Paint a card as an editor window. The canvas size follows the content. */
 export function paintCard(
   layout: Layout,

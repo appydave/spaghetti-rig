@@ -12,7 +12,7 @@ import {
   type ShowState,
 } from "#root/src/show/director/show-state.ts";
 import type { Mode, Step } from "#root/src/content/script.ts";
-import { walkSeconds } from "#root/src/world/world.ts";
+import { walkSeconds } from "#root/src/world/layout/road.ts";
 
 /** How long the face-off screen stays before the game moves on. */
 const VS_SCREEN_SECONDS = 4.2;
