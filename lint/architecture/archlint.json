@@ -3,6 +3,18 @@
     "#root/*": "./*"
   },
   "rules": {
+    "module_cohesion": {
+      "severity": "high",
+      "min_exports": 5,
+      "max_components": 2,
+      "exclude": [
+        "src/audio/types.ts",
+        "src/content/types.ts",
+        "src/world/motion/character-motion.ts",
+        "src/world/motion/city-layout-types.ts",
+        "src/world/palette.ts"
+      ]
+    },
     "lcom": {
       "exclude": ["**/*"]
     },

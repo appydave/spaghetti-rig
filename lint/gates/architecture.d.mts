@@ -10,5 +10,5 @@ export const REPO: string;
 export const CONFIG: string;
 export const RULES: Record<string, { rule: string; hint: string }>;
 export function detectors(): string[];
-export function scan(srcDir?: string): Finding[];
+export function scan(srcDir?: string, rules?: string[]): Finding[];
 export function describe(finding: Finding): string;
