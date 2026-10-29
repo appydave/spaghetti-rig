@@ -21,6 +21,8 @@ import { CONFIG, REPO, detectors, scan } from "./architecture.mjs";
 const scratch: string[] = [];
 const COUPLING_LIMIT = 30;
 const HUB_LIMIT = 8;
+/** A hub is a pass-through module: more complex than this and it is left to the size and complexity gates. */
+const HUB_COMPLEXITY_CEILING = 5;
 const NTH_IMPORTERS = 31;
 
 afterAll(() => {
@@ -62,16 +64,16 @@ const importer = (count: number) => ({
   "big.ts": `${Array.from({ length: count }, (_, i) => `import { v${i} } from "./leaf${i}.ts";`).join("\n")}\nexport const sum = ${Array.from({ length: count }, (_, i) => `v${i}`).join(" + ")};\n`,
 });
 
-/** One module `hub.ts` with `inCount` importers and `outCount` imports of its own. */
-const hubOf = (inCount: number, outCount: number) => ({
+/** One module `hub.ts` with `inCount` importers, `outCount` imports of its own and a function with `branches` decisions in it (complexity 1 + branches). */
+const hubOf = (inCount: number, outCount: number, branches = 0) => ({
   ...leaves(outCount, "out"),
   ...Object.fromEntries(
     Array.from({ length: inCount }, (_, i) => [
       `in${i}.ts`,
-      `import { hub } from "./hub.ts";\nexport const i${i} = hub;\n`,
+      `import { hub } from "./hub.ts";\nexport const i${i} = hub();\n`,
     ]),
   ),
-  "hub.ts": `${Array.from({ length: outCount }, (_, i) => `import { v${i} } from "./out${i}.ts";`).join("\n")}\nexport const hub = ${Array.from({ length: outCount }, (_, i) => `v${i}`).join(" + ")};\n`,
+  "hub.ts": `${Array.from({ length: outCount }, (_, i) => `import { v${i} } from "./out${i}.ts";`).join("\n")}\nexport const hub = () => {\n  let total = 0;\n${Array.from({ length: branches }, (_, i) => `  if (v${i % outCount} > ${i}) {\n    total += ${i};\n  }`).join("\n")}\n  return total + v0;\n};\n`,
 });
 
 /** A module `file` that nothing imports and that imports nothing, with `count` files importing it. */
@@ -167,6 +169,18 @@ describe("hubs", () => {
     expect(plant(hubOf(HUB_LIMIT, HUB_LIMIT))).toEqual(["hub:src/hub.ts"]);
   });
 
+  it("fails a hub whose complexity is at the ceiling of 5", () => {
+    expect(
+      plant(hubOf(HUB_LIMIT, HUB_LIMIT, HUB_COMPLEXITY_CEILING - 1)),
+    ).toEqual(["hub:src/hub.ts"]);
+  });
+
+  it("leaves a logic-heavy module with the same fan to the size and complexity gates (complexity 6)", () => {
+    expect(plant(hubOf(HUB_LIMIT, HUB_LIMIT, HUB_COMPLEXITY_CEILING))).toEqual(
+      [],
+    );
+  });
+
   it("passes 7 importers with 8 imports", () => {
     expect(plant(hubOf(HUB_LIMIT - 1, HUB_LIMIT))).toEqual([]);
   });
@@ -193,6 +207,7 @@ describe("the wiring", () => {
     expect(config.rules.hub_module).toMatchObject({
       min_fan_in: HUB_LIMIT,
       min_fan_out: HUB_LIMIT,
+      max_complexity: HUB_COMPLEXITY_CEILING,
     });
   });
 

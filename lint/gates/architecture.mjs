@@ -1,6 +1,8 @@
 // The architecture gates (G14 coupling and hubs; G13 and G15 add their rules to the same config): archlint 0.17.1 run over a disposable
 // copy of src/ without its tests, with the rules in lint/architecture/archlint.json. One home for the run, so `npm run lint:architecture`
 // and the gate's probes (architecture.test.ts) read the same findings.
+//   A hub is a pass-through module: 8+ importers, 8+ imports of its own and complexity <= 5. A logic-heavy module with the same fan is left
+//   to the size and complexity gates.
 //   The copy is how tests are left out: archlint would still count ignored test imports in its graph metrics.
 //   The detector list is the config's own rule list. `lcom` is in it on purpose and every file is excluded from its findings: Omer's
 //   config does the same, because dropping it changes what the module-cohesion rule (G13) sees. Do not "clean it up".
