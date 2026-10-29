@@ -9,12 +9,12 @@ import {
 } from "#root/src/show/director/frame.ts";
 import { listen } from "#root/src/show/director/input.ts";
 import { buildLanes, slipped } from "#root/src/show/director/lanes.ts";
+import { $ } from "#root/src/show/director/page.ts";
 import {
-  $,
-  newRun,
   PLAYERS,
-  type ShowState,
-} from "#root/src/show/director/shared.ts";
+  type DirectedWorld,
+} from "#root/src/show/director/players.ts";
+import { newRun, type ShowState } from "#root/src/show/director/show-state.ts";
 import {
   broadcast,
   render,
@@ -23,7 +23,6 @@ import {
 import type { AudioEngine } from "#root/src/audio/audio.ts";
 import type { Game } from "#root/src/content/load.ts";
 import type { Stage } from "#root/src/world/stage.ts";
-import type { PlayerWorld } from "#root/src/world/world.ts";
 import {
   buildScript,
   hiddenIn,
@@ -40,7 +39,7 @@ export { SPLIT_PAN } from "#root/src/show/director/lanes.ts";
 export interface DirectorParts {
   game: Game;
   stage: Stage;
-  worlds: Record<Player, PlayerWorld>;
+  worlds: Record<Player, DirectedWorld>;
   audio: AudioEngine;
 }
 
@@ -48,7 +47,7 @@ export interface DirectorParts {
 export class Director implements ShowState {
   readonly game: Game;
   readonly stage: Stage;
-  readonly worlds: Record<Player, PlayerWorld>;
+  readonly worlds: Record<Player, DirectedWorld>;
   readonly audio: AudioEngine;
   readonly script: Step[];
   readonly run = newRun();

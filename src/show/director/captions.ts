@@ -2,7 +2,8 @@ import { toolFor } from "#root/src/content/load.ts";
 import type { Stop } from "#root/src/content/types.ts";
 import { queryElOrNull } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
-import { $, laneEl, type LaneContext } from "#root/src/show/director/shared.ts";
+import { $, laneEl } from "#root/src/show/director/page.ts";
+import type { LaneContext } from "#root/src/show/director/show-state.ts";
 import type { Player } from "#root/src/content/script.ts";
 import { esc, shortTool } from "#root/src/ui/card.ts";
 

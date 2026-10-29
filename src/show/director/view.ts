@@ -9,13 +9,13 @@ import {
   resultScreen,
   vsScreen,
 } from "#root/src/show/director/screens.ts";
+import { $ } from "#root/src/show/director/page.ts";
+import { PLAYERS } from "#root/src/show/director/players.ts";
 import {
-  $,
-  PLAYERS,
   laneContext,
   type LaneContext,
   type ShowState,
-} from "#root/src/show/director/shared.ts";
+} from "#root/src/show/director/show-state.ts";
 import type { PresenterState } from "#root/src/show/messages.ts";
 import { nextIndex, type Step } from "#root/src/content/script.ts";
 import { notesFor, stepLabel } from "#root/src/show/notes.ts";
