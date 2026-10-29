@@ -12,7 +12,6 @@ export type {
   Layout,
   Line,
   Mark,
-  Token,
 } from "#root/src/world/code-window/layout/types.ts";
 
 /** A file name made from a card title is cut to this many characters (before the extension). */

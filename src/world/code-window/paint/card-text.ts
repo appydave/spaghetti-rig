@@ -43,7 +43,7 @@ const NOTE_BASELINE = 29;
 const FOOT_BASELINE = 26;
 
 /** Draw a string one letter at a time, with a fixed space between letters. */
-export function spaced(
+function spaced(
   g: CanvasRenderingContext2D,
   s: string,
   at: Point,

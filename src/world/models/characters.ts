@@ -8,7 +8,6 @@ import {
 } from "#root/src/world/motion/character-motion.ts";
 import { INK, toon } from "#root/src/world/models/toon.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
-import { clamp01, lerp } from "#root/src/maths.ts";
 import { context2d } from "#root/src/dom.ts";
 
 export type { Pose } from "#root/src/world/motion/character-motion.ts";
@@ -496,7 +495,3 @@ function laptopScreen() {
 
   return screenTexture;
 }
-
-/** Ease helper for callers animating a character's spot. */
-export const settle = (from: number, to: number, t: number) =>
-  lerp(from, to, clamp01(t));

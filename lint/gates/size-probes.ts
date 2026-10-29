@@ -1,11 +1,14 @@
 // The planted violations for the size gate (G04): each probe is [name, path, source, the codes it must raise]. Every limit has a probe
 // that fails just over it and a twin that passes exactly on it, so a changed limit breaks a test.
-export const LINES = "eslint(max-lines)";
-export const FUNCTION = "eslint(max-lines-per-function)";
+const LINES = "eslint(max-lines)";
+const FUNCTION = "eslint(max-lines-per-function)";
+
 export const PARAMS = "eslint(max-params)";
-export const MEMBERS = "size(max-members)";
-export const SIGNATURE = "size(max-signature-params)";
-export const TEST_FUNCTION = "size(max-test-function-lines)";
+
+const MEMBERS = "size(max-members)";
+const SIGNATURE = "size(max-signature-params)";
+const TEST_FUNCTION = "size(max-test-function-lines)";
+
 export const SIZE_CODES = [
   LINES,
   FUNCTION,

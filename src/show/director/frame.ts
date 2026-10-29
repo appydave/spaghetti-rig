@@ -25,7 +25,7 @@ export const applyAutoplay = (s: ShowState) => {
 };
 
 /** A cut jumps the camera; walking on within a tier glides. */
-export const isCut = (prev: Step, step: Step, animate: boolean) =>
+const isCut = (prev: Step, step: Step, animate: boolean) =>
   !animate ||
   prev.tier !== step.tier ||
   prev.phase === "vs" ||

@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "node scripts/check-no-suppressions.mjs && node scripts/check-folder-size.mjs && node lint/gates/css-colours.mjs && oxlint --type-aware --deny-warnings --tsconfig tsconfig.lint.json .",
-    "lint:duplicates": "node scripts/check-duplicates.mjs"
+    "lint:duplicates": "node scripts/check-duplicates.mjs",
+    "lint:deadcode": "knip --no-progress && knip --no-progress --production --files --dependencies"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
@@ -31,6 +32,7 @@
     "eslint-plugin-sonarjs": "4.2.0",
     "happy-dom": "21.0.4",
     "jscpd": "5.4.2",
+    "knip": "6.43.0",
     "oxlint": "1.88.0",
     "oxlint-plugin-anti-slop": "github:sirknigget/anti-slop#aa6fd941330b4e73a59bff0570344cba35ff0f4d",
     "oxlint-tsgolint": "7.0.2004",

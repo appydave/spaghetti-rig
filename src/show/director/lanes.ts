@@ -69,7 +69,7 @@ export function buildLanes(stage: Stage, mode: Mode) {
   queryEl(document, ".divider").hidden = !isSplit(mode);
 }
 
-export const pan = (mode: Mode, p: Player) =>
+const pan = (mode: Mode, p: Player) =>
   isSplit(mode) ? (p === "p1" ? -SPLIT_PAN : SPLIT_PAN) : 0;
 
 /** Player 2's tool card flies in on the tool step. */

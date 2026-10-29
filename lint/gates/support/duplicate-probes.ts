@@ -105,7 +105,7 @@ export const statements = (lines: number) =>
   ).join("");
 
 /** A function reading `reads` fields by index; `other` of them (from the first) read with a length check instead, and `added` puts one more statement first. */
-export const reader = (
+const reader = (
   name: string,
   pre: string,
   reads: number,

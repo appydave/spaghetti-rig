@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["scripts/*.mjs", "lint/gates/*.mjs"],
+  "project": [
+    "src/**/*.ts!",
+    "lint/**/*.{ts,mjs}",
+    "scripts/**/*.mjs",
+    "tests/**/*.ts",
+    "*.config.ts"
+  ],
+  "ignoreDependencies": ["jscpd"]
+}
