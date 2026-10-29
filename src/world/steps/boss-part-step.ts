@@ -12,7 +12,8 @@ import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { paintStopCard } from "#root/src/world/tier-content.ts";
 import { toolBolt } from "#root/src/world/combat/tool-bolt.ts";
 import { ease, lerp } from "#root/src/maths.ts";
-import { DEBT_WINDOW_COLS, type State } from "#root/src/world/world-shared.ts";
+import { DEBT_WINDOW_COLS } from "#root/src/world/layout/boss-arena.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 type BossPartContext = Pick<
   StepContext,

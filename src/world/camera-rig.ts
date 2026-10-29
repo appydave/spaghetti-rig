@@ -4,14 +4,14 @@ import * as THREE from "three";
 import { present } from "#root/src/nth.ts";
 import { bossBack, bossShot } from "#root/src/world/combat/boss-shot.ts";
 import type { BossLayout } from "#root/src/world/code-window/bosslayout.ts";
+import { randomSpread } from "#root/src/world/random-spread.ts";
+import type { CameraMode } from "#root/src/world/scene/state.ts";
 import {
-  randomSpread,
   SCREEN_MIDDLE,
   TALL_ASPECT_BELOW,
   USABLE_WIDTH_FRACTION,
-  type CameraMode,
   type Shape,
-} from "#root/src/world/world-shared.ts";
+} from "#root/src/world/layout/picture-shape.ts";
 
 const CAM_START_X = 3;
 const CAM_START_Y = 3;

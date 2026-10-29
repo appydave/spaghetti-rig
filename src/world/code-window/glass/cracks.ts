@@ -1,7 +1,7 @@
 import { context2d } from "#root/src/dom.ts";
 import { rng } from "#root/src/maths.ts";
 import { CRACK } from "#root/src/world/palette.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 /** The crack's centre lands this share of the way in, plus up to the spread, unless it is given. */
 const CRACK_ORIGIN_MIN = 0.3;

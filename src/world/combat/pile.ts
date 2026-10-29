@@ -5,7 +5,7 @@ import { PILE } from "#root/src/world/palette.ts";
 import { toon } from "#root/src/world/models/toon.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { rng } from "#root/src/maths.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 const PILE_SEED = 42;
 const PILE_STRANDS = 26;

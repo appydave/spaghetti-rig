@@ -19,7 +19,7 @@ import {
   slabShape,
 } from "#root/src/world/code-window/glass/slab.ts";
 import { nth } from "#root/src/nth.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 export { PALETTE } from "#root/src/world/palette.ts";
 export type { Mood } from "#root/src/world/palette.ts";

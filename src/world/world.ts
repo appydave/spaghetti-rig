@@ -23,9 +23,9 @@ import { Timeline } from "#root/src/world/timeline.ts";
 import { advanceWalk, type Walk } from "#root/src/world/walk.ts";
 import { stateFor } from "#root/src/world/world-state.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
-import { State } from "#root/src/world/world-shared.ts";
+import { State } from "#root/src/world/scene/state.ts";
 
-export { walkSeconds } from "#root/src/world/world-shared.ts";
+export { walkSeconds } from "#root/src/world/layout/road.ts";
 
 const DEBRIS_BOUNCE_VOLUME_BASE = 0.3;
 const DEBRIS_BOUNCE_VOLUME_SCALE = 0.5;
