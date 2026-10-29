@@ -56,3 +56,7 @@ export const ease = {
 };
 export const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** A random number from a up to (not including) b. */
+export const rand = (a: number, b: number): number =>
+  a + Math.random() * (b - a);

@@ -3,7 +3,8 @@ import {
   SEMITONES_PER_OCTAVE,
   midiToFreq,
 } from "#root/src/audio/music/notation.ts";
-import { SILENCE, cleanup, rand } from "#root/src/audio/voice-kit.ts";
+import { SILENCE, cleanup } from "#root/src/audio/voice-kit.ts";
+import { rand } from "#root/src/maths.ts";
 
 /** The pad chord: the tail it rings for, the filter's Q, how far apart the two sides sit, and each note's level. */
 const PAD_TAIL = 0.9;
