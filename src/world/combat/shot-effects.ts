@@ -1,7 +1,7 @@
 // What a shot, a kill and a slipped enemy look and sound like (G04 W4): the bounce off the boss, the pop and debris of a kill, the
 // "BUG SHIPPED" or "CAUGHT BY CI" text. Moved out of world.ts as it was; what they need from the world comes in as CombatDeps.
 import * as THREE from "three";
-import type { Sfx } from "#root/src/audio/audio.ts";
+import type { Sfx } from "#root/src/audio/types.ts";
 import type { Player } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import type { Character } from "#root/src/world/models/characters.ts";

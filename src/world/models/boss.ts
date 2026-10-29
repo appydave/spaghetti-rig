@@ -12,7 +12,8 @@ import {
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import { Debris } from "#root/src/world/combat/physics.ts";
-import { geo, INK } from "#root/src/world/models/toon.ts";
+import { geo } from "#root/src/world/models/toon.ts";
+import { INK } from "#root/src/world/palette.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { userData } from "#root/src/world/models/objects.ts";
 import { nth } from "#root/src/nth.ts";

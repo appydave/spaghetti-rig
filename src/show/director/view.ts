@@ -1,5 +1,5 @@
 import { nth } from "#root/src/nth.ts";
-import type { Theme } from "#root/src/audio/audio.ts";
+import type { Theme } from "#root/src/audio/types.ts";
 import { FULL_HEALTH } from "#root/src/content/load.ts";
 import { renderTopBar, renderChips } from "#root/src/show/director/hud.ts";
 import { banner, hideBanner } from "#root/src/show/director/captions.ts";

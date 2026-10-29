@@ -11,7 +11,8 @@ import { audioParts } from "#root/src/audio/engine/parts.ts";
 import { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
 import { loadContent } from "#root/src/content/load.ts";
 import { byId } from "#root/src/dom.ts";
-import { Director, SPLIT_PAN } from "#root/src/show/director.ts";
+import { Director } from "#root/src/show/director.ts";
+import { SPLIT_PAN } from "#root/src/show/director/lanes.ts";
 import {
   isSplit,
   MODES,
@@ -133,5 +134,3 @@ async function boot() {
   app.show("prelude");
   byId("enter", HTMLElement).focus();
 }
-
-export type { Game } from "#root/src/content/load.ts";

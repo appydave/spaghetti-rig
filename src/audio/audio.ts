@@ -24,8 +24,6 @@ import type {
   Theme,
 } from "#root/src/audio/types.ts";
 
-export type { PlayOptions, Sfx, Theme } from "#root/src/audio/types.ts";
-
 /** Every track's name, theme and tempo, for the track list. */
 export const TRACKS: { name: string; theme: Theme; bpm: number }[] = TRACK_LIST;
 

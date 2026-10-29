@@ -3,8 +3,6 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 import { isDrawable } from "#root/src/world/models/objects.ts";
 import { INK } from "#root/src/world/palette.ts";
 
-export { INK } from "#root/src/world/palette.ts";
-
 const TONE_SHADOW = 96;
 const TONE_DIM = 150;
 const TONE_MID = 196;

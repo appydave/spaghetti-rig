@@ -33,8 +33,6 @@ import {
   type Step,
 } from "#root/src/content/script.ts";
 
-export { SPLIT_PAN } from "#root/src/show/director/lanes.ts";
-
 /** What the show is built from: the game, and the stage, worlds and audio it plays on. */
 export interface DirectorParts {
   game: Game;

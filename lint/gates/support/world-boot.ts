@@ -2,7 +2,8 @@
 export async function loadWorld() {
   const { parseContent } = await import("../../../src/content/load");
   const { buildScript } = await import("../../../src/content/script");
-  const { PlayerWorld, walkSeconds } = await import("../../../src/world/world");
+  const { PlayerWorld } = await import("../../../src/world/world");
+  const { walkSeconds } = await import("../../../src/world/layout/road");
   const { initPhysics } = await import("../../../src/world/combat/physics");
 
   await initPhysics();

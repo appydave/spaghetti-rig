@@ -19,9 +19,8 @@ import {
   roundRect,
   type Point,
 } from "#root/src/world/code-window/paint/shapes.ts";
-import { INK } from "#root/src/world/models/toon.ts";
 import { nth } from "#root/src/nth.ts";
-import { CARD, PIN, PALETTE, type Mood } from "#root/src/world/palette.ts";
+import { CARD, PIN, PALETTE, type Mood, INK } from "#root/src/world/palette.ts";
 
 /** The label line: baseline below the bar, and the space between its letters. */
 const LABEL_BASELINE = 40;
