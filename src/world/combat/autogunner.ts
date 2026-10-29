@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { rng } from "#root/src/maths.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 // The hand's feel. Times are in seconds, and the "spread" values are multiplied by a random 0..1 and added to the base.
 const DEFAULT_MISS_CHANCE = 0.22;

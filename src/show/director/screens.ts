@@ -1,12 +1,12 @@
 import { gatesText } from "#root/src/content/gatelabel.ts";
 import type { Game, PlayTier } from "#root/src/content/load.ts";
 import { nth } from "#root/src/nth.ts";
+import { $, SCORE_DIGITS } from "#root/src/show/director/page.ts";
 import {
-  $,
   PLAYERS,
-  SCORE_DIGITS,
   WHO,
-} from "#root/src/show/director/shared.ts";
+  type DirectedWorld,
+} from "#root/src/show/director/players.ts";
 import {
   isSplit,
   type Mode,
@@ -15,14 +15,13 @@ import {
 } from "#root/src/content/script.ts";
 import { esc } from "#root/src/ui/card.ts";
 import type { Stage } from "#root/src/world/stage.ts";
-import type { PlayerWorld } from "#root/src/world/world.ts";
 
 /** What the end screens read: the show as it stands. */
 export interface ScreenContext {
   game: Game;
   tier: PlayTier;
   mode: Mode;
-  worlds: Record<Player, PlayerWorld>;
+  worlds: Record<Player, DirectedWorld>;
   script: Step[];
   at: number;
 }

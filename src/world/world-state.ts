@@ -9,7 +9,8 @@ import {
   type Player,
   type Step,
 } from "#root/src/content/script.ts";
-import { standZ, type State } from "#root/src/world/world-shared.ts";
+import { standZ } from "#root/src/world/layout/road.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 /** Mark the first k gates passed: broken for player 1, open for player 2. */
 function passed(s: State, k: number, p1: boolean) {

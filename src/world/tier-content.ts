@@ -16,7 +16,7 @@ import { layoutCard } from "#root/src/world/code-window/codelayout.ts";
 import type { Layout } from "#root/src/world/code-window/layout/types.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { paintCard } from "#root/src/world/code-window/paint/card-painter.ts";
-import type { Shape } from "#root/src/world/world-shared.ts";
+import type { Shape } from "#root/src/world/layout/picture-shape.ts";
 
 const TALL_CARD_COLS = 44;
 const WIDE_CARD_COLS = 60;

@@ -4,13 +4,9 @@ import { toolFor } from "#root/src/content/load.ts";
 import type { Stop } from "#root/src/content/types.ts";
 import { queryEl, queryElOrNull } from "#root/src/dom.ts";
 import { caption, captionFor } from "#root/src/show/director/captions.ts";
-import {
-  $,
-  isMachine,
-  laneEl,
-  WHO,
-  type LaneContext,
-} from "#root/src/show/director/shared.ts";
+import { $, laneEl } from "#root/src/show/director/page.ts";
+import { WHO, isMachine } from "#root/src/show/director/players.ts";
+import type { LaneContext } from "#root/src/show/director/show-state.ts";
 import {
   isSplit,
   toolsEarned,

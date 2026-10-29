@@ -11,7 +11,7 @@ import type { Effects } from "#root/src/world/combat/effects.ts";
 import type { Debris } from "#root/src/world/combat/physics.ts";
 import type { Street } from "#root/src/world/street.ts";
 import type { Timeline } from "#root/src/world/timeline.ts";
-import type { State } from "#root/src/world/world-shared.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 export type StepContext = {
   readonly player: Player;

@@ -6,12 +6,12 @@ import {
 } from "#root/src/content/load.ts";
 import { queryEl } from "#root/src/dom.ts";
 import { nth } from "#root/src/nth.ts";
-import { $, SCORE_DIGITS } from "#root/src/show/director/shared.ts";
+import { $, SCORE_DIGITS } from "#root/src/show/director/page.ts";
 import { modeInfo, type Mode, type Step } from "#root/src/content/script.ts";
 import { stepLabel } from "#root/src/show/notes.ts";
 import { gateHtml } from "#root/src/ui/card.ts";
 import type { Lane } from "#root/src/world/stage.ts";
-import type { PlayerWorld } from "#root/src/world/world.ts";
+import type { DirectedWorld } from "#root/src/show/director/players.ts";
 
 /** The health bar turns "low" at or below this, and "mid" below the second value. */
 const LOW_HEALTH = 35;
@@ -102,7 +102,7 @@ function restart(hp: HTMLElement, name: "flash" | "heal") {
 /** The health bar and its number, flashing on a hit and healing on a gain. Returns the health to compare against next time. */
 export function updateHealth(
   el: HTMLElement,
-  w: PlayerWorld,
+  w: DirectedWorld,
   last: number,
 ): number {
   const h = Math.max(0, Math.min(FULL_HEALTH, w.health));
@@ -131,7 +131,7 @@ export function updateHealth(
 }
 
 /** The cleanup score, and the bugs shipped where there is a box for them. */
-export function updateScore(el: HTMLElement, w: PlayerWorld) {
+export function updateScore(el: HTMLElement, w: DirectedWorld) {
   queryEl(el, ".score").textContent = String(w.combat.score).padStart(
     SCORE_DIGITS,
     "0",
@@ -147,7 +147,7 @@ export function updateScore(el: HTMLElement, w: PlayerWorld) {
 /** Autoplay's own reticle, where its hand is pointing. */
 export function updateAutoReticle(
   el: HTMLElement,
-  w: PlayerWorld,
+  w: DirectedWorld,
   l: Lane | undefined,
 ) {
   const auto = queryEl(el, ".reticle.auto");
@@ -163,7 +163,7 @@ export function updateAutoReticle(
 /** The boss bar, shown while there is a boss on the street: its name, and how many sins are left. */
 export function updateBossBar(
   el: HTMLElement,
-  w: PlayerWorld,
+  w: DirectedWorld,
   bossName: string | null,
 ) {
   const bb = queryEl(el, ".bossbar");

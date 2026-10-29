@@ -5,7 +5,7 @@ import type { BossModel } from "#root/src/world/models/boss.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
 import { ease } from "#root/src/maths.ts";
-import type { State } from "#root/src/world/world-shared.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 type BossDownContext = Pick<
   StepContext,

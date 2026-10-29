@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { disposeTree } from "#root/src/world/models/toon.ts";
 import { present } from "#root/src/nth.ts";
-import { randomSpread } from "#root/src/world/world-shared.ts";
+import { randomSpread } from "#root/src/world/random-spread.ts";
 import type { Debris } from "#root/src/world/combat/physics.ts";
 
 const BREAK_FROM_BELOW_Y = -0.5;

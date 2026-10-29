@@ -1,24 +1,14 @@
+// What the show's parts read and change (G13 A2): the Director seen from outside, what the lanes read of it, and what the clock and cues
+// have been doing. Moved out of shared.ts as it was.
 import type { AudioEngine } from "#root/src/audio/audio.ts";
 import {
   FULL_HEALTH,
   type Game,
   type PlayTier,
 } from "#root/src/content/load.ts";
-import { byId, queryElOrNull } from "#root/src/dom.ts";
 import type { Mode, Player, Step } from "#root/src/content/script.ts";
+import type { DirectedWorld } from "#root/src/show/director/players.ts";
 import type { Stage } from "#root/src/world/stage.ts";
-import type { PlayerWorld } from "#root/src/world/world.ts";
-
-export const $ = (id: string) => byId(id, HTMLElement);
-
-/** Scores are shown as this many digits, padded with zeros. */
-export const SCORE_DIGITS = 6;
-
-export const PLAYERS: Player[] = ["p1", "p2"];
-export const WHO: Record<Player, { n: string; name: string; sub: string }> = {
-  p1: { n: "PLAYER 1", name: "Vibe coder", sub: "no tools · ships fast" },
-  p2: { n: "PLAYER 2", name: "Specialist", sub: "quality gates · in CI" },
-};
 
 /** What the lanes read and act on: the show as it stands, and the way to schedule a cue. */
 export interface LaneContext {
@@ -29,16 +19,9 @@ export interface LaneContext {
   paused: boolean;
   audio: AudioEngine;
   stage: Stage;
-  worlds: Record<Player, PlayerWorld>;
+  worlds: Record<Player, DirectedWorld>;
   after: (seconds: number, fn: () => void) => void;
 }
-
-/** In spec mode player 1 is driven by autoplay and the mouse plays player 2 only. */
-export const isMachine = (mode: Mode, p: Player) =>
-  p === "p1" && mode === "spec";
-
-export const laneEl = (p: Player) =>
-  queryElOrNull(document, `.lane[data-p='${p}']`);
 
 /** What the clock, the cues and the pointer have been doing since the show began. */
 export interface Run {
@@ -66,7 +49,7 @@ export const newRun = (): Run => ({
 export interface ShowState {
   readonly game: Game;
   readonly stage: Stage;
-  readonly worlds: Record<Player, PlayerWorld>;
+  readonly worlds: Record<Player, DirectedWorld>;
   readonly audio: AudioEngine;
   readonly script: Step[];
   readonly run: Run;

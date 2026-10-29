@@ -8,7 +8,7 @@ import type { Player } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
 import type { BossLayout } from "#root/src/world/code-window/bosslayout.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";
-import { buildCity, SEGMENT } from "#root/src/world/models/city.ts";
+import { buildCity } from "#root/src/world/models/city.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
 import { Gate } from "#root/src/world/models/gate.ts";
 import type { Debris } from "#root/src/world/combat/physics.ts";
@@ -19,13 +19,9 @@ import {
   paintStopCard,
 } from "#root/src/world/tier-content.ts";
 import { disposeTree } from "#root/src/world/models/toon.ts";
-import {
-  BOSS,
-  DEBT_WINDOW_COLS,
-  standZ,
-  stopZ,
-  type State,
-} from "#root/src/world/world-shared.ts";
+import { BOSS, DEBT_WINDOW_COLS } from "#root/src/world/layout/boss-arena.ts";
+import { SEGMENT, standZ, stopZ } from "#root/src/world/layout/road.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 const RATTLE_P1 = 0.5;
 const RATTLE_P2 = 0.3;
