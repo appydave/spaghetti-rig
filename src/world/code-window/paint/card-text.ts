@@ -1,4 +1,4 @@
-import type { Layout } from "#root/src/world/code-window/codelayout.ts";
+import type { Layout } from "#root/src/world/code-window/layout/types.ts";
 import {
   FOOT_FONT,
   FOOT_LINE,

@@ -5,8 +5,8 @@ import {
   SILENCE,
   cleanup,
   noiseVoice,
-  rand,
 } from "#root/src/audio/voice-kit.ts";
+import { rand } from "#root/src/maths.ts";
 
 /** The bass: how long a note is held (between a floor and a ceiling), its peak, and how it settles. */
 const BASS_MIN_LEN = 0.08;

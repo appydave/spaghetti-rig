@@ -1,8 +1,5 @@
-import {
-  tracksForTheme,
-  type CompiledTrack,
-  type Theme,
-} from "#root/src/audio/tracks.ts";
+import { tracksForTheme, type CompiledTrack } from "#root/src/audio/tracks.ts";
+import type { Theme } from "#root/src/audio/types.ts";
 import type { Deck } from "#root/src/audio/music/deck.ts";
 import { buildEcho } from "#root/src/audio/music/echo.ts";
 import { leadNote } from "#root/src/audio/music/lead.ts";

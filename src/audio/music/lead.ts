@@ -1,6 +1,6 @@
 import type { Note } from "#root/src/audio/music/deck.ts";
 import { present } from "#root/src/nth.ts";
-import { type LeadVoice } from "#root/src/audio/tracks.ts";
+import { type LeadVoice } from "#root/src/audio/types.ts";
 import { midiToFreq } from "#root/src/audio/music/notation.ts";
 import { SILENCE, cleanup } from "#root/src/audio/voice-kit.ts";
 

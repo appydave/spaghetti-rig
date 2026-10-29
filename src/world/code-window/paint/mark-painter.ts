@@ -1,4 +1,4 @@
-import type { Line, Mark } from "#root/src/world/code-window/codelayout.ts";
+import type { Line, Mark } from "#root/src/world/code-window/layout/types.ts";
 import {
   pin,
   roundRect,

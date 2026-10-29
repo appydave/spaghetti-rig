@@ -1,6 +1,6 @@
-import type { Layout, Line } from "#root/src/world/code-window/codelayout.ts";
+import type { Layout, Line } from "#root/src/world/code-window/layout/types.ts";
 import { wrap as wrapProse } from "#root/src/world/code-window/canvas-text.ts";
-import { FONT, MONO } from "#root/src/world/code-window/paint/shapes.ts";
+import { FONT, MONO } from "#root/src/world/code-window/paint/card-font.ts";
 
 const LH = 50;
 
