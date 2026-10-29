@@ -1,5 +1,5 @@
 // The planted files for the no-reexport gate test (reexport.test.ts): the barrel shapes the architect reproduced (pure by `export … from`,
-// pure by `export *`, mixed, a hub reached through a barrel) and the import-then-export dodge must fail; a clean module, a type import that
+// pure by `export *`, mixed, a hub reached through a barrel), the import-then-export dodge and `export default` of an import must fail; a clean module, a type import that
 // is not re-exported, and the files the rule leaves alone must pass.
 import type { Probe } from "./support/probe-gate";
 
@@ -71,6 +71,12 @@ export const REEXPORT_PROBES: readonly Probe[] = [
     FAILS,
   ],
   [
+    "importing a default and exporting it as the default fails",
+    "src/probe-default-import.ts",
+    file('import a1 from "./a.ts";', "export default a1;"),
+    FAILS,
+  ],
+  [
     "importing a name and exporting it under another name fails",
     "src/probe-renamed.ts",
     file('import { a } from "./a.ts";', "export { a as b };"),
@@ -111,6 +117,30 @@ export const REEXPORT_PROBES: readonly Probe[] = [
     "exporting a name defined here by name passes",
     "src/probe-local-named.ts",
     file("const a = 1;", "export { a };"),
+    PASSES,
+  ],
+  [
+    "exporting a local const as the default passes",
+    "src/probe-default-const.ts",
+    file("const a = 1;", "export default a;"),
+    PASSES,
+  ],
+  [
+    "exporting a function as the default passes",
+    "src/probe-default-function.ts",
+    file("export default function a() {", "  return 1;", "}"),
+    PASSES,
+  ],
+  [
+    "exporting a class as the default passes",
+    "src/probe-default-class.ts",
+    file("export default class A {}"),
+    PASSES,
+  ],
+  [
+    "exporting an expression that uses an import as the default passes",
+    "src/probe-default-uses-import.ts",
+    file('import a from "./a.ts";', "export default a + 1;"),
     PASSES,
   ],
   [
