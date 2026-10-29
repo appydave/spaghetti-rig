@@ -5,6 +5,7 @@
 // The sound effects and the tracks are in audio-proof.test.ts.
 import { describe, expect, vi } from "vitest";
 import { AudioEngine } from "../../src/audio/audio";
+import { audioParts } from "../../src/audio/engine/parts";
 import { scheduleDeck } from "../../src/audio/music/sequencer";
 import { COMPILED_TRACKS } from "../../src/audio/tracks";
 import {
@@ -256,7 +257,7 @@ const surface = (e: any): void => {
   expect([e.muted, e.paused, e.theme, e.trackName]).toHaveLength(4);
   expect(e.sfx.activeSfx).toBe(0);
 
-  const late: any = new AudioEngine();
+  const late: any = new AudioEngine(audioParts());
 
   late.paused = true;
   late.muted = true;
@@ -269,12 +270,12 @@ const surface = (e: any): void => {
 
   vi.stubGlobal("AudioContext", undefined);
   vi.stubGlobal("webkitAudioContext", prefixed);
-  void new AudioEngine().unlock();
+  void new AudioEngine(audioParts()).unlock();
   expect(prefixed).toHaveBeenCalledWith({ latencyHint: "interactive" });
   vi.stubGlobal("AudioContext", () => {
     throw new Error("no context");
   });
-  void new AudioEngine().unlock();
+  void new AudioEngine(audioParts()).unlock();
 };
 
 const all: Runs = {};

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import type { Mode, Player } from "#root/src/content/script.ts";
-import { TitleShowcase, VsShowcase } from "#root/src/world/models/showcase.ts";
 import { STAGE_CLEAR } from "#root/src/world/palette.ts";
 
 /** Dense screens render at most this many pixels per CSS pixel, to keep the frame rate. */
@@ -13,6 +12,15 @@ export interface StagedWorld {
   setAspect(aspect: number): void;
 }
 
+/** A full-screen 3D scene the stage draws and advances each frame: the title screen, the face-off. */
+export interface Showcase extends StagedWorld {
+  update(dt: number): void;
+}
+/** The face-off: reset for each showing, and which player alone it shows (null for both). */
+export interface VsView extends Showcase {
+  reset(): void;
+  solo: Player | null;
+}
 export type View = "title" | "vs" | "game" | "none";
 export interface Lane {
   player: Player;
@@ -27,12 +35,14 @@ export class Stage {
   readonly renderer: THREE.WebGLRenderer;
   view: View = "none";
   mode: Mode = "both";
-  readonly title = new TitleShowcase();
-  readonly vs = new VsShowcase();
   private worlds: Record<Player, StagedWorld> | null = null;
   private readonly size = new THREE.Vector2();
 
-  constructor(readonly canvas: HTMLCanvasElement) {
+  constructor(
+    readonly canvas: HTMLCanvasElement,
+    readonly title: Showcase,
+    readonly vs: VsView,
+  ) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,

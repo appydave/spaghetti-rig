@@ -1,5 +1,5 @@
 import { tracksForTheme, type CompiledTrack } from "#root/src/audio/tracks.ts";
-import type { Theme } from "#root/src/audio/types.ts";
+import type { MusicRig, Theme } from "#root/src/audio/types.ts";
 import type { Deck } from "#root/src/audio/music/deck.ts";
 import { buildEcho } from "#root/src/audio/music/echo.ts";
 import { leadNote } from "#root/src/audio/music/lead.ts";
@@ -26,13 +26,6 @@ const DECK_TAIL_SECONDS = 3;
 const NEXT_DECK_FADE_IN = 0.03;
 /** The deck that rolls over fades out over this long. */
 const ROLL_OVER_FADE = 1.0;
-
-/** What the music plays through: the audio context, the music bus and the shared noise buffer. */
-export interface MusicRig {
-  ctx: AudioContext;
-  bus: GainNode;
-  noise: AudioBuffer | null;
-}
 
 /** The music: which theme is wanted, the decks playing it, and the scheduler that keeps them sounding. */
 export class Music {

@@ -7,6 +7,7 @@ import { installErrorBanner, showError } from "#root/src/app/errors.ts";
 import { installKeys, key } from "#root/src/app/keys.ts";
 import { presenter } from "#root/src/app/presenter.ts";
 import { AudioEngine } from "#root/src/audio/audio.ts";
+import { audioParts } from "#root/src/audio/engine/parts.ts";
 import { MS_PER_SECOND } from "#root/src/audio/engine/sfx-player.ts";
 import { loadContent } from "#root/src/content/load.ts";
 import { byId } from "#root/src/dom.ts";
@@ -22,6 +23,7 @@ import { initPhysics } from "#root/src/world/combat/physics.ts";
 import { Stage } from "#root/src/world/stage.ts";
 import type { TestHooks } from "#root/src/testhooks.ts";
 import { PlayerWorld } from "#root/src/world/world.ts";
+import { makeShowcases } from "#root/src/world/models/showcase.ts";
 
 /** A slow frame advances the game by at most this many seconds, so a stalled tab does not jump. */
 const MAX_FRAME_SECONDS = 0.05;
@@ -91,8 +93,9 @@ async function boot() {
     document.fonts.load("800 40px Barlow"),
     document.fonts.load("500 20px Space"),
   ]);
-  const audio = new AudioEngine();
-  const stage = new Stage(byId("stage", HTMLCanvasElement));
+  const audio = new AudioEngine(audioParts());
+  const { title, vs } = makeShowcases();
+  const stage = new Stage(byId("stage", HTMLCanvasElement), title, vs);
   const mode: Mode =
     MODES.find((m) => m.mode === store.get("mode"))?.mode ?? "both";
   // Sounds pan by the app's current mode; nothing plays before the app is built (audio unlocks on the first click).

@@ -5,7 +5,7 @@ import { canvasDocument } from "#root/lint/gates/recording-canvas.ts";
 // The showcases only paint label textures on a canvas; a canvas that accepts any drawing call is all they need (the stand-in the proof harnesses use).
 vi.stubGlobal("document", canvasDocument());
 
-const { TitleShowcase, VsShowcase } =
+const { TitleShowcase, VsShowcase, makeShowcases } =
   await import("#root/src/world/models/showcase.ts");
 
 const FACE_OFF_X = 2.1;
@@ -222,5 +222,14 @@ describe("TitleShowcase", () => {
       expect(o.rotation.y - (before[i] ?? 0)).toBeCloseTo(0.2 * 1.5);
     });
     expect(spinners.length).toBeGreaterThan(0);
+  });
+});
+
+describe("makeShowcases", () => {
+  it("makes the title screen and the face-off, each in its own slot", () => {
+    const made = makeShowcases();
+
+    expect(made.title).toBeInstanceOf(TitleShowcase);
+    expect(made.vs).toBeInstanceOf(VsShowcase);
   });
 });
