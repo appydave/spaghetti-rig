@@ -12,7 +12,6 @@ import { toon } from "#root/src/world/models/toon.ts";
 import { rng } from "#root/src/maths.ts";
 
 export const ROAD_HALF = 3.6;
-export const SEGMENT = 34; // distance between stops
 
 const BUILDING = [
   "#eef1dc",

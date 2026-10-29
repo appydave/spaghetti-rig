@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import { nth } from "#root/src/nth.ts";
 import { FX } from "#root/src/world/palette.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 export interface Particle {
   pos: THREE.Vector3;

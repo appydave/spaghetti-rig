@@ -5,6 +5,7 @@ import { disposeTree } from "#root/src/world/models/toon.ts";
 import { kit } from "#root/src/world/models/kit/kit.ts";
 import { context2d } from "#root/src/dom.ts";
 import { GATE } from "#root/src/world/palette.ts";
+import type { GateState } from "#root/src/world/scene/state.ts";
 
 const OUTLINE = 0.025;
 const SIGN_ANISOTROPY = 8;
@@ -45,8 +46,6 @@ const BOOM_EASE_RATE = 6;
 /** In the alarm state the light blinks at this rate; the check mark turns at this speed. */
 const ALARM_BLINK_RATE = 10;
 const CHECK_SPIN_SPEED = 2;
-
-export type GateState = "idle" | "alarm" | "open" | "broken";
 
 /** The angle the boom eases towards, and its tilt, in each state. */
 const BOOM_TARGET: Record<GateState, number> = {

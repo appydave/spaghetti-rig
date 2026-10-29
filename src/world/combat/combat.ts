@@ -19,7 +19,7 @@ import {
   type CombatDeps,
 } from "#root/src/world/combat/shot-effects.ts";
 import { disposeTree } from "#root/src/world/models/toon.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 const GUNNER_SEED_P1 = 11;
 const GUNNER_SEED_P2 = 29;

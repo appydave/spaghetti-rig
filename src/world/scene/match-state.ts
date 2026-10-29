@@ -1,7 +1,7 @@
 import { nth, present } from "#root/src/nth.ts";
 import type { Step } from "#root/src/content/script.ts";
 import type { StepContext } from "#root/src/world/steps/step-context.ts";
-import type { State } from "#root/src/world/world-shared.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 /** Make the world match a state, reusing whatever already matches. */
 export function matchState(c: StepContext, s: State) {

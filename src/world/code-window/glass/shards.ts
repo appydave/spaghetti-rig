@@ -8,7 +8,7 @@ import {
 import { nth } from "#root/src/nth.ts";
 import { meshNamed } from "#root/src/world/models/objects.ts";
 import { rng } from "#root/src/maths.ts";
-import { RANDOM_CENTRE } from "#root/src/world/world-shared.ts";
+import { RANDOM_CENTRE } from "#root/src/world/random-spread.ts";
 
 /** Shattering: the default push, the default grid (columns, rows) and the default seed. */
 const SHATTER_POWER = 6;

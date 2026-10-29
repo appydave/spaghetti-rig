@@ -10,7 +10,8 @@ import { SCORE, type Enemy } from "#root/src/world/models/enemies.ts";
 import { EVENT } from "#root/src/world/palette.ts";
 import { breakObject } from "#root/src/world/combat/break/break-object.ts";
 import type { Debris } from "#root/src/world/combat/physics.ts";
-import { KILL_TEXT_SIZE } from "#root/src/world/world-shared.ts";
+
+const KILL_TEXT_SIZE = 0.8;
 
 /** What the combat reaches for in the world around it. */
 export interface CombatDeps {

@@ -12,7 +12,7 @@ import type {
 import { makeStopWindow } from "#root/src/world/tier-content.ts";
 import { ease, lerp } from "#root/src/maths.ts";
 import { EVENT } from "#root/src/world/palette.ts";
-import type { State } from "#root/src/world/world-shared.ts";
+import type { State } from "#root/src/world/scene/state.ts";
 
 type FixedContext = Pick<
   StepContext,
