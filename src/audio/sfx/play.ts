@@ -1,7 +1,7 @@
 import rawSfx from "#root/src/audio/sfx.json";
 import { expandSfx, parseSfx } from "#root/src/audio/sfx.ts";
 import { bounce, robotBreak, shootP1 } from "#root/src/audio/sfx/bespoke.ts";
-import type { SfxRig } from "#root/src/audio/sfx/voices.ts";
+import type { SfxRig } from "#root/src/audio/sfx/rig.ts";
 
 const RECIPES = parseSfx(rawSfx);
 

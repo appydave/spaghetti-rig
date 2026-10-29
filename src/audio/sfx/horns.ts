@@ -1,9 +1,6 @@
 import { midiToFreq } from "#root/src/audio/music/notation.ts";
-import type {
-  HornNote,
-  SfxKit,
-  SlideNote,
-} from "#root/src/audio/sfx/voices.ts";
+import type { HornNote, SlideNote } from "#root/src/audio/sfx/rig.ts";
+import type { SfxKit } from "#root/src/audio/sfx/voices.ts";
 import { SILENCE, STOP_PADDING, cleanup } from "#root/src/audio/voice-kit.ts";
 
 /** The brass note: its filter opens to a multiple of the pitch (never past a ceiling) fast, then settles lower; its gain and tail. */
