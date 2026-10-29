@@ -1,4 +1,4 @@
-// The architecture gates (G13 module cohesion, G14 coupling and hubs; G15 adds its rule to the same config): archlint 0.17.1 run over a disposable
+// The architecture gates (G13 module cohesion, G14 coupling and hubs, G15 stable dependencies): archlint 0.17.1 run over a disposable
 // copy of src/ without its tests, with the rules in lint/architecture/archlint.json. One home for the run, so `npm run lint:architecture`
 // and the gate's probes (architecture.test.ts) read the same findings.
 //   A hub is a pass-through module: 8+ importers, 8+ imports of its own and complexity <= 5. A logic-heavy module with the same fan is left
@@ -8,6 +8,8 @@
 //   config does the same, because dropping it changes what the module-cohesion rule (G13) sees. Do not "clean it up".
 //   Module cohesion: a module with 5+ exports in 3+ groups fails. Two exports are in one group when one's parameter or return type names the other,
 //   or one calls the other; a field type inside an interface is not a link, which is why a few type-only files are exempt by name (exemptions.ts).
+//   Stable dependencies: a module (5+ imports and importers together) that imports a module more than 0.3 less stable than itself fails.
+//   Instability is imports / (imports + importers), so a module many files import must not import one few files import.
 //   A module that holds only types or only `export … from` lines is not in archlint's graph at all, so edges into and out of it are not counted.
 import { spawnSync } from "node:child_process";
 import {
@@ -38,6 +40,10 @@ export const RULES = {
   ScatteredModule: {
     rule: "module-cohesion",
     hint: "This module has 5+ exports that fall into 3+ unrelated groups (no export uses another or shares a type with it), so a reader opens it for one thing and scrolls past the rest. Move each group to the module named for it, or give the exports the real link they lack. Do not add the file to lint/architecture/archlint.json: the exclusions are named by file and the list is pinned.",
+  },
+  sdp_violation: {
+    rule: "stable-dependencies",
+    hint: "This module is widely depended on but itself depends on a module that changes more often than it does (stable depends on unstable). Inject the dependency (take it as a parameter or an interface the caller supplies) or move the shared thing to the stable side, so what many modules import never imports what changes. Do not lower the thresholds in lint/architecture/archlint.json.",
   },
   HighCoupling: {
     rule: "high-coupling",
