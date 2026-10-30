@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+
 /** The real content, script and world a world harness plays. They are loaded here, after the caller has stubbed `document` (building a world paints canvases), and the physics engine is started. */
 export async function loadWorld() {
   const { parseContent } = await import("../../../src/content/load");
