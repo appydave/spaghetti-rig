@@ -13,6 +13,8 @@ const MAX_UNCOVERED_FUNCTIONS = 46;
 const BACKSTOP_STATEMENTS = 91.6;
 const BACKSTOP_BRANCHES = 82.5;
 const BACKSTOP_FUNCTIONS = 87.7;
+// The lint/gates/*-proof tests do real work and overran Vitest's default 5000 ms when the machine was busy, so every test and hook gets this long.
+const TEST_TIMEOUT_MS = 30_000;
 
 export default defineConfig({
   // Listen on the network so another machine (e.g. the stage Mac) can open it by name:
@@ -34,6 +36,8 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts", "lint/**/*.test.ts"],
     environment: "node",
+    testTimeout: TEST_TIMEOUT_MS,
+    hookTimeout: TEST_TIMEOUT_MS,
     coverage: {
       // Count every source file, not only the ones a test imports, so an untested file lowers the numbers.
       include: ["src/**/*.ts"],
