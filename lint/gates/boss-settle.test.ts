@@ -1,24 +1,14 @@
 // Settling a fresh world straight onto the last steps of a tier (the boss beaten, the result, the ending) must not throw: the camera frames
 // the boss there, so the boss layout has to exist even though no boss model is on the street. (Found by orch-architect, 2026-10-25.)
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { canvasDocument } from "./recording-canvas";
-import { loadWorld } from "./support/world-boot";
+import { loadGame } from "./support/world-boot";
 
 (globalThis as any).document = canvasDocument();
 
-const { parseContent, buildScript, PlayerWorld } = await loadWorld();
+const { PlayerWorld, game, script } = await loadGame();
 
 const PAN = 0.25;
-const game = parseContent(
-  JSON.parse(
-    readFileSync(
-      new URL("../../public/content/cards.json", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
-const script = buildScript(game);
 const audio: any = { play: () => undefined };
 
 describe("settling a fresh world on the last steps of a tier", () => {
