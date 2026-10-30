@@ -6,7 +6,10 @@ import type { Game, PlayTier } from "#root/src/content/load.ts";
 import { nth, present } from "#root/src/nth.ts";
 import type { Player } from "#root/src/content/script.ts";
 import type { BossModel } from "#root/src/world/models/boss.ts";
-import type { BossLayout } from "#root/src/world/code-window/bosslayout.ts";
+import {
+  bossLayout,
+  type BossLayout,
+} from "#root/src/world/code-window/bosslayout.ts";
 import type { CameraRig } from "#root/src/world/camera-rig.ts";
 import { buildCity } from "#root/src/world/models/city.ts";
 import { CodeWindow } from "#root/src/world/code-window/codewindow.ts";
@@ -151,6 +154,8 @@ export class Street {
 
       return g;
     });
+    // The camera frames the boss on the steps after it is beaten too, when no boss model is on the street: the layout is the tier's, not the model's.
+    this.bossLayout = tier.hasBoss ? bossLayout(tier.boss.parts.length) : null;
     this.tier = tier;
   }
 
